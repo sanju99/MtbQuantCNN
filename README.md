@@ -1,4 +1,4 @@
-# MtbQuantCNN
+# Convolutional Neural Network to Predict Mtb Drug MICs
 
 ## Data Cleaning
 
