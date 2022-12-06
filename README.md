@@ -24,8 +24,9 @@ Last, the script runs `fast-lineage-caller` on all the VCF files for this partic
 Run `03_clean_data.py` to do the following:
 
 1. Remove isolates with multiple lineages (they may have lots of ambiguous calls, or be a mixed sample).
-2. Remove isolates with canonical mutations and MICs < 1/2 of the CC. 
+2. Remove isolates with category 1 mutations and MICs < 1/2 of the CC. 
+3. Split data into train and test data sets, stratifying on MIC and primary lineage. 
 
-These isolates may have genotypic or phenotypic mislabeling, so this step cleans the data further so that they don't artificially increase the error of our models.  
+Isolates that meet the top 2 criteria may have genotypic or phenotypic mislabeling, so this step cleans the data further so that they don't artificially increase the error of our models.  
 
 ## Bounded Loss Function

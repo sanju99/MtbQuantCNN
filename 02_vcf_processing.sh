@@ -20,7 +20,7 @@ cat "$1" | while read vcf_file; do
 done
 
 
-# snpEff is in the base environment
+# snpEff and fast-lineage-caller are in the base environment
 source deactivate
 
 # navigate to the directory with all VCF files
@@ -31,3 +31,8 @@ ls -d $PWD/* > /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt
 
 # annotate all VCF files in the VCF directory (because this step is so fast, it can be done on old files, even though it's redundant)
 snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt
+
+# run fast-lineage-caller to update the lineages file
+for file in /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/*; do
+    fast-lineage-caller "$file" --noheader >> /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.csv
+done

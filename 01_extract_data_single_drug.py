@@ -113,11 +113,7 @@ def get_isolate_paths_and_process(df, output_dir, drug, cryptic_genomic_path, ro
     '''
     
     print(f"Looking for VCF paths...")
-    
-    paths_lst = []
-    df_indices = []
-    passed_qc = 0
-    
+        
     df = df.reset_index(drop=True)
 
     for i, row in df.iterrows():
@@ -142,9 +138,7 @@ def get_isolate_paths_and_process(df, output_dir, drug, cryptic_genomic_path, ro
             if os.path.isfile(path_name):             
                 df.loc[i, "Path"] = path_name
                 break
-            
-    # pd.Series(paths_lst).to_csv(os.path.join(output_dir, "paths.txt"), sep="\t", header=None, index=False)
-    
+                
     # drop isolates with no full VCF file available (these will have NaN for the Path column)
     df_post_qc = df.dropna(subset="Path")
     
