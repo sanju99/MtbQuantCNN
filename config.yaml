@@ -1,0 +1,13 @@
+N_epochs: 1
+drug: MOXI
+filter_size: 12
+batch_size: 128
+locus_list: ['gyrBA'] 
+output_path: /n/data1/hms/dbmi/farhat/Sanjana/CNN_results/20221108_cryptic
+phenotype_file: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/MOXI/data_with_paths.csv
+genotype_input_directory: /n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas
+binary_thresh: 0.5
+patience_epochs: 150
+binary: False
+include_lineage: False
+bounded_loss: True
