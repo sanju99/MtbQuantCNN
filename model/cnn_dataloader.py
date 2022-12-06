@@ -1,12 +1,3 @@
-"""
-Code for running CNN on MTB data to predict MIC.
-
-Authors:
-	Anna G. Green
-    Greg Raskind
-	Sanjana Kulkarni
-"""
-
 import sys, glob, os, yaml, sparse
 import tensorflow as tf
 from tensorflow import keras

@@ -1,19 +1,3 @@
-"""
-Code for running CNN on MTB data to predict MIC using data generators so that all data is not loaded at the same time.
-This script performs 5x cross validation on training data.
-
-Deeplift Changes:
-    - Removed lambda layer and changed model to propagate the added dimension
-    - Changed Adam param to match with Keras 2 API
-
-Authors:
-	Michael Chen (original version)
-	Anna G. Green
-	Chang-ho Yoon
-    Greg Raskind
-    Sanjana Kulkarni
-"""
-
 import sys
 import glob
 import os
