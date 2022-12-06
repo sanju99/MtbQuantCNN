@@ -6,7 +6,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-_, drug, drug_who, cc, phenos_path = sys.argv
+_, drug, drug_who, cc = sys.argv
 
 
 ###### STEP 1: READ IN THE LINEAGES FILE AND COMBINE WITH THE PHENOTYPES FILE ######
@@ -19,7 +19,7 @@ lineages.columns = ["ROLLINGDB_ID", "Lineage"]
 # the Freschi lineages have "lineage" appended to the front, so remove that
 lineages["Lineage"] = [val.lstrip("lineage") for val in lineages["Lineage"]]
 
-df_phenos = pd.read_csv(phenos_path)
+df_phenos = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/data_with_paths.csv")
 
 df_combined = df_phenos.merge(lineages, on="ROLLINGDB_ID", how="left")
 assert len(df_combined) == len(df_phenos)
@@ -65,20 +65,52 @@ for i, row in who_high_conf.iterrows():
     else:
         who_high_conf.loc[i, "ANN"] = row["variant"]
         
-        
+  
+# read in list of VCF files
+vcf_files_list = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt", sep="\t", header=None)[0].values
+highConf_isolates = []
+
+
+for fName in vcf_files_list:
+    
+    isolate = os.path.basename(fName).split(".")[0]
+    
+    if isolate in df_combined["ROLLINGDB_ID"].values:
+    
+        vcf_file = vcf.Reader(filename=fName)
+
+        for record in vcf_file:
+
+            if record.POS in who_high_conf.genome_index.values:
+
+                variant_to_check = who_high_conf.loc[who_high_conf["genome_index"]==record.POS, "ANN"].values[0]
+
+                if variant_to_check in ",".join(record.INFO['ANN']):
+                    highConf_isolates.append(isolate)
+                    break
+            
+            
+prev_length = len(df_combined)
+df_combined = df_combined.loc[~((df_combined["ROLLINGDB_ID"].isin(highConf_isolates)) & 
+                                (df_combined[f"{drug}_midpoint"] < cc / 2)
+                               )
+                             ]
+print(f"Removed {prev_length - len(df_combined)} isolates with category 1 mutations and MICs < 1/2 CC")
+
         
 ###### STEP 3: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY MIC AND LINEAGE ######
 
         
-# separate data points into bins. Use log-transformed MICs because they are normally distributed. Actual MICs are exponentially distributed
-try:
-    midpoint_bins = np.digitize(np.log(df_post_qc[drug+"_midpoint"]), bins=np.linspace(np.log(df_post_qc[drug+"_midpoint"].min()), np.log(df_post_qc[drug+"_midpoint"].max()), num=10))
-    train_index, test_index = train_test_split(df_post_qc.index, test_size=0.2,
-                                           stratify=midpoint_bins)
+# # separate data points into bins. Use log-transformed MICs because they are normally distributed. Actual MICs are exponentially distributed
+# try:
+#     midpoint_bins = np.digitize(np.log(df_combined[drug+"_midpoint"]), bins=np.linspace(np.log(df_combined[f"{drug}_midpoint"].min()), np.log(df_combined[drug+"_midpoint"].max()), num=10))
+    
+#     train_index, test_index = train_test_split(df_combined.index, test_size=0.2,
+#                                            stratify=midpoint_bins)
 
-# the above will fail if there aren't enough isolates. In that case, don't stratify because it probably won't be even anyway
-except:
-    train_index, test_index = train_test_split(df_post_qc.index, test_size=0.2)
+# # the above will fail if there aren't enough isolates. In that case, don't stratify because it probably won't be even anyway
+# except:
+#     train_index, test_index = train_test_split(df_combined.index, test_size=0.2)
 
 df_post_qc.loc[train_index, "category"] = "original_train_set" 
 df_post_qc.loc[test_index, "category"] = "original_test_set"
