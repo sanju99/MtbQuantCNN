@@ -4,3 +4,6 @@ __pycache__/
 # scratch work
 sandbox.ipynb
 filter_vcf.sh
+
+# too big files. also could be sensitive data
+.fasta
