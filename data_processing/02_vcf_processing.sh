@@ -15,8 +15,9 @@ cat "$1" | while read vcf_file; do
     
         # filter the VCF file: keep all variants and all FILTER tags. This step just removes reference calls
         bcftools view --types snps,indels,mnps,other "$vcf_file" > "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/$isolate.vcf"
+    else
+        echo "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/$isolate.vcf exists"
     fi
-    
 done
 
 
@@ -30,9 +31,16 @@ cd /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF
 ls -d $PWD/* > /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt
 
 # annotate all VCF files in the VCF directory (because this step is so fast, it can be done on old files, even though it's redundant)
+# it creates an annotated version of each file at fName.eff.vcf
 snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt
 
-# run fast-lineage-caller to update the lineages file
-for file in /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/*; do
-    fast-lineage-caller "$file" --noheader >> /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.csv
+# if the lineage file exists, delete it so that the new lineages are not appended to the same file
+if [ -f /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv ]; then
+    rm /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv
+    echo "deleted existing lineage file"
+fi
+
+# run fast-lineage-caller to update the lineages file. Use only variants with the PASS flag
+for file in /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/*.vcf; do
+    fast-lineage-caller "$file" --noheader --pass >> /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv
 done

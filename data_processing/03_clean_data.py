@@ -1,15 +1,19 @@
 import numpy as np
 import pandas as pd
-import glob, os, sys, itertools, yaml
+import glob, os, sys, itertools, yaml, vcf
 from sklearn.model_selection import train_test_split
 import warnings
 warnings.filterwarnings("ignore")
 
 
-_, drug, drug_who, cc = sys.argv
+# example: python3 -u data_processing/03_clean_data.py MOXI MXF 0.5 /n/scratch3/users/s/sak0914/vcf_for_annot
+# example: python3 -u data_processing/03_clean_data.py RIF RIF 0.5 /n/scratch3/users/s/sak0914/vcf_for_annot
+_, drug, drug_who, cc, vcf_dir = sys.argv
+cc = float(cc)
+who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
 
-###### STEP 1: READ IN THE LINEAGES FILE AND COMBINE WITH THE PHENOTYPES FILE ######
+###### STEP 1: REMOVE ISOLATES WITH MULTIPLE RECORDED LINEAGES -- LOTS OF AMBIGUOUS CALLS DUE TO POLYCLONAL INFECTIONS OR SEQUENCING ERROR ######
 
 
 # first 2 columns are the Isolate name and the Freschi lineage
@@ -17,20 +21,22 @@ lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv",
 lineages.columns = ["ROLLINGDB_ID", "Lineage"]
 
 # the Freschi lineages have "lineage" appended to the front, so remove that
-lineages["Lineage"] = [val.lstrip("lineage") for val in lineages["Lineage"]]
+lineages["Lineage"] = [val.replace("lineage", "") for val in lineages["Lineage"]]
 
 df_phenos = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/data_with_paths.csv")
 
 df_combined = df_phenos.merge(lineages, on="ROLLINGDB_ID", how="left")
 assert len(df_combined) == len(df_phenos)
+
+# create binary phenotype column
+df_combined["Binary"] = (df_combined[f"{drug}_midpoint"] > cc).astype(int)
+
+df_combined = df_combined.loc[~df_combined['Lineage'].str.contains(',')]
+print(f"Removed {len(df_phenos)-len(df_combined)} isolates with multiple lineages")
 del df_phenos
 
 
 ###### STEP 2: REMOVE ISOLATES WITH CATEGORY 1 MUTATIONS AND MIC < 1/2 THE CC ######
-
-
-# create binary phenotype column
-df_combined["Binary"] = (df_combined[f"{drug}_midpoint"] > cc).astype(int)
 
 
 # Get all category 1 variants (don't use category 2 to avoid dropping too many isolates and to be more stringent about what we drop)
@@ -55,7 +61,7 @@ aa_code_dict = {'Val':'V', 'Ile':'I', 'Leu':'L', 'Glu':'E', 'Gln':'Q', \
 
 code_aa_dict = {val: key for key, val in aa_code_dict.items()}
 
-# convert them to 3-letter amino acid codes, which is what the ANN field in moxi_isolate_variants uses
+# convert them to 3-letter amino acid codes, which is what the ANN field
 for i, row in who_high_conf.iterrows():
     
     if len(row["variant"].split("_")) == 2:
@@ -67,50 +73,66 @@ for i, row in who_high_conf.iterrows():
         
   
 # read in list of VCF files
-vcf_files_list = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt", sep="\t", header=None)[0].values
+vcf_files_list = glob.glob(f"{vcf_dir}/*.eff.vcf")
+vcf_files_list = [val for val in vcf_files_list if os.path.basename(val).split(".")[0] in df_combined.ROLLINGDB_ID.values]
+
+assert len(vcf_files_list) == len(df_combined)
 highConf_isolates = []
 
-
-for fName in vcf_files_list:
+for i, fName in enumerate(vcf_files_list):
     
-    isolate = os.path.basename(fName).split(".")[0]
+    vcf_file = vcf.Reader(filename=fName)
     
-    if isolate in df_combined["ROLLINGDB_ID"].values:
-    
-        vcf_file = vcf.Reader(filename=fName)
+    for record in vcf_file:
 
-        for record in vcf_file:
+        # if FILTER == PASS, the FILTER field is an empty list, so the length is 0
+        if record.POS in who_high_conf.genome_index.values and len(record.FILTER) == 0:
 
-            if record.POS in who_high_conf.genome_index.values:
+            variant_to_check = who_high_conf.loc[who_high_conf["genome_index"]==record.POS, "ANN"].values[0]
 
-                variant_to_check = who_high_conf.loc[who_high_conf["genome_index"]==record.POS, "ANN"].values[0]
-
-                if variant_to_check in ",".join(record.INFO['ANN']):
-                    highConf_isolates.append(isolate)
-                    break
+            if variant_to_check in ",".join(record.INFO['ANN']):
+                highConf_isolates.append(os.path.basename(fName).split(".")[0])
+                break
+            
+    if i % 100 == 0:
+        print(i)
             
             
-prev_length = len(df_combined)
-df_combined = df_combined.loc[~((df_combined["ROLLINGDB_ID"].isin(highConf_isolates)) & 
-                                (df_combined[f"{drug}_midpoint"] < cc / 2)
-                               )
-                             ]
-print(f"Removed {prev_length - len(df_combined)} isolates with category 1 mutations and MICs < 1/2 CC")
+df_combined = df_combined.loc[~((df_combined["ROLLINGDB_ID"].isin(highConf_isolates)) & (df_combined[f"{drug}_midpoint"] < cc/2))]
+print(f"Removed {len(vcf_files_list) - len(df_combined)} isolates with category 1 mutations and MICs < 1/2 CC")
+
+
+###### STEP 3: REMOVE ISOLATES WITH THE SAME PRIMARY LINEAGE AND THE SAME BINARY RESISTANCE PHENOTYPE (I.E. ALL MEMBERS OF A LINEAGE ARE RESISTANT) ######
+
+
+df_combined["Binary"] = (df_combined[f"{drug}_midpoint"] > cc).astype(int)
+df_combined["Primary_Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_combined["Lineage"]]
+
+stratify_vals = df_combined["Primary_Lineage"] + "_" + df_combined["Binary"].astype(str)
+
+summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
+summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("_", expand=True)
+
+for primary_lineage in summary_counts.Lineage.unique():
+    if len(summary_counts.query("Lineage == @primary_lineage").Resistance.unique()) < 2:
+        print(f"Removed lineage {primary_lineage}")
+        df_combined = df_combined.query("Primary_Lineage not in @primary_lineage")
+        
+        
+###### STEP 4: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY BINARY PHENOTYPE AND PRIMARY LINEAGE ######
 
         
-###### STEP 3: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY MIC AND LINEAGE ######
+# remake stratify vals after removing some lineages
+stratify_vals = df_combined["Primary_Lineage"] + "_" + df_combined["Binary"].astype(str)
 
-        
-# # separate data points into bins. Use log-transformed MICs because they are normally distributed. Actual MICs are exponentially distributed
-# try:
-#     midpoint_bins = np.digitize(np.log(df_combined[drug+"_midpoint"]), bins=np.linspace(np.log(df_combined[f"{drug}_midpoint"].min()), np.log(df_combined[drug+"_midpoint"].max()), num=10))
-    
-#     train_index, test_index = train_test_split(df_combined.index, test_size=0.2,
-#                                            stratify=midpoint_bins)
+# reset index so that index can be used for train/test splitting
+df_combined = df_combined.reset_index(drop=True)
+train_index, test_index = train_test_split(df_combined.index, test_size=0.2, stratify=stratify_vals)
 
-# # the above will fail if there aren't enough isolates. In that case, don't stratify because it probably won't be even anyway
-# except:
-#     train_index, test_index = train_test_split(df_combined.index, test_size=0.2)
+df_combined.loc[train_index, "category"] = "original_train_set" 
+df_combined.loc[test_index, "category"] = "original_test_set"
 
-df_post_qc.loc[train_index, "category"] = "original_train_set" 
-df_post_qc.loc[test_index, "category"] = "original_test_set"
+# print the means of the two groups as a cursory check
+print(df_combined.groupby("category")[["Binary", f"{drug}_midpoint"]].mean())
+
+df_combined.to_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/data_for_model.csv", index=False)

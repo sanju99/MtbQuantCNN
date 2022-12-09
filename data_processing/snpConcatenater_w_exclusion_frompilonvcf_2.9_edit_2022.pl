@@ -19,7 +19,7 @@ if ($#ARGV < 1) {
 
 # text file containing the names of the VCF files to concatenate
 my $pathsFile=shift(@ARGV);
-print STDOUT "\nReading in VCF files in $pathsFile\n"
+print STDERR "\nReading in VCF files in $pathsFile\n";
 
 my @tempFiles;
 
@@ -448,7 +448,7 @@ sub duplicateEliminator
 }
 
 #---------------------------------------------------------------------------------------
-#  Check the qualtiy of a variant
+#  Check the quality of a variant
 #---------------------------------------------------------------------------------------
 
 sub qualityControl
@@ -501,7 +501,7 @@ sub qualityControl
 }
 
 #---------------------------------------------------------------------------------------
-#  Check the qualtiy of a variant
+#  Get the reverse complement if strand = neg
 #---------------------------------------------------------------------------------------
 sub revComp
 {
