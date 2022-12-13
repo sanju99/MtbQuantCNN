@@ -1,4 +1,4 @@
-.ipynb_checkpoints
+.ipynb_checkpoints/
 __pycache__/
 
 # scratch work
@@ -6,4 +6,4 @@ sandbox.ipynb
 filter_vcf.sh
 
 # too big files. also could be sensitive data
-.fasta
+*.fasta
