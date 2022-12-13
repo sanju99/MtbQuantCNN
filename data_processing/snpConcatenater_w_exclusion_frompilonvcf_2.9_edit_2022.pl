@@ -2,7 +2,7 @@
 
 #author Maha Farhat
 
-#Reads in all the vcf files in a directory, exclusion BED file, ID failed file and takes options 1) INDEL|SNP and 2) REGION|WHOLE. The first refers to whether to include INDELs, or just SNPs. The second allows for alignment of just a region between two coordinate. If REGION opion provided need to provide START and STOP coordinates and strand.
+#Reads in all the vcf files in a directory, exclusion BED file, and takes options 1) INDEL|SNP and 2) REGION|WHOLE. The first refers to whether to include INDELs, or just SNPs. The second allows for alignment of just a region between two coordinate. If REGION opion provided need to provide START and STOP coordinates and strand.
 # The region option results in an MSA of the full region with SNPs/indels introduced, and not just SNP concatenation
 # for each line in the vcf file it excludes those lines that have a reference position between the start and end positions of an exclusion BED file
 # exports this to a single multiple alignment fasta file with the file name as the first field
@@ -28,7 +28,6 @@ my @fileList;
 
 ######### get remaining arguments #########
 my $excludedCoords=shift(@ARGV);
-my $failed_IDs=shift(@ARGV);
 my $option3=shift(@ARGV);
 my $option4= shift(@ARGV)|| "";
 
@@ -52,18 +51,19 @@ if ($option4 =~ m/REGION/i ) {
 $regionstart++;
 
 my @excludedcoordRaw =&ReadInFile("$excludedCoords");
-my @failed_IDsRaw=&ReadInFile("$failed_IDs");
 my @Start_excludedcoord;
 my @End_excludedcoord;
 
 foreach my $line (@excludedcoordRaw) {
-	chomp $line;
-	#print STDERR "reading $line\n";
-	my @pieces=split /\t/,$line;
-	#if ($pieces[1] =~ /^\d+$/) {
-	push (@Start_excludedcoord, $pieces[1]);
-	push (@End_excludedcoord,$pieces[2]);
-	#}
+    
+    # remove trailing newline character
+    chomp $line;
+
+    #print STDERR "reading $line\n";
+    my @pieces=split /\t/,$line;
+    #if ($pieces[1] =~ /^\d+$/) {
+    push (@Start_excludedcoord, $pieces[1]);
+    push (@End_excludedcoord,$pieces[2]);
 }
 
 foreach my $line (@fileListRaw) {
@@ -72,14 +72,6 @@ foreach my $line (@fileListRaw) {
         $line =~ s/\*//g;
         push (@fileList, $line);
     }
-}
-
-my %badIDs;
-foreach my $line (@failed_IDsRaw) {
-    chomp $line;
-    my @pieces=split /\s+/,$line;
-    #print STDERR "reading $line...\n";
-    $badIDs{$pieces[0]}=1;
 }
 
 push(@tempFiles, 'files.txt');
@@ -97,30 +89,30 @@ my @RvDNA;
 
 ######### get the H37Rv reference sequence for a region based whole sequence alignment i.e not a snp concatenation
 if ($option4 =~ m/REGION/i) {
-       my @sequence;
-       @sequence = `/n/data1/hms/dbmi/farhat/bin/work-horse/bin/get_seq_coord.pl -coord ${regionstart}-${regionend} -nodefline /n/data1/hms/dbmi/farhat/bin/work-horse/bin/h37rv.fasta`; #regionstart here needs to be 1-based
-       my $sequence;
+    my @sequence;
+   @sequence = `/n/data1/hms/dbmi/farhat/bin/work-horse/bin/get_seq_coord.pl -coord ${regionstart}-${regionend} -nodefline /n/data1/hms/dbmi/farhat/bin/work-horse/bin/h37rv.fasta`; #regionstart here needs to be 1-based
+   my $sequence;
 
-       foreach my $line (@sequence) {
-            chomp ($line);
-            $sequence=$sequence.$line;
-       }
+   foreach my $line (@sequence) {
+        chomp ($line);
+        $sequence=$sequence.$line;
+   }
 
-       @RvDNA = split( '', $sequence);
+   @RvDNA = split( '', $sequence);
 
-       my $r=$regionstart; #already incremented above
-       foreach my $base (@RvDNA) {
-	    $referenceHash{$r}=$base;
-            $r++;
-       }
-       if ($regionstart>1) {
-	       push (@Start_excludedcoord, 1);
-       	       push (@End_excludedcoord, $regionstart-1 );
-       }
-       if ($regionend <4411532) {
-	       push (@Start_excludedcoord, $regionend+1);
-      	       push (@End_excludedcoord, 4411532);
-       }
+   my $r=$regionstart; #already incremented above
+   foreach my $base (@RvDNA) {
+    $referenceHash{$r}=$base;
+        $r++;
+   }
+   if ($regionstart>1) {
+       push (@Start_excludedcoord, 1);
+           push (@End_excludedcoord, $regionstart-1 );
+   }
+   if ($regionend <4411532) {
+       push (@Start_excludedcoord, $regionend+1);
+           push (@End_excludedcoord, 4411532);
+   }
 
 }
 

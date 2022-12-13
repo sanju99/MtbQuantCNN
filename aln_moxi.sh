@@ -8,4 +8,6 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=skulkarni@g.harvard.edu
 
-perl data_processing/snpConcatenater_w_exclusion_frompilonvcf_2.9_edit_2022.pl /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/MOXI/filt_paths.txt /n/data1/hms/dbmi/farhat/mchen/exclude.BED /n/data1/hms/dbmi/farhat/tb_cnn/IDfail.tab INDEL REGION 4997-9818 pos > gyrBA.fasta
+# perl data_processing/snpConcatenator_2022_withMIssingness.pl /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/MOXI/filt_paths.txt /n/data1/hms/dbmi/farhat/mchen/exclude.BED /n/data1/hms/dbmi/farhat/tb_cnn/IDfail.tab INDEL REGION 4997-9818 pos > gyrBA.fasta
+
+perl data_processing/snpConcatenator_2022_withMIssingness.pl test.txt /n/data1/hms/dbmi/farhat/mchen/exclude.BED INDEL REGION 4997-9818 pos > gyrBA_2.fasta
