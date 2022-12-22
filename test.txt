@@ -1,2 +1,0 @@
-/n/scratch3/users/s/sak0914/vcf_for_lineage/ERR4810493.vcf
-/n/scratch3/users/s/sak0914/vcf_for_lineage/ERR4810494.vcf

@@ -61,23 +61,29 @@ graphic_record = MyCustomTranslator().translate_record(record)
 def get_gene_coords(locus_list, fasta_dir):
     '''
     Use this function to get a dataframe of coordinates from the bash scripts used to generate the alignment FASTA files for every locus.
+    
+    coords_lst is a list of tuples of the start and end coordinates of the genes
     '''
     coords = []
     sense_lst = []
     
-    for locus in locus_list:
+    for i, locus in enumerate(locus_list):
+        
         # read the coordinates from the file
         with open(os.path.join(fasta_dir, locus + ".sh"), "r") as file:
+            
             for line in file:
                 if line[0] not in ["#", "\n"]:
-                    split_line = line.split("-")
-                    coords.append([int(split_line[0].split(" ")[-1]), 
-                                   int(split_line[1].split(" ")[0])
+
+                    # the 2nd, 3rd, and 4th to last strings are start, end, and sense
+                    split_line = line.split(" ")[-4:-1]
+                    coords.append([int(split_line[0]), 
+                                   int(split_line[1])
                                   ])
-                    
+
                     # sense comes after the coordinates
-                    sense_lst.append(split_line[1].split(" ")[1])
-                    
+                    sense_lst.append(split_line[2].lower())
+
     gene_coords = pd.DataFrame(coords)
     gene_coords.columns = ["Start", "End"]
     gene_coords["Locus"] = locus_list    
@@ -302,77 +308,31 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
 
 
 
-def multi_locus_saliency(config_file, sense_dict, gene_coords, binary=False, isolate_variants_df=None, save=False):
+def multi_locus_saliency(config_file, sense_dict, gene_coords, isolate_variants_df=None, save=False):
     
     kwargs = yaml.safe_load(open(config_file, "r"))
     
     out_dir = kwargs["output_path"]
     fasta_dir = kwargs["genotype_input_directory"]
-    drug = kwargs["drug"]
     locus_list = kwargs["locus_list"]
-    df_phenos_path = kwargs["phenotype_file"]
-    binary_thresh = kwargs["binary_thresh"]
+    binary = kwargs["binary"]
     
     # this is 1-indexed and in reverse order for negative sense genes
     X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
     
     if binary:
-        deeplift_dir = os.path.join(out_dir, "deeplift_outputs", "binary")
+        saliency_dir = os.path.join(out_dir, "saliency", "binary")
     else:
-        deeplift_dir = os.path.join(out_dir, "deeplift_outputs", "quant")
+        saliency_dir = os.path.join(out_dir, "saliency", "quant")
     
-    combined_mean = np.load(os.path.join(deeplift_dir, "deeplift_mean.npy"))
-    combined_max = np.load(os.path.join(deeplift_dir, "deeplift_max.npy"))
-    combined_min = np.load(os.path.join(deeplift_dir, "deeplift_min.npy"))
+    combined_mean = np.load(os.path.join(saliency_dir, "scores_mean.npy"))
+    combined_max = np.load(os.path.join(saliency_dir, "scores_max.npy"))
+    combined_min = np.load(os.path.join(saliency_dir, "scores_min.npy"))
     
     # check signs
     assert np.max(combined_min.flatten()) <= 0
     assert np.min(combined_max.flatten()) >= 0
     
-#     # get all scores for computing correlations
-#     all_scores = sparse.load_npz(os.path.join(deeplift_dir, "scores_all_strains.npy.npz")).todense()
-    
-    # get MIC data for the traininset. Use the train generator for consistency in the order in which they were computed in run_deeplift.py
-    # batch load data and compute saliency scores because inputs are too large, don't shuffle inputs
-    train_generator = MtbGeneDataset(
-        os.path.join(out_dir, 'pkl_sparse_train.npz'),
-        df_phenos_path,
-        kwargs["snp_table_file"],
-        drug,
-        locus_list,
-        train_or_test="original_train_set",
-        binary=binary,
-        cc=binary_thresh,
-        include_lineage=kwargs["include_lineage"],
-        data_idx=None,
-        batch_size=kwargs["batch_size"],
-        shuffle=False
-    )
-
-    # get MICs for the training set
-    mics = np.array([])
-
-    for i, _ in enumerate(train_generator):
-        batch = train_generator.__getTestData__(i)
-        mics = np.concatenate([mics, batch[1]])
-        
-    #### DEFINE FUNCTION FOR COMPUTING CORRELATIONS BETWEEN MICS AND SALIENCIES OF THE TRAINING SET ####    
-    
-#     def compute_mic_saliency_correlation_single_locus(all_scores, locus, aln_len, locus_idx, locus_list, mic_lst):
-
-#         single_locus_scores_all_strains = all_scores[:, :aln_len, locus_idx]
-
-#         positive_corr = []
-
-#         for idx in range(single_locus_scores_all_strains.shape[1]):
-#             if len(np.unique(single_locus_scores_all_strains[:, idx])) > 1:
-#                 corr = st.spearmanr(single_locus_scores_all_strains[:, idx], mic_lst)
-#                 positive_corr.append([idx, corr[0], corr[1]])
-
-#         df = pd.DataFrame(positive_corr)
-#         df.columns = ["index", "Spearman_R", "pval"]
-#         return df
-            
     # initalize empty dataframe for saliency scores
     res_df = pd.DataFrame(columns=["Gene", "Pos", "Max", "Min"])
 
@@ -422,9 +382,12 @@ def multi_locus_saliency(config_file, sense_dict, gene_coords, binary=False, iso
         sns.despine(ax=ax_saliency, top=True, right=True, left=True, bottom=True)
         ax_coords.set_ylabel("saliency")
         
-        new_coord_df = pd.DataFrame({"Gene": locus, "Pos": X_matrix_H37Rv_coords[:, locus_idx], 
-                                     "Max": combined_max[:, locus_idx], "Min": combined_min[:, locus_idx],
-                                     "Mean": combined_mean[i, locus_idx]})
+        new_coord_df = pd.DataFrame({"Gene": locus, 
+                                     "Pos": X_matrix_H37Rv_coords[:, locus_idx], 
+                                     "Max": combined_max[:, locus_idx], 
+                                     "Min": combined_min[:, locus_idx],
+                                     "Mean": combined_mean[:, locus_idx]}
+                                   )
         
         with open(os.path.join(fasta_dir, f'{locus}.fasta'), 'r') as f:
             
@@ -440,15 +403,7 @@ def multi_locus_saliency(config_file, sense_dict, gene_coords, binary=False, iso
                 k += 1
             else:
                 new_coord_df.loc[i, "Pos"] = row["Pos"]
-                
-#         # add correlations between MICs and saliency scores
-#         new_coord_df = new_coord_df.reset_index()
-#         corr_df = compute_mic_saliency_correlation_single_locus(all_scores, locus, aln_len, locus_idx, locus_list, mics)
-        
-#         # merge with coords dataframe
-#         new_coord_df = new_coord_df.merge(corr_df, on="index", how="outer")
-#         del new_coord_df["index"]
-        
+
         #new_coord_df["Gene"] = locus
         # combine into a single dataframe
         res_df = pd.concat([res_df, new_coord_df.iloc[:aln_len, :]])
@@ -457,7 +412,7 @@ def multi_locus_saliency(config_file, sense_dict, gene_coords, binary=False, iso
     if not save:
         plt.show()
     else:
-        plt.savefig(os.path.join(deeplift_dir, "saliency_plots.png"), dpi=300)
+        plt.savefig(os.path.join(saliency_dir, "saliency_plots.png"), dpi=300)
     return res_df
 
 
@@ -489,77 +444,77 @@ def did_cnn_find_pos(cnn_saliency_df, drugs_lst, cat_to_check=["1", "2"]):
 
 
 
-def bootstrap_saliencies(df, num_bootstrap=1000):
-    '''
-    Use only nonzero scores because there is huge zero-inflation. Sites with 0 scores are irrelevant
-    '''
+# def bootstrap_saliencies(df, num_bootstrap=1000):
+#     '''
+#     Use only nonzero scores because there is huge zero-inflation. Sites with 0 scores are irrelevant
+#     '''
     
-    print(f"Performing bootstrapping with {num_bootstrap} replicates...")
+#     print(f"Performing bootstrapping with {num_bootstrap} replicates...")
     
-    for gene in df.Gene.unique():
-        #print(f"    {gene}")
-        single_df = df.query("Gene == @gene").reset_index(drop=True)
+#     for gene in df.Gene.unique():
+#         #print(f"    {gene}")
+#         single_df = df.query("Gene == @gene").reset_index(drop=True)
         
-        bs_max_reps = []
-        bs_min_reps = []
-        # bs_mean_reps = []
+#         bs_max_reps = []
+#         bs_min_reps = []
+#         # bs_mean_reps = []
 
-        for _ in range(num_bootstrap):
-            bs_max_idx = np.random.choice(single_df.query("Max > 0").index, len(single_df.query("Max > 0")), replace=True)        
-            bs_max_reps.append(np.mean(single_df.loc[bs_max_idx, "Max"].values))
+#         for _ in range(num_bootstrap):
+#             bs_max_idx = np.random.choice(single_df.query("Max > 0").index, len(single_df.query("Max > 0")), replace=True)        
+#             bs_max_reps.append(np.mean(single_df.loc[bs_max_idx, "Max"].values))
 
-            bs_min_idx = np.random.choice(single_df.query("Min < 0").index, len(single_df.query("Min < 0")), replace=True)
-            bs_min_reps.append(np.mean(single_df.loc[bs_min_idx, "Min"].values))
+#             bs_min_idx = np.random.choice(single_df.query("Min < 0").index, len(single_df.query("Min < 0")), replace=True)
+#             bs_min_reps.append(np.mean(single_df.loc[bs_min_idx, "Min"].values))
             
-            # bs_mean_idx = np.random.choice(single_df.query("Mean != 0").index, len(single_df.query("Mean != 0")), replace=True)        
-            # bs_mean_reps.append(np.mean(single_df.loc[bs_mean_idx, "Mean"].values))
+#             # bs_mean_idx = np.random.choice(single_df.query("Mean != 0").index, len(single_df.query("Mean != 0")), replace=True)        
+#             # bs_mean_reps.append(np.mean(single_df.loc[bs_mean_idx, "Mean"].values))
 
-        assert np.min(bs_max_reps) > 0
-        assert np.max(bs_min_reps) < 0
-        # assert np.mean(bs_mean_reps) != 0
+#         assert np.min(bs_max_reps) > 0
+#         assert np.max(bs_min_reps) < 0
+#         # assert np.mean(bs_mean_reps) != 0
 
-        # get the proportion of scores in the resampled distributions that are at least as extreme as the test statistic for each site
-        for i, row in df.query("Gene == @gene").iterrows():
-            if row["Max"] > 0:
-                df.loc[i, "max_pVal"] = np.mean(np.array(bs_max_reps) >= row["Max"])
-            if row["Min"] < 0:
-                df.loc[i, "min_pVal"] = np.mean(np.array(bs_min_reps) <= row["Min"])
+#         # get the proportion of scores in the resampled distributions that are at least as extreme as the test statistic for each site
+#         for i, row in df.query("Gene == @gene").iterrows():
+#             if row["Max"] > 0:
+#                 df.loc[i, "max_pVal"] = np.mean(np.array(bs_max_reps) >= row["Max"])
+#             if row["Min"] < 0:
+#                 df.loc[i, "min_pVal"] = np.mean(np.array(bs_min_reps) <= row["Min"])
         
-            # if row["Mean"] < 0:
-            #     non_zero_df.loc[i, "mean_pVal"] = np.mean(np.array(bs_mean_reps) <= row["Mean"])
-            # else:
-            #     non_zero_df.loc[i, "mean_pVal"] = np.mean(np.array(bs_mean_reps) >= row["Mean"])
+#             # if row["Mean"] < 0:
+#             #     non_zero_df.loc[i, "mean_pVal"] = np.mean(np.array(bs_mean_reps) <= row["Mean"])
+#             # else:
+#             #     non_zero_df.loc[i, "mean_pVal"] = np.mean(np.array(bs_mean_reps) >= row["Mean"])
                 
                 
-    # compute global p values
-    bs_max_reps = []
-    bs_min_reps = []
-    bs_mean_reps = []
+#     # compute global p values
+#     bs_max_reps = []
+#     bs_min_reps = []
+#     bs_mean_reps = []
 
-    for _ in range(num_bootstrap):
+#     for _ in range(num_bootstrap):
 
-        bs_max_idx = np.random.choice(df.query("Max > 0").index, len(df.query("Max > 0")), replace=True)        
-        bs_max_reps.append(np.mean(df.loc[bs_max_idx, "Max"].values))
+#         bs_max_idx = np.random.choice(df.query("Max > 0").index, len(df.query("Max > 0")), replace=True)        
+#         bs_max_reps.append(np.mean(df.loc[bs_max_idx, "Max"].values))
 
-        bs_min_idx = np.random.choice(df.query("Min < 0").index, len(df.query("Min < 0")), replace=True)
-        bs_min_reps.append(np.mean(df.loc[bs_min_idx, "Min"].values))
+#         bs_min_idx = np.random.choice(df.query("Min < 0").index, len(df.query("Min < 0")), replace=True)
+#         bs_min_reps.append(np.mean(df.loc[bs_min_idx, "Min"].values))
         
-        # bs_mean_idx = np.random.choice(non_zero_df.query("Mean != 0").index, len(non_zero_df.query("Mean != 0")), replace=True)
-        # bs_mean_reps.append(np.mean(non_zero_df.loc[bs_mean_idx, "Mean"].values))
+#         # bs_mean_idx = np.random.choice(non_zero_df.query("Mean != 0").index, len(non_zero_df.query("Mean != 0")), replace=True)
+#         # bs_mean_reps.append(np.mean(non_zero_df.loc[bs_mean_idx, "Mean"].values))
 
-        assert np.min(bs_max_reps) > 0
-        assert np.max(bs_min_reps) < 0
-        # assert np.mean(bs_mean_reps) != 0
+#         assert np.min(bs_max_reps) > 0
+#         assert np.max(bs_min_reps) < 0
+#         # assert np.mean(bs_mean_reps) != 0
 
-    # get the proportion of scores in the resampled distributions that are at least as extreme as the test statistic for each site
-    for i, row in df.iterrows():
-        df.loc[i, "global_max_pVal"] = np.mean(np.array(bs_max_reps) >= row["Max"])
-        df.loc[i, "global_min_pVal"] = np.mean(np.array(bs_min_reps) <= row["Min"])
+#     # get the proportion of scores in the resampled distributions that are at least as extreme as the test statistic for each site
+#     for i, row in df.iterrows():
+#         df.loc[i, "global_max_pVal"] = np.mean(np.array(bs_max_reps) >= row["Max"])
+#         df.loc[i, "global_min_pVal"] = np.mean(np.array(bs_min_reps) <= row["Min"])
         
-        # if row["Mean"] < 0:
-        #     non_zero_df.loc[i, "global_mean_pVal"] = np.mean(np.array(bs_mean_reps) <= row["Mean"])
-        # else:
-        #     non_zero_df.loc[i, "global_mean_pVal"] = np.mean(np.array(bs_mean_reps) >= row["Mean"])
+#         # if row["Mean"] < 0:
+#         #     non_zero_df.loc[i, "global_mean_pVal"] = np.mean(np.array(bs_mean_reps) <= row["Mean"])
+#         # else:
+#         #     non_zero_df.loc[i, "global_mean_pVal"] = np.mean(np.array(bs_mean_reps) >= row["Mean"])
             
             
             
@@ -606,8 +561,8 @@ def generate_saliency_plots(config_file, who_drugs_lst, cat_to_check=["1", "2"],
     fasta_dir = kwargs["genotype_input_directory"]
     drug = kwargs["drug"]
     locus_list = kwargs["locus_list"]
-    df_phenos_path = kwargs["phenotype_file"]
-    binary_thresh = kwargs["binary_thresh"]
+    phenotype_file = kwargs["phenotype_file"]
+    # binary_thresh = kwargs["binary_thresh"]
         
     #fastas = glob.glob(os.path.join(out_dir, "fastas", "*.fasta"))
     fastas = [os.path.join(fasta_dir, gene + ".fasta") for gene in locus_list]
@@ -616,17 +571,17 @@ def generate_saliency_plots(config_file, who_drugs_lst, cat_to_check=["1", "2"],
     # make the genetic coordinates dataframe. Includes strand sense and locus length
     gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
 
-    # saliency_df = multi_locus_saliency(drug, out_dir, fasta_dir, locus_list, sense_dict, gene_coords, df_phenos_path, binary_thresh, binary=binary, isolate_variants_df=isolate_variants_df, save=save)
+    # saliency_df = multi_locus_saliency(drug, out_dir, fasta_dir, locus_list, sense_dict, gene_coords, phenotype_file, binary_thresh, binary=binary, isolate_variants_df=isolate_variants_df, save=save)
     
-    saliency_df = multi_locus_saliency(config_file, sense_dict, gene_coords, binary=binary, isolate_variants_df=isolate_variants_df, save=save)
+    saliency_df = multi_locus_saliency(config_file, sense_dict, gene_coords, isolate_variants_df=isolate_variants_df, save=save)
     
     # update with WHO and lineage SNP annotations (crude because only the positions are checked, not the actual SNPs)
     saliency_df = did_cnn_find_pos(saliency_df, who_drugs_lst, cat_to_check)
     
-    df_phenos = pd.read_csv(df_phenos_path)
+    df_phenos = pd.read_csv(phenotype_file)
     seq_mat_all_loci = create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos)
     
-    # add p-values with non-parametric boostrapping
-    bootstrap_saliencies(saliency_df, num_bootstrap=num_bootstrap)
+    # # add p-values with non-parametric boostrapping
+    # bootstrap_saliencies(saliency_df, num_bootstrap=num_bootstrap)
     
     return saliency_df, seq_mat_all_loci

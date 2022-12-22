@@ -6,13 +6,11 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix
 from sklearn.model_selection import KFold
 from tensorflow.keras import backend as K
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.models import load_model
-from tensorflow.keras import backend as K
 
 from cnn_utils import *
 import warnings
 warnings.filterwarnings("ignore")
+print(f"Tensorflow version: {tf.__version__}")
 
 # starting the memory monitoring
 tracemalloc.start()
@@ -52,7 +50,6 @@ X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
 # shape = 1 x 5 x longest_locus x num_loci
 longest_locus = X_h37rv.shape[2]
 del X_h37rv
-print(f"Longest locus: {longest_locus}")
 
 
 train_generator = MtbGeneDataset(
@@ -114,6 +111,7 @@ def train_step(x, y):
     # run the optimizer
     optimizer.apply_gradients(zip(gradients, model.trainable_weights))
     
+    # return loss
     return loss
     
     
@@ -125,12 +123,13 @@ def val_step(x, y):
     
     y_hat = model(x, training=False)
     
-    # return the loss
+    # return loss
     return custom_bounded_mae(lower_bounds, upper_bounds)(y, y_hat)
 
 
-# initialize the model using the function from cnn_utils
-model = custom_loss_quant_CNN(longest_locus, num_loci, num_lineages, filter_size=filter_size)
+# initialize the model using the function from cnn_utils and the optimizer
+model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+optimizer = Adam(learning_rate = np.exp(-1.0 * 9))
 
 # manual implementation of model callbacks
 patience_counter = 0
@@ -138,61 +137,111 @@ min_loss = np.inf
 
 # initialize lists to store losses
 train_loss = []
+train_mae = []
 val_loss = []
-mae = []
+val_mae = []
 
-# initialize an optimizer
-optimizer=Adam(learning_rate = np.exp(-1.0 * 9))
+results = pd.DataFrame(columns=["train_loss", "train_mae", "val_loss", "val_mae"])
 
-results = pd.DataFrame(columns=["train_loss", "val_loss", "val_mae"])
+if patience_epochs is None:
+    print(f"Training the model for {N_epochs} epochs")
+else:
+    print(f"Using early stopping with a delay of {patience_epochs} epochs")
+
 
 for epoch in range(N_epochs):
         
     # list to keep track of the losses for each batch
     train_epoch_loss = []
+    train_epoch_mae = []
     val_epoch_loss = []
     val_epoch_mae = []
     
     # training loop
     for train_idx, (x_batch_train, y_batch_train) in enumerate(train_generator):
-        
-        # get the mean loss of the batch
+                
+        # compute bounded MAE
         train_epoch_loss.append(train_step(x_batch_train, y_batch_train).numpy())
+        
+        # compute absolute MAE
+        y_hat_train = model(x_batch_train, training=False)
+        train_epoch_mae.append(np.mean(np.abs(y_hat_train - y_batch_train.flatten())))
         
     # store losses for the epoch -- mean of all the batches
     train_loss.append(np.mean(train_epoch_loss))    
+    train_mae.append(np.mean(train_epoch_mae))
 
     # validation loop
     for _, (x_batch_val, y_batch_val) in enumerate(val_generator):
-        
-        y_hat = model(x_batch_val, training=False).numpy().flatten()
-        
+                        
         # compute bounded MAE
         val_epoch_loss.append(val_step(x_batch_val, y_batch_val).numpy())
 
         # compute absolute MAE
-        val_epoch_mae.append(np.mean(np.abs(y_hat - y_batch_val)))
+        y_hat_val = model(x_batch_val, training=False)
+        val_epoch_mae.append(np.mean(np.abs(y_hat_val - y_batch_val.flatten())))
         
     val_loss.append(np.mean(val_epoch_loss))
-    mae.append(np.mean(val_epoch_mae))
+    val_mae.append(np.mean(val_epoch_mae))
     
-    results.loc[epoch, :] = [train_loss[-1], val_loss[-1], mae[-1]]
+    results.loc[epoch, :] = [train_loss[-1], train_mae[-1], val_loss[-1], val_mae[-1]]
     
-    if val_loss[-1] < min_loss:
-        model.save(os.path.join(output_path, "best_model.h5"))
-        print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
-        
-        # update min loss, then zero out the patience counter
-        min_loss = val_loss[-1]
-        patience_counter = 0
-    else:
-        patience_counter += 1
-        
-    if patience_counter == patience_epochs:
-        break
-    
+    if patience_epochs is not None:
+        if val_loss[-1] < min_loss:
+            model.save(os.path.join(output_path, "best_model.h5"))
+            print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
 
+            # update min loss, then zero out the patience counter
+            min_loss = val_loss[-1]
+            patience_counter = 0
+        else:
+            patience_counter += 1
+
+        if patience_counter == patience_epochs:
+            break
+    
+    # train the model for the specified number of epochs
+    else:
+        continue
+    
 results.to_csv(os.path.join(output_path, "history.csv"), index=False)
+
+# manually save the model if not using the callback
+if patience_epochs is None:
+    model.save(os.path.join(output_path, "best_model.h5"))
+
+# initialize a new model and load the weights of the best model
+best_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+best_model.load_weights(os.path.join(output_path, "best_model.h5"))
+
+# get final model predictions
+y_pred = best_model.predict(
+    x=val_generator,
+    workers=4,
+    use_multiprocessing=True,
+)
+
+# get test values and IDs from the dataset class
+ids = np.array([])
+y_test = np.array([])
+lower_bounds = np.array([])
+upper_bounds = np.array([])
+
+for i, _ in enumerate(val_generator):
+    
+    val_batch = val_generator.__getTestData__(i)    
+    ids = np.concatenate([ids, val_batch[0]])
+    y_test = np.concatenate([y_test, val_batch[1]])
+    
+    bounds_batch = val_generator.__getBounds__(i)
+    lower_bounds = np.concatenate([lower_bounds, bounds_batch[0]])
+    upper_bounds = np.concatenate([upper_bounds, bounds_batch[1]])
+    
+    
+pred_df = pd.DataFrame({"Isolate": ids, "y_pred": np.squeeze(y_pred), "y_test": y_test, "lower": lower_bounds, "upper": upper_bounds})
+pred_df.to_csv(os.path.join(output_path, "test_predictions.csv"), index=False)
+K.clear_session()
+
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

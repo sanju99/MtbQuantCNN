@@ -45,8 +45,7 @@ phenotype_file = kwargs["phenotype_file"]
 binary = kwargs["binary"]
 binary_thresh = kwargs["binary_thresh"]
 include_lineage = kwargs["include_lineage"]
-snp_table_file = kwargs["snp_table_file"]
-
+bounded_loss = kwargs["bounded_loss"]
 
 X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz')).todense()
 
@@ -86,25 +85,28 @@ print(f"Deeplift model: {deeplift_model_json}")
 train_generator = MtbGeneDataset(
     os.path.join(output_path, 'pkl_sparse_train.npz'),
     phenotype_file,
-    snp_table_file,
     drug,
     locus_list,
     train_or_test="original_train_set",
     binary=binary,
     cc=binary_thresh,
     include_lineage=include_lineage,
+    bounded_loss=bounded_loss,
     data_idx=None,
     batch_size=BATCH_SIZE,
-    shuffle=False
+    shuffle=True
 )
 
-# get model and load weights
 if include_lineage:
-    print("Including lineage in this model")
-    num_snps = train_generator[0][0][1].shape[1]
-    model = conv_nn_with_lineage(longest_locus, num_loci, num_snps, binary, filter_size, preSoftmax=preSoftmax_var)
+    num_lineages = train_generator[0][0][1].shape[1]
 else:
-    model = conv_nn(longest_locus, num_loci, binary, filter_size, preSoftmax=preSoftmax_var)
+    num_lineages = 0
+
+# get model and load weights
+if bounded_loss:
+    model = custom_loss_quant_CNN(longest_locus, num_loci, num_lineages, filter_size=filter_size)
+else:
+    model = standard_CNN(longest_locus, num_loci, num_lineages, binary, filter_size, preSoftmax=preSoftmax_var)
 
 print(f"{model.count_params()} parameters in the model")
 
@@ -135,34 +137,41 @@ if include_lineage:
     
     # get indices of input layers
     layer_names = list(scoring_method.get_name_to_layer().keys())
-    input_layers = [name for _, name in enumerate(layer_names) if "input" in name]
+    input_layers = [name for _, name in enumerate(layer_names) if ("input" in name or "bounds" in name)]
     
     # get the layer names using the indices determine in the previous line. There are only 2 indices
     output_layer = layer_names[-1]
     print(f"Input layer names: {input_layers}")
     print(f"Output layer name: {output_layer}")
 
-    deeplift_prediction_func = deeplift.util.compile_func(inputs=[scoring_method.get_name_to_layer()[input_layers[0]].get_activation_vars(), 
-                                                                  scoring_method.get_name_to_layer()[input_layers[1]].get_activation_vars()
-                                                                 ],
+    if bounded_loss:
+        ref_data = [X_h37rv, np.zeros((1, num_lineages)), np.array([[0]]), np.array([[0.03]])]
+    else:
+        ref_data = [X_h37rv, np.zeros((1, num_lineages))]
+        
+    inputs = [scoring_method.get_name_to_layer()[input_layers[i]].get_activation_vars() for i in range(len(ref_data))]
+    
+    deeplift_prediction_func = deeplift.util.compile_func(inputs=inputs,
                                                           outputs=scoring_method.get_name_to_layer()[output_layer].get_activation_vars()
                                                          )
-
-    ref_data = [X_h37rv, np.zeros((1, num_snps))]
+    
 else:
     deeplift_prediction_func = deeplift.util.compile_func(inputs=[scoring_method.get_layers()[0].get_activation_vars()],
                                                           outputs=scoring_method.get_layers()[-1].get_activation_vars()
                                                          )
-    ref_data = [X_h37rv]
+    if bounded_loss:
+        ref_data = [X_h37rv, np.array([[0]]), np.array([[0.03]])]
+    else:
+        ref_data = [X_h37rv]
 
 
 original_model_predictions = our_model.predict(ref_data, batch_size=200)
 
-converted_model_predictions = deeplift.util.run_function_in_batches(
-                                func=deeplift_prediction_func,
-                                input_data_list=ref_data,
-                                batch_size=200,
-                                progress_update=None)
+converted_model_predictions = deeplift.util.run_function_in_batches(func=deeplift_prediction_func,
+                                                                    input_data_list=ref_data,
+                                                                    batch_size=200,
+                                                                    progress_update=None
+                                                                   )
 
 
 print(original_model_predictions)
@@ -184,10 +193,6 @@ if include_lineage:
     # add the scores for the first batch. first 0 = first batch. second 0 = inputs ([1] = output MICs)
     print(f"Working on batch 1 of {len(train_generator)}")
     
-    # when lineage is included, each batch is a list of length 2: first element = sequence matrix, second element = lienage matrix
-    assert len(first_batch) == 2
-    assert type(first_batch) == list
-    
     combined_genetic_scores, combined_lineage_scores = np.array(scoring_func(task_idx=0,
                                                                             input_data_list=first_batch,
                                                                             input_references_list=ref_data,
@@ -204,7 +209,7 @@ if include_lineage:
     combined_genetic_scores = np.array([score.sum(axis=0) for score in combined_genetic_scores])
     print(combined_genetic_scores.shape)
     
-    # don't get why this needs to be done. Now it should have shape 128 x num_snps
+    # don't get why this needs to be done. Now it should have shape 128 x num_lineages
     combined_lineage_scores = np.array([score for score in combined_lineage_scores])
     print(combined_lineage_scores.shape)
     
@@ -227,7 +232,7 @@ if include_lineage:
             # there are 128 samples. Sum along the first axis (length = 5) for each one, and combined into a single array. Shape should be 128 x longest_locus x num_loci
             genetic_scores = np.array([score.sum(axis=0) for score in genetic_scores])
 
-            # don't get why this needs to be done. Now it should have shape 128 x num_snps
+            # don't get why this needs to be done. Now it should have shape 128 x num_lineages
             lineage_scores = np.array([score for score in lineage_scores])
             
             # combine them into a single array. The first axis is number of samples

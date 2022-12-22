@@ -1,0 +1,13 @@
+N_epochs: 152
+drug: RIF
+filter_size: 12
+batch_size: 128
+locus_list: ['rpoBC'] 
+output_path: /n/data1/hms/dbmi/farhat/Sanjana/CNN_results/20221219_rif_rpoBC_lineage
+phenotype_file: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/RIF/data_for_model.csv
+genotype_input_directory: /home/sak0914/MtbQuantCNN
+binary_thresh: 0.5
+patience_epochs: 25
+binary: False
+include_lineage: True
+bounded_loss: True

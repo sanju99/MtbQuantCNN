@@ -1,4 +1,4 @@
-import sys, glob, os, yaml, sparse
+import sys, glob, os, yaml, sparse, tracemalloc
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
@@ -13,7 +13,6 @@ from tensorflow.keras import backend as K
 from cnn_utils import *
 import warnings
 warnings.filterwarnings("ignore")
-import tracemalloc
 
 
 # starting the memory monitoring
@@ -37,6 +36,7 @@ binary_thresh = kwargs["binary_thresh"]
 binary = kwargs["binary"]
 include_lineage = kwargs["include_lineage"]
 bounded_loss = kwargs["bounded_loss"]
+assert not bounded_loss
 
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
@@ -56,7 +56,6 @@ X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
 # shape = 1 x 5 x longest_locus x num_loci
 longest_locus = X_h37rv.shape[2]
 del X_h37rv
-print(f"Longest locus: {longest_locus}")
 
 
 train_generator = MtbGeneDataset(
@@ -95,9 +94,7 @@ else:
     num_lineages = 0
 
 print(f"Including {num_lineages} lineages in this model")
-model = conv_nn(longest_locus, num_loci, num_lineages, binary, bounded_loss, filter_size=filter_size, preSoftmax=False)
-print(f"{model.count_params()} parameters in the model")
-
+model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
 
 # get class weights for binary training to balance weights
 if binary:
@@ -147,8 +144,9 @@ history_df.to_csv(os.path.join(output_path, f"{prefix}history.csv"), index=False
 if patience_epochs is None:
     model.save(os.path.join(output_path, f"{prefix}best_model.h5"))
 
-# load in the saved best model
-best_model = load_model(os.path.join(output_path, f"{prefix}best_model.h5"), custom_objects={'bounded_mae': bounded_mae})
+# initialize a new model and load the weights of the best model
+best_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+best_model.load_weights(os.path.join(output_path, f"{prefix}best_model.h5"))
 
 # get model predictions
 y_pred = best_model.predict(
@@ -173,14 +171,7 @@ pred_df = pd.DataFrame({"Isolate": ids, "y_pred": np.squeeze(y_pred), "y_test": 
     
 if binary:
     # optimize the classification threshold using sensitivity and specificity and add the class labels 
-    pred_df = get_threshold_val(pred_df, "y_pred", "y_test")    
-else:
-    # add bounds for the prediction
-    pred_df = pred_df.merge(df_phenos[["ROLLINGDB_ID", f"{drug}_lower_bound", f"{drug}_upper_bound"]], left_on="Isolate", right_on="ROLLINGDB_ID")
-    del pred_df["ROLLINGDB_ID"]
-    pred_df[["y_pred_exp", "y_test_exp"]] = np.exp(pred_df[["y_pred", "y_test"]])
-    assert sum(pred_df["y_test_exp"] < pred_df[f"{drug}_lower_bound"]) == 0
-    assert sum(pred_df["y_test_exp"] > pred_df[f"{drug}_upper_bound"]) == 0         
+    pred_df = get_threshold_val(pred_df, "y_pred", "y_test")        
 
 pred_df.to_csv(os.path.join(output_path, f"{prefix}test_predictions.csv"), index=False)
 K.clear_session()

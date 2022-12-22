@@ -3,20 +3,17 @@ import pandas as pd
 import os, glob, sparse, warnings
 from Bio import SeqIO
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers, models
 from tensorflow.keras.utils import Sequence
 from tensorflow.keras.optimizers import Adam
 from sklearn.utils import class_weight
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, accuracy_score, balanced_accuracy_score
-from tensorflow.keras.callbacks import Callback
 warnings.filterwarnings("ignore")
 
-# use only 4, treat gap character as all 0s
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 
-# Get one hot vector
+
 def get_one_hot(sequence):
     """
 	Returns
@@ -26,11 +23,16 @@ def get_one_hot(sequence):
 	"""
 
     seq_len = len(sequence)
-    seq_in_index = [BASE_TO_COLUMN.get(b, b) for b in sequence]
+    
+    # ignore N characters, the vector is all 0s for that
+    seq_in_index = [(idx, BASE_TO_COLUMN.get(base, base)) for idx, base in enumerate(sequence) if base in BASE_TO_COLUMN.keys()]
+    idx, pos = list(zip(*seq_in_index))
+
+    # initialize
     one_hot = np.zeros((seq_len, 5))
 
     # Assign the found positions to 1
-    one_hot[np.arange(seq_len), np.array(seq_in_index)] = 1
+    one_hot[idx, pos] = 1
 
     return one_hot
 
@@ -413,8 +415,8 @@ class MtbGeneDataset(Sequence):
                 return X_batch.todense(), self.pheno[isolate_idx]
             else:
                 return [X_batch.todense(), 
-                        lower_batch,#.reshape(-1, 1), 
-                        upper_batch#.reshape(-1, 1)
+                        lower_batch,
+                        upper_batch
                        ], self.pheno[isolate_idx]
         else:
             if pd.isnull(lower_batch).all():
@@ -422,8 +424,8 @@ class MtbGeneDataset(Sequence):
             else:
                 return [X_batch.todense(), 
                         lineage_batch, 
-                        lower_batch,#.reshape(-1, 1), 
-                        upper_batch#.reshape(-1, 1)
+                        lower_batch, 
+                        upper_batch
                        ], self.pheno[isolate_idx]
             
         # return values for the batch
@@ -447,14 +449,14 @@ class MtbGeneDataset(Sequence):
         Use this to return only the isolate IDs and MICs from the generator (not the one-hot encodings). This is mainly for generating the test_predictions.csv file
         '''
         isolate_idx = self.indexes[batch_idx*self.batch_size:(batch_idx+1)*self.batch_size]
-        return self.ID[isolate_idx], self.pheno[isolate_idx]
+        return self.ID[isolate_idx], np.squeeze(self.pheno[isolate_idx])
     
-#     def __getBounds__(self, batch_idx):
-#         '''
-#         Use this function to return the lower and upper bounds for the bounded loss function
-#         '''
-#         isolate_idx = self.indexes[batch_idx*self.batch_size:(batch_idx+1)*self.batch_size]
-#         return self.lower_bounds[isolate_idx], self.upper_bounds[isolate_idx]
+    def __getBounds__(self, batch_idx):
+        '''
+        Use this function to return the lower and upper bounds for the bounded loss function
+        '''
+        isolate_idx = self.indexes[batch_idx*self.batch_size:(batch_idx+1)*self.batch_size]
+        return self.lower_bounds[isolate_idx], self.upper_bounds[isolate_idx]
     
     
 
@@ -501,15 +503,92 @@ def custom_bounded_mae(lower_bounds, upper_bounds):
 
 
 
-
-def standard_CNN(longest_locus, num_loci, num_lineages, binary, filter_size=12, preSoftmax=False):
+def bounded_mae_standalone(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col):
     '''
-    Functional API is the recommended one for multi-input models. 
+    y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated
+    ''' 
     
-    DON'T USE THIS FUNCTION FOR THE CUSTOM LOSS FUNCTION. CUSTOM TRAINING AND VALIDATION LOOPS ARE REQUIRED FOR THAT MODEL.
-    '''
+    pred_df[f"{y_pred_col}_exp"] = np.exp(pred_df[y_pred_col])
+    pred_df[f"{y_true_col}_exp"] = np.exp(pred_df[y_true_col])
+    
+    # compute error using only predictions outside of the concentration bounds
+    pred_df_error = pred_df.loc[(pred_df[f"{y_pred_col}_exp"] < pred_df[lower_bounds_col]) | 
+                                (pred_df[f"{y_pred_col}_exp"] > pred_df[upper_bounds_col])
+                               ]
+    
+    # also return the number of predictions within 1 bin
+    within_1bin = len(pred_df.loc[(pred_df[f"{y_pred_col}_exp"] >= pred_df[lower_bounds_col] / 2) & 
+                                  (pred_df[f"{y_pred_col}_exp"] <= pred_df[upper_bounds_col] * 2)
+                                 ]) / len(pred_df)
+        
+    # return mean absolute error
+    return np.sum(np.abs(pred_df_error[y_pred_col] - pred_df_error[y_true_col])) / len(pred_df), within_1bin
 
-    cnn_input = keras.Input(shape=(5, longest_locus, num_loci), name='seq_input')
+
+
+# def standard_CNN(binary, longest_locus, num_loci, num_lineages, filter_size=12, preSoftmax=False):
+#     '''
+#     Functional API is the recommended one for multi-input models. 
+    
+#     DON'T USE THIS FUNCTION FOR THE CUSTOM LOSS FUNCTION. CUSTOM TRAINING AND VALIDATION LOOPS ARE REQUIRED FOR THAT MODEL.
+#     '''
+
+#     cnn_input = tf.keras.Input(shape=(5, longest_locus, num_loci), name='seq_input')
+    
+#     # first perform convolutions and max pooling as in the original model. 
+#     x = layers.Conv2D(64, (5, filter_size), data_format='channels_last', activation='relu', input_shape=(5, longest_locus, num_loci), name='conv1')(cnn_input)
+#     x = layers.Conv2D(64, (1,12), activation='relu', name='conv2')(x)
+
+#     conv_block_1 = layers.MaxPooling2D((1,3), name='maxPooling1')(x)
+
+#     y = layers.Conv2D(32, (1,3), activation='relu', name='conv3')(conv_block_1)
+#     y = layers.Conv2D(32, (1,3), activation='relu', name='conv4')(y)
+
+#     conv_block_2 = layers.MaxPooling2D((1,3), name='maxPooling2')(y)
+
+#     # flattened output of convolutional block. Concatenate this with the lineages, then pass into dense layers
+#     if num_lineages > 0:
+#         mlp_input = tf.keras.Input(shape=(num_lineages, ), name='lineage_input')
+#         cnn_output = layers.Flatten(name='flatten')(conv_block_2)
+#         dense_inputs = layers.concatenate([cnn_output, mlp_input], axis=1, name='concatenate')
+#     else:
+#         dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
+
+#     dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
+#     dense = layers.Dense(256, activation='relu', name='dense2')(dense)
+        
+#     # for binary model, if preSoftmax is False, then return the preactivation values
+#     if binary and not preSoftmax:
+#         output = layers.Dense(1, activation='sigmoid', name='output')(dense)
+    
+#     # return the pre-activation values. So pre-softmax. Which is also the same for the quantitative model
+#     else:
+#         output = layers.Dense(1, activation=None, name='output')(dense)
+
+#     if num_lineages > 0:
+#         model = tf.keras.Model(inputs=[cnn_input, mlp_input], outputs=output)
+#     else:
+#         model = tf.keras.Model(inputs=cnn_input, outputs=output)
+
+#     if binary:
+#         print("Fitting binary model")
+#         model.compile(optimizer=Adam(learning_rate = np.exp(-1.0 * 9)),
+#                       loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
+#                       metrics=[tf.keras.metrics.BinaryAccuracy()], 
+#                      )
+        
+#     else:
+#         print("Fitting quantitative model")
+#         model.compile(optimizer=Adam(learning_rate = np.exp(-1.0 * 9)),
+#                       loss="mae",
+#                      )
+#     return model
+
+            
+        
+def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size):
+    
+    cnn_input = tf.keras.Input(shape=(5, longest_locus, num_loci), name='seq_input')
     
     # first perform convolutions and max pooling as in the original model. 
     x = layers.Conv2D(64, (5, filter_size), data_format='channels_last', activation='relu', input_shape=(5, longest_locus, num_loci), name='conv1')(cnn_input)
@@ -524,84 +603,33 @@ def standard_CNN(longest_locus, num_loci, num_lineages, binary, filter_size=12, 
 
     # flattened output of convolutional block. Concatenate this with the lineages, then pass into dense layers
     if num_lineages > 0:
-        mlp_input = keras.Input(shape=(num_lineages, ), name='lineage_input')
         cnn_output = layers.Flatten(name='flatten')(conv_block_2)
+        mlp_input = tf.keras.Input(shape=(num_lineages, ), name='lineage_input')
         dense_inputs = layers.concatenate([cnn_output, mlp_input], axis=1, name='concatenate')
     else:
         dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
 
     dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
     dense = layers.Dense(256, activation='relu', name='dense2')(dense)
-        
-    # for binary model, if preSoftmax is False, then return the preactivation values
-    if binary and not preSoftmax:
-        output = layers.Dense(1, activation='sigmoid', name='output')(dense)
     
-    # return the pre-activation values. So pre-softmax. Which is also the same for the quantitative model
+    if binary:
+        print("Fitting binary model")
+        output = layers.Dense(1, activation='sigmoid', name='output')(dense)
     else:
+        print("Fitting quantitative model")
         output = layers.Dense(1, activation=None, name='output')(dense)
 
     if num_lineages > 0:
-        model = keras.Model(inputs=[cnn_input, mlp_input], outputs=output)
+        inputs_lst = [cnn_input, mlp_input]
     else:
-        model = keras.Model(inputs=cnn_input, outputs=output)
-
-    if binary:
-        print("Fitting binary model")
-        loss_func = tf.keras.losses.BinaryCrossentropy(from_logits=False)
-        metrics_lst = [tf.keras.metrics.BinaryAccuracy()]
-    else:
-        print("Fitting quantitative model")
-        loss_func = tf.keras.metrics.MeanAbsoluteError()
-        metrics_lst = []
-
-    model.compile(optimizer=Adam(learning_rate = np.exp(-1.0 * 9)),
-                  loss=loss_func,
-                  metrics=metrics_lst, 
-                 )
+        inputs_lst = [cnn_input]
     
-    return model
+    # add bounds to the inputs list if True
+    if bounded_loss:
+        lower_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='lower_bounds')
+        upper_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='upper_bounds')
 
+        inputs_lst.append(lower_bounds)
+        inputs_lst.append(upper_bounds)
 
-
-
-def custom_loss_quant_CNN(longest_locus, num_loci, num_lineages, filter_size=12):
-    '''
-    USE THIS FUNCTION ONLY TO CREATE QUANTITATIVE CNN'S FOR USE WITH A CUSTOM LOSS FUNCTION
-    '''
-    
-    cnn_input = keras.Input(shape=(5, longest_locus, num_loci), name='seq_input')
-    
-    # first perform convolutions and max pooling as in the original model. 
-    x = layers.Conv2D(64, (5, filter_size), data_format='channels_last', activation='relu', input_shape=(5, longest_locus, num_loci), name='conv1')(cnn_input)
-    x = layers.Conv2D(64, (1,12), activation='relu', name='conv2')(x)
-
-    conv_block_1 = layers.MaxPooling2D((1,3), name='maxPooling1')(x)
-
-    y = layers.Conv2D(32, (1,3), activation='relu', name='conv3')(conv_block_1)
-    y = layers.Conv2D(32, (1,3), activation='relu', name='conv4')(y)
-
-    conv_block_2 = layers.MaxPooling2D((1,3), name='maxPooling2')(y)
-
-    # flattened output of convolutional block. Concatenate this with the lineages, then pass into dense layers
-    if num_lineages > 0:
-        cnn_output = layers.Flatten(name='flatten')(conv_block_2)
-        mlp_input = keras.Input(shape=(num_lineages, ), name='lineage_input')
-        dense_inputs = layers.concatenate([cnn_output, mlp_input], axis=1, name='concatenate')
-    else:
-        dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
-
-    dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
-    dense = layers.Dense(256, activation='relu', name='dense2')(dense)
-    output = layers.Dense(1, activation=None, name='output')(dense)
-
-    lower_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='lower_bounds')
-    upper_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='upper_bounds')
-
-    # sequence one-hot encoding, lineages, lower_bounds, upper_bounds
-    if num_lineages > 0:
-        model = keras.Model(inputs=[cnn_input, mlp_input, lower_bounds, upper_bounds], outputs=output)
-    else:
-        model = keras.Model(inputs=[cnn_input, lower_bounds, upper_bounds], outputs=output)
-        
-    return model
+    return tf.keras.Model(inputs=inputs_lst, outputs=output)

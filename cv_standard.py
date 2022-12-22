@@ -50,6 +50,7 @@ else:
     print("Making input one-hot encodings file...\n")
     make_geno_pheno_files(**kwargs)
     
+    
 # get longest locus from the pickle file
 X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
 
@@ -65,10 +66,10 @@ val_generator = MtbGeneDataset(
     drug,
     locus_list,
     train_or_test="original_test_set",
-    binary=binary,
+    binary=False,
     cc=binary_thresh,
     include_lineage=include_lineage,
-    bounded_loss=bounded_loss,
+    bounded_loss=True,
     data_idx=None,
     batch_size=BATCH_SIZE,
     shuffle=False
@@ -92,52 +93,26 @@ bootstrap_reps = 10
 results = []
 
 for fold in range(bootstrap_reps):
-# for fold in range(5):
-    # assert sum(pd.isnull(df_train[f"CV{fold}_train"])) == 0
-    
-    # the isolates assigned to the training set for the current fold
-    # train_idx = df_train.loc[df_train[f"CV{fold}_train"] == 1].index.values
-    
-    # cv_train_generator = MtbGeneDataset(
-    #             os.path.join(output_path, 'pkl_sparse_train.npz'),
-    #             phenotype_file,
-    #             drug,
-    #             locus_list,
-    #             train_or_test="original_train_set",
-    #             binary=binary,
-    #             cc=binary_thresh,
-    #             include_lineage=include_lineage,
-    #             data_idx=train_idx,
-    #             batch_size=BATCH_SIZE,
-    #             shuffle=True
-    # )
-    
-    # if include_lineage:
-    #     print("Including lineage in this model")
-    #     model = conv_nn_with_lineage(longest_locus, num_loci, num_snps, binary, filter_size)
-    # else:
-    #     model = conv_nn(longest_locus, num_loci, binary, filter_size)
-    # print(f"{model.count_params()} parameters in the model")
-    
+
     print(f"Working on fold {fold+1}/{bootstrap_reps}")
     
     # sample indices with replacement
     train_idx = np.random.choice(np.arange(0, len(df_train)), size=len(df_train), replace=True)
-    
+
     cv_train_generator = MtbGeneDataset(
-                            os.path.join(output_path, 'pkl_sparse_train.npz'),
-                            phenotype_file,
-                            drug,
-                            locus_list,
-                            train_or_test="original_train_set",
-                            binary=binary,
-                            cc=binary_thresh,
-                            include_lineage=include_lineage,
-                            bounded_loss=bounded_loss,
-                            data_idx=train_idx,
-                            batch_size=BATCH_SIZE,
-                            shuffle=True
-                        )
+                                    os.path.join(output_path, 'pkl_sparse_train.npz'),
+                                    phenotype_file,
+                                    drug,
+                                    locus_list,
+                                    train_or_test="original_train_set",
+                                    binary=binary,
+                                    cc=binary_thresh,
+                                    include_lineage=include_lineage,
+                                    bounded_loss=bounded_loss,
+                                    data_idx=train_idx,
+                                    batch_size=BATCH_SIZE,
+                                    shuffle=True
+    )
 
     print(f"Including {num_lineages} lineages in this model")
     model = conv_nn(longest_locus, num_loci, num_lineages, binary, bounded_loss, filter_size=filter_size, preSoftmax=False)
@@ -204,7 +179,7 @@ for fold in range(bootstrap_reps):
         within_1bin = len(pred_df.loc[(pred_df["y_pred_exp"] >= pred_df[f"{drug}_lower_bound"] / 2) & (pred_df["y_pred_exp"] <= pred_df[f"{drug}_upper_bound"] * 2)]) / len(pred_df)
         
         # compute quantitative metrics
-        binned_mae = bounded_mae_standalone(pred_df.y_test, pred_df.y_pred)
+        # binned_mae = bounded_mae_standalone(pred_df.y_test, pred_df.y_pred)
         mae = np.mean(np.abs(pred_df.y_test - pred_df.y_pred))
         rmse = np.sqrt(np.mean((pred_df.y_test - pred_df.y_pred)**2))
         pearson = st.pearsonr(pred_df.y_test, pred_df.y_pred)[0]
