@@ -1,18 +1,17 @@
 import sys, glob, os, yaml, sparse, tracemalloc
-import tensorflow as tf
-from tensorflow import keras
 import numpy as np
 import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix
 from sklearn.model_selection import KFold
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.models import load_model
-from tensorflow.keras import backend as K
 
+# cnn_utils is one level up in the directory tree
+sys.path.append(os.path.dirname(os.getcwd()))
 from cnn_utils import *
-import warnings
-warnings.filterwarnings("ignore")
 
 
 # starting the memory monitoring
@@ -34,9 +33,9 @@ phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
 binary = kwargs["binary"]
+loss_type = kwargs["loss_type"]
 include_lineage = kwargs["include_lineage"]
-bounded_loss = kwargs["bounded_loss"]
-assert not bounded_loss
+bounded_loss = False
 
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
@@ -95,28 +94,34 @@ else:
 
 print(f"Including {num_lineages} lineages in this model")
 model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+optimizer = Adam(learning_rate = np.exp(-1.0 * 9))
 
 # get class weights for binary training to balance weights
 if binary:
     prefix = "binary_"
     
     # get class weights for the training data only
-    if drug+"_midpoint" in df_phenos.columns:
-        y_train = (df_phenos.query("category=='original_train_set'")[drug+"_midpoint"].values > binary_thresh).astype(int)
-    else:
-        y_train = df_phenos.query("category=='original_train_set'")["phenotype"].values.astype(int)
+    y_train = (df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"].values > binary_thresh).astype(int)
 
     assert len(np.unique(y_train)) == 2
     class_weights = class_weighting_dictionary(y_train)
+    model.compile(loss=tf.keras.losses.BinaryCrossentropy(), optimizer=optimizer)
             
 else:
     prefix = ""
     class_weights = None
     
+    if loss_type == "L1":
+        model.compile(loss=tf.keras.losses.MeanAbsoluteError(), optimizer=optimizer)
+    elif loss_type == "L2":
+        model.compile(loss=tf.keras.losses.MeanSquaredError(), optimizer=optimizer)
+    else:
+        raise ValueError(f"{loss_type} is an invalid loss type for quantitative CNNs")
+            
 
 # include early stopping and get the model checkpoint at the best epoch
 if patience_epochs is not None:
-    print("Using early stopping...")
+    print(f"Using early stopping with a delay of {patience_epochs} epochs...")
     es = EarlyStopping(monitor='val_loss', mode='min', patience=patience_epochs, verbose=1)
     mc = ModelCheckpoint(os.path.join(output_path, f'{prefix}best_model.h5'), monitor='val_loss', mode='min', save_best_only=True, verbose=1)
     model_callbacks = [es, mc]

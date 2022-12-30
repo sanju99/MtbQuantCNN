@@ -4,9 +4,12 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import glob, os, yaml, sparse, itertools
+import glob, os, yaml, sparse, itertools, sys
 from Bio import SeqIO
 from Bio.Seq import Seq
+
+# cnn_utils is one level up in the directory tree
+sys.path.append(os.path.dirname(os.getcwd()))
 from cnn_utils import MtbGeneDataset
 import scipy.stats as st
 
@@ -14,7 +17,7 @@ import scipy.stats as st
 # import reference files
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
-freschi_snps = pd.read_excel("../lasso/Freschi_SNPs.xlsx")
+freschi_snps = pd.read_excel("Freschi_SNPs.xlsx")
 freschi_snps["position"] = freschi_snps["position"].astype(int)
 
 
@@ -308,11 +311,10 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
 
 
 
-def multi_locus_saliency(config_file, sense_dict, gene_coords, isolate_variants_df=None, save=False):
+def multi_locus_saliency(out_dir, config_file, sense_dict, gene_coords, save=False):
     
     kwargs = yaml.safe_load(open(config_file, "r"))
     
-    out_dir = kwargs["output_path"]
     fasta_dir = kwargs["genotype_input_directory"]
     locus_list = kwargs["locus_list"]
     binary = kwargs["binary"]
@@ -553,11 +555,10 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
 
             
             
-def generate_saliency_plots(config_file, who_drugs_lst, cat_to_check=["1", "2"], binary=False, isolate_variants_df=None, num_bootstrap=10000, save=False):
+def generate_saliency_plots(out_dir, config_file, who_drugs_lst, cat_to_check=["1", "2"], binary=False, save=False):
         
     kwargs = yaml.safe_load(open(config_file, "r"))
     
-    out_dir = kwargs["output_path"]
     fasta_dir = kwargs["genotype_input_directory"]
     drug = kwargs["drug"]
     locus_list = kwargs["locus_list"]
@@ -573,7 +574,7 @@ def generate_saliency_plots(config_file, who_drugs_lst, cat_to_check=["1", "2"],
 
     # saliency_df = multi_locus_saliency(drug, out_dir, fasta_dir, locus_list, sense_dict, gene_coords, phenotype_file, binary_thresh, binary=binary, isolate_variants_df=isolate_variants_df, save=save)
     
-    saliency_df = multi_locus_saliency(config_file, sense_dict, gene_coords, isolate_variants_df=isolate_variants_df, save=save)
+    saliency_df = multi_locus_saliency(out_dir, config_file, sense_dict, gene_coords, save=save)
     
     # update with WHO and lineage SNP annotations (crude because only the positions are checked, not the actual SNPs)
     saliency_df = did_cnn_find_pos(saliency_df, who_drugs_lst, cat_to_check)

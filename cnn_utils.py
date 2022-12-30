@@ -1,15 +1,13 @@
 import numpy as np
 import pandas as pd
-import os, glob, sparse, warnings
+import os, glob, sparse
 from Bio import SeqIO
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers, models
 from tensorflow.keras.utils import Sequence
-from tensorflow.keras.optimizers import Adam
 from sklearn.utils import class_weight
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, accuracy_score, balanced_accuracy_score
-warnings.filterwarnings("ignore")
 
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 
@@ -298,7 +296,7 @@ def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
     
 class MtbGeneDataset(Sequence):
 
-    def __init__(self, sparse_file, phenotype_file, drug, locus_list, train_or_test, binary, cc, include_lineage=False, bounded_loss=False, data_idx=None, batch_size=128, shuffle=True):
+    def __init__(self, sparse_file, phenotype_file, drug, locus_list, train_or_test, binary, cc, shuffle_phenos=False, include_lineage=False, bounded_loss=False, data_idx=None, batch_size=128, shuffle=True):
         '''
         Sparse files for both the training and testing sets are available, so read those. 
         Use data_idx only when performing cross-validation, where data_idx is train_idx or test_idx
@@ -342,6 +340,10 @@ class MtbGeneDataset(Sequence):
             assert len(np.unique(y)) == 2
         else:
             y = np.log(df_phenos[drug+"_midpoint"].values)
+            
+        # shuffle -- use this for performing the permutation test for saliency scores
+        if shuffle_phenos:
+            np.random.shuffle(y)
             
         if bounded_loss:
             if df_phenos[[f"{drug}_lower_bound", f"{drug}_upper_bound"]].values.min() < 0:
@@ -474,12 +476,12 @@ def class_weighting_dictionary(y):
 
 
 
-def custom_bounded_mae(lower_bounds, upper_bounds):
+def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
     '''
     The bounds are in exponentiated form because some lower bounds are 0. So when computing the loss, y_pred must be exponentiated
     '''
 
-    def bounded_loss(y_true, y_pred):
+    def boundedLoss(y_true, y_pred):
         '''
         y_test is the log-transformed midpoint of the lower and upper bounds
         '''
@@ -489,7 +491,13 @@ def custom_bounded_mae(lower_bounds, upper_bounds):
         y_pred = tf.cast(y_pred, tf.float64)
 
         # compute the absolute errors first using the log-MICs
-        errors = K.abs(y_true - y_pred)
+        if loss_type == "L1":
+            errors = K.abs(y_true - y_pred)
+        elif loss_type == "L2":
+        # squared error
+            errors = K.square(y_true - y_pred)
+        else:
+            raise RuntimeError(f"{loss_type} is not a valid loss function type")
         
         # assign 1 to predicted points that are less than the lower bound or greater than the upper bound. Exponentiate the predictions to be compatible with the bounds
         outside_bounds_mask = tf.cast(K.less(K.exp(y_pred), lower_bounds) | K.greater(K.exp(y_pred), upper_bounds), tf.float64)
@@ -499,11 +507,11 @@ def custom_bounded_mae(lower_bounds, upper_bounds):
 
         return K.mean(masked_errors)
     
-    return bounded_loss
+    return boundedLoss
 
 
 
-def bounded_mae_standalone(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col):
+def boundedLoss_predict(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col):
     '''
     y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated
     ''' 
@@ -521,68 +529,10 @@ def bounded_mae_standalone(pred_df, y_pred_col, y_true_col, lower_bounds_col, up
                                   (pred_df[f"{y_pred_col}_exp"] <= pred_df[upper_bounds_col] * 2)
                                  ]) / len(pred_df)
         
-    # return mean absolute error
-    return np.sum(np.abs(pred_df_error[y_pred_col] - pred_df_error[y_true_col])) / len(pred_df), within_1bin
-
-
-
-# def standard_CNN(binary, longest_locus, num_loci, num_lineages, filter_size=12, preSoftmax=False):
-#     '''
-#     Functional API is the recommended one for multi-input models. 
-    
-#     DON'T USE THIS FUNCTION FOR THE CUSTOM LOSS FUNCTION. CUSTOM TRAINING AND VALIDATION LOOPS ARE REQUIRED FOR THAT MODEL.
-#     '''
-
-#     cnn_input = tf.keras.Input(shape=(5, longest_locus, num_loci), name='seq_input')
-    
-#     # first perform convolutions and max pooling as in the original model. 
-#     x = layers.Conv2D(64, (5, filter_size), data_format='channels_last', activation='relu', input_shape=(5, longest_locus, num_loci), name='conv1')(cnn_input)
-#     x = layers.Conv2D(64, (1,12), activation='relu', name='conv2')(x)
-
-#     conv_block_1 = layers.MaxPooling2D((1,3), name='maxPooling1')(x)
-
-#     y = layers.Conv2D(32, (1,3), activation='relu', name='conv3')(conv_block_1)
-#     y = layers.Conv2D(32, (1,3), activation='relu', name='conv4')(y)
-
-#     conv_block_2 = layers.MaxPooling2D((1,3), name='maxPooling2')(y)
-
-#     # flattened output of convolutional block. Concatenate this with the lineages, then pass into dense layers
-#     if num_lineages > 0:
-#         mlp_input = tf.keras.Input(shape=(num_lineages, ), name='lineage_input')
-#         cnn_output = layers.Flatten(name='flatten')(conv_block_2)
-#         dense_inputs = layers.concatenate([cnn_output, mlp_input], axis=1, name='concatenate')
-#     else:
-#         dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
-
-#     dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
-#     dense = layers.Dense(256, activation='relu', name='dense2')(dense)
-        
-#     # for binary model, if preSoftmax is False, then return the preactivation values
-#     if binary and not preSoftmax:
-#         output = layers.Dense(1, activation='sigmoid', name='output')(dense)
-    
-#     # return the pre-activation values. So pre-softmax. Which is also the same for the quantitative model
-#     else:
-#         output = layers.Dense(1, activation=None, name='output')(dense)
-
-#     if num_lineages > 0:
-#         model = tf.keras.Model(inputs=[cnn_input, mlp_input], outputs=output)
-#     else:
-#         model = tf.keras.Model(inputs=cnn_input, outputs=output)
-
-#     if binary:
-#         print("Fitting binary model")
-#         model.compile(optimizer=Adam(learning_rate = np.exp(-1.0 * 9)),
-#                       loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
-#                       metrics=[tf.keras.metrics.BinaryAccuracy()], 
-#                      )
-        
-#     else:
-#         print("Fitting quantitative model")
-#         model.compile(optimizer=Adam(learning_rate = np.exp(-1.0 * 9)),
-#                       loss="mae",
-#                      )
-#     return model
+    # return error and proportion within 1 bin away
+    mae = np.sum(np.abs(pred_df_error[y_pred_col] - pred_df_error[y_true_col])) / len(pred_df)
+    mse = np.sum((pred_df_error[y_pred_col] - pred_df_error[y_true_col])**2) / len(pred_df)
+    return mae, mse, within_1bin
 
             
         
@@ -632,4 +582,7 @@ def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_
         inputs_lst.append(lower_bounds)
         inputs_lst.append(upper_bounds)
 
+    if len(inputs_lst) == 1:
+        inputs_lst = inputs_lst[0]
+        
     return tf.keras.Model(inputs=inputs_lst, outputs=output)
