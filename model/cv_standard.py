@@ -24,7 +24,6 @@ locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
 N_epochs = kwargs["N_epochs"]
-N_epochs = 1
 binary = kwargs["binary"]
 binary_thresh = kwargs["binary_thresh"]
 
@@ -80,14 +79,13 @@ else:
 df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
 df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
 
-bootstrap_reps = 1
+bootstrap_reps = 10
 results = []
 history_df = pd.DataFrame(columns=[f"rep_{i+1}" for i in range(bootstrap_reps)])
 
 for rep in range(bootstrap_reps):
 
-    print(f"Working on replicate {rep+1}/{bootstrap_reps}")
-    val_loss = []
+    print(f"Working on replicate {rep+1}/{bootstrap_reps} for {N_epochs} epochs")
     
     # sample indices with replacement
     train_idx = np.random.choice(np.arange(0, len(df_train)), size=len(df_train), replace=True)
@@ -147,8 +145,7 @@ for rep in range(bootstrap_reps):
     )
     
     # add validation loss for this replicate to the history dataframe
-    history_df[f"fold_{fold+1}"] = pd.DataFrame(history.history)["val_loss"]
-    model.save(os.path.join(output_path, f"{prefix}cv_model_{fold+1}.h5"))
+    history_df[f"rep_{rep+1}"] = pd.DataFrame(history.history)["val_loss"]
     
     # get model predictions
     y_pred = model.predict(x=val_generator,
@@ -166,6 +163,8 @@ for rep in range(bootstrap_reps):
                 
         # compute binary metrics: sens, spec, auc, auc_pr, acc, balanced_acc
         binary_metrics_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred_label"], binary_thresh, binarize=False)
+        binary_metrics_df["Drug"] = drug
+        binary_metrics_df["Model"] = "CNN"
     else:
         pred_df = pd.DataFrame({"Isolate": ids, "y_pred": np.squeeze(y_pred), "y_test": np.log(y_test)})
         
@@ -190,7 +189,7 @@ for rep in range(bootstrap_reps):
                         
 # save summary statistics from cross-validation
 pd.concat(results).to_csv(os.path.join(output_path, f"{prefix}val_results.csv"), index=False)
-history_df.to_csv(os.path.join(output_path, f"{prefix}history_cv.csv"), index=False)
+history_df.to_csv(os.path.join(output_path, f"{prefix}history_replicates.csv"), index=False)
 K.clear_session()
 
 # returns a tuple: current, peak memory in bytes 

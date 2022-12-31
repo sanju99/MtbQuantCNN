@@ -313,8 +313,8 @@ def ridge_binary(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, n
         X_train = scaler.fit_transform(X[df_phenos.query("category=='original_train_set'").index, :])   
         X_test = scaler.fit_transform(X[df_phenos.query("category=='original_test_set'").index, :])
 
-    y_train = (df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int)
-    y_test = (df_phenos.query("category=='original_test_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int)
+    y_train = (df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int).values
+    y_test = (df_phenos.query("category=='original_test_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int).values
     
     model = LogisticRegressionCV(penalty='l2', 
                                  Cs=np.logspace(-6, 6, 13), 

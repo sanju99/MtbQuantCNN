@@ -151,13 +151,13 @@ for fold, (train_idx, val_idx) in enumerate(cv_splits.split(df_train[f"{drug}_mi
     for epoch in range(N_epochs):
 
         # training loop: don't keep track of the train losses because we just want to train the model here
-        for train_idx, (x_batch_train, y_batch_train) in enumerate(cv_train_generator):
+        for (x_batch_train, y_batch_train) in cv_train_generator:
 
             _ = train_step(x_batch_train, y_batch_train) 
         
         # validation loop
         val_epoch_loss = []
-        for _, (x_batch_val, y_batch_val) in enumerate(cv_val_generator):
+        for (x_batch_val, y_batch_val) in cv_val_generator:
 
             # compute bounded error
             val_epoch_loss.append(val_step(x_batch_val, y_batch_val).numpy())

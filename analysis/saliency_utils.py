@@ -160,164 +160,39 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
 
 
 
-# def get_locus_adj_coords(X_matrix_H37Rv_coords, gene_coords, locus_list, locus, fasta_dir, combined_max, combined_min, combined_mean):
-#     '''
-#     Adjustments for insertions relative to H37Rv are made for all loci. Adjustments for deletions are only made for loci that don't have
-#     deletions at the start and end. Deletions at the ends mean that deletions occurred outside the locus, so the saliencies have to remain
-#     where they are because the coordinates are not extended past the locus. This may cause some difficulties for mapping positions back to
-#     the original VCFs / isolate_variants file, so it'll just have to be searched manually for now. 
-#     '''
-#     idx = locus_list.index(locus)
-
-#     seqs = [seq.seq for seq in SeqIO.parse(f"{fasta_dir}/{locus}.fasta", "fasta")]
-#     H37Rv_locus = seqs[-1]
-#     aln_len = len(H37Rv_locus)
-
-#     # the alignment length should be the same or longer (indels) as the H37Rv reference sequence
-#     assert aln_len >= gene_coords.loc[locus, "Length"]
+def compute_saliency_score_significance(locus_idx, scores_max, scores_min, permute_max_lst, permute_min_lst):
     
-#     new_coord_df = pd.DataFrame(columns=["Pos", "Type"])
+    # get the max and min scores from the permutation tests for the locus of interest
+    permute_max = [pd.Series(np.load(score_path)[:, locus_idx]) for score_path in permute_max_lst]
+    permute_min = [pd.Series(np.load(score_path)[:, locus_idx]) for score_path in permute_min_lst]
+
+    permute_max = pd.concat(permute_max, axis=1).values
+    permute_min = pd.concat(permute_min, axis=1).values
     
-#     # check that after the length of the alignment, the rest are padded positions (NaNs)
-#     assert sum(~pd.isnull(X_matrix_H37Rv_coords[:, idx][aln_len:])) == 0
+    # get the max and min scores for the main model for the locus of interest
+    scores_max_locus = scores_max[:, locus_idx]
+    scores_min_locus = scores_min[:, locus_idx]
+    
+    max_pvals = []
+    min_pvals = []
 
-#     #print("Adjusting coordinates for insertions relative to H37Rv...")
-#     for i, char in enumerate(list(H37Rv_locus)):
-#         if char == "-":
-#             # if the previous character is not a gap, then it's easy. Take that position
-#             if H37Rv_locus[i-1] != "-":
-#                 new_coord_df.loc[i] = [((X_matrix_H37Rv_coords[:, idx][:aln_len])[i-1]), "gap_adj"]
-#             else:            
-#                 # find the first occurrence of a gap between the previous new index and the current gap 
-#                 new_coord_df.loc[i] = [new_coord_df.query("Type=='not_gap'").iloc[-1, :].Pos, "gap_far"]
+    for i in range(len(scores_max_locus)):
 
-#         # get the coordinate as usual
-#         else:
-#             new_coord_df.loc[i] = [((X_matrix_H37Rv_coords[:, idx][:aln_len])[i]), "not_gap"]
+        if scores_max_locus[i] > 0:
+            max_pvals.append(np.mean(permute_max[i, :] > scores_max_locus[i]))
+        else:
+            max_pvals.append(np.nan)
+
+        if scores_min_locus[i] < 0:
+            min_pvals.append(np.mean(permute_min[i, :] < scores_min_locus[i]))
+        else:
+            min_pvals.append(np.nan)
+
+    # return arrays of 1s and 0s, where 1 = significant
+    return (np.array(max_pvals) < 0.1).astype(int), (np.array(min_pvals) < 0.1).astype(int)
             
-#     # make a copy to store means, then concatenate later
-#     mean_coord_df = new_coord_df.copy()
-    
-#     # add max and min to the main dataframe
-#     new_coord_df["Max"] = combined_max[:aln_len, idx]
-#     new_coord_df["Min"] = combined_min[:aln_len, idx]
 
-#     assert new_coord_df.Pos.values[0] == gene_coords.loc[locus, "Start"]
-#     assert new_coord_df.Pos.values[-1] == gene_coords.loc[locus, "End"]
-
-#     new_coord_df = new_coord_df.groupby("Pos")[["Max", "Min"]].sum().reset_index()
-    
-#     mean_coord_df["Mean"] = combined_mean[:aln_len, idx]
-#     mean_coord_df = mean_coord_df.groupby("Pos")[["Mean"]].mean().reset_index()
-        
-#     new_coord_df = new_coord_df.merge(mean_coord_df, on="Pos")
-#     new_coord_df["Pos"] = new_coord_df["Pos"].astype(int)
-#     return new_coord_df
-
-
-
-
-# def get_locus_adj_coords_with_deletions(X_matrix_H37Rv_coords, gene_coords, locus_list, locus, fasta_dir, combined_max, combined_min, combined_mean, isolate_variants_df):
-#     '''
-#     Adjustments for insertions relative to H37Rv are made for all loci. Adjustments for deletions are only made for loci that don't have
-#     deletions at the start and end. Deletions at the ends mean that deletions occurred outside the locus, so the saliencies have to remain
-#     where they are because the coordinates are not extended past the locus. This may cause some difficulties for mapping positions back to
-#     the original VCFs / isolate_variants file, so it'll just have to be searched manually for now. 
-#     '''
-#     idx = locus_list.index(locus)
-        
-#     seqs = [(os.path.basename(seq.id).split(".")[0], str(seq.seq)) for seq in SeqIO.parse(f"{fasta_dir}/{locus}.fasta", "fasta")]
-#     H37Rv_locus = seqs[-1][1]
-
-#     aln_len = len(H37Rv_locus)
-#     seq_df = pd.DataFrame(seqs).rename(columns={0:"Isolate", 1:"seq"})
-#     isolates = seq_df.Isolate.values
-
-#     seq_df = seq_df.seq.str.split("", expand=True).iloc[:, 1:-1].T.reset_index(drop=True)
-#     seq_df.columns = isolates
-
-#     # the alignment length should be the same or longer (indels) as the H37Rv reference sequence
-#     assert aln_len >= gene_coords.loc[locus, "Length"]
-
-#     del_idx = []
-#     for i, row in seq_df.iterrows():
-
-#         if ("-" in seq_df.loc[i, :].values) & (row["MT_H37Rv"] != "-"):
-#             assert ~pd.isnull(i)
-#             del_idx.append(int(i))
-
-#     del_pos = X_matrix_H37Rv_coords[del_idx, idx]
-    
-#     # if there are huge deletions in any isolates, don't adjust for deletions below because it will throw off stuff
-#     min_coord = np.min(gene_coords.loc[locus, ["Start", "End"]].values)
-#     max_coord = np.max(gene_coords.loc[locus, ["Start", "End"]].values)
-#     idx_large = np.where(isolate_variants_df.query("POS >= @min_coord & POS <= @max_coord")["REF_len"] - 
-#                          isolate_variants_df.query("POS >= @min_coord & POS <= @max_coord")["ALT_len"] > 10)[0]
-    
-#     new_coord_df = pd.DataFrame(columns=["Pos", "Type"])
-    
-#     # check that after the length of the alignment, the rest are padded positions (NaNs)
-#     assert sum(~pd.isnull(X_matrix_H37Rv_coords[:, idx][aln_len:])) == 0
-
-#     #print("Adjusting coordinates for insertions relative to H37Rv...")
-#     for i, char in enumerate(list(H37Rv_locus)):
-#         curr_pos = (X_matrix_H37Rv_coords[:, idx][:aln_len])[i]
-#         prev_pos = (X_matrix_H37Rv_coords[:, idx][:aln_len])[i-1]
-        
-#         if char == "-":
-#             # if the previous character is not a gap, then it's easy. Take that position
-#             if H37Rv_locus[i-1] != "-":
-#                 new_coord_df.loc[i] = [prev_pos, "gap_adj"]
-#             else:            
-#                 # find the first occurrence of a gap between the previous new index and the current gap 
-#                 new_coord_df.loc[i] = [new_coord_df.query("Type=='not_gap'").iloc[-1, :].Pos, "gap_far"]
-        
-#         else:
-#             if (len(idx_large) == 0) & (curr_pos in del_pos) and (gene_coords.loc[locus, "Start"] not in del_pos) and (gene_coords.loc[locus, "End"] not in del_pos):
-#                 if prev_pos not in del_pos:
-#                     new_coord_df.loc[i] = [prev_pos, "gap_adj"]
-#                 else:
-#                     new_coord_df.loc[i] = [new_coord_df.query("Type=='gap_adj'").iloc[-1, :].Pos, "gap_far"]
-#             # get the coordinate as usual
-#             else:
-#                 new_coord_df.loc[i] = [((X_matrix_H37Rv_coords[:, idx][:aln_len])[i]), "not_gap"]
-                
-#     # make a copy to store means, then concatenate later
-#     mean_coord_df = new_coord_df.copy()
-    
-#     # add max and min to the main dataframe
-#     new_coord_df["Max"] = combined_max[:aln_len, idx]
-#     new_coord_df["Min"] = combined_min[:aln_len, idx]
-
-#     assert new_coord_df.Pos.values[0] == gene_coords.loc[locus, "Start"]
-#     assert new_coord_df.Pos.values[-1] == gene_coords.loc[locus, "End"]
-
-#     new_coord_df = new_coord_df.groupby("Pos")[["Max", "Min"]].sum().reset_index()
-    
-#     mean_coord_df["Mean"] = combined_mean[:aln_len, idx]
-#     mean_coord_df = mean_coord_df.groupby("Pos")[["Mean"]].mean().reset_index()
-        
-#     new_coord_df = new_coord_df.merge(mean_coord_df, on="Pos")
-#     new_coord_df["Pos"] = new_coord_df["Pos"].astype(int)
-    
-#     # add additional positions that were dropped because they are deletions relative to H37Rv
-#     # these are only positions that are not deletions in H37Rv
-#     add_pos = set(np.arange(min_coord, max_coord+1)) - set(new_coord_df.Pos)
-
-#     new_coord_df = pd.concat([new_coord_df, pd.DataFrame({"Pos": np.array(list(add_pos)).astype(int), "Max": np.zeros(len(add_pos)), "Min": np.zeros(len(add_pos))})])
-#     assert len(new_coord_df) == gene_coords.loc[locus, "Length"]
-
-#     return new_coord_df.sort_values("Pos")
-
-
-
-def multi_locus_saliency(out_dir, config_file, sense_dict, gene_coords, save=False):
-    
-    kwargs = yaml.safe_load(open(config_file, "r"))
-    
-    fasta_dir = kwargs["genotype_input_directory"]
-    locus_list = kwargs["locus_list"]
-    binary = kwargs["binary"]
+def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, save=False, significance=True):
     
     # this is 1-indexed and in reverse order for negative sense genes
     X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
@@ -335,29 +210,45 @@ def multi_locus_saliency(out_dir, config_file, sense_dict, gene_coords, save=Fal
     assert np.max(combined_min.flatten()) <= 0
     assert np.min(combined_max.flatten()) >= 0
     
+    # get results from the permutation test
+    if significance:
+        permute_max_lst = glob.glob(os.path.join(saliency_dir, "permutation_test/scores_max*.npy"))
+        permute_min_lst = glob.glob(os.path.join(saliency_dir, "permutation_test/scores_min*.npy"))
+
     # initalize empty dataframe for saliency scores
     res_df = pd.DataFrame(columns=["Gene", "Pos", "Max", "Min"])
 
     fig, ax = plt.subplots(gene_coords.shape[0]*2, 1, figsize=(14, 3*gene_coords.shape[0]))
     axes=ax.flatten()
 
-    #print("Computing new coordinates to account for indels...")
+    color_dict = {0: "black", 1: "red"}
+    point_size = 3
+
     for locus_idx, locus in enumerate(locus_list):
 
-        #print(f"    {locus}")
+        # compute p-values for the max and min scores for every position
+        if significance:
+            max_sig, min_sig = compute_saliency_score_significance(locus_idx, combined_max, combined_min, permute_max_lst, permute_min_lst)
+
+            max_thresh = combined_max[:, locus_idx].mean() + 2 * combined_max[:, locus_idx].std()
+            min_thresh = combined_min[:, locus_idx].mean() - 2 * combined_min[:, locus_idx].std()
+        
+            max_significant_df = pd.DataFrame({"Pos": X_matrix_H37Rv_coords[:, locus_idx], 
+                                           "max_score": combined_max[:, locus_idx],
+                                           "max_significant": max_sig,
+                                           "max_color": pd.Series(max_sig).map(color_dict).values,
+                                      }).query("max_significant == 1 & max_score > @max_thresh")
+
+            min_significant_df = pd.DataFrame({"Pos": X_matrix_H37Rv_coords[:, locus_idx], 
+                                           "min_score": combined_min[:, locus_idx],
+                                           "min_significant": min_sig,
+                                           "min_color": pd.Series(min_sig).map(color_dict).values
+                                      }).query("min_significant == 1 < @min_thresh")
+
+        
         ax_coords = axes[(locus_idx)*2+1]
         ax_saliency = axes[(locus_idx)*2]
 
-        # # this creates a dataframe of positions, Max, and Min saliency scores
-        # if isolate_variants_df is not None:
-        #     #print("Computing new coordinates to account for deletions relative to H37Rv....")
-        #     new_coord_df = get_locus_adj_coords_with_deletions(X_matrix_H37Rv_coords, gene_coords, locus_list, locus, fasta_dir, combined_max, combined_min, combined_mean, isolate_variants_df)
-        # else:
-        #     new_coord_df = get_locus_adj_coords(X_matrix_H37Rv_coords, gene_coords, locus_list, locus, fasta_dir, combined_max, combined_min, combined_mean)
-        
-        # start = new_coord_df.Pos.values[0]
-        # end = new_coord_df.Pos.values[-1]
-                
         start = np.min([int(gene_coords.loc[locus, "Start"]), int(gene_coords.loc[locus, "End"])])
         end = np.max([int(gene_coords.loc[locus, "Start"]), int(gene_coords.loc[locus, "End"])])
 
@@ -365,31 +256,26 @@ def multi_locus_saliency(out_dir, config_file, sense_dict, gene_coords, save=Fal
         cropped_record.plot(ax=ax_coords, with_ruler=False)
 
         ax_coords.set_xlim(start, end)
-        
-        # # replace 0s in all but 1 array with NaN so that they don't get plotted everywhere where there's a 0
-        # plot_mean = new_coord_df.Mean.values.copy()        
-        # plot_mean[plot_mean == 0] = np.nan
-        
-        ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_max[:, locus_idx], color="black", linewidth=0.7)
-        ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_min[:, locus_idx], color="black", linewidth=0.7)
-        
-        # ax_saliency.plot(new_coord_df.Pos, new_coord_df.Max.values, color="black", linewidth=0.7)
-        # ax_saliency.plot(new_coord_df.Pos, new_coord_df.Min.values, color="black", linewidth=0.7) 
-        #ax_saliency.plot(new_coord_df.Pos, plot_mean, color="black", linewidth=0.7) 
+        ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_max[:, locus_idx], linewidth=0.7, color="black")
+        ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_min[:, locus_idx], linewidth=0.7, color="black")
 
-        # use the largest absolute value for the given gene so that each plot is symmetric around the y axis
-        #max_val = np.max(np.abs([combined_min[:, i], combined_max[:, i]]))
-        #ax_saliency.set_ylim(-max_val*1.1, max_val*1.1)
-
-        sns.despine(ax=ax_saliency, top=True, right=True, left=True, bottom=True)
-        ax_coords.set_ylabel("saliency")
-        
         new_coord_df = pd.DataFrame({"Gene": locus, 
                                      "Pos": X_matrix_H37Rv_coords[:, locus_idx], 
                                      "Max": combined_max[:, locus_idx], 
                                      "Min": combined_min[:, locus_idx],
-                                     "Mean": combined_mean[:, locus_idx]}
-                                   )
+                                     "Mean": combined_mean[:, locus_idx]
+                                   })
+        
+        # plot dots for significant scores
+        if significance:
+            ax_saliency.scatter(max_significant_df["Pos"], max_significant_df["max_score"], c=max_significant_df["max_color"], s=point_size)
+            ax_saliency.scatter(min_significant_df["Pos"], min_significant_df["min_score"], c=min_significant_df["min_color"], s=point_size)
+
+            new_coord_df["Max_Sig"] = max_sig
+            new_coord_df["Min_Sig"] = min_sig
+            
+        sns.despine(ax=ax_saliency, top=True, right=True, left=True, bottom=True)
+        ax_coords.set_ylabel("saliency")
         
         with open(os.path.join(fasta_dir, f'{locus}.fasta'), 'r') as f:
             
@@ -406,38 +292,35 @@ def multi_locus_saliency(out_dir, config_file, sense_dict, gene_coords, save=Fal
             else:
                 new_coord_df.loc[i, "Pos"] = row["Pos"]
 
-        #new_coord_df["Gene"] = locus
-        # combine into a single dataframe
         res_df = pd.concat([res_df, new_coord_df.iloc[:aln_len, :]])
-        #res_df["Pos"] = res_df["Pos"].astype(int)
        
     if not save:
         plt.show()
     else:
         plt.savefig(os.path.join(saliency_dir, "saliency_plots.png"), dpi=300)
+    
     return res_df
 
 
 
-def did_cnn_find_pos(cnn_saliency_df, drugs_lst, cat_to_check=["1", "2"]):
+def did_cnn_find_pos(cnn_saliency_df, drug, cat_to_check=["1", "2"], significance=True):
     
-    search_df = who_variants.loc[(who_variants.drug.isin(drugs_lst)) & (who_variants.confidence.str.contains("|".join(cat_to_check)))]
+    search_df = who_variants.loc[(who_variants.drug == drug) & (who_variants.confidence.str.contains("|".join(cat_to_check)))]
     who_sites = [val for val in search_df.genome_index.str.split(",")]
     who_pos = np.unique(list(itertools.chain.from_iterable(who_sites))).astype(int)
-    print(f"{len(who_pos)} Cat {'/'.join(cat_to_check)} WHO catalog sites for {drugs_lst}")
+    print(f"{len(who_pos)} Cat {'/'.join(cat_to_check)} WHO catalog sites for {drug}")
 
-    # check if the CNN finds all sites that are Cat 1 or 2
-    # non_zero_scores = cnn_saliency_df.query("Max > 0 | Min < 0")
-    
-    # make stricter using mean
-    # non_zero_scores = cnn_saliency_df.query("Mean != 0")
+    # check if the CNN finds all sites as significant of the specified categories -- only RESISTANCE associated, so check max scores
     cnn_saliency_df["WHO"] = cnn_saliency_df.Pos.isin(who_pos).astype(int)
     cnn_saliency_df["Lineage_SNP"] = cnn_saliency_df.Pos.isin(freschi_snps.position).astype(int)
     non_zero_scores = cnn_saliency_df.query("Max > 0")
     
+    if significance:
+        non_zero_scores.query("Max_Sig == 1")
+    
     not_found_sites = np.array(list(set(who_pos) - set(non_zero_scores.Pos)))
     if len(not_found_sites) == 0:
-        print(f"CNN found all Cat {'/'.join(cat_to_check)} WHO catalog sites for {drugs_lst}")
+        print(f"CNN found all Cat {'/'.join(cat_to_check)} WHO catalog sites for {drug}")
     else:
         print(f"{len(not_found_sites)} Cat {'/'.join(cat_to_check)} WHO catalog sites not found")
         print(f"Sites not found: {np.sort(not_found_sites)}")
@@ -445,81 +328,6 @@ def did_cnn_find_pos(cnn_saliency_df, drugs_lst, cat_to_check=["1", "2"]):
 
 
 
-
-# def bootstrap_saliencies(df, num_bootstrap=1000):
-#     '''
-#     Use only nonzero scores because there is huge zero-inflation. Sites with 0 scores are irrelevant
-#     '''
-    
-#     print(f"Performing bootstrapping with {num_bootstrap} replicates...")
-    
-#     for gene in df.Gene.unique():
-#         #print(f"    {gene}")
-#         single_df = df.query("Gene == @gene").reset_index(drop=True)
-        
-#         bs_max_reps = []
-#         bs_min_reps = []
-#         # bs_mean_reps = []
-
-#         for _ in range(num_bootstrap):
-#             bs_max_idx = np.random.choice(single_df.query("Max > 0").index, len(single_df.query("Max > 0")), replace=True)        
-#             bs_max_reps.append(np.mean(single_df.loc[bs_max_idx, "Max"].values))
-
-#             bs_min_idx = np.random.choice(single_df.query("Min < 0").index, len(single_df.query("Min < 0")), replace=True)
-#             bs_min_reps.append(np.mean(single_df.loc[bs_min_idx, "Min"].values))
-            
-#             # bs_mean_idx = np.random.choice(single_df.query("Mean != 0").index, len(single_df.query("Mean != 0")), replace=True)        
-#             # bs_mean_reps.append(np.mean(single_df.loc[bs_mean_idx, "Mean"].values))
-
-#         assert np.min(bs_max_reps) > 0
-#         assert np.max(bs_min_reps) < 0
-#         # assert np.mean(bs_mean_reps) != 0
-
-#         # get the proportion of scores in the resampled distributions that are at least as extreme as the test statistic for each site
-#         for i, row in df.query("Gene == @gene").iterrows():
-#             if row["Max"] > 0:
-#                 df.loc[i, "max_pVal"] = np.mean(np.array(bs_max_reps) >= row["Max"])
-#             if row["Min"] < 0:
-#                 df.loc[i, "min_pVal"] = np.mean(np.array(bs_min_reps) <= row["Min"])
-        
-#             # if row["Mean"] < 0:
-#             #     non_zero_df.loc[i, "mean_pVal"] = np.mean(np.array(bs_mean_reps) <= row["Mean"])
-#             # else:
-#             #     non_zero_df.loc[i, "mean_pVal"] = np.mean(np.array(bs_mean_reps) >= row["Mean"])
-                
-                
-#     # compute global p values
-#     bs_max_reps = []
-#     bs_min_reps = []
-#     bs_mean_reps = []
-
-#     for _ in range(num_bootstrap):
-
-#         bs_max_idx = np.random.choice(df.query("Max > 0").index, len(df.query("Max > 0")), replace=True)        
-#         bs_max_reps.append(np.mean(df.loc[bs_max_idx, "Max"].values))
-
-#         bs_min_idx = np.random.choice(df.query("Min < 0").index, len(df.query("Min < 0")), replace=True)
-#         bs_min_reps.append(np.mean(df.loc[bs_min_idx, "Min"].values))
-        
-#         # bs_mean_idx = np.random.choice(non_zero_df.query("Mean != 0").index, len(non_zero_df.query("Mean != 0")), replace=True)
-#         # bs_mean_reps.append(np.mean(non_zero_df.loc[bs_mean_idx, "Mean"].values))
-
-#         assert np.min(bs_max_reps) > 0
-#         assert np.max(bs_min_reps) < 0
-#         # assert np.mean(bs_mean_reps) != 0
-
-#     # get the proportion of scores in the resampled distributions that are at least as extreme as the test statistic for each site
-#     for i, row in df.iterrows():
-#         df.loc[i, "global_max_pVal"] = np.mean(np.array(bs_max_reps) >= row["Max"])
-#         df.loc[i, "global_min_pVal"] = np.mean(np.array(bs_min_reps) <= row["Min"])
-        
-#         # if row["Mean"] < 0:
-#         #     non_zero_df.loc[i, "global_mean_pVal"] = np.mean(np.array(bs_mean_reps) <= row["Mean"])
-#         # else:
-#         #     non_zero_df.loc[i, "global_mean_pVal"] = np.mean(np.array(bs_mean_reps) >= row["Mean"])
-            
-            
-            
 def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
     '''
     Creates a dictionary of matrices with every nucleotide for every isolate in the given loci. This is to determine the variants at each site and see which are
@@ -555,34 +363,19 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
 
             
             
-def generate_saliency_plots(out_dir, config_file, who_drugs_lst, cat_to_check=["1", "2"], binary=False, save=False):
-        
-    kwargs = yaml.safe_load(open(config_file, "r"))
-    
-    fasta_dir = kwargs["genotype_input_directory"]
-    drug = kwargs["drug"]
-    locus_list = kwargs["locus_list"]
-    phenotype_file = kwargs["phenotype_file"]
-    # binary_thresh = kwargs["binary_thresh"]
-        
-    #fastas = glob.glob(os.path.join(out_dir, "fastas", "*.fasta"))
+def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", cat_to_check=["1", "2"], binary=False, save=False, significance=True):
+                    
     fastas = [os.path.join(fasta_dir, gene + ".fasta") for gene in locus_list]
     print(f"{len(fastas)} loci!")
     
     # make the genetic coordinates dataframe. Includes strand sense and locus length
     gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
-
-    # saliency_df = multi_locus_saliency(drug, out_dir, fasta_dir, locus_list, sense_dict, gene_coords, phenotype_file, binary_thresh, binary=binary, isolate_variants_df=isolate_variants_df, save=save)
-    
-    saliency_df = multi_locus_saliency(out_dir, config_file, sense_dict, gene_coords, save=save)
+    saliency_df = multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, save, significance)
     
     # update with WHO and lineage SNP annotations (crude because only the positions are checked, not the actual SNPs)
-    saliency_df = did_cnn_find_pos(saliency_df, who_drugs_lst, cat_to_check)
+    saliency_df = did_cnn_find_pos(saliency_df, drug, cat_to_check, significance)
     
-    df_phenos = pd.read_csv(phenotype_file)
+    df_phenos = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/data_for_model.csv")
     seq_mat_all_loci = create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos)
-    
-    # # add p-values with non-parametric boostrapping
-    # bootstrap_saliencies(saliency_df, num_bootstrap=num_bootstrap)
     
     return saliency_df, seq_mat_all_loci

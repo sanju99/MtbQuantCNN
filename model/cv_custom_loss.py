@@ -23,7 +23,6 @@ locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
 N_epochs = kwargs["N_epochs"]
-N_epochs = 1
 patience_epochs = kwargs["patience_epochs"]
 
 output_path = kwargs["output_path"]
@@ -96,13 +95,13 @@ else:
 df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
 df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
 
-bootstrap_reps = 1
+bootstrap_reps = 10
 results = []
 history_df = pd.DataFrame(columns=[f"rep_{i+1}" for i in range(bootstrap_reps)])
 
 for rep in range(bootstrap_reps):
 
-    print(f"Working on replicate {rep+1}/{bootstrap_reps}")
+    print(f"Working on replicate {rep+1}/{bootstrap_reps} for {N_epochs} epochs")
     val_loss = []
     
     # sample indices with replacement
@@ -170,7 +169,7 @@ for rep in range(bootstrap_reps):
     for epoch in range(N_epochs):
 
         # training loop: don't keep track of the train losses because we just want to train the model here
-        for train_idx, (x_batch_train, y_batch_train) in enumerate(cv_train_generator):
+        for (x_batch_train, y_batch_train) in cv_train_generator:
 
             _ = train_step(x_batch_train, y_batch_train) 
         

@@ -1,15 +1,18 @@
-import sparse, sys, os, glob, yaml, tracemalloc, warnings
+import sys, glob, os, yaml, sparse, tracemalloc
 import numpy as np
+import pandas as pd
+import scipy.stats as st
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import backend as K
-from tensorflow.keras import layers, models
-from tensorflow.keras.utils import Sequence
-warnings.filterwarnings("ignore")
+from sklearn.model_selection import KFold
+from tensorflow.keras.optimizers import Adam
 
 # cnn_utils is one level up in the directory tree
 sys.path.append(os.path.dirname(os.getcwd()))
 from cnn_utils import *
+
+
+# starting the memory monitoring
+tracemalloc.start()
 
 _, config_file = sys.argv
 
@@ -25,12 +28,14 @@ patience_epochs = kwargs["patience_epochs"]
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
-binary = kwargs["binary"]
 binary_thresh = kwargs["binary_thresh"]
 include_lineage = kwargs["include_lineage"]
+loss_type = kwargs["loss_type"]
+binary = kwargs["binary"]
 bounded_loss = kwargs["bounded_loss"]
-num_loci = len(locus_list)
 
+num_loci = len(locus_list)
+df_phenos = pd.read_csv(phenotype_file)
 
 # creat output directories
 if binary:
@@ -39,7 +44,6 @@ if binary:
 else:
     model_prefix = ""
     save_prefix = "quant"
-
     
 # get longest locus from the pickle file
 X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
@@ -73,13 +77,12 @@ for rep in range(replicates):
         batch_size=BATCH_SIZE,
         shuffle=True
     )
-
+    
     if include_lineage:
         num_lineages = train_generator[0][0][1].shape[1]
     else:
         num_lineages = 0
-
-
+    
     # initialize the model using the function from cnn_utils and the optimizer
     model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
     optimizer = Adam(learning_rate = np.exp(-1.0 * 9))
@@ -89,7 +92,7 @@ for rep in range(replicates):
         @tf.function
         def train_step(x, y):
             '''
-            This is the training step for a single batch. Iterating over batches and epochs is done separately. Redefine and recompile this function for every permutation test model. 
+            This is the training step for a single batch. Iterating over batches and epochs is done separately. Redefine and recompile this function for every bootstrapped model. 
             '''
 
             # the bounds are the last 2 elements of the x list
@@ -101,7 +104,7 @@ for rep in range(replicates):
                 y_hat = model(x, training=True)
 
                 # Calculate the loss using the two bounds tensors. custom_bounded_mae is imported from cnn_utils
-                loss = boundedLoss_CNN(lower_bounds, upper_bounds)(y, y_hat)
+                loss = boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat)
 
             # Calculate the gradients
             gradients = tape.gradient(loss, model.trainable_weights)
@@ -113,10 +116,11 @@ for rep in range(replicates):
             return loss
 
 
-        # train the model with shuffled MICs. Don't keep track of losses; the only thing we want is the final model
+        # train the bootstrapped model
         for epoch in range(N_epochs):
 
-            for train_idx, (x_batch_train, y_batch_train) in enumerate(train_generator):
+            # training loop: don't keep track of the train losses because we just want to train the model here
+            for (x_batch_train, y_batch_train) in train_generator:
 
                 _ = train_step(x_batch_train, y_batch_train) 
 
