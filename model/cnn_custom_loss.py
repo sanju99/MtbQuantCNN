@@ -3,14 +3,17 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import pandas as pd
+from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix
 from sklearn.model_selection import KFold
 from tensorflow.keras import backend as K
 
-# cnn_utils is one level up in the directory tree
-sys.path.append(os.path.dirname(os.getcwd()))
-from cnn_utils import *
-# print(f"Tensorflow version: {tf.__version__}")
+# code to go up one level in the directory tree if needed
+# sys.path.append(os.path.dirname(os.getcwd()))
+from data_utils import *
+from model_utils import *
+from dataloader import MtbGeneDataset
+
 
 # starting the memory monitoring
 tracemalloc.start()

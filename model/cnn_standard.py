@@ -9,9 +9,11 @@ from sklearn.model_selection import KFold
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-# cnn_utils is one level up in the directory tree
-sys.path.append(os.path.dirname(os.getcwd()))
-from cnn_utils import *
+# code to go up one level in the directory tree if needed
+# sys.path.append(os.path.dirname(os.getcwd()))
+from data_utils import *
+from model_utils import *
+from dataloader import MtbGeneDataset
 
 
 # starting the memory monitoring

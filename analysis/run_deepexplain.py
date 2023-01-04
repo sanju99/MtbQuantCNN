@@ -89,7 +89,7 @@ else:
     save_prefix = "quant"
 
 
-def get_saliency_scores(model, weights_path, train_generator, ref_data, output_path, file_suffix=None):
+def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=None):
     
     genetic_attr = []
     lineage_attr = []
@@ -149,18 +149,18 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, output_p
         # combine scores for all isolates along the first axis, which is the number of samples axis
         genetic_attr = np.concatenate(genetic_attr, axis=0)    
 
-        print(f"Saving scores to {output_path}")
-        sparse.save_npz(os.path.join(output_path, f"genetic_scores{file_suffix}.npy"), sparse.COO(genetic_attr), compressed=True)
+        print(f"Saving scores to {saliency_dir}")
+        sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores{file_suffix}.npy"), sparse.COO(genetic_attr), compressed=True)
 
         # save mean, max, and min scores
-        np.save(os.path.join(output_path, f"scores_max{file_suffix}.npy"), np.max(genetic_attr, axis=0))
-        np.save(os.path.join(output_path, f"scores_min{file_suffix}.npy"), np.min(genetic_attr, axis=0))
-        np.save(os.path.join(output_path, f"scores_mean{file_suffix}.npy"), np.mean(genetic_attr, axis=0))
+        np.save(os.path.join(saliency_dir, f"scores_max{file_suffix}.npy"), np.max(genetic_attr, axis=0))
+        np.save(os.path.join(saliency_dir, f"scores_min{file_suffix}.npy"), np.min(genetic_attr, axis=0))
+        np.save(os.path.join(saliency_dir, f"scores_mean{file_suffix}.npy"), np.mean(genetic_attr, axis=0))
 
         if include_lineage:
             lineage_attr = np.concatenate(lineage_attr, axis=0)
             print(lineage_attr.shape)
-            np.save(os.path.join(output_path, f"lineage_scores{file_suffix}.npy"), lineage_attr)
+            np.save(os.path.join(saliency_dir, f"lineage_scores{file_suffix}.npy"), lineage_attr)
 
 
 # get model from cnn_utils. Build using TF v1, then load weights
@@ -169,19 +169,19 @@ model = conv_nn(binary=binary, longest_locus=longest_locus, num_loci=num_loci, n
 
 if not permutation_test:
 
-    output_path = os.path.join(output_path, "saliency", save_prefix)
+    saliency_dir = os.path.join(output_path, "saliency", save_prefix)
     
-    if not os.path.isdir(output_path):
-        os.makedirs(os.path.join(output_path))
+    if not os.path.isdir(saliency_dir):
+        os.makedirs(os.path.join(saliency_dir))
         
     # compute saliency scores for the single model
-    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, output_path, file_suffix=None)
+    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix=None)
 
 else:
     # this path should already exist because that's where the models are stored
-    output_path = os.path.join(output_path, "saliency", save_prefix, "permutation_test")
+    saliency_dir = os.path.join(output_path, "saliency", save_prefix, "permutation_test")
     
-    weights_lst = glob.glob(os.path.join(output_path, "*.h5"))
+    weights_lst = glob.glob(os.path.join(saliency_dir, "*.h5"))
         
     for i, weights_path in enumerate(weights_lst):
         
@@ -190,4 +190,4 @@ else:
         model_num = os.path.basename(weights_path).split(".")[0].split("_")[-1]
         
         # compute saliency scores for the single model
-        get_saliency_scores(model, weights_path, train_generator, ref_data, output_path, file_suffix=f"_{model_num}")
+        get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=f"_{model_num}")

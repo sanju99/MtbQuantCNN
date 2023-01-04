@@ -13,9 +13,11 @@ from sklearn.model_selection import train_test_split
 from Bio import SeqIO
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import class_weight
-# cnn_utils is one level up in the directory tree
+
+# model_utils is one level up in the directory tree
 sys.path.append(os.path.dirname(os.getcwd()))
-from cnn_utils import *
+from model_utils import *
+
 
 _, config_file = sys.argv
 
