@@ -8,9 +8,8 @@ import glob, os, yaml, sparse, itertools, sys
 from Bio import SeqIO
 from Bio.Seq import Seq
 
-# cnn_utils is one level up in the directory tree
-sys.path.append(os.path.dirname(os.getcwd()))
-from cnn_utils import MtbGeneDataset
+sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
+from dataloader import MtbGeneDataset
 import scipy.stats as st
 
 

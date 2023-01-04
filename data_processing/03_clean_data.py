@@ -6,9 +6,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-# example: python3 -u data_processing/03_clean_data.py MOXI MXF 0.5 /n/scratch3/users/s/sak0914/vcf_for_annot
-# example: python3 -u data_processing/03_clean_data.py RIF RIF 0.5 /n/scratch3/users/s/sak0914/vcf_for_annot
-_, drug, drug_who, cc, vcf_dir = sys.argv
+# example: python3 -u data_processing/03_clean_data.py MXF 0.5 /n/scratch3/users/s/sak0914/vcf_for_annot
+# example: python3 -u data_processing/03_clean_data.py RIF 0.5 /n/scratch3/users/s/sak0914/vcf_for_annot
+_, drug, cc, vcf_dir = sys.argv
 cc = float(cc)
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
@@ -40,14 +40,14 @@ del df_phenos
 
 
 # Get all category 1 variants (don't use category 2 to avoid dropping too many isolates and to be more stringent about what we drop)
-who_high_conf = who_variants.loc[(who_variants["drug"] == drug_who) & (who_variants.confidence.str.contains("|".join(["1"])))].reset_index(drop=True)
+who_high_conf = who_variants.loc[(who_variants["drug"] == drug) & (who_variants.confidence.str.contains("|".join(["1"])))].reset_index(drop=True)
 
 for _, row in who_high_conf.iterrows():
     if "," in row["genome_index"]:
         expanded_pos = row["genome_index"].split(",")
         
         for pos in expanded_pos:
-            add_df = pd.DataFrame({"drug": drug_who, "genome_index": pos, "confidence": row["confidence"], "gene": row["gene"], "variant": row["variant"]}, index=[len(who_high_conf)])
+            add_df = pd.DataFrame({"drug": drug, "genome_index": pos, "confidence": row["confidence"], "gene": row["gene"], "variant": row["variant"]}, index=[len(who_high_conf)])
             who_high_conf = pd.concat([who_high_conf, add_df])
           
 who_high_conf = who_high_conf.loc[~who_high_conf.genome_index.str.contains(",")]
