@@ -1,4 +1,4 @@
-# Data Extraction and Proessing
+# Data Extraction and Processing
 
 ## Step 1
 
