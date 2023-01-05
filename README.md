@@ -1,4 +1,4 @@
-# Convolutional Neural Network to Predict Mtb Drug MICs
+# Convolutional Neural Networks to Predict Mtb Drug MICs
 
 ## Data Extraction and Cleaning
 
