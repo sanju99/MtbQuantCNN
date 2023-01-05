@@ -345,7 +345,7 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
         
         # fasta files contain the full VCF file name, without the .vcf extension. So use the Path column in df_phenos. 
         # The ROLLINGDB_ID column is just the isolate name, not the full file path
-        seq_df = seq_df.loc[seq_df["Isolate"].isin(np.concatenate([df_phenos["Path"].values, np.array(["MT_H37Rv"])]))].reset_index(drop=True)
+        seq_df = seq_df.loc[seq_df["Isolate"].isin(np.concatenate([df_phenos["ROLLINGDB_ID"].values, np.array(["MT_H37Rv"])]))].reset_index(drop=True)
         
         nuc_matrix = seq_df["Seq"].str.split("", expand=True)
         nuc_matrix = nuc_matrix.iloc[:, 1:-1]
