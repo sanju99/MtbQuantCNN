@@ -29,4 +29,8 @@ Isolates that meet the top 2 criteria may have genotypic or phenotypic mislabeli
 
 ## Step 4
 
-Run `04_make_MSA.py`, which is a SNP concateantor script. It inserts SNPs and high-quality indels into the H37Rv reference sequence for each isolate in the dataset and outputs a multiple sequence alignment. 
+Run `04_make_MSA.py` to make a multiple sequence alignment of the region of interest. The script inserts SNPs, MNPs, and indels that pass quality control into the H37Rv reference sequence (NC_000962.3) for each isolate in the dataset and outputs . 
+
+The thresholds for meeting quality control are SNP quality > 10, PASS or Amb FILTER with an alternative allele fraction in the range [0.25, 0.75], no imprecise structural variants, no heterogeneous alternative alleles, not a low coverage region…
+
+SNPs and MNPs that did not pass quality control were inserted as ambiguous nucleotides (N), but indels that did not meet quality control were not inserted. Complex variants (reference and alternative alleles are of different lengths, and both are longer than 1 nucleotide) that passed quality control were also not inserted. 
