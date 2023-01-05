@@ -9,9 +9,10 @@ from tensorflow.keras.utils import Sequence
 # Import DeepExplain
 from deepexplain.tensorflow import DeepExplain
 
-# cnn_utils is one level up in the directory tree
-sys.path.append(os.path.dirname(os.getcwd()))
-from cnn_utils import *
+# utils files are in the model folder
+sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
+from model_utils import *
+from dataloader import MtbGeneDataset
 
 # disable v2 stuff to make this compatible with TF v2 models. This was suggested in a pull request in DeepExplain
 tf.compat.v1.disable_v2_behavior()
@@ -89,7 +90,7 @@ else:
     save_prefix = "quant"
 
 
-def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=None):
+def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=""):
     
     genetic_attr = []
     lineage_attr = []
@@ -98,18 +99,22 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
     
     with DeepExplain(session=K.get_session()) as de:
 
-        # initialize a DeepExplain model using the same inputs and outputs as the original model
-        de_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
-
-        # get the target layer to get attributions for. For quantitative models, we want to target the output layer 
+        # initialize a DeepExplain model using the same inputs and outputs as the original model and get the target layer to get attributions for
+        # For quantitative models, we want to target the output layer. For binary, target the second to last layer (pre-Softmax)
         if binary:
-            pass
-            # TODO: figure out how to target the second to last layer before sigmoid activation(logits)
+            de_model = tf.keras.Model(inputs = model.inputs, outputs = model.layers[-2].output)
+            predict_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
         else:
-            target_layer = de_model(model.inputs)
+            de_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
+        
+        target_layer = de_model(model.inputs)
 
         # check that the original and DeepExplain models give the same predictions on the H37Rv input
-        assert np.abs(np.max(de_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
+        if binary:
+            assert np.abs(np.max(predict_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
+            del predict_model
+        else:
+            assert np.abs(np.max(de_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
 
         for idx, batch in enumerate(train_generator):
 
@@ -175,7 +180,7 @@ if not permutation_test:
         os.makedirs(os.path.join(saliency_dir))
         
     # compute saliency scores for the single model
-    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix=None)
+    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix="")
 
 else:
     # this path should already exist because that's where the models are stored
