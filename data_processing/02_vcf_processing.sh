@@ -1,7 +1,11 @@
 # have a separate environment for bcftools
 source activate sambcftools
 
-# the 1 is the first additional command line argument
+# command line arguments:
+
+# 1. text file with all original VCF files to read from and extract variants from
+# 2. directory to store filtered VCF files. DON'T INCLUDE A SLASH AT THE END OF IT --> use a scratch directory because files get copied
+
 cat "$1" | while read vcf_file; do
     
     # remove the full path
@@ -11,12 +15,12 @@ cat "$1" | while read vcf_file; do
     isolate=${fName%_*}
     
     # check if the filtered VCF file does not exist. If it doesn't, filter and create it
-    if [ ! -f "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/$isolate.vcf" ]; then
+    if [ ! -f "$2/$isolate.vcf" ]; then
     
         # filter the VCF file: keep all variants and all FILTER tags. This step just removes reference calls
-        bcftools view --types snps,indels,mnps,other "$vcf_file" > "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/$isolate.vcf"
+        bcftools view --types snps,indels,mnps,other "$vcf_file" > "$2/$isolate.vcf"
     else
-        echo "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/$isolate.vcf exists"
+        echo "$2/$isolate.vcf exists"
     fi
 done
 
@@ -25,7 +29,7 @@ done
 source deactivate
 
 # navigate to the directory with all VCF files
-cd /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF
+cd $2
 
 # create a text with the file names to use with snpEff
 ls -d $PWD/* > /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt
@@ -40,7 +44,7 @@ if [ -f /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv ]; then
     echo "deleted existing lineage file"
 fi
 
-# run fast-lineage-caller to update the lineages file. Use only variants with the PASS flag
-for file in /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/*.vcf; do
+# run fast-lineage-caller to update the lineages file. Use only variants with the PASS flag. The filtered VCFs will have all variants, including low-quality ones
+for file in "$2/*.vcf"; do
     fast-lineage-caller "$file" --noheader --pass >> /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv
 done
