@@ -112,16 +112,15 @@ def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
         y_true = tf.cast(y_true, tf.float64)
         y_pred = tf.cast(y_pred, tf.float64)
 
-        # compute the absolute errors first using the log-MICs
+        # compute the errors first using the log-MICs, based on the desired loss type
         if loss_type == "L1":
             errors = K.abs(y_true - y_pred)
         elif loss_type == "L2":
-        # squared error
             errors = K.square(y_true - y_pred)
         else:
             raise RuntimeError(f"{loss_type} is not a valid loss function type")
         
-        # assign 1 to predicted points that are less than the lower bound or greater than the upper bound. Exponentiate the predictions to be compatible with the bounds
+        # assign 1 to predicted points that are less than the lower bound or greater than the upper bound. Exponentiate the predictions because the bounds are the original MIC values
         outside_bounds_mask = tf.cast(K.less(K.exp(y_pred), lower_bounds) | K.greater(K.exp(y_pred), upper_bounds), tf.float64)
 
         # multiply the tensors, so all predicted points within the bounds will have an error of 0
