@@ -10,5 +10,5 @@ filter_vcf.sh
 *.sh
 
 # additional files for testing
-*.txt
+*_paths.txt
 config_*.yaml
