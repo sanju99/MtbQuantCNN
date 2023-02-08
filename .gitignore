@@ -8,5 +8,6 @@ sandbox.ipynb
 *.fasta
 
 # additional files for testing
+temp.py
 *_paths.txt
 config_*.yaml
