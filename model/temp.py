@@ -7,10 +7,9 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix
 from sklearn.model_selection import KFold
 from tensorflow.keras import backend as K
-tf.config.run_functions_eagerly(True)
 
-# utils files are in the utils_files directory
-sys.path.append("utils_files")
+# code to go up one level in the directory tree if needed
+# sys.path.append(os.path.dirname(os.getcwd()))
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
@@ -28,7 +27,8 @@ locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
 N_epochs = kwargs["N_epochs"]
-patience_epochs = kwargs["patience_epochs"]
+N_epochs = 1
+patience_epochs = None
 
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
@@ -120,8 +120,8 @@ def train_step(x, y):
     # run the optimizer
     optimizer.apply_gradients(zip(gradients, model.trainable_weights))
     
-    # return loss and error. quantLoss_CNN returns a numpy object from a tensor
-    return loss.numpy(), quantLoss_CNN(y, y_hat, loss_type)
+    # return loss
+    return loss
     
     
 @tf.function
@@ -132,8 +132,8 @@ def val_step(x, y):
     
     y_hat = model(x, training=False)
     
-    # return loss and error. quantLoss_CNN returns a numpy object from a tensor
-    return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat).numpy(), quantLoss_CNN(y, y_hat, loss_type)
+    # return loss
+    return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat)
 
 
 # initialize the model using the function from cnn_utils and the optimizer
@@ -150,7 +150,7 @@ train_error = []
 val_loss = []
 val_error = []
 
-results = pd.DataFrame(columns=["loss", "error", "val_loss", "val_error"])
+results = pd.DataFrame(columns=["train_loss", "train_error", "val_loss", "val_error"])
 
 if patience_epochs is None:
     print(f"Training the model with an {loss_type} loss for {N_epochs} epochs")
@@ -169,11 +169,16 @@ for epoch in range(N_epochs):
     # training loop
     for train_idx, (x_batch_train, y_batch_train) in enumerate(train_generator):
                 
-        # compute loss and error
-        loss, error = train_step(x_batch_train, y_batch_train)
+        # compute bounded error
+        train_epoch_loss.append(train_step(x_batch_train, y_batch_train).numpy())
         
-        train_epoch_loss.append(loss)
-        train_epoch_error.append(error)
+        # compute absolute error
+        y_hat_train = model(x_batch_train, training=False)
+        
+        if loss_type == "L1":
+            train_epoch_error.append(np.mean(np.abs(y_hat_train - y_batch_train.flatten())))
+        elif loss_type == "L2":
+            train_epoch_error.append(np.mean((y_hat_train - y_batch_train.flatten())**2))
         
     # store losses for the epoch -- mean of all the batches
     train_loss.append(np.mean(train_epoch_loss))    
@@ -182,11 +187,16 @@ for epoch in range(N_epochs):
     # validation loop
     for _, (x_batch_val, y_batch_val) in enumerate(val_generator):
                         
-        # compute loss and error
-        loss, error = val_step(x_batch_val, y_batch_val)
+        # compute bounded error
+        val_epoch_loss.append(val_step(x_batch_val, y_batch_val).numpy())
+
+        # compute absolute error
+        y_hat_val = model(x_batch_val, training=False)
         
-        val_epoch_loss.append(loss)
-        val_epoch_error.append(error)
+        if loss_type == "L1":
+            val_epoch_error.append(np.mean(np.abs(y_hat_val - y_batch_val.flatten())))
+        elif loss_type == "L2":
+            val_epoch_error.append(np.mean((y_hat_val - y_batch_val.flatten())**2))
         
     val_loss.append(np.mean(val_epoch_loss))
     val_error.append(np.mean(val_epoch_error))
@@ -208,45 +218,6 @@ for epoch in range(N_epochs):
     
     # train the model for the specified number of epochs
     else:
-        continue  
-    
-# save the model for later use and the history dataframe
-model.save(os.path.join(output_path, "best_model.h5"))
-results.to_csv(os.path.join(output_path, "history.csv"), index=False)
-
-# initialize a new model and load the weights of the best model
-best_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
-best_model.load_weights(os.path.join(output_path, "best_model.h5"))
-
-# get final model predictions
-y_pred = best_model.predict(
-    x=val_generator,
-    workers=4,
-    use_multiprocessing=True,
-)
-
-# get test values and IDs from the dataset class
-ids = np.array([])
-y_test = np.array([])
-lower_bounds = np.array([])
-upper_bounds = np.array([])
-
-for i, _ in enumerate(val_generator):
-    
-    val_batch = val_generator.__getTestData__(i)    
-    ids = np.concatenate([ids, val_batch[0]])
-    y_test = np.concatenate([y_test, val_batch[1]])
-    
-    bounds_batch = val_generator.__getBounds__(i)
-    lower_bounds = np.concatenate([lower_bounds, bounds_batch[0]])
-    upper_bounds = np.concatenate([upper_bounds, bounds_batch[1]])
-    
-    
-pred_df = pd.DataFrame({"Isolate": ids, "y_pred": np.squeeze(y_pred), "y_test": y_test, "lower": lower_bounds, "upper": upper_bounds})
-pred_df.to_csv(os.path.join(output_path, "test_predictions.csv"), index=False)
-K.clear_session()
-
-# returns a tuple: current, peak memory in bytes 
-script_memory = tracemalloc.get_traced_memory()[1] / 1e9
-tracemalloc.stop()
-print(f"    {script_memory} GB\n")
+        continue
+         
+print(results)

@@ -191,7 +191,7 @@ def compute_saliency_score_significance(locus_idx, scores_max, scores_min, permu
     return (np.array(max_pvals) < 0.1).astype(int), (np.array(min_pvals) < 0.1).astype(int)
             
 
-def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, save=False, significance=True):
+def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save=False, significance=True):
     
     # this is 1-indexed and in reverse order for negative sense genes
     X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
@@ -228,21 +228,18 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
         # compute p-values for the max and min scores for every position
         if significance:
             max_sig, min_sig = compute_saliency_score_significance(locus_idx, combined_max, combined_min, permute_max_lst, permute_min_lst)
-
-            max_thresh = combined_max[:, locus_idx].mean() + 2 * combined_max[:, locus_idx].std()
-            min_thresh = combined_min[:, locus_idx].mean() - 2 * combined_min[:, locus_idx].std()
         
             max_significant_df = pd.DataFrame({"Pos": X_matrix_H37Rv_coords[:, locus_idx], 
                                            "max_score": combined_max[:, locus_idx],
                                            "max_significant": max_sig,
                                            "max_color": pd.Series(max_sig).map(color_dict).values,
-                                      }).query("max_significant == 1 & max_score > @max_thresh")
+                                      }).query("max_significant == 1 & max_score > 0")
 
             min_significant_df = pd.DataFrame({"Pos": X_matrix_H37Rv_coords[:, locus_idx], 
                                            "min_score": combined_min[:, locus_idx],
                                            "min_significant": min_sig,
                                            "min_color": pd.Series(min_sig).map(color_dict).values
-                                      }).query("min_significant == 1 < @min_thresh")
+                                      }).query("min_significant == 1 & min_score < 0")
 
         
         ax_coords = axes[(locus_idx)*2+1]
@@ -267,8 +264,12 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
         
         # plot dots for significant scores
         if significance:
-            ax_saliency.scatter(max_significant_df["Pos"], max_significant_df["max_score"], c=max_significant_df["max_color"], s=point_size)
-            ax_saliency.scatter(min_significant_df["Pos"], min_significant_df["min_score"], c=min_significant_df["min_color"], s=point_size)
+            
+            plot_max_df = max_significant_df.query("max_score > @plot_thresh")
+            plot_min_df = min_significant_df.query("min_score < -@plot_thresh")
+            
+            ax_saliency.scatter(plot_max_df["Pos"], plot_max_df["max_score"], c=plot_max_df["max_color"], s=point_size)
+            ax_saliency.scatter(plot_min_df["Pos"], plot_min_df["min_score"], c=plot_min_df["min_color"], s=point_size)
 
             new_coord_df["Max_Sig"] = max_sig
             new_coord_df["Min_Sig"] = min_sig
@@ -362,14 +363,14 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
 
             
             
-def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", cat_to_check=["1", "2"], binary=False, save=False, significance=True):
+def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", plot_thresh=0.1, cat_to_check=["1", "2"], binary=False, save=False, significance=True):
                     
     fastas = [os.path.join(fasta_dir, gene + ".fasta") for gene in locus_list]
     print(f"{len(fastas)} loci!")
     
     # make the genetic coordinates dataframe. Includes strand sense and locus length
     gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
-    saliency_df = multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, save, significance)
+    saliency_df = multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save, significance)
     
     # update with WHO and lineage SNP annotations (crude because only the positions are checked, not the actual SNPs)
     saliency_df = did_cnn_find_pos(saliency_df, drug, cat_to_check, significance)

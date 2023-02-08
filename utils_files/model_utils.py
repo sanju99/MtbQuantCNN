@@ -97,6 +97,23 @@ def class_weighting_dictionary(y):
 
 
 
+def quantLoss_CNN(y_true, y_pred, loss_type):
+    
+    # ensure same types of everything
+    y_true = tf.cast(y_true, tf.float64)
+    y_pred = tf.cast(y_pred, tf.float64)
+
+    # compute the errors first using the log-MICs, based on the desired loss type
+    if loss_type == "L1":
+        errors = K.abs(y_true - y_pred)
+    elif loss_type == "L2":
+        errors = K.square(y_true - y_pred)
+    else:
+        raise RuntimeError(f"{loss_type} is not a valid loss function type")
+        
+    return K.mean(errors).numpy()
+
+
 
 def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
     '''

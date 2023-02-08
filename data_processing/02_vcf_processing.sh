@@ -1,5 +1,17 @@
+#!/bin/bash 
+#SBATCH -c 1
+#SBATCH -t 0-11:59
+#SBATCH -p short 
+#SBATCH --mem=5G
+#SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
+#SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=skulkarni@g.harvard.edu
+
+# submit with sbatch data_processing/02_vcf_processing.sh /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/RIF/paths.txt /n/scratch3/users/s/sak0914/annotated_VCF
+
 # have a separate environment for bcftools
-source activate sambcftools
+source activate bioinformatics
 
 # command line arguments:
 
@@ -24,14 +36,12 @@ cat "$1" | while read vcf_file; do
     fi
 done
 
-
-# snpEff and fast-lineage-caller are in the base environment
-source deactivate
+# conda deactivate --> no longer needed because everything is in the same environment
 
 # navigate to the directory with all VCF files
 cd $2
 
-# create a text with the file names to use with snpEff
+# create a text file with the names of all files we want to annotate
 ls -d $PWD/* > /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_list.txt
 
 # annotate all VCF files in the VCF directory (because this step is so fast, it can be done on old files, even though it's redundant)
@@ -44,7 +54,11 @@ if [ -f /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv ]; then
     echo "deleted existing lineage file"
 fi
 
-# run fast-lineage-caller to update the lineages file. Use only variants with the PASS flag. The filtered VCFs will have all variants, including low-quality ones
-for file in "$2/*.vcf"; do
-    fast-lineage-caller "$file" --noheader --pass >> /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv
-done
+# # run fast-lineage-caller to update the lineages file. Use only variants with the PASS flag. The filtered VCFs will have all variants, including low-quality ones
+# for file in "$2/*.vcf"; do
+#     fast-lineage-caller "$file" --noheader --pass >> /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv
+# done
+
+# for i in `ls |grep ".vcf"`; do
+#     fast-lineage-caller genomic_data/SAMEA968141.vcf --noheader
+# done >> results.tsv

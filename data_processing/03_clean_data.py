@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import glob, os, sys, itertools, yaml, vcf
 from sklearn.model_selection import train_test_split
+import Bio.SeqUtils
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -54,19 +55,19 @@ who_high_conf = who_high_conf.loc[~who_high_conf.genome_index.str.contains(",")]
 who_high_conf = who_high_conf.drop_duplicates().reset_index(drop=True)
 who_high_conf["genome_index"] = who_high_conf["genome_index"].astype(int)
 
-aa_code_dict = {'Val':'V', 'Ile':'I', 'Leu':'L', 'Glu':'E', 'Gln':'Q', \
-'Asp':'D', 'Asn':'N', 'His':'H', 'Trp':'W', 'Phe':'F', 'Tyr':'Y',    \
-'Arg':'R', 'Lys':'K', 'Ser':'S', 'Thr':'T', 'Met':'M', 'Ala':'A',    \
-'Gly':'G', 'Pro':'P', 'Cys':'C'}
+# aa_code_dict = {'Val':'V', 'Ile':'I', 'Leu':'L', 'Glu':'E', 'Gln':'Q', \
+# 'Asp':'D', 'Asn':'N', 'His':'H', 'Trp':'W', 'Phe':'F', 'Tyr':'Y',    \
+# 'Arg':'R', 'Lys':'K', 'Ser':'S', 'Thr':'T', 'Met':'M', 'Ala':'A',    \
+# 'Gly':'G', 'Pro':'P', 'Cys':'C'}
 
-code_aa_dict = {val: key for key, val in aa_code_dict.items()}
+# code_aa_dict = {val: key for key, val in aa_code_dict.items()}
 
-# convert them to 3-letter amino acid codes, which is what the ANN field
+# convert them to 3-letter amino acid codes, which is what the ANN field has
 for i, row in who_high_conf.iterrows():
     
     if len(row["variant"].split("_")) == 2:
         var = row["variant"].split("_")[1]
-        expand_code = code_aa_dict[var[0]] + var[1:-1] + code_aa_dict[var[-1]]
+        expand_code = Bio.SeqUtils.IUPACData.protein_letters_1to3[var[0]] + var[1:-1] + Bio.SeqUtils.IUPACData.protein_letters_1to3[var[-1]]
         who_high_conf.loc[i, "ANN"] = expand_code
     else:
         who_high_conf.loc[i, "ANN"] = row["variant"]
@@ -102,28 +103,37 @@ df_combined = df_combined.loc[~((df_combined["ROLLINGDB_ID"].isin(highConf_isola
 print(f"Removed {len(vcf_files_list) - len(df_combined)} isolates with category 1 mutations and MICs < 1/2 CC")
 
 
-###### STEP 3: REMOVE ISOLATES WITH THE SAME PRIMARY LINEAGE AND THE SAME BINARY RESISTANCE PHENOTYPE (I.E. ALL MEMBERS OF A LINEAGE ARE RESISTANT) ######
+# ###### STEP 3: REMOVE LINEAGE WITH ONLY ONE MEMBER -- CAN CAUSE CONFOUNDING ######
 
 
-df_combined["Binary"] = (df_combined[f"{drug}_midpoint"] > cc).astype(int)
+# drop_single_lineages = pd.DataFrame(df_combined.Lineage.value_counts()).query("Lineage==1").index.values
+# for lineage in drop_single_lineages:
+#     print(f"Removed lineage {lineage}")
+
+# df_combined = df_combined.query("Lineage not in @drop_single_lineages")
+
+
+###### STEP 4: REMOVE ISOLATES WITH THE SAME PRIMARY LINEAGE AND THE SAME BINARY RESISTANCE PHENOTYPE (I.E. ALL MEMBERS OF A LINEAGE ARE RESISTANT) ######
+
+
 df_combined["Primary_Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_combined["Lineage"]]
-
-stratify_vals = df_combined["Primary_Lineage"] + "_" + df_combined["Binary"].astype(str)
+stratify_vals = df_combined["Primary_Lineage"] + "-" + df_combined["Binary"].astype(str)
 
 summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
-summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("_", expand=True)
+summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-", expand=True)
 
-for primary_lineage in summary_counts.Lineage.unique():
-    if len(summary_counts.query("Lineage == @primary_lineage").Resistance.unique()) < 2:
-        print(f"Removed lineage {primary_lineage}")
-        df_combined = df_combined.query("Primary_Lineage not in @primary_lineage")
+for lineage in summary_counts["Lineage"].unique():
+    if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
+        print(f"Removed lineage {lineage}")
+        df_combined = df_combined.query("Primary_Lineage not in @lineage")
         
         
-###### STEP 4: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY BINARY PHENOTYPE AND PRIMARY LINEAGE ######
+###### STEP 5: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY BINARY PHENOTYPE AND PRIMARY LINEAGE ######
 
         
-# remake stratify vals after removing some lineages
-stratify_vals = df_combined["Primary_Lineage"] + "_" + df_combined["Binary"].astype(str)
+# get new stratify vals after removing some lineages
+df_combined["Primary_Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_combined["Lineage"]]
+stratify_vals = df_combined["Primary_Lineage"] + "-" + df_combined["Binary"].astype(str)
 
 # reset index so that index can be used for train/test splitting
 df_combined = df_combined.reset_index(drop=True)

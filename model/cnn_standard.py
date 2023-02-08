@@ -9,8 +9,8 @@ from sklearn.model_selection import KFold
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-# code to go up one level in the directory tree if needed
-# sys.path.append(os.path.dirname(os.getcwd()))
+# utils files are in the utils_files directory
+sys.path.append("utils_files")
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
@@ -123,12 +123,12 @@ else:
 
 # include early stopping and get the model checkpoint at the best epoch
 if patience_epochs is not None:
-    print(f"Using early stopping with a delay of {patience_epochs} epochs...")
+    print(f"Using early stopping with an {loss_type} loss and a delay of {patience_epochs} epochs")
     es = EarlyStopping(monitor='val_loss', mode='min', patience=patience_epochs, verbose=1)
     mc = ModelCheckpoint(os.path.join(output_path, f'{prefix}best_model.h5'), monitor='val_loss', mode='min', save_best_only=True, verbose=1)
     model_callbacks = [es, mc]
 else:
-    print(f"Training model for {N_epochs} epochs...")
+    print(f"Training the model with an {loss_type} loss for {N_epochs} epochs")
     model_callbacks = []
     
     

@@ -6,10 +6,10 @@ import tensorflow as tf
 from sklearn.model_selection import KFold
 from tensorflow.keras.optimizers import Adam
 
-# cnn_utils is one level up in the directory tree
-sys.path.append(os.path.dirname(os.getcwd()))
-from cnn_utils import *
-
+# utils files are in the model folder
+sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
+from model_utils import *
+from dataloader import MtbGeneDataset
 
 # starting the memory monitoring
 tracemalloc.start()
