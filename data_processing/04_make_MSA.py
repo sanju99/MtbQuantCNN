@@ -7,11 +7,20 @@ from Bio import SeqIO
 tracemalloc.start()
 
 
-###### STEP 0: READ IN FILES AND INITIALIZE VARIABLES ######
+#################################### STEP 0: READ IN FILES AND INITIALIZE VARIABLES ####################################
     
     
-_, PHENOS_FILE, VCF_DIR, START, END, SENSE, OUT_FILE = sys.argv
-
+# START is 0-indexed, END is 1-indexed to be consistent with the previous SNP concatenator in Perl
+    
+if len(sys.argv) == 7:
+    _, PHENOS_FILE, VCF_DIR, START, END, SENSE, OUT_FILE = sys.argv
+    ADDITIONAL_ISOLATES_FILE = None
+elif len(sys.argv) == 8:
+    _, PHENOS_FILE, VCF_DIR, START, END, SENSE, OUT_FILE, ADDITIONAL_ISOLATES_FILE = sys.argv
+else:
+    raise ValueError(f"Must pass in 6 or 7 command line arguments. You passed in {len(sys.argv)-1}")
+    
+    
 START = int(START)
 END = int(END)
 
@@ -22,7 +31,30 @@ if not os.path.isfile(PHENOS_FILE):
     raise ValueError(f"{PHENOS_FILE} is not a file!")
     
 isolates = pd.read_csv(PHENOS_FILE)["ROLLINGDB_ID"].values
-paths = [os.path.join(VCF_DIR, isolate) + ".vcf" for isolate in isolates]
+paths = []
+
+for isolate in isolates:
+    fName = os.path.join(VCF_DIR, isolate) + ".vcf" 
+  
+    if not os.path.isfile(fName):
+        raise ValueError(f"{fName} does not exist!")
+    else:
+        paths.append(fName)
+
+
+# ADDITIONAL_ISOLATES_FILE must contain ONLY the isolate names.
+if ADDITIONAL_ISOLATES_FILE is not None:
+    
+    with open(ADDITIONAL_ISOLATES_FILE, "r") as file:
+        # precaution: remove any existing VCF file extension if it's there
+        for line in file:
+            fName = os.path.join(VCF_DIR, line.strip("\n").replace(".vcf", "") + ".vcf")
+            
+            if not os.path.isfile(fName):
+                raise ValueError(f"{fName} does not exist!")
+            else:
+                paths.append(fName)
+    
 print(f"Making multiple sequence alignment for {len(paths)} sequences")
   
 if ".fasta" not in OUT_FILE:
@@ -35,7 +67,7 @@ print(f"Reference genome size: {genome_len}")
 
 # get only the region of interest
 h37Rv_region = list(str(h37Rv.seq[START:END]))
-print(f"Region size: {len(h37Rv_region)}")
+print(f"Unaligned region size: {len(h37Rv_region)}")
 del h37Rv
 
     
@@ -229,7 +261,7 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 
 
 
-###### STEP 1: GET SNPS AND INDELS AND INSERT INTO EACH SEQUENCE USING THE FUNCTION ABOVE ######
+#################################### STEP 1: GET SNPS AND INDELS AND INSERT INTO EACH SEQUENCE USING THE FUNCTION ABOVE ####################################
 
 
 # keep track of positions and the numbers of insertions relative to H37Rv
@@ -255,7 +287,7 @@ insertion_sites[insertion_sites.columns] = insertion_sites[insertion_sites.colum
 print(insertion_sites)
 
 
-###### STEP 2: FILL IN GAP CHARACTERS IN THE REFERENCE SEQUENCE ######
+#################################### STEP 2: FILL IN GAP CHARACTERS IN THE REFERENCE SEQUENCE ####################################
 
 
 new_ref_seq = h37Rv_region.copy()
@@ -267,14 +299,16 @@ for _, row in insertion_sites.iterrows():
 
     new_ref_seq[row["idx"]] = new_ref_seq[row["idx"]] + "-" * add_gap
         
-print(len(new_ref_seq), len("".join(new_ref_seq)))
-
-# get the reverse complement if negative sense
+# get the reverse complement if negative sense. This function returns the joined sequence. If not, 
 if SENSE == "NEG":
     new_ref_seq = reverse_complement(new_ref_seq)
+else:
+    new_ref_seq = "".join(new_ref_seq)
+
+print(f"Aligned region size: {len(new_ref_seq)}")
 
 
-###### STEP 3: FILL IN GAP CHARACTERS IN ALL SEQUENCES AND WRITE TO THE OUTPUT FILE ######
+#################################### STEP 3: FILL IN GAP CHARACTERS IN ALL SEQUENCES AND WRITE TO THE OUTPUT FILE ####################################
 
 
 with open(OUT_FILE, "w+") as file:
@@ -285,7 +319,7 @@ with open(OUT_FILE, "w+") as file:
 
         for _, row in insertion_sites.iterrows():
 
-            # the numbers in insertion_sites have 1 subtracted them, so they are the number of nucleotides to insert
+            # the numbers in insertion_sites have 1 subtracted from them, so they are the number of nucleotides to insert
             # this is the length that that position should be
             pos_length = row["len_insertion"] + 1
 
@@ -302,6 +336,8 @@ with open(OUT_FILE, "w+") as file:
         # get the reverse complement if negative sense
         if SENSE == "NEG":
             seq = reverse_complement(seq)
+        else:
+            seq = "".join(seq)
         
         # write the new sequence to the alignment file
         file.write(">" + isolate + "\n")

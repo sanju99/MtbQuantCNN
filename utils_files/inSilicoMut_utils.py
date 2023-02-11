@@ -8,10 +8,77 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 import Bio.SeqUtils
 import Bio.Data
+import warnings
+warnings.filterwarnings("ignore")
 
 
 h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
 h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/mycobrowser_h37rv_genes_v4.csv")
+
+
+
+def split_multisite_mutations_dataframe(df):
+    
+    drop_mut = []
+    add_df = pd.DataFrame(columns=df.columns)
+
+    for i, row in df.iterrows():
+
+        # convert to integers for reading/writing to VCF files and comparing to the saliency dataframe
+        # in the saliency dataframe, all positions are converted to integers/floats, except for the indel rows
+        if "," not in row["genome_index"]:
+            df.loc[i, "genome_index"] = int(row["genome_index"])
+        else:
+            split_sites = row["genome_index"].split(",")
+
+            for site in split_sites:
+                add_df = pd.concat([add_df, pd.DataFrame({"drug": df["drug"].unique(),
+                                                          "genome_index": int(site), 
+                                                          "confidence": df["confidence"].unique(),
+                                                          "mutation": row["mutation"]
+                                                         }, index=[-1])], axis=0)
+
+
+            drop_mut.append(row["mutation"])
+
+    return pd.concat([df.query("mutation not in @drop_mut"), add_df], axis=0).reset_index(drop=True)
+
+
+
+
+def get_dict_WHO_mutations_sites(who_variants_df, drug_abbr, gene=None):
+    '''
+    This function returns 2 dictionaries:
+    
+        1. one mapping an integer (corresponding to a WHO confidence category, i.e. 1-5) to a dataframe of unique mutations and their sites.
+        2. one mapping an integer (corresponding to a WHO confidence category, i.e. 1-5) an array of all the unique nucleotide sites
+        
+    Arguments:
+    
+        1. who_variants_df: Dataframe of all WHO mutations across all drugs and categories
+    
+    There will be duplicate sites in the dataframe because multiple different mutations occur at the same nucleotide. 
+    There will also be duplicate mutations if a mutation (usually an AA substitution) requires multiple SNVs in the same codon. Each SNV will be a new row, and they will have the same mutation field
+    
+    Splitting is necessary because the REF and ALT alleles for each nucleotide need to be filled in with another function.
+    '''
+    who_variants_single_drug = who_variants_df.query("drug == @drug_abbr")
+    
+    if gene is not None:
+        who_variants_single_drug = who_variants_single_drug.query("mutation.str.contains(@gene)")
+    
+    sites_dict = {}
+    dfs_dict = {}
+    
+    for num in range(1, 6):
+        
+        dfs_dict[num] = split_multisite_mutations_dataframe(who_variants_single_drug.loc[who_variants_single_drug["confidence"].str.contains(str(num))]).reset_index(drop=True)
+        sites_dict[num] = np.unique(dfs_dict[num]["genome_index"])
+        
+    return sites_dict, dfs_dict
+
+
+
 
 
 def get_aa_to_codon_table():
