@@ -41,7 +41,8 @@ for isolate in isolates:
     else:
         paths.append(fName)
 
-
+num_isolates = len(paths)
+        
 # ADDITIONAL_ISOLATES_FILE must contain ONLY the isolate names.
 if ADDITIONAL_ISOLATES_FILE is not None:
     
@@ -55,7 +56,7 @@ if ADDITIONAL_ISOLATES_FILE is not None:
             else:
                 paths.append(fName)
     
-print(f"Making multiple sequence alignment for {len(paths)} sequences")
+print(f"Making multiple sequence alignment for {num_isolates} sequences with phenotypes and {len(paths)-num_isolates} additional sequences")
   
 if ".fasta" not in OUT_FILE:
     OUT_FILE = OUT_FILE.split(".")[0] + ".fasta"
