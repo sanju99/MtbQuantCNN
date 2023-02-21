@@ -13,5 +13,5 @@ temp.py
 config_*.yaml
 
 # sensitive analysis info
-*.ipynb
+analysis/
 figures/
