@@ -39,3 +39,9 @@ SNPs and MNPs that did not pass quality control were inserted as ambiguous nucle
 ## Running SnpEff
 
 Instructions are in `snpEff_instructions.md`. Follow them to annotate VCF files with mutation effects.
+
+## Training CNNs on Subdistributions
+
+If CNNs are only trained on part of a drug's MIC distribution, how well can they predict MICs that are outside of this distribution?
+
+The script `create_subdistributions.py` creates subdistributions (based on user-selected bounds) and saves them to an output phenotype file. Because the training scripts are based on a phenotypes dataframe and select isolates based on their presence in the dataframe, this is the easiest to achieve this step.
