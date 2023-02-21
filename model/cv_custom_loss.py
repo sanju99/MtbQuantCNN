@@ -6,8 +6,8 @@ import tensorflow as tf
 from sklearn.model_selection import KFold
 from tensorflow.keras.optimizers import Adam
 
-# code to go up one level in the directory tree if needed
-# sys.path.append(os.path.dirname(os.getcwd()))
+# utils files are in the utils_files directory
+sys.path.append("utils")
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
@@ -103,7 +103,7 @@ history_df = pd.DataFrame(columns=[f"rep_{i+1}" for i in range(bootstrap_reps)])
 
 for rep in range(bootstrap_reps):
 
-    print(f"Working on replicate {rep+1}/{bootstrap_reps} for {N_epochs} epochs")
+    print(f"Training replicate {rep+1}/{bootstrap_reps} for {N_epochs} epochs")
     val_loss = []
     
     # sample indices with replacement

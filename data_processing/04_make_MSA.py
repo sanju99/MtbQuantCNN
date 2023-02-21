@@ -274,7 +274,7 @@ seq_dict = {}
 
 for i, fName in enumerate(paths):
     
-    seq_dict[os.path.basename(fName).split(".")[0]] = introduce_snps_indels_single_seq(fName, h37Rv_region, START, END)
+    seq_dict[os.path.basename(fName).replace(".vcf", "")] = introduce_snps_indels_single_seq(fName, h37Rv_region, START, END)
 
     if i % 1000 == 0:
         print(i)

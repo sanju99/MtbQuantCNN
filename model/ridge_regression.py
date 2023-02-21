@@ -14,8 +14,8 @@ from Bio import SeqIO
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import class_weight
 
-# model_utils is one level up in the directory tree
-sys.path.append(os.path.dirname(os.getcwd()))
+# utils files are in the utils_file folder
+sys.path.append("utils")
 from model_utils import *
 
 
@@ -64,7 +64,9 @@ def subset_fasta_files():
         # indices_to_keep = np.where(aln.frequencies.max(axis=1) < 1)[0]
         
         # this keeps only sites where the major allele frequency is less than 1. Major allele frequence = 1 means that all isolates are the same at the site
-        indices_to_keep = np.where(aln.frequencies.max(axis=1) < 1)[0]
+        
+        # keep sites with a minor allele fraction of at least 0.1%
+        indices_to_keep = np.where(aln.frequencies.max(axis=1) <= 0.999)[0]
         subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_ids)        
        
         print("original alignment shape", aln.matrix.shape)
@@ -217,11 +219,13 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
     model.fit(X_train, y_train)
     
     y_pred = np.squeeze(model.predict(X_test))
-    pred_df = pd.DataFrame({"y_pred": np.squeeze(y_pred), 
+    pred_df = pd.DataFrame({"Isolate": df_phenos.query("category=='original_test_set'")["ROLLINGDB_ID"].values,
+                            "y_pred": np.squeeze(y_pred), 
                             "y_test": y_test, 
                             "lower": df_phenos.query("category=='original_test_set'")[f"{drug}_lower_bound"], 
                             "upper": df_phenos.query("category=='original_test_set'")[f"{drug}_upper_bound"]
                            }) 
+    pred_df.to_csv(os.path.join(ridge_dir, "test_predictions.csv"), index=False)
 
     binned_mae, binned_mse, within_1bin = boundedLoss_predict(pred_df, "y_pred", "y_test", "lower", "upper")
     
@@ -328,6 +332,13 @@ def ridge_binary(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, n
     
     model.fit(X_train, y_train)
     y_pred = np.squeeze(model.predict(X_test))
+    
+    pred_df = pd.DataFrame({"Isolate": df_phenos.query("category=='original_test_set'")["ROLLINGDB_ID"].values,
+                            "y_pred": np.squeeze(y_pred), 
+                            "y_test": y_test
+                           }) 
+    pred_df.to_csv(os.path.join(ridge_dir, "binary_test_predictions.csv"), index=False)
+    
     summary_df = compute_binary_metrics(y_test, y_pred, binary_thresh, binarize=False)
     summary_df["CV"] = 0
         

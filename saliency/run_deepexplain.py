@@ -8,13 +8,16 @@ from tensorflow.keras.utils import Sequence
 from deepexplain.tensorflow import DeepExplain
 
 # utils files are in the model folder
-sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
+sys.path.append("utils")
 from model_utils import *
 from dataloader import MtbGeneDataset
 
 # disable v2 stuff to make this compatible with TF v2 models. This was suggested in a pull request in DeepExplain
 tf.compat.v1.disable_v2_behavior()
 tf.compat.v1.disable_eager_execution()
+
+# don't use GPU for this script because it's not training intensive
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 _, config_file = sys.argv
@@ -91,6 +94,7 @@ else:
 
 def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=""):
     
+    genetic_attr_by_nuc = []
     genetic_attr = []
     lineage_attr = []
     
@@ -99,7 +103,6 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
     if not os.path.isfile(os.path.join(saliency_dir, f"scores_max{file_suffix}.npy")):
 
         with DeepExplain(session=K.get_session()) as de:
-        #with DeepExplain(session=get_session()) as de:
 
             # initialize a DeepExplain model using the same inputs and outputs as the original model and get the target layer to get attributions for
             # For quantitative models, we want to target the output layer. For binary, target the second to last layer (pre-Softmax)
@@ -148,15 +151,20 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
 
                 # genetic scores shape should be num_samples x 5 x longest_locus x num_loci -- sum scores across nucleotides, which is the second dimension
                 if include_lineage:
+                    genetic_attr_by_nuc.append(attributions[0])
                     genetic_attr.append(np.sum(attributions[0], axis=1))
                     lineage_attr.append(attributions[1])
                 else:
+                    genetic_attr_by_nuc.append(attributions)
                     genetic_attr.append(np.sum(attributions, axis=1))
 
             # combine scores for all isolates along the first axis, which is the number of samples axis
-            genetic_attr = np.concatenate(genetic_attr, axis=0)    
+            genetic_attr_by_nuc = np.concatenate(genetic_attr_by_nuc, axis=0)
+            genetic_attr = np.concatenate(genetic_attr, axis=0) 
+            print(genetic_attr.shape, genetic_attr_by_nuc.shape)
 
             print(f"Saving scores to {saliency_dir}")
+            sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores_unpooled_nuc{file_suffix}.npy"), sparse.COO(genetic_attr_by_nuc), compressed=True)
             sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores{file_suffix}.npy"), sparse.COO(genetic_attr), compressed=True)
 
             # save mean, max, and min scores
@@ -172,7 +180,6 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
 
 # get model from cnn_utils. Build using TF v1, then load weights
 model = conv_nn(binary=binary, longest_locus=longest_locus, num_loci=num_loci, num_lineages=num_lineages, bounded_loss=False, filter_size=filter_size)
-
 
 if not permutation_test:
 

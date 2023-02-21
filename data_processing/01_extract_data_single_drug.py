@@ -66,6 +66,9 @@ def standardize_MICs(df, drug):
     
     cryptic_unique = df.loc[df.Path.str.contains('cryptic')][drug].unique()
     cryptic_unique = list(np.sort(np.unique([float(num.strip(">").strip("<=")) for num in cryptic_unique])))
+    
+    # get a gigantic value (impossible to get any MIC at that value for the upper bounds of MICs listed as > N)
+    max_val = np.max(df_new[f"{drug}_midpoint"])*1000
 
     for i, row in df_new.iterrows():
         if "<" in row[drug]:
@@ -77,7 +80,7 @@ def standardize_MICs(df, drug):
         elif ">" in row[drug]:
             val = float(row[drug].strip(">"))
             df_new.loc[i, f"{drug}_lower_bound"] = val
-            df_new.loc[i, f"{drug}_upper_bound"] = val
+            df_new.loc[i, f"{drug}_upper_bound"] = max_val
             df_new.loc[i, f"{drug}_midpoint"] = val
         elif "-" in row[drug]:
             lower = float(row[drug].split("-")[0])
@@ -90,9 +93,14 @@ def standardize_MICs(df, drug):
             if "cryptic" in row["Path"]:
                 lower = cryptic_unique[cryptic_unique.index(upper)-1]
                 df_new.loc[i, f"{drug}_lower_bound"] = lower
-                df_new.loc[i, f"{drug}_upper_bound"] = upper
+                
+                if ">" in row[drug]:
+                    df_new.loc[i, f"{drug}_upper_bound"] = max_val
+                else:
+                    df_new.loc[i, f"{drug}_upper_bound"] = upper
+                    
                 df_new.loc[i, f"{drug}_midpoint"] = np.mean([lower, upper])
-            # because we don't know the concentrations for the non-cryptic data, remove them if only one concentration was tested
+            # because we don't know the tested concentrations for the non-cryptic data, remove them if only one concentration was tested
             else:
                 df_new.loc[i, f"{drug}_midpoint"] = np.nan
                 

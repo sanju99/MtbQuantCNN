@@ -6,8 +6,8 @@ import tensorflow as tf
 from sklearn.model_selection import KFold
 from tensorflow.keras.optimizers import Adam
 
-# utils files are in the model folder
-sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
+# utils files are in the utils_files directory
+sys.path.append("utils")
 from model_utils import *
 from dataloader import MtbGeneDataset
 
@@ -116,7 +116,7 @@ for rep in range(replicates):
             return loss
 
 
-        # train the bootstrapped model
+        # train the model on the permuted data
         for epoch in range(N_epochs):
 
             # training loop: don't keep track of the train losses because we just want to train the model here

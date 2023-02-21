@@ -16,6 +16,7 @@ conda create --name MtbQuantCNN --file /home/sak0914/MtbQuantCNN/environment_req
 
 conda activate MtbQuantCNN
 pip install tensorflow
+pip install evcouplings
 ```
 
 ## Instructions for Running on GPU Nodes on O2 Cluster

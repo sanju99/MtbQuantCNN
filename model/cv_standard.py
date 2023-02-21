@@ -7,8 +7,8 @@ from tensorflow.keras import backend as K
 from sklearn.model_selection import StratifiedKFold
 from tensorflow.keras.optimizers import Adam
 
-# code to go up one level in the directory tree if needed
-# sys.path.append(os.path.dirname(os.getcwd()))
+# utils files are in the utils_files directory
+sys.path.append("utils")
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset

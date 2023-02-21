@@ -10,7 +10,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 # utils files are in the utils_files directory
-sys.path.append("utils_files")
+sys.path.append("utils")
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset

@@ -10,7 +10,7 @@ from tensorflow.keras import backend as K
 tf.config.run_functions_eagerly(True)
 
 # utils files are in the utils_files directory
-sys.path.append("utils_files")
+sys.path.append("utils")
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
@@ -142,7 +142,7 @@ optimizer = Adam(learning_rate = np.exp(-1.0 * 9))
 
 # manual implementation of model callbacks
 patience_counter = 0
-min_loss = np.inf
+min_loss = 1e3
 
 # initialize lists to store losses
 train_loss = []
@@ -194,7 +194,11 @@ for epoch in range(N_epochs):
     results.loc[epoch, :] = [train_loss[-1], train_error[-1], val_loss[-1], val_error[-1]]
     
     if patience_epochs is not None:
-        if val_loss[-1] < min_loss:
+        #if val_loss[-1] < min_loss:
+
+        # if loss decreases by at least 0.5%
+        if float((min_loss - val_loss[-1]) / min_loss) >= 0.005:
+        
             print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
 
             # update min loss, then zero out the patience counter

@@ -171,7 +171,7 @@ def make_noncoding_mutation(df, row, idx, genome_seq):
         
         
         
-def insert_nuc(clean_var, aa_to_codon_table, df, idx, pos, genome_seq):
+def insert_nuc(clean_var, aa_to_codon_table):
     '''
     When one or more amino acids have to be inserted, extract the 3-letter AA abbreviations (from the mutation name) and get codons to insert.
     
@@ -190,8 +190,7 @@ def insert_nuc(clean_var, aa_to_codon_table, df, idx, pos, genome_seq):
         aa = insert_aa[k*3:k*3+3]
         add_nuc += np.random.choice(aa_to_codon_table.query("AA==@aa").Codon.values)
         
-    prev_nuc = str(genome_seq[pos-1])
-    df.loc[idx, ["POS", "REF", "ALT"]] = [pos, prev_nuc, prev_nuc + add_nuc]
+    return add_nuc
     
     
     
@@ -206,7 +205,7 @@ def get_data_for_synthetic_VCF(df, sense):
     df = df.reset_index(drop=True)
     df[["gene", "variant"]] = df["mutation"].str.split("_", expand=True, n=1)
     
-    if sense.upper() == "POS":
+    if sense.lower() == "pos":
         
         for i, row in df.iterrows():
             
@@ -244,28 +243,41 @@ def get_data_for_synthetic_VCF(df, sense):
                     # INSERT SINGLE AMINO ACID
                     if aa2 in Bio.SeqUtils.IUPACData.protein_letters_3to1.keys():
 
+                        # check that the listed position is one of the positions determined from the genome sequence (this is just a sanity check)
+                        assert row["POS"] in codon_pos
+
                         # list of possible codons
                         possible_new_codons = aa_to_codon_table.query("AA==@aa2").Codon.values
 
                         # the index to replace. This looks for genome_index within the 3 positions of the codon values
                         idx_to_replace = codon_pos.index(row["POS"])
+                        idx_must_match = list(set(range(3)) - set([idx_to_replace]))
 
-                        assert row["POS"] in codon_pos
+                        # find a codon that matches the other two nucleotides in the original codon. ONLY WANT TO CHANGE THE NUCLEOTIDE AT THE SPECIFIED POSITION
+                        for new_codon in possible_new_codons:
+
+                            # once it is found, break out of the loop
+                            if new_codon[idx_must_match[0]] == codon[idx_must_match[0]] and new_codon[idx_must_match[1]] == codon[idx_must_match[1]]:
+                                break
+
                         df.loc[i, "REF"] = h37Rv.seq[row["POS"] - 1]
-                        df.loc[i, "ALT"] = np.random.choice(possible_new_codons)[idx_to_replace]
+                        df.loc[i, "ALT"] = new_codon[idx_to_replace]
 
-                    # INSERT OR DELETE SINGLE AMINO ACID
+                    # INSERT OR DELETE SINGLE AMINO ACID, WHICH IS AA1
                     else:
+                        
+                        # use the previous nucleotide as the reference site, then the deletion comes right after it. pos is the coordinate, but need pos - 1 to index the correct nucleotide
+                        pos = codon_pos[0]-1
+                        prev_nuc = str(h37Rv.seq[pos-1])
+                        
+                        # Get the nucleotides (inclusive) that need to be deleted or duplicated
+                        intermediate_nuc = str(h37Rv.seq[pos:codon_pos[-1]])
+                    
                         if "dup" in clean_var:
-                            # get position, then randomly add one of the possible codons
-                            df.loc[i, "REF"] = h37Rv.seq[row["POS"] - 1]
-                            df.loc[i, "ALT"] = str(h37Rv.seq[row["POS"] - 1]) + np.random.choice(possible_new_codons)
+                            df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc, prev_nuc + intermediate_nuc]
 
                         elif "del" in clean_var:
-                            # reference is the previous nucleotide AND the codon that will be deleted
-                            df.loc[i, "REF"] = str(h37Rv.seq[row["POS"] - 1:row["POS"]+3])
-                            # alternative is just the previous nucleotide
-                            df.loc[i, "ALT"] = str(h37Rv.seq[row["POS"] - 1])
+                            df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc + intermediate_nuc, prev_nuc]
                 
                 # MULTI-AMINO ACID CHANGES
                 else:
@@ -284,24 +296,30 @@ def get_data_for_synthetic_VCF(df, sense):
                     end_coord = end_coord[-1]
 
                     # this is used in both the deletion and duplication cases. Get the nucleotides (inclusive) that need to be deleted or duplicated
-                    intermediate_nucleotides = str(h37Rv.seq[start_codon_sites[0]-1:end_coord])
+                    intermediate_nuc = str(h37Rv.seq[start_codon_sites[0]-1:end_coord])
                     
                     # nucleotide coordinates to remove
                     if "del" in clean_var:
 
-                        # use the previous nucleotide as the reference site, then the deletion comes right after it
-                        prev_nuc = str(h37Rv.seq[start_codon_sites[0]-2])
+                        # use the previous nucleotide as the reference site, then the deletion comes right after it. pos is the coordinate, but need pos - 1 to index the correct nucleotide
+                        pos = start_codon_sites[0]-1
+                        prev_nuc = str(h37Rv.seq[pos-1])
+                        
+                        df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc + intermediate_nuc, prev_nuc]
 
+                        # if there is an insertion, then update the alternative allele to have it
                         if "ins" in clean_var:
-                            insert_nuc(clean_var, aa_to_codon_table, df, i, start_codon_sites[0]-1, h37Rv.seq)
-                        else:
-                            df.loc[i, ["POS", "REF", "ALT"]] = [start_codon_sites[0]-1, prev_nuc + intermediate_nucleotides, prev_nuc]
+                            add_nuc = insert_nuc(clean_var, aa_to_codon_table)
+                            df.loc[i, "ALT"] = prev_nuc + add_nuc
                     
                     elif "ins" in clean_var:
-                        insert_nuc(clean_var, aa_to_codon_table, df, i, start_codon_sites[-1], h37Rv.seq)
-                        
+                        add_nuc = insert_nuc(clean_var, aa_to_codon_table)
+                        pos = start_codon_sites[-1]
+                        df.loc[i, ["POS", "REF", "ALT"]] = [pos, str(h37Rv.seq[pos-1]), str(h37Rv.seq[pos-1]) + add_nuc]
+                    
                     elif "dup" in clean_var:
-                        df.loc[i, ["POS", "REF", "ALT"]] = [end_coord, str(h37Rv.seq[end_coord]), str(h37Rv.seq[end_coord]) + intermediate_nucleotides] 
+                        df.loc[i, ["POS", "REF", "ALT"]] = [end_coord, str(h37Rv.seq[end_coord]), str(h37Rv.seq[end_coord]) + intermediate_nuc] 
+                    
                     else:
                         print("Protein-coding, no indels", row["variant"])
     #else:
