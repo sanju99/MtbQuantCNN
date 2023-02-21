@@ -1,9 +1,6 @@
 .ipynb_checkpoints/
 __pycache__/
 
-# scratch work
-sandbox.ipynb
-
 # too big or too many files. also could be sensitive data
 *.fasta
 
