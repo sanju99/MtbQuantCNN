@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as st
 import tensorflow as tf
-from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.model_selection import KFold
 from tensorflow.keras.optimizers import Adam
 
 # utils files are in the utils_files directory
@@ -55,24 +55,43 @@ X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
 longest_locus = X_h37rv.shape[2]
 del X_h37rv
 
+val_generator = MtbGeneDataset(
+    os.path.join(output_path, 'pkl_sparse_test.npz'),
+    phenotype_file,
+    drug,
+    locus_list,
+    train_or_test="original_test_set",
+    binary=binary,
+    cc=binary_thresh,
+    include_lineage=include_lineage,
+    bounded_loss=bounded_loss,
+    data_idx=None,
+    batch_size=BATCH_SIZE,
+    shuffle=False
+)        
+        
+if include_lineage:
+    num_lineages = val_generator[0][0][1].shape[1]
+else:
+    num_lineages = 0
+
+
 # need the train dataframe indices for slicing it. Reset index so that it's the index within the values, not in the overall dataframe
 df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
+df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
 
-num_reps = 5
+num_reps = 10
 results = []
 history_df = pd.DataFrame(columns=[f"rep_{i+1}" for i in range(num_reps)])
 
-cv_splits = StratifiedKFold(n_splits=num_reps)
+for rep in range(num_reps):
 
-# include df_train["Binary"] as the y argument so that it stratifies by it
-for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_train["Binary"])):
-    
-    # print means to double check
-    print(df_train.iloc[train_idx]["Binary"].mean(), df_train.iloc[val_idx]["Binary"].mean())
-    
-    print(f"Training split {rep+1}/{num_reps} for {N_epochs} epochs")
+    print(f"Training replicate {rep+1}/{num_reps} for {N_epochs} epochs")
     val_loss = []
     
+    # sample indices with replacement
+    train_idx = np.random.choice(np.arange(0, len(df_train)), size=len(df_train), replace=True)
+
     cv_train_generator = MtbGeneDataset(
                                     os.path.join(output_path, 'pkl_sparse_train.npz'),
                                     phenotype_file,
@@ -87,26 +106,6 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
                                     batch_size=BATCH_SIZE,
                                     shuffle=True
     )
-    
-    cv_val_generator = MtbGeneDataset(
-                                    os.path.join(output_path, 'pkl_sparse_train.npz'),
-                                    phenotype_file,
-                                    drug,
-                                    locus_list,
-                                    train_or_test="original_train_set",
-                                    binary=binary,
-                                    cc=binary_thresh,
-                                    include_lineage=include_lineage,
-                                    bounded_loss=bounded_loss,
-                                    data_idx=val_idx,
-                                    batch_size=BATCH_SIZE,
-                                    shuffle=False
-    )
-    
-    if include_lineage:
-        num_lineages = cv_train_generator[0][0][1].shape[1]
-    else:
-        num_lineages = 0
 
     # initialize the model using the function from cnn_utils and the optimizer
     model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
@@ -161,7 +160,7 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
         
         # validation loop
         val_epoch_loss = []
-        for _, (x_batch_val, y_batch_val) in enumerate(cv_val_generator):
+        for _, (x_batch_val, y_batch_val) in enumerate(val_generator):
 
             # compute bounded error
             val_epoch_loss.append(val_step(x_batch_val, y_batch_val).numpy())
@@ -172,26 +171,20 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
     history_df[f"rep_{rep+1}"] = val_loss
     
     # get model predictions
-    y_pred = model.predict(x=cv_val_generator,
+    y_pred = model.predict(x=val_generator,
                            workers=4,
                            use_multiprocessing=True,
     )
     
     # predictions dataframe: get indices of validation data in the cv splits
-    pred_df = df_train.iloc[val_idx, :][["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
+    pred_df = df_test[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
     
     # rename columns to make them easier to read
-    pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
-                          f"{drug}_midpoint": "y_test",
-                          f"{drug}_lower_bound": "lower",
-                          f"{drug}_upper_bound": "upper"
-                         }, 
-                   inplace=True
-                  )
-    
-    # add model predictions, and log-transform the test values
-    pred_df["y_pred"] = np.squeeze(y_pred)
-    pred_df["y_test"] = np.log2(pred_df["y_test"])
+    pred_df = pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
+                                      f"{drug}_midpoint": "y_test",
+                                      f"{drug}_lower_bound": "lower",
+                                      f"{drug}_upper_bound": "upper"
+                                     }, inplace=True)
 
     # compute quantitative metrics
     binned_mae, binned_mse, within_doubling = boundedLoss_predict(pred_df, "y_pred", "y_test", "lower", "upper")

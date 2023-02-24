@@ -168,11 +168,12 @@ for rep in range(bootstrap_reps):
         binary_metrics_df["Drug"] = drug
         binary_metrics_df["Model"] = "CNN"
     else:
-        pred_df = pd.DataFrame({"Isolate": ids, "y_pred": np.squeeze(y_pred), "y_test": np.log(y_test)})
+        pred_df = pd.DataFrame({"Isolate": ids, "y_pred": np.squeeze(y_pred), "y_test": np.log2(y_test)})
         
         # compute quantitative metrics
         mae = np.mean(np.abs(pred_df["y_test"] - pred_df["y_pred"]))
         mse = np.mean((pred_df["y_test"] - pred_df["y_pred"])**2)
+        spearman = st.spearman(pred_df["y_test"], pred_df["y_pred"])[0]
         pearson = st.pearsonr(pred_df["y_test"], pred_df["y_pred"])[0]
 
         summary_df = pd.DataFrame({"Drug": drug,
@@ -180,6 +181,7 @@ for rep in range(bootstrap_reps):
                                    "Num_Loci": num_loci,
                                    "MAE": mae,
                                    "MSE": mse,
+                                   "Spearman": spearman,
                                    "Pearson": pearson,
                                   }, index=[0])
 

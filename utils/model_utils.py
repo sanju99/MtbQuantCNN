@@ -59,8 +59,8 @@ def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
         
     # binarize using the critical concentration
     if binarize:
-        y_val_binary = (y_val > np.log(binary_thresh)).astype(int)
-        y_pred_binary = (y_pred > np.log(binary_thresh)).astype(int)
+        y_val_binary = (y_val > np.log2(binary_thresh)).astype(int)
+        y_pred_binary = (y_pred > np.log2(binary_thresh)).astype(int)
     else:
         y_val_binary = np.copy(y_val)
         y_pred_binary = np.copy(y_pred)
@@ -154,23 +154,23 @@ def boundedLoss_predict(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper
     y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated
     ''' 
     
-    pred_df[f"{y_pred_col}_exp"] = np.exp(pred_df[y_pred_col])
-    pred_df[f"{y_true_col}_exp"] = np.exp(pred_df[y_true_col])
+    pred_df[f"{y_pred_col}_exp"] = 2**(pred_df[y_pred_col])
+    pred_df[f"{y_true_col}_exp"] = 2**(pred_df[y_true_col])
     
     # compute error using only predictions outside of the concentration bounds
     pred_df_error = pred_df.loc[(pred_df[f"{y_pred_col}_exp"] < pred_df[lower_bounds_col]) | 
                                 (pred_df[f"{y_pred_col}_exp"] > pred_df[upper_bounds_col])
                                ]
     
-    # also return the number of predictions within 1 bin
-    within_1bin = len(pred_df.loc[(pred_df[f"{y_pred_col}_exp"] >= pred_df[lower_bounds_col] / 2) & 
-                                  (pred_df[f"{y_pred_col}_exp"] <= pred_df[upper_bounds_col] * 2)
-                                 ]) / len(pred_df)
+    # also return the number of predictions within 1 doubling
+    within_doubling = len(pred_df.loc[(pred_df[f"{y_pred_col}_exp"] >= pred_df[lower_bounds_col] / 2) & 
+                                      (pred_df[f"{y_pred_col}_exp"] <= pred_df[upper_bounds_col] * 2)
+                                     ]) / len(pred_df)
         
-    # return error and proportion within 1 bin away
+    # return error and proportion within 1 doubline of the measured MIC
     mae = np.sum(np.abs(pred_df_error[y_pred_col] - pred_df_error[y_true_col])) / len(pred_df)
     mse = np.sum((pred_df_error[y_pred_col] - pred_df_error[y_true_col])**2) / len(pred_df)
-    return mae, mse, within_1bin
+    return mae, mse, within_doubling
 
             
         

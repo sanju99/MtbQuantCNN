@@ -65,7 +65,11 @@ def get_dict_WHO_mutations_sites(who_variants_df, drug_abbr, gene=None):
     who_variants_single_drug = who_variants_df.query("drug == @drug_abbr")
     
     if gene is not None:
-        who_variants_single_drug = who_variants_single_drug.query("mutation.str.contains(@gene)")
+        
+        if type(gene) is not list:
+            gene = list(gene)
+        
+        who_variants_single_drug = who_variants_single_drug.loc[who_variants_single_drug["mutation"].str.contains("|".join(gene))]
     
     sites_dict = {}
     dfs_dict = {}
@@ -202,7 +206,8 @@ def get_data_for_synthetic_VCF(df, sense):
     df.rename(columns={"genome_index": "WHO_genome_index"}, inplace=True)
     df["POS"] = df.loc[:, 'WHO_genome_index']
         
-    df = df.reset_index(drop=True)
+    # exclude mutations on the last codon (usually a stop lost mutation) because we don't know what the actual mutation is and how much longer the protein goes on
+    df = df.query("~mutation.str.contains('Ter')").reset_index(drop=True)
     df[["gene", "variant"]] = df["mutation"].str.split("_", expand=True, n=1)
     
     if sense.lower() == "pos":

@@ -1,10 +1,12 @@
-1. Add the Rv assembly name: Mycobacterium_tuberculosis_gca_000195955 to the snpEff config file:
+1. Install snpEff with anaconda: `conda install -c bioconda snpeff`
 
-`anaconda3/envs/bioinformatics/share/snpeff-5.1-2/snpEff.config`
+2. Add the Rv assembly name: Mycobacterium_tuberculosis_gca_000195955 to the snpEff config file:
 
-2. Create the folder `anaconda3/envs/bioinformatics/share/snpeff-5.1-2/data` and create a folder for each database you want to creat. The folder name should be the same as the assembly name added to `snpEff.config`. For example:
+`anaconda3/envs/sambcftools/share/snpeff-5.1-2/snpEff.config`
 
-`anaconda3/envs/bioinformatics/share/snpeff-5.1-2/Mycobacterium_tuberculosis_gca_000195955`
+3. Create the folder `anaconda3/envs/sambcftools/share/snpeff-5.1-2/data` and create a folder within that for each database you want to create. The folder name should be the same as the assembly name added to `snpEff.config`. For example:
+
+`anaconda3/envs/sambcftools/share/snpeff-5.1-2/data/Mycobacterium_tuberculosis_gca_000195955`
 
 This should have a GenBank file called `genes.gbk`. For this assembly, I downloaded it from https://www.ncbi.nlm.nih.gov/assembly/GCF_000195955.2/
 
@@ -12,16 +14,10 @@ This should have a GenBank file called `genes.gbk`. For this assembly, I downloa
 snpEff build -genbank -v Mycobacterium_tuberculosis_gca_000195955
 ```
 
-```bash
-paste /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/RIF/paths.txt lasso/rif_out_paths.txt | while read vcf_path out_path; do
-    cp $vcf_path "${out_path}.vcf" 
-done
-```
-
-Had to add the extension .vcf to the files and make a new text file. Then can run snpEff on all VCF files in the text file efficiently, without having to reload the database every time. 
+You need to create a text file containing the paths to all the files that you want to annotate. Then can run snpEff on all VCF files in the text file efficiently, without having to reload the database every time. 
 
 ```bash
-snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList rif_paths_to_ann.txt
+snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_for_annot.txt
 ```
 
 The next block of code extracts the desired fields from each VCF file and saves them to a text file. The text files will then be processed and concatenated into the final `isolate_variants.csv` file.

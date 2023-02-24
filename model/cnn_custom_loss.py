@@ -196,8 +196,8 @@ for epoch in range(N_epochs):
     if patience_epochs is not None:
         #if val_loss[-1] < min_loss:
 
-        # if loss decreases by at least 0.5%
-        if float((min_loss - val_loss[-1]) / min_loss) >= 0.005:
+        # if loss decreases by at least 1%
+        if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
         
             print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
 
@@ -229,24 +229,22 @@ y_pred = best_model.predict(
     use_multiprocessing=True,
 )
 
-# get test values and IDs from the dataset class
-ids = np.array([])
-y_test = np.array([])
-lower_bounds = np.array([])
-upper_bounds = np.array([])
+# predictions dataframe: get indices of validation data in the cv splits
+pred_df = df_phenos.query("category=='original_test_set'")[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
 
-for i, _ in enumerate(val_generator):
+# rename columns to make them easier to read
+pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
+                        f"{drug}_midpoint": "y_test",
+                        f"{drug}_lower_bound": "lower",
+                        f"{drug}_upper_bound": "upper"
+                       }, 
+               inplace=True
+              )
+
+# add model predictions, and log-transform the test values
+pred_df["y_pred"] = np.squeeze(y_pred)
+pred_df["y_test"] = np.log2(pred_df["y_test"])
     
-    val_batch = val_generator.__getTestData__(i)    
-    ids = np.concatenate([ids, val_batch[0]])
-    y_test = np.concatenate([y_test, val_batch[1]])
-    
-    bounds_batch = val_generator.__getBounds__(i)
-    lower_bounds = np.concatenate([lower_bounds, bounds_batch[0]])
-    upper_bounds = np.concatenate([upper_bounds, bounds_batch[1]])
-    
-    
-pred_df = pd.DataFrame({"Isolate": ids, "y_pred": np.squeeze(y_pred), "y_test": y_test, "lower": lower_bounds, "upper": upper_bounds})
 pred_df.to_csv(os.path.join(output_path, "test_predictions.csv"), index=False)
 K.clear_session()
 

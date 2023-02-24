@@ -17,11 +17,11 @@ who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resist
 ###### STEP 1: REMOVE ISOLATES WITH MULTIPLE RECORDED LINEAGES -- LOTS OF AMBIGUOUS CALLS DUE TO POLYCLONAL INFECTIONS OR SEQUENCING ERROR ######
 
 
-# first 2 columns are the Isolate name and the Freschi lineage
+# first 2 columns are the Isolate name and lineage
 lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.tsv", sep="\t", header=None, usecols=[0, 1])
 lineages.columns = ["ROLLINGDB_ID", "Lineage"]
 
-# the Freschi lineages have "lineage" appended to the front, so remove that
+# the Coll 2014 lineages have "lineage" appended to the front, so remove that
 lineages["Lineage"] = [val.replace("lineage", "") for val in lineages["Lineage"]]
 
 df_phenos = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/data_with_paths.csv")
@@ -54,13 +54,6 @@ for _, row in who_high_conf.iterrows():
 who_high_conf = who_high_conf.loc[~who_high_conf.genome_index.str.contains(",")]
 who_high_conf = who_high_conf.drop_duplicates().reset_index(drop=True)
 who_high_conf["genome_index"] = who_high_conf["genome_index"].astype(int)
-
-# aa_code_dict = {'Val':'V', 'Ile':'I', 'Leu':'L', 'Glu':'E', 'Gln':'Q', \
-# 'Asp':'D', 'Asn':'N', 'His':'H', 'Trp':'W', 'Phe':'F', 'Tyr':'Y',    \
-# 'Arg':'R', 'Lys':'K', 'Ser':'S', 'Thr':'T', 'Met':'M', 'Ala':'A',    \
-# 'Gly':'G', 'Pro':'P', 'Cys':'C'}
-
-# code_aa_dict = {val: key for key, val in aa_code_dict.items()}
 
 # convert them to 3-letter amino acid codes, which is what the ANN field has
 for i, row in who_high_conf.iterrows():
@@ -116,16 +109,16 @@ print(f"Removed {len(vcf_files_list) - len(df_combined)} isolates with category 
 ###### STEP 4: REMOVE ISOLATES WITH THE SAME PRIMARY LINEAGE AND THE SAME BINARY RESISTANCE PHENOTYPE (I.E. ALL MEMBERS OF A LINEAGE ARE RESISTANT) ######
 
 
-df_combined["Primary_Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_combined["Lineage"]]
-stratify_vals = df_combined["Primary_Lineage"] + "-" + df_combined["Binary"].astype(str)
+# df_combined["Primary_Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_combined["Lineage"]]
+# stratify_vals = df_combined["Primary_Lineage"] + "-" + df_combined["Binary"].astype(str)
 
-summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
-summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-", expand=True)
+# summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
+# summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-", expand=True)
 
-for lineage in summary_counts["Lineage"].unique():
-    if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
-        print(f"Removed lineage {lineage}")
-        df_combined = df_combined.query("Primary_Lineage not in @lineage")
+# for lineage in summary_counts["Lineage"].unique():
+#     if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
+#         print(f"Removed lineage {lineage}")
+#         df_combined = df_combined.query("Primary_Lineage not in @lineage")
         
         
 ###### STEP 5: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY BINARY PHENOTYPE AND PRIMARY LINEAGE ######

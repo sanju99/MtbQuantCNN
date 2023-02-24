@@ -9,6 +9,42 @@ from tensorflow.keras.utils import Sequence
 
 
 
+
+def get_lineages_matrix(df_phenos):
+    
+    df_lineages = pd.DataFrame(columns=["ROLLINGDB_ID", "Lineage"])
+
+    # loop to add additional hierarchies of lineages -- i.e. if an isolate is lineage 4.3, then it should have a one in both columns 4.3 and 4
+    for i, row in df_phenos.iterrows():
+
+        # means it's a sublineage
+        if "." in row["Lineage"]:
+
+            split_lineages = row["Lineage"].split(".")
+
+            for i, _ in enumerate(split_lineages):
+                df_lineages = pd.concat([df_lineages, pd.DataFrame({"ROLLINGDB_ID": row["ROLLINGDB_ID"],
+                                                                    "Lineage": ".".join(split_lineages[:i+1])
+                                                                   }, index=[0])], axis=0)
+
+    # combine with original lineages and drop duplicates. The duplicates come from 4.3 being split into 4 and 4.3, but 4.3 already being present in the dataframe
+    df_lineages = pd.concat([df_phenos[["ROLLINGDB_ID", "Lineage"]], df_lineages], axis=0)[["ROLLINGDB_ID", "Lineage"]].drop_duplicates().reset_index(drop=True)
+
+    # just need a dummy column for values before pivoting
+    df_lineages["Count"] = 1
+    
+    # pivot to matrix and check that every isolate and lineage have at least one value
+    lineages_matrix = df_lineages.pivot(index="ROLLINGDB_ID", columns="Lineage", values="Count").fillna(0).astype(int)
+    assert np.min(lineages_matrix.sum(axis=1)) >= 1
+    assert np.min(lineages_matrix.sum(axis=0)) >= 1
+    
+    # return the matrix in the same order as the phenotypes matrix
+    return lineages_matrix
+
+
+
+
+
 class MtbGeneDataset(Sequence):
 
     def __init__(self, sparse_file, phenotype_file, drug, locus_list, train_or_test, binary, cc, shuffle_phenos=False, include_lineage=False, bounded_loss=False, data_idx=None, batch_size=128, shuffle=True):
@@ -21,16 +57,18 @@ class MtbGeneDataset(Sequence):
         X = sparse.load_npz(sparse_file)
         df_phenos = pd.read_csv(phenotype_file)
         
-        # make lineage matrix. Do this before getting only the train or test set so that all lineages are there
-        lineages = pd.get_dummies(df_phenos["Lineage"])
-        lineages.index = df_phenos["ROLLINGDB_ID"]
+#         # make lineage matrix. Do this before getting only the train or test set so that all lineages are there
+#         lineages = pd.get_dummies(df_phenos["Lineage"])
+#         lineages.index = df_phenos["ROLLINGDB_ID"]
         
-        # the following checks are a bit extra, but including them anyway to be very careful
-        # check that the sum of each row (isolate) is 1, i.e. each isolate has only 1 lineage
-        assert lineages.sum(axis=1).unique() == np.array([1])
+#         # the following checks are a bit extra, but including them anyway to be very careful
+#         # check that the sum of each row (isolate) is 1, i.e. each isolate has only 1 lineage
+#         assert lineages.sum(axis=1).unique() == np.array([1])
 
-        # minimum number of samples in a particular lineage group should not be 0
-        assert lineages.sum(axis=0).min() > 0
+#         # minimum number of samples in a particular lineage group should not be 0
+#         assert lineages.sum(axis=0).min() > 0
+
+        lineages = get_lineages_matrix(df_phenos)
         
         # get only the training or testing set and subset the lineage matrix too
         df_phenos = df_phenos.query("category==@train_or_test").reset_index(drop=True)
@@ -54,7 +92,7 @@ class MtbGeneDataset(Sequence):
                 y = df_phenos["phenotype"].values.astype(int)
             assert len(np.unique(y)) == 2
         else:
-            y = np.log(df_phenos[drug+"_midpoint"].values)
+            y = np.log2(df_phenos[drug+"_midpoint"].values)
             
         # shuffle -- use this for performing the permutation test for saliency scores
         if shuffle_phenos:

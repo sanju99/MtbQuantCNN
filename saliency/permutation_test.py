@@ -61,7 +61,7 @@ for rep in range(replicates):
     
     print(f"Working on replicate {rep+1}/{replicates}")
     
-    # for each replicate, randomly shuffle the MICs, so get new training data each time
+    # for each replicate, randomly shuffle the MICs, so get new training data each time. TRAIN ON FULL DATASET
     train_generator = MtbGeneDataset(
         os.path.join(output_path, 'pkl_sparse_train.npz'),
         phenotype_file,
