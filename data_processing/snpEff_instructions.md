@@ -2,13 +2,15 @@
 
 2. Add the Rv assembly name: Mycobacterium_tuberculosis_gca_000195955 to the snpEff config file:
 
-`anaconda3/envs/sambcftools/share/snpeff-5.1-2/snpEff.config`
+`anaconda3/envs/bioinformatics/share/snpeff-5.1-2/snpEff.config`
 
-3. Create the folder `anaconda3/envs/sambcftools/share/snpeff-5.1-2/data` and create a folder within that for each database you want to create. The folder name should be the same as the assembly name added to `snpEff.config`. For example:
+3. Create the folder `anaconda3/envs/bioinformatics/share/snpeff-5.1-2/data` and create a folder within that for each database you want to create. The folder name should be the same as the assembly name added to `snpEff.config`. For example:
 
-`anaconda3/envs/sambcftools/share/snpeff-5.1-2/data/Mycobacterium_tuberculosis_gca_000195955`
+`anaconda3/envs/bioinformatics/share/snpeff-5.1-2/data/Mycobacterium_tuberculosis_gca_000195955`
 
-This should have a GenBank file called `genes.gbk`. For this assembly, I downloaded it from https://www.ncbi.nlm.nih.gov/assembly/GCF_000195955.2/
+Follow the instructions in the "Step 2, Option 2: Building a database from GenBank files" section of the snpEff instructions for creating a custom database: https://pcingola.github.io/SnpEff/se_buildingdb/#step-2-option-2-building-a-database-from-genbank-files
+
+This should have a GenBank file called `genes.gbk`. For H37Rv reference sequence NC_000962.3, I downloaded the GenBank file from https://www.ncbi.nlm.nih.gov/nuccore/NC_000962.3 following the snpEff instructions above. MAKE SURE THE FILE IS SAVED IN THE FOLDER WITH THE NAME <b>genes.gbk</b>. 
 
 ```bash
 snpEff build -genbank -v Mycobacterium_tuberculosis_gca_000195955

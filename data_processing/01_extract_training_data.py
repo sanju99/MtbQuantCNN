@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 ### THIS SCRIPT EXTRACTS DATA FOR A SINGLE DRUG, GETS THE VCF FILE PATHS, AND STANDARDIZES THE MICS (INCLUDING GETTING BOUNDS) ###
 
 
-def extract_single_drug(data_df, drug, output_dir, metadata_cols_num=9):
+def extract_single_drug(data_df, drug, metadata_cols_num=9):
     '''
     Extracts data for isolates with quality score of at least MEDIUM. 
     '''
@@ -36,7 +36,7 @@ def extract_single_drug(data_df, drug, output_dir, metadata_cols_num=9):
         high_quality = data_df.copy()
 
     # first several columns the metadata columns
-    keep_df = high_quality[list(data_df.columns[:metadata_cols_num]) + list(data_df.columns[data_df.columns.str.contains(drug, case=False)])]
+    keep_df = high_quality[np.concatenate([data_df.columns[:metadata_cols_num], data_df.columns[data_df.columns.str.contains(drug, case=False)]])]
 
     if drug in ["BDQ", "DLM"]:
         keep_df.loc[:, "MEDIA"] = "m7h11"
@@ -44,6 +44,12 @@ def extract_single_drug(data_df, drug, output_dir, metadata_cols_num=9):
         keep_df.loc[:, "MEDIA"] = "m7h10"
 
     single_drug_df = keep_df.loc[~pd.isnull(keep_df[drug + "_midpoint"])]
+    
+    # this is basically just for the Cryptic data, sometimes the drug field is missing. Replace it with midpoint
+    # all 3 columns are the same: drug_lower_bound, drug_midpoint, drug_upper_bound, but one of the bounds will be NaN if the MIC is at the extremes
+    # midpoint field is never NaN
+    single_drug_df.loc[pd.isnull(single_drug_df[drug]), drug] = single_drug_df.loc[pd.isnull(single_drug_df[drug])][f"{drug}_midpoint"].astype(str)
+    assert len(single_drug_df.dropna(subset=[drug, f"{drug}_midpoint"])) == len(single_drug_df)
     print(f"Found {len(single_drug_df)} isolates for {drug}")
 
     return single_drug_df
@@ -91,19 +97,24 @@ def standardize_MICs(df, drug):
         else:
             upper = float(row[drug])
             if "cryptic" in row["Path"]:
-                lower = cryptic_unique[cryptic_unique.index(upper)-1]
+
+                if cryptic_unique.index(upper) > 0:
+                    lower = cryptic_unique[cryptic_unique.index(upper)-1]
+                else:
+                    lower = 0
+
                 df_new.loc[i, f"{drug}_lower_bound"] = lower
-                
+
                 if ">" in row[drug]:
                     df_new.loc[i, f"{drug}_upper_bound"] = max_val
                 else:
                     df_new.loc[i, f"{drug}_upper_bound"] = upper
-                    
+
                 df_new.loc[i, f"{drug}_midpoint"] = np.mean([lower, upper])
             # because we don't know the tested concentrations for the non-cryptic data, remove them if only one concentration was tested
             else:
                 df_new.loc[i, f"{drug}_midpoint"] = np.nan
-                
+
     # check that bounds make sense with the midpoints
     assert len(df_new.query(f"{drug}_lower_bound > {drug}_midpoint")) == 0
     assert len(df_new.query(f"{drug}_upper_bound < {drug}_midpoint")) == 0
@@ -153,8 +164,9 @@ def get_isolate_paths_and_process(df, output_dir, drug, cryptic_genomic_path, ro
     # print the number of isolates for which data is unavailable because it didn't pass QC
     print(f"{len(df_post_qc)} out of {len(df)} isolates passed QC")
     
-    # standardize MICs
+    # standardize MICs. Now nothing should be NaN in the drug MIC columns
     df_post_qc = standardize_MICs(df_post_qc, drug)
+    assert len(df_post_qc.dropna(subset=[drug, f"{drug}_lower_bound", f"{drug}_midpoint", f"{drug}_upper_bound"])) == len(df_post_qc)
     
     # save the full data file and a file of the paths
     df_post_qc.to_csv(os.path.join(output_dir, "data_with_paths.csv"), index=False)
@@ -174,7 +186,7 @@ df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_rollingdb_crypti
 print(f"Full data shape: {df.shape}")
 
 # get the dataframe of MICs for a single drug
-single_drug_df = extract_single_drug(df, drug, output_dir)
+single_drug_df = extract_single_drug(df, drug)
     
 # create a text file of the VCF paths, copy the CSV made in the line above, and add the path column to it
 get_isolate_paths_and_process(single_drug_df, output_dir, drug, cryptic_genomic_path, rollingdb_genomic_path)

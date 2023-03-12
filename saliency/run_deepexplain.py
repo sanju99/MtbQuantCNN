@@ -168,12 +168,13 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
             # don't save the scores by nucleotide for the permutation test
             if file_suffix == "":
                 sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores_unpooled_nuc{file_suffix}.npy"), sparse.COO(genetic_attr_by_nuc), compressed=True)
+            
             sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores{file_suffix}.npy"), sparse.COO(genetic_attr), compressed=True)
 
             # save mean, max, and min scores
             np.save(os.path.join(saliency_dir, f"scores_max{file_suffix}.npy"), np.max(genetic_attr, axis=0))
             np.save(os.path.join(saliency_dir, f"scores_min{file_suffix}.npy"), np.min(genetic_attr, axis=0))
-            np.save(os.path.join(saliency_dir, f"scores_mean{file_suffix}.npy"), np.mean(genetic_attr, axis=0))
+            # np.save(os.path.join(saliency_dir, f"scores_mean{file_suffix}.npy"), np.mean(genetic_attr, axis=0))
 
             if include_lineage:
                 lineage_attr = np.concatenate(lineage_attr, axis=0)

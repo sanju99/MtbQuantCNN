@@ -10,16 +10,59 @@ tracemalloc.start()
 #################################### STEP 0: READ IN FILES AND INITIALIZE VARIABLES ####################################
     
     
-# START is 0-indexed, END is 1-indexed to be consistent with the previous SNP concatenator in Perl
+######## IMPORTANT: START is 0-indexed, END is 1-indexed to be consistent with the previous SNP concatenator in Perl ########
     
-if len(sys.argv) == 7:
-    _, PHENOS_FILE, VCF_DIR, START, END, SENSE, OUT_FILE = sys.argv
-    ADDITIONAL_ISOLATES_FILE = None
-elif len(sys.argv) == 8:
-    _, PHENOS_FILE, VCF_DIR, START, END, SENSE, OUT_FILE, ADDITIONAL_ISOLATES_FILE = sys.argv
+# if len(sys.argv) == 7:
+#     _, PHENOS_FILE, VCF_DIR, START, END, SENSE, OUT_FILE = sys.argv
+#     ADDITIONAL_ISOLATES_FILE = None
+# elif len(sys.argv) == 8:
+#     _, PHENOS_FILE, VCF_DIR, START, END, SENSE, OUT_FILE, ADDITIONAL_ISOLATES_FILE = sys.argv
+# else:
+#     raise ValueError(f"Must pass in 6 or 7 command line arguments. You passed in {len(sys.argv)-1}")
+    
+    
+# START = int(START)
+# END = int(END)
+
+# SENSE = SENSE.upper()
+# assert SENSE in ["POS", "NEG"]
+
+# if not os.path.isfile(PHENOS_FILE):
+#     raise ValueError(f"{PHENOS_FILE} is not a file!")
+    
+# isolates = pd.read_csv(PHENOS_FILE)["ROLLINGDB_ID"].values
+# paths = []
+
+# for isolate in isolates:
+#     fName = os.path.join(VCF_DIR, isolate) + ".vcf" 
+  
+#     if not os.path.isfile(fName):
+#         raise ValueError(f"{fName} does not exist!")
+#     else:
+#         paths.append(fName)
+
+# num_isolates = len(paths)
+        
+# # ADDITIONAL_ISOLATES_FILE must contain ONLY the isolate names.
+# if ADDITIONAL_ISOLATES_FILE is not None:
+    
+#     with open(ADDITIONAL_ISOLATES_FILE, "r") as file:
+#         # precaution: remove any existing VCF file extension if it's there
+#         for line in file:
+#             fName = os.path.join(VCF_DIR, line.strip("\n").replace(".vcf", "") + ".vcf")
+            
+#             if not os.path.isfile(fName):
+#                 raise ValueError(f"{fName} does not exist!")
+#             else:
+#                 paths.append(fName)
+    
+# print(f"Making multiple sequence alignment for {num_isolates} sequences with phenotypes and {len(paths)-num_isolates} additional sequences")
+
+
+if len(sys.argv) == 6:
+    _, PATHS_FILE, START, END, SENSE, OUT_FILE = sys.argv
 else:
-    raise ValueError(f"Must pass in 6 or 7 command line arguments. You passed in {len(sys.argv)-1}")
-    
+    raise ValueError(f"Must pass in 6 command line arguments. You passed in {len(sys.argv)-1}")
     
 START = int(START)
 END = int(END)
@@ -27,37 +70,16 @@ END = int(END)
 SENSE = SENSE.upper()
 assert SENSE in ["POS", "NEG"]
 
-if not os.path.isfile(PHENOS_FILE):
-    raise ValueError(f"{PHENOS_FILE} is not a file!")
+if not os.path.isfile(PATHS_FILE):
+    raise ValueError(f"{PATHS_FILE} is not a file!")
     
-isolates = pd.read_csv(PHENOS_FILE)["ROLLINGDB_ID"].values
-paths = []
+# PATHS_FILE should be a text file of paths
+if PATHS_FILE[-4:] != ".txt":
+    raise ValueError(f"{PATHS_FILE} must be a text file!")
 
-for isolate in isolates:
-    fName = os.path.join(VCF_DIR, isolate) + ".vcf" 
-  
-    if not os.path.isfile(fName):
-        raise ValueError(f"{fName} does not exist!")
-    else:
-        paths.append(fName)
+paths = pd.read_csv(PATHS_FILE, sep="\t", header=None)[0].values    
+print(f"Making multiple sequence alignment for {len(paths)} sequences")
 
-num_isolates = len(paths)
-        
-# ADDITIONAL_ISOLATES_FILE must contain ONLY the isolate names.
-if ADDITIONAL_ISOLATES_FILE is not None:
-    
-    with open(ADDITIONAL_ISOLATES_FILE, "r") as file:
-        # precaution: remove any existing VCF file extension if it's there
-        for line in file:
-            fName = os.path.join(VCF_DIR, line.strip("\n").replace(".vcf", "") + ".vcf")
-            
-            if not os.path.isfile(fName):
-                raise ValueError(f"{fName} does not exist!")
-            else:
-                paths.append(fName)
-    
-print(f"Making multiple sequence alignment for {num_isolates} sequences with phenotypes and {len(paths)-num_isolates} additional sequences")
-  
 if ".fasta" not in OUT_FILE:
     OUT_FILE = OUT_FILE.split(".")[0] + ".fasta"
     

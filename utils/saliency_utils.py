@@ -190,6 +190,7 @@ def compute_saliency_score_significance(locus_idx, scores_max, scores_min, permu
     # return arrays of 1s and 0s, where 1 = significant
     return (np.array(max_pvals) < 0.1).astype(int), (np.array(min_pvals) < 0.1).astype(int)
             
+    
 
 def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save=False, significance=True):
     
@@ -201,7 +202,7 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
     else:
         saliency_dir = os.path.join(out_dir, "saliency", "quant")
     
-    combined_mean = np.load(os.path.join(saliency_dir, "scores_mean.npy"))
+    # combined_mean = np.load(os.path.join(saliency_dir, "scores_mean.npy"))
     combined_max = np.load(os.path.join(saliency_dir, "scores_max.npy"))
     combined_min = np.load(os.path.join(saliency_dir, "scores_min.npy"))
     
@@ -259,7 +260,7 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
                                      "Pos": X_matrix_H37Rv_coords[:, locus_idx], 
                                      "Max": combined_max[:, locus_idx], 
                                      "Min": combined_min[:, locus_idx],
-                                     "Mean": combined_mean[:, locus_idx]
+                                     #"Mean": combined_mean[:, locus_idx]
                                    })
         
         # plot dots for significant scores
