@@ -8,18 +8,27 @@
 
 `anaconda3/envs/bioinformatics/share/snpeff-5.1-2/data/Mycobacterium_tuberculosis_gca_000195955`
 
-Follow the instructions in the "Step 2, Option 2: Building a database from GenBank files" section of the snpEff instructions for creating a custom database: https://pcingola.github.io/SnpEff/se_buildingdb/#step-2-option-2-building-a-database-from-genbank-files
+Follow the instructions in the <a href="https://pcingola.github.io/SnpEff/se_buildingdb/#step-2-option-2-building-a-database-from-genbank-files" target="_blank">"Step 2, Option 2: Building a database from GenBank files"</a> section of the snpEff instructions for creating a custom database.
 
-This should have a GenBank file called `genes.gbk`. For H37Rv reference sequence NC_000962.3, I downloaded the GenBank file from https://www.ncbi.nlm.nih.gov/nuccore/NC_000962.3 following the snpEff instructions above. MAKE SURE THE FILE IS SAVED IN THE FOLDER WITH THE NAME <b>genes.gbk</b>. 
+1. Download a GenBank file for the H37Rv reference sequence <a href="https://www.ncbi.nlm.nih.gov/nuccore/NC_000962.3" target="_blank">NC_000962.3</a> (EXACTLY follow the instructions in the above link).
+2. Because all of our VCF files have been aligned to the NC_000962.3 genome, you HAVE to download this genome. Otherwise, you will get a "Chromosome not found error" when you try to run snpEff on the VCF files.
+3. Rename the downloaded file to `genes.gbk` and place in the `anaconda3/envs/bioinformatics/share/snpeff-5.1-2/data/Mycobacterium_tuberculosis_gca_000195955` folder. <b>The name is important because snpEff looks for a file with that exact name.</b>
+
+Run the following to build the database:
 
 ```bash
 snpEff build -genbank -v Mycobacterium_tuberculosis_gca_000195955
 ```
-
-You need to create a text file containing the paths to all the files that you want to annotate. Then can run snpEff on all VCF files in the text file efficiently, without having to reload the database every time. 
+To run snpEff on a single file, run
 
 ```bash
-snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/vcf_files_for_annot.txt
+snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats /path/to/sample/file.vcf > /path/to/sample/file.eff.vcf
+```
+
+To run it efficiently on many samples without having to reload the database every time, you need to create a text file containing the paths to all the files that you want to annotate. Once you have that file, run:
+
+```bash
+snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList /path/to/samples/file.txt
 ```
 
 The next block of code extracts the desired fields from each VCF file and saves them to a text file. The text files will then be processed and concatenated into the final `isolate_variants.csv` file.
@@ -29,4 +38,3 @@ paste /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/RIF/paths.txt /home
      bcftools view -v snps,indels "${out_path}.eff.vcf" | bcftools query -i 'INFO/IMPRECISE != 1 & ALT != "."' -f '%POS %REF %ALT %QUAL %FILTER %INFO/DP %INFO/BQ %INFO/MQ %INFO/AF %ANN\n' > "${out_path}.txt"
 done
 ```
-
