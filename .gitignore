@@ -4,6 +4,7 @@ __pycache__/
 # too big or too many files. also could be sensitive data
 *.fasta
 *.gbk
+*.gb
 
 # additional files for testing
 temp.py
