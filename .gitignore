@@ -5,6 +5,7 @@ __pycache__/
 *.fasta
 *.gbk
 *.gb
+*.vcf
 
 # additional files for testing
 temp.py
