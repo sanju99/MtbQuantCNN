@@ -5,10 +5,10 @@ import sys, glob, os, yaml, sparse, warnings, tracemalloc
 
 from evcouplings.align import Alignment
 import scipy.stats as st
-from sklearn.linear_model import Ridge, RidgeCV, LogisticRegression, LogisticRegressionCV, SGDRegressor
+from sklearn.linear_model import Ridge, RidgeCV, LogisticRegression, LogisticRegressionCV, SGDClassifier, SGDRegressor
 from sklearn.metrics import roc_auc_score, roc_curve, auc, accuracy_score, average_precision_score
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold, StratifiedKFold
 
 from Bio import SeqIO
 from sklearn.metrics import confusion_matrix
@@ -57,8 +57,8 @@ def subset_fasta_files():
         
         # the fasta files contain sequences for all isolates. Keep only the isolates in the phenotypes file
         # need indices for splitting alignment in evcouplings
-        keep_ids = [i for i, name in enumerate(aln.ids) if os.path.basename(name) in isolate_order]
-        assert len(keep_ids) == len(isolate_order)
+        keep_ids = [i for i, name in enumerate(aln.ids) if os.path.basename(name).split(".")[0] in isolate_order]
+        # assert len(keep_ids) == len(isolate_order)
 
         # drop sites that are identical in all isolates because they have no impact on the regression
         # indices_to_keep = np.where(aln.frequencies.max(axis=1) < 1)[0]
@@ -66,7 +66,7 @@ def subset_fasta_files():
         # this keeps only sites where the major allele frequency is less than 1. Major allele frequence = 1 means that all isolates are the same at the site
         
         # keep sites with a minor allele fraction of at least 0.1%
-        indices_to_keep = np.where(aln.frequencies.max(axis=1) <= 0.999)[0]
+        indices_to_keep = np.where(aln.frequencies.max(axis=1) < 1)[0]
         subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_ids)        
        
         print("original alignment shape", aln.matrix.shape)
@@ -76,7 +76,7 @@ def subset_fasta_files():
         del aln
 
         # First, correct the ids in the alignment so that they match the ROLLINGDB_IDs in the dataframe of phenotypes
-        subset_alignment.ids = [os.path.basename(path) for path in subset_alignment.ids]
+        subset_alignment.ids = [os.path.basename(path).split(".")[0] for path in subset_alignment.ids]
         
         # First, correct the ids in the alignment so that they match the ROLLINGDB_IDs in the dataframe of phenotypes
         subset_alignment.id_to_index = {x:idx for idx,x in enumerate(subset_alignment.ids)}
@@ -101,18 +101,19 @@ def subset_fasta_files():
         
         
 
-# get the reduced files made in the previous function
+# # get the reduced files made in the previous function
+# reduced_fastas = glob.glob(os.path.join(ridge_dir, "*_reduced.fasta"))
+
+# if len(reduced_fastas) == len(fastas):
+#     print("Found reduced fasta files. Proceeding with modeling...")
+# else:
+#     subset_fasta_files()
+
+# get the reduced files made in the previous function. Re-acquire the list of reduced fasta files since they've now been made
+subset_fasta_files()
 reduced_fastas = glob.glob(os.path.join(ridge_dir, "*_reduced.fasta"))
 
-if len(reduced_fastas) == len(fastas):
-    print("Found reduced fasta files. Proceeding with modeling...")
-else:
-    subset_fasta_files()
-    
-    # get the reduced files made in the previous function. Re-acquire the list of reduced fasta files since they've now been made
-    reduced_fastas = glob.glob(os.path.join(ridge_dir, "*_reduced.fasta"))
-    
-    assert len(reduced_fastas) == len(fastas)
+assert len(reduced_fastas) == len(fastas)
 
 # Compute the total number of sites in our model by summing the length of all the alignment
 total_sites = 0
@@ -183,22 +184,31 @@ gene_sites.to_csv(os.path.join(ridge_dir, "site_indices.csv"))
 
 def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10):
 
+    # need the train dataframe indices for slicing it. Reset index so that it's the index within the values, not in the overall dataframe
+    df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
+    df_val = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
+    
     # Perform baseline model with all data
     scaler = StandardScaler()
         
     if include_lineage:
-        lineages = pd.get_dummies(df_phenos["Lineage"])
-        lineages.index = df_phenos["ROLLINGDB_ID"]
+        print(f"Fitting model with lineages")
+        # lineages = pd.get_dummies(df_phenos["Lineage"])
+        # lineages.index = df_phenos["ROLLINGDB_ID"]
         
-        # the following checks are a bit extra, but including them anyway to be very careful
-        # check that the sum of each row (isolate) is 1, i.e. each isolate has only 1 lineage
-        assert lineages.sum(axis=1).unique() == np.array([1])
+        lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
+        assert len(np.unique(lineages.values)) == 2
+        lineages = lineages.loc[df_phenos["ROLLINGDB_ID"]]
+        
+#         # the following checks are a bit extra, but including them anyway to be very careful
+#         # check that the sum of each row (isolate) is 1, i.e. each isolate has only 1 lineage
+#         assert lineages.sum(axis=1).unique() == np.array([1])
 
-        # minimum number of samples in a particular lineage group should not be 0
-        assert lineages.sum(axis=0).min() > 0
+#         # minimum number of samples in a particular lineage group should not be 0
+#         assert lineages.sum(axis=0).min() > 0
     
-        X_train = np.concatenate([X[df_phenos.query("category=='original_train_set'").index, :], lineages.loc[df_phenos.query("category=='original_train_set'").ROLLINGDB_ID.values, :].values], axis=1)
-        X_test = np.concatenate([X[df_phenos.query("category=='original_test_set'").index, :], lineages.loc[df_phenos.query("category=='original_test_set'").ROLLINGDB_ID.values, :].values], axis=1)
+        X_train = np.concatenate([X[df_phenos.query("category=='original_train_set'").index, :], lineages.loc[df_train.ROLLINGDB_ID.values, :].values], axis=1)
+        X_test = np.concatenate([X[df_phenos.query("category=='original_test_set'").index, :], lineages.loc[df_val.ROLLINGDB_ID.values, :].values], axis=1)
     
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.fit_transform(X_test)
@@ -206,8 +216,10 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
         X_train = scaler.fit_transform(X[df_phenos.query("category=='original_train_set'").index, :])   
         X_test = scaler.fit_transform(X[df_phenos.query("category=='original_test_set'").index, :])
 
-    y_train = np.log(df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"].values)
-    y_test = np.log(df_phenos.query("category=='original_test_set'")[f"{drug}_midpoint"].values)
+    print(X_train.shape, X_test.shape)
+    
+    y_train = np.log2(df_train[f"{drug}_midpoint"].values)
+    y_test = np.log2(df_val[f"{drug}_midpoint"].values)
     
     # get the regularization parameter
     if loss_type == "L1":
@@ -215,35 +227,27 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
     elif loss_type == "L2":
         loss_func = "neg_mean_squared_error"
     
+    print(f"Minimizing {loss_type} loss")
+    
     model = RidgeCV(alphas=np.logspace(-6, 6, 13), scoring=loss_func)
     model.fit(X_train, y_train)
+    pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
+    print(f"Regularization parameter: {model.alpha_}")
     
     y_pred = np.squeeze(model.predict(X_test))
-    pred_df = pd.DataFrame({"Isolate": df_phenos.query("category=='original_test_set'")["ROLLINGDB_ID"].values,
-                            "y_pred": np.squeeze(y_pred), 
-                            "y_test": y_test, 
-                            "lower": df_phenos.query("category=='original_test_set'")[f"{drug}_lower_bound"], 
-                            "upper": df_phenos.query("category=='original_test_set'")[f"{drug}_upper_bound"]
-                           }) 
-    pred_df.to_csv(os.path.join(ridge_dir, "test_predictions.csv"), index=False)
+    
+    summary_df = create_summary_df(df_phenos.query("category=='original_test_set'").reset_index(drop=True), 
+                                   y_pred, 
+                                   drug, 
+                                   binary_thresh, 
+                                   num_loci, 
+                                   model_name="CNN", 
+                                   binarize=True, 
+                                   save_fName=os.path.join(ridge_dir, "test_predictions.csv")
+                                  )
 
-    binned_mae, binned_mse, within_1bin = boundedLoss_predict(pred_df, "y_pred", "y_test", "lower", "upper")
-    
-    summary_df = pd.DataFrame({"Drug": drug,
-                               "Model": "LinReg",
-                               "Num_Loci": num_loci,
-                               "Binned_MAE": binned_mae,
-                               "Binned_MSE": binned_mse,
-                               "MAE": np.mean(np.abs(y_pred-y_test)),
-                               "MSE": np.mean((y_pred-y_test)**2),
-                               "Within_1bin": within_1bin,
-                               "Pearson": st.pearsonr(y_pred, y_test)[0],
-                              }, index=[0])
-    
-    binary_metrics_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred"], binary_thresh, binarize=True)
-    summary_df = pd.concat([summary_df, binary_metrics_df], axis=1)
     summary_df["CV"] = 0
-        
+
     bootstrap_df = []
 
     print("Performing bootstrapping...")
@@ -265,7 +269,7 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
                                    "upper": df_phenos.query("category=='original_test_set'")[f"{drug}_upper_bound"]
                                   }) 
             
-        bs_binned_mae, bs_binned_mse, bs_within_1bin = boundedLoss_predict(bs_pred_df, "y_pred", "y_test", "lower", "upper")
+        bs_binned_mae, bs_binned_mse, bs_within_doubling = boundedLoss_predict(bs_pred_df, "y_pred", "y_test", "lower", "upper")
         
         bs_summary_df = pd.DataFrame({"Drug": drug,
                                    "Model": "LinReg",
@@ -274,7 +278,8 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
                                    "Binned_MSE": bs_binned_mse,
                                    "MAE": np.mean(np.abs(bs_pred_df.y_test - bs_pred_df.y_pred)),
                                    "MSE": np.mean((bs_pred_df.y_test - bs_pred_df.y_pred)**2),
-                                   "Within_1bin": bs_within_1bin,
+                                    "Within_doubling": bs_within_doubling,
+                                   "Spearman": st.spearmanr(bs_pred_df.y_test, bs_pred_df.y_pred)[0],
                                    "Pearson": st.pearsonr(bs_pred_df.y_test, bs_pred_df.y_pred)[0],
                                   }, index=[0])
 
@@ -282,93 +287,141 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
         bs_summary_df = pd.concat([bs_summary_df, bs_binary_metrics_df], axis=1)
         bs_summary_df["CV"] = i + 1
         bootstrap_df.append(bs_summary_df)
-
         
     bootstrap_df = pd.concat(bootstrap_df)
     final_df = pd.concat([summary_df, bootstrap_df], axis=0)
     final_df[["Lineage", "Num_Loci"]] = [int(include_lineage), num_loci]
 
+#     print("Performing crossvalidation....")
+
+#     crossValidation_df = []
+
+#     cv_splits = StratifiedKFold(n_splits=num_bootstrap)
+
+#     # include df_train["Binary"] as the y argument so that it stratifies by it
+#     # so stratify the training dataset by binary resistance phenotype
+#     for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_train["Binary"])):
+
+#         X_cv_train = scaler.fit_transform(X_train[train_idx])
+#         X_cv_val = scaler.fit_transform(X_train[val_idx])
+        
+#         y_cv_train = y_train[train_idx]
+#         y_cv_val = y_train[val_idx]
+        
+#         cv_model = Ridge(alpha=model.alpha_)
+#         cv_model.fit(X_cv_train, y_cv_train)
+#         y_cv_pred = np.squeeze(cv_model.predict(X_cv_val))
+                
+#         cv_pred_df = pd.DataFrame({"y_pred": y_cv_pred,
+#                                    "y_test": y_cv_val, 
+#                                    "lower": df_train.iloc[val_idx, :][f"{drug}_lower_bound"], 
+#                                    "upper": df_train.iloc[val_idx, :][f"{drug}_upper_bound"]
+#                                   }) 
+            
+#         cv_binned_mae, cv_binned_mse, cv_within_doubling = boundedLoss_predict(cv_pred_df, "y_pred", "y_test", "lower", "upper")
+        
+#         cv_summary_df = pd.DataFrame({"Drug": drug,
+#                                    "Model": "LinReg",
+#                                    "Num_Loci": num_loci,
+#                                    "Binned_MAE": cv_binned_mae,
+#                                    "Binned_MSE": cv_binned_mse,
+#                                    "MAE": np.mean(np.abs(cv_pred_df.y_test - cv_pred_df.y_pred)),
+#                                    "MSE": np.mean((cv_pred_df.y_test - cv_pred_df.y_pred)**2),
+#                                    "Within_doubling": cv_within_doubling,
+#                                    "Pearson": st.pearsonr(cv_pred_df.y_test, cv_pred_df.y_pred)[0],
+#                                   }, index=[0])
+
+#         cv_binary_metrics_df = compute_binary_metrics(cv_pred_df["y_test"], cv_pred_df["y_pred"], binary_thresh, binarize=True)
+#         cv_summary_df = pd.concat([cv_summary_df, cv_binary_metrics_df], axis=1)
+#         cv_summary_df["CV"] = rep + 1
+#         crossValidation_df.append(cv_summary_df)
+        
+        
+    # crossValidation_df = pd.concat(crossValidation_df)
+    # final_df = pd.concat([summary_df, crossValidation_df], axis=0)
+    # final_df[["Lineage", "Num_Loci"]] = [int(include_lineage), num_loci]
+
     return final_df
 
 
 
 
-def ridge_binary(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10):
+# def ridge_binary(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10):
     
-    print(f"Critical concentration: {binary_thresh} ug/mL")
-    # Perform baseline model with all data
-    scaler = StandardScaler()
+#     print(f"Critical concentration: {binary_thresh} ug/mL")
+#     # Perform baseline model with all data
+#     scaler = StandardScaler()
         
-    if include_lineage:
-        lineages = pd.get_dummies(df_phenos["Lineage"])
-        lineages.index = df_phenos["ROLLINGDB_ID"]
+#     if include_lineage:
+#         lineages = pd.get_dummies(df_phenos["Lineage"])
+#         lineages.index = df_phenos["ROLLINGDB_ID"]
         
-        # the following checks are a bit extra, but including them anyway to be very careful
-        # check that the sum of each row (isolate) is 1, i.e. each isolate has only 1 lineage
-        assert lineages.sum(axis=1).unique() == np.array([1])
+#         # the following checks are a bit extra, but including them anyway to be very careful
+#         # check that the sum of each row (isolate) is 1, i.e. each isolate has only 1 lineage
+#         assert lineages.sum(axis=1).unique() == np.array([1])
 
-        # minimum number of samples in a particular lineage group should not be 0
-        assert lineages.sum(axis=0).min() > 0
+#         # minimum number of samples in a particular lineage group should not be 0
+#         assert lineages.sum(axis=0).min() > 0
     
-        X_train = np.concatenate([X[df_phenos.query("category=='original_train_set'").index, :], lineages.loc[df_phenos.query("category=='original_train_set'").ROLLINGDB_ID.values, :].values], axis=1)
-        X_test = np.concatenate([X[df_phenos.query("category=='original_test_set'").index, :], lineages.loc[df_phenos.query("category=='original_test_set'").ROLLINGDB_ID.values, :].values], axis=1)
+#         X_train = np.concatenate([X[df_phenos.query("category=='original_train_set'").index, :], lineages.loc[df_phenos.query("category=='original_train_set'").ROLLINGDB_ID.values, :].values], axis=1)
+#         X_test = np.concatenate([X[df_phenos.query("category=='original_test_set'").index, :], lineages.loc[df_phenos.query("category=='original_test_set'").ROLLINGDB_ID.values, :].values], axis=1)
     
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.fit_transform(X_test)
-    else:     
-        X_train = scaler.fit_transform(X[df_phenos.query("category=='original_train_set'").index, :])   
-        X_test = scaler.fit_transform(X[df_phenos.query("category=='original_test_set'").index, :])
+#         X_train = scaler.fit_transform(X_train)
+#         X_test = scaler.fit_transform(X_test)
+#     else:     
+#         X_train = scaler.fit_transform(X[df_phenos.query("category=='original_train_set'").index, :])   
+#         X_test = scaler.fit_transform(X[df_phenos.query("category=='original_test_set'").index, :])
 
-    y_train = (df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int).values
-    y_test = (df_phenos.query("category=='original_test_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int).values
+#     y_train = (df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int).values
+#     y_test = (df_phenos.query("category=='original_test_set'")[f"{drug}_midpoint"] > binary_thresh).astype(int).values
     
-    model = LogisticRegressionCV(penalty='l2', 
-                                 Cs=np.logspace(-6, 6, 13), 
-                                 class_weight=class_weighting_dictionary(y_train), 
-                                 multi_class='ovr', 
-                                 scoring='neg_log_loss', 
-                                 max_iter=100000
-                                )
+#     model = LogisticRegressionCV(penalty='l2', 
+#                                  Cs=np.logspace(-6, 6, 13), 
+#                                  class_weight=class_weighting_dictionary(y_train), 
+#                                  multi_class='ovr', 
+#                                  scoring='neg_log_loss', 
+#                                  max_iter=100000
+#                                 )
     
-    model.fit(X_train, y_train)
-    y_pred = np.squeeze(model.predict(X_test))
+#     model.fit(X_train, y_train)
+#     y_pred = np.squeeze(model.predict(X_test))
     
-    pred_df = pd.DataFrame({"Isolate": df_phenos.query("category=='original_test_set'")["ROLLINGDB_ID"].values,
-                            "y_pred": np.squeeze(y_pred), 
-                            "y_test": y_test
-                           }) 
-    pred_df.to_csv(os.path.join(ridge_dir, "binary_test_predictions.csv"), index=False)
+#     pred_df = pd.DataFrame({"Isolate": df_phenos.query("category=='original_test_set'")["ROLLINGDB_ID"].values,
+#                             "y_pred": np.squeeze(y_pred), 
+#                             "y_test": y_test
+#                            }) 
+#     pred_df.to_csv(os.path.join(ridge_dir, "binary_test_predictions.csv"), index=False)
     
-    summary_df = compute_binary_metrics(y_test, y_pred, binary_thresh, binarize=False)
-    summary_df["CV"] = 0
+#     summary_df = compute_binary_metrics(y_test, y_pred, binary_thresh, binarize=False)
+#     summary_df["CV"] = 0
         
-    bootstrap_df = []
+#     bootstrap_df = []
 
-    print("Performing bootstrapping...")
-    for i in range(num_bootstrap):
+#     print("Performing bootstrapping...")
+#     for i in range(num_bootstrap):
         
-        train_idx = np.random.choice(np.arange(0, len(X_train)), size=len(X_train), replace=True)
+#         train_idx = np.random.choice(np.arange(0, len(X_train)), size=len(X_train), replace=True)
         
-        X_bs = X_train[train_idx, :]
-        y_bs = y_train[train_idx]
+#         X_bs = X_train[train_idx, :]
+#         y_bs = y_train[train_idx]
         
-        # use regularization parameter determined above
-        bs_model = LogisticRegression(penalty="l2", C=model.C_[0], multi_class='ovr', class_weight=class_weighting_dictionary(y_bs), max_iter=100000)
-        bs_model.fit(X_bs, y_bs)
-        y_bs_pred = np.squeeze(bs_model.predict(X_test))
+#         # use regularization parameter determined above
+#         bs_model = LogisticRegression(penalty="l2", C=model.C_[0], multi_class='ovr', class_weight=class_weighting_dictionary(y_bs), max_iter=100000)
+#         bs_model.fit(X_bs, y_bs)
+#         y_bs_pred = np.squeeze(bs_model.predict(X_test))
 
-        bs_binary_metrics_df = compute_binary_metrics(y_test, y_bs_pred, binary_thresh, binarize=False)
-        bs_binary_metrics_df["CV"] = i + 1
-        bootstrap_df.append(bs_binary_metrics_df)
+#         bs_binary_metrics_df = compute_binary_metrics(y_test, y_bs_pred, binary_thresh, binarize=False)
+#         bs_binary_metrics_df["CV"] = i + 1
+#         bootstrap_df.append(bs_binary_metrics_df)
 
         
-    bootstrap_df = pd.concat(bootstrap_df)
-    final_df = pd.concat([summary_df, bootstrap_df])
-    final_df[["Lineage", "Num_Loci"]] = [int(include_lineage), num_loci]
-    final_df.insert(0, "Model", "LogReg")
-    final_df.insert(0, "Drug", drug)
+#     bootstrap_df = pd.concat(bootstrap_df)
+#     final_df = pd.concat([summary_df, bootstrap_df])
+#     final_df[["Lineage", "Num_Loci"]] = [int(include_lineage), num_loci]
+#     final_df.insert(0, "Model", "LogReg")
+#     final_df.insert(0, "Drug", drug)
 
-    return final_df
+#     return final_df
 
 
 
@@ -383,3 +436,10 @@ if binary:
 else:
     results_df = ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10)
     results_df.to_csv(os.path.join(ridge_dir, "ridge_results.csv"), index=False)
+    
+# delete all large files to save space (this script is very fast, so time is not an issue)
+for fName in reduced_fastas:
+    os.remove(fName)
+    
+for fName in glob.glob(os.path.join(ridge_dir, "*.npy")):
+    os.remove(fName)

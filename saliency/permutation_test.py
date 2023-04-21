@@ -3,8 +3,9 @@ import numpy as np
 import pandas as pd
 import scipy.stats as st
 import tensorflow as tf
-from sklearn.model_selection import KFold
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import backend as K
+tf.config.run_functions_eagerly(True)
 
 # utils files are in the utils_files directory
 sys.path.append("utils")
@@ -55,8 +56,10 @@ saliency_dir = os.path.join(output_path, "saliency", save_prefix, "permutation_t
     
 if not os.path.isdir(saliency_dir):
     os.makedirs(os.path.join(saliency_dir))    
-    
+        
 replicates = 10
+print(f"Performing permutation test with {replicates} replicates for {N_epochs} epochs")
+
 for rep in range(replicates):
     
     print(f"Working on replicate {rep+1}/{replicates}")
@@ -92,7 +95,7 @@ for rep in range(replicates):
         @tf.function
         def train_step(x, y):
             '''
-            This is the training step for a single batch. Iterating over batches and epochs is done separately. Redefine and recompile this function for every bootstrapped model. 
+            This is the training step for a single batch. Iterating over batches and epochs is done separately
             '''
 
             # the bounds are the last 2 elements of the x list
@@ -112,17 +115,17 @@ for rep in range(replicates):
             # run the optimizer
             optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 
-            # return loss
-            return loss
+            # return only loss
+            return loss.numpy()
 
-
+        
         # train the model on the permuted data
         for epoch in range(N_epochs):
 
             # training loop: don't keep track of the train losses because we just want to train the model here
             for (x_batch_train, y_batch_train) in train_generator:
 
-                _ = train_step(x_batch_train, y_batch_train) 
+                _ = train_step(x_batch_train, y_batch_train)
 
     else:
         

@@ -335,13 +335,21 @@ def get_data_for_synthetic_VCF(df, sense):
 
 
 
-def create_synthetic_VCF_files(df, out_fName, vcf_dir="/n/scratch3/users/s/sak0914/annotated_VCF"):
+def create_synthetic_VCF_files(df, out_fName, vcf_dir="/n/scratch3/users/s/sak0914/synthetic_VCF"):
 
+    if not os.path.isdir(vcf_dir):
+        os.makedirs(vcf_dir)
+        
+    if not os.path.isdir(os.path.dirname(out_fName)):
+        os.makedirs(os.path.dirname(out_fName))
+    
     # create a header section
     header = '##fileformat=VCFv4.1\n'
     header += "##contig=<ID=NC_000962.3,length=4411532>\n"
     header += '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSample\n'
 
+    print(f"Creating synthetic VCF files for {len(df['mutation'].unique())} mutations")
+    
     # text file for the list of mutation files (isolate name only) to pass into SNP concatenator later
     with open(out_fName, "w+") as out_file:
 
@@ -349,8 +357,11 @@ def create_synthetic_VCF_files(df, out_fName, vcf_dir="/n/scratch3/users/s/sak09
         # There can be multiple single site variants to make for a given mutation
         for mutation in df["mutation"].unique():
             
-            # write the mutation name to the out text file    
-            out_file.write(f'{mutation}\n')
+            # absolute VCF file path
+            vcf_fName = f'{vcf_dir}/{mutation}.vcf'
+            
+            # write the absolute path of the VCF file name to the out text file. Need this text file to pass into 06_make_MSA.py
+            out_file.write(f'{vcf_fName}\n')
 
             variants_to_add = []
 
@@ -360,7 +371,7 @@ def create_synthetic_VCF_files(df, out_fName, vcf_dir="/n/scratch3/users/s/sak09
                 variants_to_add.append(['NC_000962.3', row["POS"], '.', row["REF"], row["ALT"], '.', 'PASS', '.', 'GT', '1/1'])
 
                 # create a VCF file for the mutation
-                with open(f'{vcf_dir}/{mutation}.vcf', 'w+') as vcf_file:
+                with open(vcf_fName, 'w+') as vcf_file:
 
                     # write VCF file header
                     vcf_file.write(header)

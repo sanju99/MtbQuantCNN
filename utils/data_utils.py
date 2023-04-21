@@ -159,10 +159,11 @@ def make_geno_pheno_files(**kwargs):
     
     # make table of all genotypes. Index is the identifier
     df_genos = make_genotype_df(kwargs["locus_list"], kwargs['genotype_input_directory'])
-
+    
     # Some IDs had '-' switched to '_', fix that here
-    df_genos.index = [name.replace("-", "_") for name in df_genos.index]
+    df_genos.index = [name.replace("-", "_").split(".")[0] for name in df_genos.index]
     df_phenos["ROLLINGDB_ID"] = [name.replace("-", "_") for name in df_phenos["ROLLINGDB_ID"]]
+    
     print(f"found phenotypes for {len(df_phenos)-1} strains")
 
     df_genos.index.rename('ROLLINGDB_ID', inplace=True)
@@ -211,3 +212,65 @@ def make_geno_pheno_files(**kwargs):
     sparse.save_npz(os.path.join(output_path, "pkl_sparse_train.npz"), X_sparse_train, compressed=False)
     sparse.save_npz(os.path.join(output_path, "pkl_sparse_test.npz"), X_sparse_test, compressed=False)
     sparse.save_npz(os.path.join(output_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=False)
+    
+    
+    
+    
+def get_all_higher_lineages(lineage):
+
+    if "," in lineage:
+        raise ValueError("Lineage entry can't have multiple lineages")
+                
+    if "." in lineage:
+
+        hierarchical_lineages = []
+        split_lineages = lineage.split(".")
+
+        for k in range(len(split_lineages)):
+
+            hierarchical_lineages.append(".".join(split_lineages[:k+1]))
+
+        # check that there are N + 1 lineages in the list, where N is the number of divisions (.)
+        assert len(hierarchical_lineages) == lineage.count(".") + 1
+        return hierarchical_lineages
+
+    # nothing to split, so return a list with the input lineage
+    else:
+        return [lineage]
+
+    
+
+def get_lineages_matrix(df_phenos):
+    
+    lineage_indicator_df = pd.get_dummies(df_phenos[["Lineage"]], prefix="", prefix_sep="")
+    
+    # check that before filling in the hierarchical lineages, each sample has a single lineage
+    assert len(np.unique(lineage_indicator_df.sum(axis=1))) == 1
+    assert np.unique(lineage_indicator_df.sum(axis=1))[0] == 1
+
+    for i, col in enumerate(lineage_indicator_df.columns):
+
+        hierarchical_lineages = get_all_higher_lineages(col)
+
+        found_cols = []
+        primary_lineage = hierarchical_lineages[0]
+
+        # the primary lineage should definitely be in the dataframe
+        assert primary_lineage in lineage_indicator_df.columns
+
+        for col in hierarchical_lineages:
+            if col in lineage_indicator_df.columns:
+                found_cols.append(col)
+
+        # remove the last lineage from the list (this column already has 1)
+        final_lineage = found_cols.pop(-1)
+
+        lineage_indicator_df.loc[lineage_indicator_df[final_lineage]==1, found_cols] += 1
+
+    # check that every row (sample) has at least one lineage and every column (lineage) has at least one isolate
+    assert np.min(lineage_indicator_df.sum(axis=1)) >= 1
+    assert np.min(lineage_indicator_df.sum(axis=0)) >= 1
+
+    lineage_indicator_df.index = df_phenos["ROLLINGDB_ID"].values
+
+    return lineage_indicator_df

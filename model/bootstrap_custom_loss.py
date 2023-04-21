@@ -3,14 +3,19 @@ import numpy as np
 import pandas as pd
 import scipy.stats as st
 import tensorflow as tf
-from sklearn.model_selection import KFold
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import backend as K
+tf.config.run_functions_eagerly(True)
+import scipy.stats as st
 
 # utils files are in the utils_files directory
 sys.path.append("utils")
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
+
+import warnings
+warnings.filterwarnings("ignore")
 
 
 # starting the memory monitoring
@@ -24,8 +29,12 @@ drug = kwargs["drug"]
 locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
-N_epochs = kwargs["N_epochs"]
 patience_epochs = kwargs["patience_epochs"]
+
+if patience_epochs is not None:
+    N_epochs = 250
+else:
+    raise ValueError("patience_epochs must not be None!")
 
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
@@ -39,8 +48,10 @@ bounded_loss = True
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
 
-if not os.path.isdir(output_path):
-    os.mkdir(output_path)
+bootstrap_output_path = os.path.join(output_path, "bootstrapping")
+
+if not os.path.isdir(bootstrap_output_path):
+    os.makedirs(bootstrap_output_path)
 
 if os.path.isfile(os.path.join(output_path, "pkl_sparse_train.npz")): 
     print("Input one-hot encodings file exists. Proceeding with modeling \n")    
@@ -82,17 +93,21 @@ df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True
 
 num_reps = 10
 results = []
-history_df = pd.DataFrame(columns=[f"rep_{i+1}" for i in range(num_reps)])
+history_df = []
 
 for rep in range(num_reps):
-
-    print(f"Training replicate {rep+1}/{num_reps} for {N_epochs} epochs")
+    
+    # reset the patience counter and min_loss for each replicate
+    patience_counter = 0
+    min_loss = 1e3
     val_loss = []
+
+    print(f"\nTraining replicate {rep+1}/{num_reps} for {N_epochs} epochs with early stopping")
     
     # sample indices with replacement
     train_idx = np.random.choice(np.arange(0, len(df_train)), size=len(df_train), replace=True)
 
-    cv_train_generator = MtbGeneDataset(
+    bs_train_generator = MtbGeneDataset(
                                     os.path.join(output_path, 'pkl_sparse_train.npz'),
                                     phenotype_file,
                                     drug,
@@ -135,7 +150,7 @@ for rep in range(num_reps):
         optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 
         # return loss
-        return loss
+        return loss.numpy()
     
     
     @tf.function
@@ -147,76 +162,83 @@ for rep in range(num_reps):
         y_hat = model(x, training=False)
 
         # return loss
-        return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat)
+        return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat).numpy()
     
 
-    # train the bootstrapped model
+    # train the model
     for epoch in range(N_epochs):
+        
+        # only storing validation losses in this script
+        val_epoch_loss = []
 
         # training loop: don't keep track of the train losses because we just want to train the model here
-        for (x_batch_train, y_batch_train) in cv_train_generator:
+        for (x_batch_train, y_batch_train) in bs_train_generator:
 
             _ = train_step(x_batch_train, y_batch_train) 
-        
-        # validation loop
-        val_epoch_loss = []
-        for _, (x_batch_val, y_batch_val) in enumerate(val_generator):
+            
+        # validation loop for a single epoch
+        for (x_batch_val, y_batch_val) in val_generator:
 
             # compute bounded error
-            val_epoch_loss.append(val_step(x_batch_val, y_batch_val).numpy())
+            val_epoch_loss.append(val_step(x_batch_val, y_batch_val))
 
-        val_loss.append(np.mean(val_epoch_loss))
+        val_loss.append(np.sum(val_epoch_loss) / len(df_test))
+        
+        if patience_epochs is not None:
+
+            # if loss decreases by at least 1%
+            if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
+
+                print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
+                
+                # update min loss, then zero out the patience counter
+                min_loss = val_loss[-1]
+                patience_counter = 0
+
+            else:
+                patience_counter += 1
+
+            if patience_counter == patience_epochs:
+                break
+    
+        # train the model for the specified number of epochs
+        else:
+            print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
+            continue
           
     # add validation loss for this replicate to the history dataframe
-    history_df[f"rep_{rep+1}"] = val_loss
+    model.save(os.path.join(bootstrap_output_path, f"model_{rep}.h5"))
+    history_df.append(pd.DataFrame({f"rep_{rep+1}": val_loss}))
     
     # get model predictions
     y_pred = model.predict(x=val_generator,
                            workers=4,
                            use_multiprocessing=True,
     )
-    
-    # predictions dataframe: get indices of validation data in the cv splits
-    pred_df = df_test[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
-    
-    # rename columns to make them easier to read
-    pred_df = pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
-                                      f"{drug}_midpoint": "y_test",
-                                      f"{drug}_lower_bound": "lower",
-                                      f"{drug}_upper_bound": "upper"
-                                     }, inplace=True)
 
-    # compute quantitative metrics
-    binned_mae, binned_mse, within_doubling = boundedLoss_predict(pred_df, "y_pred", "y_test", "lower", "upper")
-    mae = np.mean(np.abs(pred_df.y_test - pred_df.y_pred))
-    mse = np.mean((pred_df.y_test - pred_df.y_pred)**2)
-    spearman = st.spearmanr(pred_df.y_test, pred_df.y_pred)[0]
-    pearson = st.pearsonr(pred_df.y_test, pred_df.y_pred)[0]
-    
-    summary_df = pd.DataFrame({"Drug": drug,
-                               "Model": "CNN",
-                               "Num_Loci": num_loci,
-                               "Binned_MAE": binned_mae,
-                               "Binned_MSE": binned_mse,
-                               "MAE": mae,
-                               "MSE": mse,
-                               "Within_doubling": within_doubling,
-                               "Spearman": spearman,
-                               "Pearson": pearson,
-                              }, index=[0])
-
-    # compute binary metrics: sens, spec, auc, auc_pr, acc, balanced_acc
-    binary_metrics_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred"], binary_thresh, binarize=True)
-    summary_df = pd.concat([summary_df, binary_metrics_df], axis=1)
+    summary_df = create_summary_df(df_test, 
+                                   y_pred, 
+                                   drug, 
+                                   binary_thresh, 
+                                   num_loci, 
+                                   model_name="CNN", 
+                                   binarize=True, 
+                                   save_fName=None
+                                  )
         
     results.append(summary_df)
     del model
     del optimizer
-
+    del patience_counter
+    del min_loss
+    del val_loss
+    del train_idx
+    del bs_train_generator
+    
             
 # save summary statistics from cross-validation
-pd.concat(results).to_csv(os.path.join(output_path, "val_results.csv"), index=False)
-history_df.to_csv(os.path.join(output_path, "history_replicates.csv"), index=False)
+pd.concat(results, axis=0).to_csv(os.path.join(bootstrap_output_path, "bs_results.csv"), index=False)
+pd.concat(history_df, axis=1).to_csv(os.path.join(bootstrap_output_path, "history_bs_replicates.csv"), index=False)
 K.clear_session()
 
 # returns a tuple: current, peak memory in bytes 

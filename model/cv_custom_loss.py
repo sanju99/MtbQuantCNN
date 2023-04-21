@@ -1,10 +1,13 @@
 import sys, glob, os, yaml, sparse, tracemalloc
+import tensorflow as tf
+from tensorflow import keras
 import numpy as np
 import pandas as pd
-import scipy.stats as st
-import tensorflow as tf
-from sklearn.model_selection import KFold, StratifiedKFold
 from tensorflow.keras.optimizers import Adam
+from sklearn.model_selection import KFold, StratifiedKFold
+from tensorflow.keras import backend as K
+tf.config.run_functions_eagerly(True)
+import scipy.stats as st
 
 # utils files are in the utils_files directory
 sys.path.append("utils")
@@ -39,8 +42,8 @@ bounded_loss = True
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
 
-if not os.path.isdir(output_path):
-    os.mkdir(output_path)
+if not os.path.isdir(os.path.join(output_path, "bootstrapping")):
+    os.makedirs(os.path.join(output_path, "bootstrapping"))
 
 if os.path.isfile(os.path.join(output_path, "pkl_sparse_train.npz")): 
     print("Input one-hot encodings file exists. Proceeding with modeling \n")    
@@ -58,19 +61,21 @@ del X_h37rv
 # need the train dataframe indices for slicing it. Reset index so that it's the index within the values, not in the overall dataframe
 df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
 
-num_reps = 5
+num_reps = 10
 results = []
 history_df = pd.DataFrame(columns=[f"rep_{i+1}" for i in range(num_reps)])
 
 cv_splits = StratifiedKFold(n_splits=num_reps)
 
 # include df_train["Binary"] as the y argument so that it stratifies by it
+# so stratify the training dataset by binary resistance phenotype
 for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_train["Binary"])):
     
     # print means to double check
     print(df_train.iloc[train_idx]["Binary"].mean(), df_train.iloc[val_idx]["Binary"].mean())
     
     print(f"Training split {rep+1}/{num_reps} for {N_epochs} epochs")
+
     val_loss = []
     
     cv_train_generator = MtbGeneDataset(
@@ -102,7 +107,7 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
                                     batch_size=BATCH_SIZE,
                                     shuffle=False
     )
-    
+
     if include_lineage:
         num_lineages = cv_train_generator[0][0][1].shape[1]
     else:
@@ -136,7 +141,7 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
         optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 
         # return loss
-        return loss
+        return loss.numpy()
     
     
     @tf.function
@@ -148,10 +153,10 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
         y_hat = model(x, training=False)
 
         # return loss
-        return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat)
+        return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat).numpy()
     
 
-    # train the bootstrapped model
+    # train the cross-validated model
     for epoch in range(N_epochs):
 
         # training loop: don't keep track of the train losses because we just want to train the model here
@@ -164,11 +169,12 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
         for _, (x_batch_val, y_batch_val) in enumerate(cv_val_generator):
 
             # compute bounded error
-            val_epoch_loss.append(val_step(x_batch_val, y_batch_val).numpy())
+            val_epoch_loss.append(val_step(x_batch_val, y_batch_val))
 
-        val_loss.append(np.mean(val_epoch_loss))
+        val_loss.append(np.sum(val_epoch_loss) / len(val_idx))
           
     # add validation loss for this replicate to the history dataframe
+    model.save(os.path.join(output_path, "bootstrapping", f"model_{rep}.h5"))
     history_df[f"rep_{rep+1}"] = val_loss
     
     # get model predictions
@@ -193,7 +199,7 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
     pred_df["y_pred"] = np.squeeze(y_pred)
     pred_df["y_test"] = np.log2(pred_df["y_test"])
 
-    # compute quantitative metrics
+    # compute quantitative metrics. The dataframe should have log-transformed values for y_pred and y_test
     binned_mae, binned_mse, within_doubling = boundedLoss_predict(pred_df, "y_pred", "y_test", "lower", "upper")
     mae = np.mean(np.abs(pred_df.y_test - pred_df.y_pred))
     mse = np.mean((pred_df.y_test - pred_df.y_pred)**2)
@@ -222,8 +228,8 @@ for rep, (train_idx, val_idx) in enumerate(cv_splits.split(df_train.index, df_tr
 
             
 # save summary statistics from cross-validation
-pd.concat(results).to_csv(os.path.join(output_path, "val_results.csv"), index=False)
-history_df.to_csv(os.path.join(output_path, "history_replicates.csv"), index=False)
+pd.concat(results).to_csv(os.path.join(output_path, "cv_results.csv"), index=False)
+history_df.to_csv(os.path.join(output_path, "history_cv_replicates.csv"), index=False)
 K.clear_session()
 
 # returns a tuple: current, peak memory in bytes 

@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 1
-#SBATCH -t 1-00:00
-#SBATCH -p medium 
-#SBATCH --mem=50G
+#SBATCH -t 0-01:00
+#SBATCH -p short 
+#SBATCH --mem=25G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL

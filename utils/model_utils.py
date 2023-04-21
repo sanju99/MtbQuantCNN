@@ -4,8 +4,10 @@ import os, glob, sparse
 from Bio import SeqIO
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models, regularizers
 from tensorflow.keras.utils import Sequence
+import scipy.stats as st
+from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.utils import class_weight
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, accuracy_score, balanced_accuracy_score
     
@@ -98,6 +100,9 @@ def class_weighting_dictionary(y):
 
 
 def quantLoss_CNN(y_true, y_pred, loss_type):
+    '''
+    This function returns MAE or MSE (unbounded) for a model.
+    '''
     
     # ensure same types of everything
     y_true = tf.cast(y_true, tf.float64)
@@ -111,7 +116,9 @@ def quantLoss_CNN(y_true, y_pred, loss_type):
     else:
         raise RuntimeError(f"{loss_type} is not a valid loss function type")
         
-    return K.mean(errors).numpy()
+    # return sum because in the training loop it will be divided by the total number of points in each batch
+    return K.sum(errors).numpy()
+
 
 
 
@@ -120,59 +127,125 @@ def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
     The bounds are in exponentiated form because some lower bounds are 0. So when computing the loss, y_pred must be exponentiated
     '''
 
-    def boundedLoss(y_true, y_pred):
+    # add a tiny amount so they can be log-transformed
+    lower_bounds[lower_bounds==0] += 1e-6
+    
+    # take log2. There is only ln in tensorflow backend, so use the change of base formula
+    lower_bounds = tf.squeeze(K.log(lower_bounds) / K.log(K.constant(2, shape=len(lower_bounds), dtype=tf.float64)))
+    upper_bounds = tf.squeeze(K.log(upper_bounds) / K.log(K.constant(2, shape=len(upper_bounds), dtype=tf.float64)))
+    
+    def boundedLoss_CNN_helper(y_true, y_pred):
         '''
-        y_test is the log-transformed midpoint of the lower and upper bounds
+        y_test and y_pred are log-transformed. lower_bounds and upper_bounds are NOT
         '''
-
         # ensure same types of everything
-        y_true = tf.cast(y_true, tf.float64)
-        y_pred = tf.cast(y_pred, tf.float64)
+        y_true = tf.squeeze(tf.cast(y_true, tf.float64))
+        y_pred = tf.squeeze(tf.cast(y_pred, tf.float64))
+
+        # this returns the lower bound, upper bound, or value itself
+        # if the predicted value is less than the lower bound, return lower
+        # if prediction > upper bound, return upper
+        # if lower <= prediction <= upper, return the value
+        bound_to_compute_error = K.clip(y_pred, lower_bounds, upper_bounds)
 
         # compute the errors first using the log-MICs, based on the desired loss type
         if loss_type == "L1":
-            errors = K.abs(y_true - y_pred)
+            errors = tf.squeeze(K.abs(bound_to_compute_error - y_pred))
         elif loss_type == "L2":
-            errors = K.square(y_true - y_pred)
+            errors = tf.squeeze(K.square(bound_to_compute_error - y_pred))
         else:
             raise RuntimeError(f"{loss_type} is not a valid loss function type")
         
-        # assign 1 to predicted points that are less than the lower bound or greater than the upper bound. Exponentiate the predictions because the bounds are the original MIC values
-        outside_bounds_mask = tf.cast(K.less(K.exp(y_pred), lower_bounds) | K.greater(K.exp(y_pred), upper_bounds), tf.float64)
+        # assign 1 to predicted points that are less than the lower bound or greater than the upper bound. 
+        outside_bounds_mask = tf.cast(K.less(y_pred, lower_bounds) | K.greater(y_pred, upper_bounds), tf.float64)
 
-        # multiply the tensors, so all predicted points within the bounds will have an error of 0
+        # multiply so that the points predicted in their bin are multiplied by 0 so they have 0 error
         masked_errors = outside_bounds_mask * errors
 
-        return K.mean(masked_errors)
+        # return the sum of the errors of only points that are predicted outside of their bin
+        # return sum because when iterating through batches it will be divided by the total number of points in each batch
+        return K.sum(masked_errors)
     
-    return boundedLoss
+    return boundedLoss_CNN_helper
 
 
 
-def boundedLoss_predict(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col):
+def compute_proportion_within_1bin(df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col, binary_thresh):
+    
+    df = df.reset_index(drop=True)
+    
+    # list of all lower and upper bounds from the table
+    MIC_vals = list(np.sort(np.unique(np.concatenate([df["lower"].values, df["upper"].values]))))
+    
+    for i, row in df.iterrows():
+
+        pred_MIC, actual_MIC = np.exp2(row[y_pred_col]), np.round(np.exp2(row[y_true_col]), 2)
+        lower, upper = row[lower_bounds_col], row[upper_bounds_col]
+
+        assert lower <= actual_MIC
+        assert actual_MIC <= upper
+
+        lower_idx = MIC_vals.index(lower)
+        upper_idx = MIC_vals.index(upper)
+
+        if lower > 0:
+            lower_adj = MIC_vals[lower_idx - 1]
+        else:
+            lower_adj = 0
+
+        if upper < np.max(df[upper_bounds_col].values):
+            upper_adj = MIC_vals[upper_idx + 1]
+        else:
+            upper_adj = np.max(df[upper_bounds_col].values)
+
+        assert lower_adj < upper_adj
+        assert lower_adj < lower
+        assert upper_adj > upper
+
+        if pred_MIC >= lower_adj and pred_MIC <= upper_adj:
+            df.loc[i, "within_1bin"] = 1
+        else:
+            df.loc[i, "within_1bin"] = 0
+
+    assert np.nan not in df["within_1bin"].unique()
+    df["within_1bin"] = df["within_1bin"].astype(int)
+    
+    log_binary_thresh = np.log2(binary_thresh)
+    df.loc[((df[y_pred_col] < log_binary_thresh) & (df[y_true_col] < log_binary_thresh)) | ((df[y_pred_col] > log_binary_thresh) & (df[y_true_col] > log_binary_thresh)), "binary"] = 1
+    df["binary"] = df["binary"].fillna(0).astype(int)
+    
+    return df
+
+
+
+def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col="y_test", lower_bounds_col="lower", upper_bounds_col="upper"):
     '''
-    y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated
+    y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated. 
+    
+    This function returns bounded MAE, MSE, and the proportion of points measured within 1 MIC doubling (1 log2 unit)
     ''' 
     
-    pred_df[f"{y_pred_col}_exp"] = 2**(pred_df[y_pred_col])
-    pred_df[f"{y_true_col}_exp"] = 2**(pred_df[y_true_col])
+    # make copies to avoid changing the original dataframe
+    lower_bounds = np.copy(pred_df[lower_bounds_col].values)
+    upper_bounds = np.copy(pred_df[upper_bounds_col].values)
     
-    # compute error using only predictions outside of the concentration bounds
-    pred_df_error = pred_df.loc[(pred_df[f"{y_pred_col}_exp"] < pred_df[lower_bounds_col]) | 
-                                (pred_df[f"{y_pred_col}_exp"] > pred_df[upper_bounds_col])
-                               ]
+    lower_bounds[lower_bounds==0] += 1e-6
+    lower_bounds = np.log2(lower_bounds)
+    upper_bounds = np.log2(upper_bounds)
     
-    # also return the number of predictions within 1 doubling
-    within_doubling = len(pred_df.loc[(pred_df[f"{y_pred_col}_exp"] >= pred_df[lower_bounds_col] / 2) & 
-                                      (pred_df[f"{y_pred_col}_exp"] <= pred_df[upper_bounds_col] * 2)
-                                     ]) / len(pred_df)
-        
+    bound_to_compute_error = np.clip(pred_df[y_pred_col].values, lower_bounds, upper_bounds)
+
+    pred_df["compute_error"] = ((pred_df[y_pred_col] < lower_bounds) | (pred_df[y_pred_col] > upper_bounds)).astype(int)
+    mae = np.mean(pred_df["compute_error"] * (np.abs(bound_to_compute_error - pred_df[y_pred_col])))
+    mse = np.mean(pred_df["compute_error"] * (np.square(bound_to_compute_error - pred_df[y_pred_col])))
+    
+    pred_df = compute_proportion_within_1bin(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col, binary_thresh)
+    
     # return error and proportion within 1 doubline of the measured MIC
-    mae = np.sum(np.abs(pred_df_error[y_pred_col] - pred_df_error[y_true_col])) / len(pred_df)
-    mse = np.sum((pred_df_error[y_pred_col] - pred_df_error[y_true_col])**2) / len(pred_df)
-    return mae, mse, within_doubling
+    return mae, mse, pred_df["within_1bin"].mean()
 
             
+        
         
 def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size):
     
@@ -197,6 +270,11 @@ def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_
     else:
         dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
 
+    # change regularization strength
+    # kernel_regularizer=regularizers.L2(0.01)
+    
+    # dense = layers.Dense(256, activation='relu', name='dense1', kernel_regularizer='l2')(dense_inputs)
+    # dense = layers.Dense(256, activation='relu', name='dense2', kernel_regularizer='l2')(dense)
     dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
     dense = layers.Dense(256, activation='relu', name='dense2')(dense)
     
@@ -224,3 +302,107 @@ def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_
         inputs_lst = inputs_lst[0]
         
     return tf.keras.Model(inputs=inputs_lst, outputs=output)
+
+
+
+    
+class CustomRidgeCV(RidgeCV):
+                
+    def fit(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None, *args, **kwargs):
+        
+        self.loss_type = loss_type
+        
+        # processing of bounds. first add a tiny amount so they can be log-transformed
+        lower_bounds[lower_bounds==0] += 1e-6
+        
+        # take log2. There is only ln in tensorflow backend, so use the change of base formula
+        self.lower_bounds = np.log2(lower_bounds)
+        self.upper_bounds = np.log2(upper_bounds)
+        
+        super().fit(X, y, *args, **kwargs)
+        
+    def score(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None):
+        
+        self.loss_type = loss_type
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+        
+        def boundedLoss_Reg(y_pred, y_true):
+
+            '''
+            y_test and y_pred are log2-transformed. lower_bounds and upper_bounds are NOT
+            loss_type is L1 or L2, specifying whether to return the MAE or MSE
+            reg_param is the strength of regularization to apply -- multiply the sum of the squares of sample_weights by this term
+            '''
+
+            bound_to_compute_error = np.clip(y_pred, lower_bounds, upper_bounds)
+
+            # compute the errors first using the log-MICs, based on the desired loss type
+            if self.loss_type == "L1":
+                errors = np.abs(bound_to_compute_error - y_pred)
+            elif self.loss_type == "L2":
+                errors = np.exp2(bound_to_compute_error - y_pred)
+            else:
+                raise RuntimeError(f"{self.loss_type} is not a valid loss function type")
+
+            # compute error using only the points that are predicted outside of their bin. Sum the errors, then divide by the number of points
+            binned_error = np.sum(errors[((y_pred < self.lower_bounds) | (y_pred > self.upper_bounds))]) / len(y_pred)
+            return binned_error + self.alpha * np.sum(np.square(self.coef_))
+        
+        y_pred = self.predict(X)
+        return -boundedLoss_Reg(y_pred, y)
+    
+    
+    
+    
+class CustomRidge(Ridge):
+                
+    def fit(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None, *args, **kwargs):
+        
+        self.loss_type = loss_type
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+        
+        super().fit(X, y, *args, **kwargs)
+        
+        
+        
+        
+def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name, binarize=True, save_fName=None):
+    
+    # predictions dataframe: get indices of validation data in the cv splits
+    pred_df = df_test[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
+
+    # rename columns to make them easier to read
+    pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
+                            f"{drug}_midpoint": "y_test",
+                            f"{drug}_lower_bound": "lower",
+                            f"{drug}_upper_bound": "upper"
+                           }, 
+                   inplace=True
+                  )
+
+    # add model predictions, and log-transform the test values
+    pred_df["y_pred"] = np.squeeze(y_pred)
+    pred_df["y_test"] = np.log2(pred_df["y_test"])
+
+    binned_mae, binned_mse, within_1bin = boundedLoss_predict(pred_df, binary_thresh)
+    
+    if save_fName is not None:
+        pred_df.to_csv(save_fName, index=False)
+
+    summary_df = pd.DataFrame({"Drug": drug,
+                               "Model": model_name,
+                               "Num_Loci": num_loci,
+                               "Binned_MAE": binned_mae,
+                               "Binned_MSE": binned_mse,
+                               "MAE": np.mean(np.abs(pred_df["y_pred"]-pred_df["y_test"])),
+                               "MSE": np.mean(np.square(pred_df["y_pred"]-pred_df["y_test"])),
+                               "Within_1Bin": within_1bin,
+                               "Spearman": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[0],
+                               "Pearson": st.pearsonr(pred_df["y_pred"], pred_df["y_test"])[0],
+                              }, index=[0])
+
+    binary_metrics_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred"], binary_thresh, binarize=binarize)
+    summary_df = pd.concat([summary_df, binary_metrics_df], axis=1)
+    return summary_df

@@ -3,7 +3,7 @@ import numpy as np
 import sys, os, glob
 
 
-_, drug = sys.argv
+_, drug, cc = sys.argv
 
 # paths_df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML_data.csv")
 validation_data = pd.read_csv("/n/data1/hms/dbmi/farhat/rollingDB/metadata/MIC/MIC_ML_consortium_MIC_table.csv").rename(columns={"MOXI_lower_bound": "MXF_lower_bound",
@@ -70,5 +70,10 @@ paths_df = paths_df.loc[~pd.isnull(paths_df[f"{drug}_midpoint"])]
 
 # only keep the columns relevant for the drug of interest, then save the dataframe
 metadata_cols = 9
-paths_df = paths_df[list(paths_df.columns[:metadata_cols]) + [f"{drug}_quality", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]        
+paths_df = paths_df[list(paths_df.columns[:metadata_cols]) + [f"{drug}_quality", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]       
+
+prev_len = len(paths_df)
+paths_df = paths_df.query(f"~({drug}_lower_bound < @cc & {drug}_upper_bound > @cc)")
+print(f"Removed {prev_len - len(paths_df)} isolates with MIC bounds that span the CC of {cc}")
+
 paths_df.to_csv(os.path.join(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/validation_data.csv"), index=False)

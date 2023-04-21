@@ -7,41 +7,8 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import layers, models
 from tensorflow.keras.utils import Sequence
 
-
-
-
-def get_lineages_matrix(df_phenos):
-    
-    df_lineages = pd.DataFrame(columns=["ROLLINGDB_ID", "Lineage"])
-
-    # loop to add additional hierarchies of lineages -- i.e. if an isolate is lineage 4.3, then it should have a one in both columns 4.3 and 4
-    for i, row in df_phenos.iterrows():
-
-        # means it's a sublineage
-        if "." in row["Lineage"]:
-
-            split_lineages = row["Lineage"].split(".")
-
-            for i, _ in enumerate(split_lineages):
-                df_lineages = pd.concat([df_lineages, pd.DataFrame({"ROLLINGDB_ID": row["ROLLINGDB_ID"],
-                                                                    "Lineage": ".".join(split_lineages[:i+1])
-                                                                   }, index=[0])], axis=0)
-
-    # combine with original lineages and drop duplicates. The duplicates come from 4.3 being split into 4 and 4.3, but 4.3 already being present in the dataframe
-    df_lineages = pd.concat([df_phenos[["ROLLINGDB_ID", "Lineage"]], df_lineages], axis=0)[["ROLLINGDB_ID", "Lineage"]].drop_duplicates().reset_index(drop=True)
-
-    # just need a dummy column for values before pivoting
-    df_lineages["Count"] = 1
-    
-    # pivot to matrix and check that every isolate and lineage have at least one value
-    lineages_matrix = df_lineages.pivot(index="ROLLINGDB_ID", columns="Lineage", values="Count").fillna(0).astype(int)
-    assert np.min(lineages_matrix.sum(axis=1)) >= 1
-    assert np.min(lineages_matrix.sum(axis=0)) >= 1
-    
-    # return the matrix in the same order as the phenotypes matrix
-    return lineages_matrix
-
-
+# need lineage processing functions from here
+from data_utils import *
 
 
 
@@ -56,19 +23,11 @@ class MtbGeneDataset(Sequence):
         # read in the one-hot encoded files and convert from sparse to dense format. read in the phenotypes file
         X = sparse.load_npz(sparse_file)
         df_phenos = pd.read_csv(phenotype_file)
-        
-#         # make lineage matrix. Do this before getting only the train or test set so that all lineages are there
-#         lineages = pd.get_dummies(df_phenos["Lineage"])
-#         lineages.index = df_phenos["ROLLINGDB_ID"]
-        
-#         # the following checks are a bit extra, but including them anyway to be very careful
-#         # check that the sum of each row (isolate) is 1, i.e. each isolate has only 1 lineage
-#         assert lineages.sum(axis=1).unique() == np.array([1])
 
-#         # minimum number of samples in a particular lineage group should not be 0
-#         assert lineages.sum(axis=0).min() > 0
-
-        lineages = get_lineages_matrix(df_phenos)
+        # make lineage matrix. Do this before getting only the train or test set so that all lineages are there
+        #lineages = get_lineages_matrix(df_phenos)
+        lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
+        assert len(np.unique(lineages.values)) == 2
         
         # get only the training or testing set and subset the lineage matrix too
         df_phenos = df_phenos.query("category==@train_or_test").reset_index(drop=True)
@@ -86,14 +45,34 @@ class MtbGeneDataset(Sequence):
         ids = df_phenos["ROLLINGDB_ID"].values
         
         if binary:
-            if drug+"_midpoint" in df_phenos.columns:
-                y = (df_phenos[drug+"_midpoint"].values > cc).astype(int)
+            if f"{drug}_midpoint" in df_phenos.columns:
+                y = (df_phenos[f"{drug}_midpoint"].values > cc).astype(int)
             else:
                 y = df_phenos["phenotype"].values.astype(int)
             assert len(np.unique(y)) == 2
         else:
-            y = np.log2(df_phenos[drug+"_midpoint"].values)
+            y = np.log2(df_phenos[f"{drug}_midpoint"]).values
             
+#             y = []
+            
+#             for _, row in df_phenos.iterrows():
+    
+#                 # the upper bounds for the highest MICs have been changed to be a very large number, so doesn't make sense to 
+#                 # take the midpoint of the lower and upper bounds. So log-transform the lower bound
+#                 if ">" in row[drug]:
+#                     y.append(np.log2(row[f"{drug}_lower_bound"]))
+#                 # can't log-transform the lower bound of the lowest MICs (which is 0), so log-transform the upper bound
+#                 elif "<=" in row[drug] or "<" in row[drug]:
+#                     y.append(np.log2(row[f"{drug}_upper_bound"]))
+#                 else:
+#                     y.append(np.mean([np.log2(row[f"{drug}_lower_bound"]), np.log2(row[f"{drug}_upper_bound"])]))
+                
+#                 # the loss functions will not penalize predictions below the lowest MICs (unless the predicted MIC is negative) or above the highest MICs
+
+#             y = np.array(y)
+#             assert np.inf not in y
+#             assert -np.inf not in y
+
         # shuffle -- use this for performing the permutation test for saliency scores
         if shuffle_phenos:
             np.random.shuffle(y)

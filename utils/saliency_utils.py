@@ -16,8 +16,11 @@ import scipy.stats as st
 # import reference files
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
-freschi_snps = pd.read_excel("Freschi_SNPs.xlsx")
-freschi_snps["position"] = freschi_snps["position"].astype(int)
+coll_2014 = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
+freschi_2020 = pd.read_csv("/home/sak0914/who-analysis/data/freschi2020_SNP_scheme.tsv", sep="\t")
+
+coll_2014["position"] = coll_2014["position"].astype(int)
+freschi_2020["position"] = freschi_2020["position"].astype(int)
 
 
 # create plotting class
@@ -75,7 +78,7 @@ def get_gene_coords(locus_list, fasta_dir):
         with open(os.path.join(fasta_dir, locus + ".sh"), "r") as file:
             
             for line in file:
-                if line[0] not in ["#", "\n"]:
+                if line[0] not in ["#", "\n"] and "06_make_MSA.py" in line:
 
                     # the 2nd, 3rd, and 4th to last strings are start, end, and sense
                     split_line = line.split(" ")[-4:-1]
@@ -83,8 +86,8 @@ def get_gene_coords(locus_list, fasta_dir):
                                    int(split_line[1])
                                   ])
 
-                    # sense comes after the coordinates
-                    sense_lst.append(split_line[2].lower())
+                    # sense comes after the coordinates. Also remove any quotes that might be in the string
+                    sense_lst.append(split_line[2].lower().replace('"', '').replace("'", ""))
 
     gene_coords = pd.DataFrame(coords)
     gene_coords.columns = ["Start", "End"]
@@ -159,11 +162,13 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
 
 
 
-def compute_saliency_score_significance(locus_idx, scores_max, scores_min, permute_max_lst, permute_min_lst):
+def compute_saliency_score_significance(locus_idx, scores_max, scores_min, permute_max_lst, permute_min_lst, sig_thresh):
     
     # get the max and min scores from the permutation tests for the locus of interest
     permute_max = [pd.Series(np.load(score_path)[:, locus_idx]) for score_path in permute_max_lst]
     permute_min = [pd.Series(np.load(score_path)[:, locus_idx]) for score_path in permute_min_lst]
+    
+    print(f"Computing saliency significance with {len(permute_max)} max scores and {len(permute_min)} min scores")
 
     permute_max = pd.concat(permute_max, axis=1).values
     permute_min = pd.concat(permute_min, axis=1).values
@@ -188,11 +193,11 @@ def compute_saliency_score_significance(locus_idx, scores_max, scores_min, permu
             min_pvals.append(np.nan)
 
     # return arrays of 1s and 0s, where 1 = significant
-    return (np.array(max_pvals) < 0.1).astype(int), (np.array(min_pvals) < 0.1).astype(int)
+    return (np.array(max_pvals) < sig_thresh).astype(int), (np.array(min_pvals) < sig_thresh).astype(int)
             
     
 
-def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save=False, significance=True):
+def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save=False, significance=True, sig_thresh=0.05):
     
     # this is 1-indexed and in reverse order for negative sense genes
     X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
@@ -221,25 +226,22 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
     fig, ax = plt.subplots(gene_coords.shape[0]*2, 1, figsize=(14, 3*gene_coords.shape[0]))
     axes=ax.flatten()
 
-    color_dict = {0: "black", 1: "red"}
     point_size = 3
 
     for locus_idx, locus in enumerate(locus_list):
 
         # compute p-values for the max and min scores for every position
         if significance:
-            max_sig, min_sig = compute_saliency_score_significance(locus_idx, combined_max, combined_min, permute_max_lst, permute_min_lst)
+            max_sig, min_sig = compute_saliency_score_significance(locus_idx, combined_max, combined_min, permute_max_lst, permute_min_lst, sig_thresh)
         
             max_significant_df = pd.DataFrame({"Pos": X_matrix_H37Rv_coords[:, locus_idx], 
                                            "max_score": combined_max[:, locus_idx],
                                            "max_significant": max_sig,
-                                           "max_color": pd.Series(max_sig).map(color_dict).values,
                                       }).query("max_significant == 1 & max_score > 0")
 
             min_significant_df = pd.DataFrame({"Pos": X_matrix_H37Rv_coords[:, locus_idx], 
                                            "min_score": combined_min[:, locus_idx],
                                            "min_significant": min_sig,
-                                           "min_color": pd.Series(min_sig).map(color_dict).values
                                       }).query("min_significant == 1 & min_score < 0")
 
         
@@ -269,8 +271,8 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
             plot_max_df = max_significant_df.query("max_score > @plot_thresh")
             plot_min_df = min_significant_df.query("min_score < -@plot_thresh")
             
-            ax_saliency.scatter(plot_max_df["Pos"], plot_max_df["max_score"], c=plot_max_df["max_color"], s=point_size)
-            ax_saliency.scatter(plot_min_df["Pos"], plot_min_df["min_score"], c=plot_min_df["min_color"], s=point_size)
+            ax_saliency.scatter(plot_max_df["Pos"], plot_max_df["max_score"], c="tomato", s=point_size)
+            ax_saliency.scatter(plot_min_df["Pos"], plot_min_df["min_score"], c="tomato", s=point_size)
 
             new_coord_df["Max_Sig"] = max_sig
             new_coord_df["Min_Sig"] = min_sig
@@ -313,7 +315,11 @@ def did_cnn_find_pos(cnn_saliency_df, drug, cat_to_check=["1", "2"], significanc
 
     # check if the CNN finds all sites as significant of the specified categories -- only RESISTANCE associated, so check max scores
     cnn_saliency_df["WHO"] = cnn_saliency_df.Pos.isin(who_pos).astype(int)
-    cnn_saliency_df["Lineage_SNP"] = cnn_saliency_df.Pos.isin(freschi_snps.position).astype(int)
+    
+    # add lineage SNP designations
+    cnn_saliency_df["Coll_2014"] = cnn_saliency_df.Pos.isin(coll_2014.position).astype(int)
+    cnn_saliency_df["Freschi_2020"] = cnn_saliency_df.Pos.isin(freschi_2020.position).astype(int)
+    
     non_zero_scores = cnn_saliency_df.query("Max > 0")
     
     if significance:
@@ -347,13 +353,12 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
         
         # fasta files contain the full VCF file name, without the .vcf extension. So use the Path column in df_phenos. 
         # The ROLLINGDB_ID column is just the isolate name, not the full file path
-        seq_df = seq_df.loc[seq_df["Isolate"].isin(np.concatenate([df_phenos["ROLLINGDB_ID"].values, np.array(["MT_H37Rv"])]))].reset_index(drop=True)
-        
+        seq_df["Isolate"] = [isolate.split(".")[0] for isolate in seq_df["Isolate"].values]
+        seq_df = seq_df.set_index("Isolate")
+        seq_df = seq_df.loc[np.concatenate([df_phenos["ROLLINGDB_ID"].values, np.array(["MT_H37Rv"])])]
+
         nuc_matrix = seq_df["Seq"].str.split("", expand=True)
         nuc_matrix = nuc_matrix.iloc[:, 1:-1]
-
-        nuc_matrix["Isolate"] = [os.path.basename(fName) for fName in seq_df["Isolate"].values]
-        nuc_matrix = nuc_matrix.set_index("Isolate")
         
         # this will already be sorted. DON'T SORT AGAIN BECAUSE THEN NANS WILL BE OUT OF ORDER
         nuc_matrix.columns = saliency_df.query("Gene == @locus").Pos.values[:aln_len]
@@ -364,14 +369,14 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
 
             
             
-def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", plot_thresh=0.1, cat_to_check=["1", "2"], binary=False, save=False, significance=True):
+def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", plot_thresh=0.1, cat_to_check=["1", "2"], binary=False, save=False, significance=True, sig_thresh=0.05):
                     
     fastas = [os.path.join(fasta_dir, gene + ".fasta") for gene in locus_list]
     print(f"{len(fastas)} loci!")
     
     # make the genetic coordinates dataframe. Includes strand sense and locus length
     gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
-    saliency_df = multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save, significance)
+    saliency_df = multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save, significance, sig_thresh)
     
     # update with WHO and lineage SNP annotations (crude because only the positions are checked, not the actual SNPs)
     saliency_df = did_cnn_find_pos(saliency_df, drug, cat_to_check, significance)

@@ -20,10 +20,11 @@ tf.compat.v1.disable_eager_execution()
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
-_, config_file = sys.argv
+_, config_file, permutation_test = sys.argv
+
+permutation_test = [True if permutation_test == "True" else False][0]
 
 kwargs = yaml.safe_load(open(config_file, "r"))
-
 drug = kwargs["drug"]
 locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
@@ -37,7 +38,6 @@ genotype_input_directory = kwargs["genotype_input_directory"]
 binary = kwargs["binary"]
 binary_thresh = kwargs["binary_thresh"]
 include_lineage = kwargs["include_lineage"]
-permutation_test = kwargs["permutation_test"]
 
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
@@ -69,15 +69,17 @@ train_generator = MtbGeneDataset(
 if include_lineage:
     num_lineages = train_generator[0][0][1].shape[1]
     
-    lineages = pd.get_dummies(df_phenos["Lineage"])
-    if "4" not in lineages.columns:
-        raise RuntimeError("Lineage 4 is not in the lineage matrix")
+#     lineages = pd.get_dummies(df_phenos["Lineage"])
+#     if "4" not in lineages.columns:
+#         raise RuntimeError("Lineage 4 is not in the lineage matrix")
 
-    # get the index of L4 and make the one-hot encoding for H37Rv as :L4
-    l4_idx = list(lineages).index("4")
+#     # get the index of L4 and make the one-hot encoding for H37Rv as :L4
+#     l4_idx = list(lineages).index("4")
+#     ref_lineages = np.zeros((1, num_lineages))
+#     ref_lineages[:, l4_idx] = 1
+
+    # the lineage SNP schemes all use H37Rv as the reference, so it's easy because the H37Rv SNPs are all 0
     ref_lineages = np.zeros((1, num_lineages))
-    ref_lineages[:, l4_idx] = 1
-    
     ref_data = [X_h37rv, ref_lineages]
 else:
     num_lineages = 0
@@ -100,86 +102,104 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
     
     model.load_weights(weights_path)
     
-    if not os.path.isfile(os.path.join(saliency_dir, f"scores_max{file_suffix}.npy")):
+    with DeepExplain(session=K.get_session()) as de:
 
-        with DeepExplain(session=K.get_session()) as de:
+        # initialize a DeepExplain model using the same inputs and outputs as the original model and get the target layer to get attributions for
+        # For quantitative models, we want to target the output layer. For binary, target the second to last layer (pre-Softmax)
+        if binary:
+            de_model = tf.keras.Model(inputs = model.inputs, outputs = model.layers[-2].output)
+            predict_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
+        else:
+            de_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
 
-            # initialize a DeepExplain model using the same inputs and outputs as the original model and get the target layer to get attributions for
-            # For quantitative models, we want to target the output layer. For binary, target the second to last layer (pre-Softmax)
-            if binary:
-                de_model = tf.keras.Model(inputs = model.inputs, outputs = model.layers[-2].output)
-                predict_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
+        target_layer = de_model(model.inputs)
+
+        # check that the original and DeepExplain models give the same predictions on the H37Rv input
+        if binary:
+            assert np.abs(np.max(predict_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
+            del predict_model
+        else:
+            assert np.abs(np.max(de_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
+
+        for idx, batch in enumerate(train_generator):
+
+            print(f"Working on batch {idx+1} of {len(train_generator)}")
+
+            # the second index is the phenotypes
+            X_train = batch[0]
+
+            # Remove the batch dimension, which is the first dimension. If the lengths of the dimensions are the same, then the batch dimension is in the reference
+            # for some reason, this needs to be done for every batch. If it is done outside of this loop, ref_data gets another dimension in each input at the end of each batch
+            if include_lineage:
+                if ref_data[0].shape[0] == 1:
+                    ref_data[0] = ref_data[0][0]
+
+                if ref_data[1].shape[0] == 1:
+                    ref_data[1] = ref_data[1][0]
             else:
-                de_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
+                if ref_data.shape[0] == 1:
+                    ref_data = ref_data[0]
 
-            target_layer = de_model(model.inputs)
+            # compute attributions for the training set            
+            attributions = de.explain(method='deeplift', 
+                                      T=target_layer, # target tensor to get attributions for
+                                      X=model.inputs, # symbolic input to the network
+                                      xs=X_train, 
+                                      baseline=ref_data, # if method_name == deeplift, then provide the reference data as the baseline
+                                     )
 
-            # check that the original and DeepExplain models give the same predictions on the H37Rv input
-            if binary:
-                assert np.abs(np.max(predict_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
-                del predict_model
+
+            # create an array of the indices to ignore. These are the indices of the reference nucleotide at each position
+            idx_to_ignore = np.argmax(np.squeeze(X_h37rv), axis=0)
+                
+            # genetic scores shape should be num_samples x 5 x longest_locus x num_loci -- sum scores across nucleotides, which is the second dimension
+            if include_lineage:
+                
+                # full scores matrix
+                genetic_attr_by_nuc.append(attributions[0])
+                                                
+                for pos, nuc_idx in enumerate(idx_to_ignore):
+                    # set the index of the reference nucleotide to 0
+                    # samples x 5 x position x 1
+                    # when the scores are summed across the nucleotides in the next line, the ref nucleotide doesn't contribute
+                    attributions[0][:, nuc_idx, pos, :] = 0
+    
+                genetic_attr.append(np.sum(attributions[0], axis=1))
+                
+                lineage_attr.append(attributions[1])
+            
             else:
-                assert np.abs(np.max(de_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
+                # full scores matrix
+                genetic_attr_by_nuc.append(attributions)
+                
+                for i, nuc_idx in enumerate(idx_to_ignore):
+                    # set the index to ignore to 0
+                    # samples x 5 x position x 1
+                    attributions[:, nuc_idx, i, :] = 0
+    
+                genetic_attr.append(np.sum(attributions, axis=1))
+        
+        # combine scores for all isolates along the first axis, which is the number of samples axis
+        genetic_attr_by_nuc = np.concatenate(genetic_attr_by_nuc, axis=0)
+        genetic_attr = np.concatenate(genetic_attr, axis=0) 
+        print(genetic_attr.shape, genetic_attr_by_nuc.shape)
 
-            for idx, batch in enumerate(train_generator):
+        print(f"Saving scores to {saliency_dir}")
 
-                print(f"Working on batch {idx+1} of {len(train_generator)}")
-
-                # the second index is the phenotypes
-                X_train = batch[0]
-
-                # Remove the batch dimension, which is the first dimension. If the lengths of the dimensions are the same, then the batch dimension is in the reference
-                # for some reason, this needs to be done for every batch. If it is done outside of this loop, ref_data gets another dimension in each input at the end of each batch
-                if include_lineage:
-                    if ref_data[0].shape[0] == 1:
-                        ref_data[0] = ref_data[0][0]
-
-                    if ref_data[1].shape[0] == 1:
-                        ref_data[1] = ref_data[1][0]
-                else:
-                    if ref_data.shape[0] == 1:
-                        ref_data = ref_data[0]
-
-                # compute attributions for the training set            
-                attributions = de.explain(method='deeplift', 
-                                          T=target_layer, # target tensor to get attributions for
-                                          X=model.inputs, # symbolic input to the network
-                                          xs=X_train, 
-                                          baseline=ref_data, # if method_name == deeplift, then provide the reference data as the baseline
-                                         )
-
-
-                # genetic scores shape should be num_samples x 5 x longest_locus x num_loci -- sum scores across nucleotides, which is the second dimension
-                if include_lineage:
-                    genetic_attr_by_nuc.append(attributions[0])
-                    genetic_attr.append(np.sum(attributions[0], axis=1))
-                    lineage_attr.append(attributions[1])
-                else:
-                    genetic_attr_by_nuc.append(attributions)
-                    genetic_attr.append(np.sum(attributions, axis=1))
-
-            # combine scores for all isolates along the first axis, which is the number of samples axis
-            genetic_attr_by_nuc = np.concatenate(genetic_attr_by_nuc, axis=0)
-            genetic_attr = np.concatenate(genetic_attr, axis=0) 
-            print(genetic_attr.shape, genetic_attr_by_nuc.shape)
-
-            print(f"Saving scores to {saliency_dir}")
-            
-            # don't save the scores by nucleotide for the permutation test
-            if file_suffix == "":
-                sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores_unpooled_nuc{file_suffix}.npy"), sparse.COO(genetic_attr_by_nuc), compressed=True)
-            
+        # don't save individual genetic scores (or scores by nucleotide) for the permutation test
+        if file_suffix == "":
+            sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores_unpooled_nuc{file_suffix}.npy"), sparse.COO(genetic_attr_by_nuc), compressed=True)
             sparse.save_npz(os.path.join(saliency_dir, f"genetic_scores{file_suffix}.npy"), sparse.COO(genetic_attr), compressed=True)
 
-            # save mean, max, and min scores
-            np.save(os.path.join(saliency_dir, f"scores_max{file_suffix}.npy"), np.max(genetic_attr, axis=0))
-            np.save(os.path.join(saliency_dir, f"scores_min{file_suffix}.npy"), np.min(genetic_attr, axis=0))
-            # np.save(os.path.join(saliency_dir, f"scores_mean{file_suffix}.npy"), np.mean(genetic_attr, axis=0))
+        # save mean, max, and min scores
+        np.save(os.path.join(saliency_dir, f"scores_max{file_suffix}.npy"), np.max(genetic_attr, axis=0))
+        np.save(os.path.join(saliency_dir, f"scores_min{file_suffix}.npy"), np.min(genetic_attr, axis=0))
+        # np.save(os.path.join(saliency_dir, f"scores_mean{file_suffix}.npy"), np.mean(genetic_attr, axis=0))
 
-            if include_lineage:
-                lineage_attr = np.concatenate(lineage_attr, axis=0)
-                print(lineage_attr.shape)
-                np.save(os.path.join(saliency_dir, f"lineage_scores{file_suffix}.npy"), lineage_attr)
+        if include_lineage:
+            lineage_attr = np.concatenate(lineage_attr, axis=0)
+            print(lineage_attr.shape)
+            np.save(os.path.join(saliency_dir, f"lineage_scores{file_suffix}.npy"), lineage_attr)
 
 
 # get model from cnn_utils. Build using TF v1, then load weights

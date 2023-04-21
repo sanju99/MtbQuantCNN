@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix
-from sklearn.model_selection import KFold
 from tensorflow.keras import backend as K
 tf.config.run_functions_eagerly(True)
 
@@ -14,6 +13,9 @@ sys.path.append("utils")
 from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
+
+import warnings
+warnings.filterwarnings("ignore")
 
 
 # starting the memory monitoring
@@ -27,8 +29,12 @@ drug = kwargs["drug"]
 locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
-N_epochs = kwargs["N_epochs"]
 patience_epochs = kwargs["patience_epochs"]
+
+if patience_epochs is not None:
+    N_epochs = 250
+else:
+    N_epochs = kwargs["N_epochs"]
 
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
@@ -96,6 +102,12 @@ if include_lineage:
 else:
     num_lineages = 0
 
+    
+# get total numbers of points for computing the loss
+num_train = len(df_phenos.query("category=='original_train_set'"))
+num_val = len(df_phenos.query("category=='original_test_set'"))
+print(f"Training on {num_train} isolates and validating on {num_val} isolates")
+
 
 @tf.function
 def train_step(x, y):
@@ -130,6 +142,7 @@ def val_step(x, y):
     # the bounds are the last 2 elements of the x list
     lower_bounds, upper_bounds = x[-2:]
     
+    # y_hat = model.predict(x)
     y_hat = model(x, training=False)
     
     # return loss and error. quantLoss_CNN returns a numpy object from a tensor
@@ -150,7 +163,7 @@ train_error = []
 val_loss = []
 val_error = []
 
-results = pd.DataFrame(columns=["loss", "error", "val_loss", "val_error"])
+history = pd.DataFrame(columns=["loss", "error", "val_loss", "val_error"])
 
 if patience_epochs is None:
     print(f"Training the model with an {loss_type} loss for {N_epochs} epochs")
@@ -159,7 +172,7 @@ else:
 
 
 for epoch in range(N_epochs):
-        
+               
     # list to keep track of the losses for each batch
     train_epoch_loss = []
     train_epoch_error = []
@@ -167,31 +180,37 @@ for epoch in range(N_epochs):
     val_epoch_error = []
     
     # training loop
-    for train_idx, (x_batch_train, y_batch_train) in enumerate(train_generator):
+    for x_batch_train, y_batch_train in train_generator:
                 
-        # compute loss and error
+        # compute loss and error. These are sums over the points in the batch
         loss, error = train_step(x_batch_train, y_batch_train)
         
         train_epoch_loss.append(loss)
         train_epoch_error.append(error)
         
     # store losses for the epoch -- mean of all the batches
-    train_loss.append(np.mean(train_epoch_loss))    
-    train_error.append(np.mean(train_epoch_error))
+    train_loss.append(np.sum(train_epoch_loss) / num_train)   
+    train_error.append(np.sum(train_epoch_error) / num_train)
+    # train_loss.append(np.mean(train_epoch_loss))   
+    # train_error.append(np.mean(train_epoch_error))
 
-    # validation loop
-    for _, (x_batch_val, y_batch_val) in enumerate(val_generator):
+    # validation loop -- iterate through all batches
+    for x_batch_val, y_batch_val in val_generator:
                         
         # compute loss and error
         loss, error = val_step(x_batch_val, y_batch_val)
         
         val_epoch_loss.append(loss)
         val_epoch_error.append(error)
-        
-    val_loss.append(np.mean(val_epoch_loss))
-    val_error.append(np.mean(val_epoch_error))
+      
+    # store the mean loss of the batch
+    val_loss.append(np.sum(val_epoch_loss) / num_val)
+    val_error.append(np.sum(val_epoch_error) / num_val)
     
-    results.loc[epoch, :] = [train_loss[-1], train_error[-1], val_loss[-1], val_error[-1]]
+    # val_loss.append(np.mean(val_epoch_loss))
+    # val_error.append(np.mean(val_epoch_error))
+    
+    history.loc[epoch, :] = [train_loss[-1], train_error[-1], val_loss[-1], val_error[-1]]    
     
     if patience_epochs is not None:
         #if val_loss[-1] < min_loss:
@@ -200,10 +219,16 @@ for epoch in range(N_epochs):
         if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
         
             print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
+            
+            # save the model because it is better than the previous iteration
+            # also save the history dataframe to monitor progress
+            model.save(os.path.join(output_path, "best_model.h5"))
+            history.to_csv(os.path.join(output_path, "history.csv"), index=False)
 
             # update min loss, then zero out the patience counter
             min_loss = val_loss[-1]
             patience_counter = 0
+            
         else:
             patience_counter += 1
 
@@ -212,11 +237,16 @@ for epoch in range(N_epochs):
     
     # train the model for the specified number of epochs
     else:
-        continue  
+        print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
+        continue
+        
     
-# save the model for later use and the history dataframe
-model.save(os.path.join(output_path, "best_model.h5"))
-results.to_csv(os.path.join(output_path, "history.csv"), index=False)
+# save the history dataframe to see the additional 25 epochs. DON'T SAVE THE MODEL because we want the model at the early stop point
+history.to_csv(os.path.join(output_path, "history.csv"), index=False)
+
+# only save the model if not using early stopping because it doesn't get saved as you go in the above loop
+if patience_epochs is None:
+    model.save(os.path.join(output_path, "best_model.h5"))
 
 # initialize a new model and load the weights of the best model
 best_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
@@ -229,23 +259,17 @@ y_pred = best_model.predict(
     use_multiprocessing=True,
 )
 
-# predictions dataframe: get indices of validation data in the cv splits
-pred_df = df_phenos.query("category=='original_test_set'")[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
-
-# rename columns to make them easier to read
-pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
-                        f"{drug}_midpoint": "y_test",
-                        f"{drug}_lower_bound": "lower",
-                        f"{drug}_upper_bound": "upper"
-                       }, 
-               inplace=True
-              )
-
-# add model predictions, and log-transform the test values
-pred_df["y_pred"] = np.squeeze(y_pred)
-pred_df["y_test"] = np.log2(pred_df["y_test"])
+summary_df = create_summary_df(df_phenos.query("category=='original_test_set'").reset_index(drop=True), 
+                               y_pred, 
+                               drug, 
+                               binary_thresh, 
+                               num_loci, 
+                               model_name="CNN", 
+                               binarize=True, 
+                               save_fName=os.path.join(output_path, "test_predictions.csv")
+                              )
     
-pred_df.to_csv(os.path.join(output_path, "test_predictions.csv"), index=False)
+summary_df.to_csv(os.path.join(output_path, "cnn_results.csv"), index=False)
 K.clear_session()
 
 # returns a tuple: current, peak memory in bytes 
