@@ -13,4 +13,4 @@ temp.py
 config_*.yaml
 
 # sensitive analysis info
-figures/
+*.png
