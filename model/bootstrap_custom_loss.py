@@ -74,6 +74,7 @@ val_generator = MtbGeneDataset(
     train_or_test="original_test_set",
     binary=binary,
     cc=binary_thresh,
+    shuffle_phenos=False,
     include_lineage=include_lineage,
     bounded_loss=bounded_loss,
     data_idx=None,
@@ -191,7 +192,8 @@ for rep in range(num_reps):
 
                 print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
                 
-                # update min loss, then zero out the patience counter
+                # update min loss, then zero out the patience counter. Save the model only if the loss decreases so the the model in the patience window doesn't save
+                model.save(os.path.join(bootstrap_output_path, f"model_{rep}.h5"))
                 min_loss = val_loss[-1]
                 patience_counter = 0
 
@@ -206,8 +208,10 @@ for rep in range(num_reps):
             print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
             continue
           
+    if patience_epochs is None:
+        model.save(os.path.join(bootstrap_output_path, f"model_{rep}.h5"))
+        
     # add validation loss for this replicate to the history dataframe
-    model.save(os.path.join(bootstrap_output_path, f"model_{rep}.h5"))
     history_df.append(pd.DataFrame({f"rep_{rep+1}": val_loss}))
     
     # get model predictions

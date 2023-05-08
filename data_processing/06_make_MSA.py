@@ -55,6 +55,9 @@ paths = np.concatenate([paths, add_paths], axis=0)
 if ".fasta" not in OUT_FILE:
     OUT_FILE = OUT_FILE.split(".")[0] + ".fasta"
     
+if not os.path.isdir(os.path.dirname(OUT_FILE)):
+    os.makedirs(os.path.dirname(OUT_FILE))
+    
 # H37Rv reference strain
 h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
 genome_len = len(h37Rv)

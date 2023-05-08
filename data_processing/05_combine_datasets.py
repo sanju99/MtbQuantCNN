@@ -100,21 +100,22 @@ def get_samples_PASS_prop(fName):
 training_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/training_PASS_prop.txt")
 validation_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/validation_PASS_prop.txt")
 
-drop_train_samples = training_PASS_prop_df.query("PASS_prop < 0.75")["ROLLINGDB_ID"].values
+drop_train_samples = list(set(df_train["ROLLINGDB_ID"].values).intersection(training_PASS_prop_df.query("PASS_prop < 0.75")["ROLLINGDB_ID"].values))
 drop_val_samples = validation_PASS_prop_df.loc[validation_PASS_prop_df["ROLLINGDB_ID"].isin(df_val.ROLLINGDB_ID.values)].query("PASS_prop < 0.75")["ROLLINGDB_ID"].values
+drop_val_samples = list(set(drop_val_samples).intersection(df_val["ROLLINGDB_ID"].values))
 
-print(f"Removed {len(drop_train_samples)}/{len(training_PASS_prop_df)} training isolates with less than 75% PASS or Amb calls in the alignment region")
+print(f"Removed {len(drop_train_samples)}/{len(df_train)} training isolates with less than 75% PASS or Amb calls in the alignment region")
 print(drop_train_samples)
 df_train = df_train.query("ROLLINGDB_ID not in @drop_train_samples")
 
-print(f"Removed {len(drop_val_samples)}/{len(validation_PASS_prop_df)} validation isolates with less than 75% PASS or Amb calls in the alignment region\n")
+print(f"Removed {len(drop_val_samples)}/{len(df_val)} validation isolates with less than 75% PASS or Amb calls in the alignment region\n")
 print(drop_val_samples)
 df_val = df_val.query("ROLLINGDB_ID not in @drop_val_samples")
 df_val = df_val.merge(lineages[["ROLLINGDB_ID", "Coll2014", "Lineage"]], on="ROLLINGDB_ID")
 
 prev_len = len(df_val)
 df_val = df_val.query("~Coll2014.str.contains(',')")
-print(f"Print dropped {prev_len - len(df_val)} validation isolates with multiple lineages")
+print(f"Dropped {prev_len - len(df_val)} validation isolates with multiple lineages")
 df_val.to_csv(os.path.join(out_dir, "validation_data_for_model.csv"), index=False)
 
 
@@ -131,7 +132,7 @@ summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-
 
 for lineage in summary_counts["Lineage"].unique():
     if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
-        print(f"Removed {len(df_train.query('Lineage == @lineage'))} isolates in lineage {lineage}")
+        print(f"Removed {len(df_train.query('Lineage == @lineage'))} isolates in lineage {lineage} from the train/test set")
         df_train = df_train.query("Lineage not in @lineage")
         
     

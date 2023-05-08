@@ -124,7 +124,7 @@ else:
 # include early stopping and get the model checkpoint at the best epoch
 if patience_epochs is not None:
     print(f"Using early stopping with an {loss_type} loss and a delay of {patience_epochs} epochs")
-    es = EarlyStopping(monitor='val_loss', mode='min', patience=patience_epochs, verbose=1)
+    es = EarlyStopping(monitor='val_loss', mode='min', patience=patience_epochs, verbose=1, min_delta=0.01)
     mc = ModelCheckpoint(os.path.join(output_path, f'{prefix}best_model.h5'), monitor='val_loss', mode='min', save_best_only=True, verbose=1)
     model_callbacks = [es, mc]
 else:
@@ -141,6 +141,7 @@ history = model.fit(
                     workers=4,
                     callbacks=model_callbacks,
                     class_weight=class_weights,
+                    verbose=2
                    )
 
 # save history dataframe, predictions vs. test values dataframe, and the model
@@ -181,6 +182,8 @@ if binary:
     pred_df = get_threshold_val(pred_df, "y_pred", "y_test")        
 
 pred_df.to_csv(os.path.join(output_path, f"{prefix}test_predictions.csv"), index=False)
+binary_metrics_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred_label"], binary_thresh, binarize=False)
+binary_metrics_df.to_csv(os.path.join(output_path, f"{prefix}cnn_results.csv"), index=False)
 K.clear_session()
 
 # returns a tuple: current, peak memory in bytes 

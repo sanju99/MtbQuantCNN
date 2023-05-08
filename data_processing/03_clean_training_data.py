@@ -65,43 +65,44 @@ for i, row in who_high_conf.iterrows():
     else:
         who_high_conf.loc[i, "ANN"] = row["variant"]
         
+print(who_high_conf)
   
-# read in list of VCF files
-vcf_files_list = glob.glob(f"{vcf_dir}/*.eff.vcf")
-vcf_files_list = [val for val in vcf_files_list if os.path.basename(val).split(".")[0] in df_combined.ROLLINGDB_ID.values]
+# # read in list of VCF files
+# vcf_files_list = glob.glob(f"{vcf_dir}/*.eff.vcf")
+# vcf_files_list = [val for val in vcf_files_list if os.path.basename(val).split(".")[0] in df_combined.ROLLINGDB_ID.values]
 
-assert len(vcf_files_list) == len(df_combined)
-highConf_isolates = []
+# assert len(vcf_files_list) == len(df_combined)
+# highConf_isolates = []
 
-for i, fName in enumerate(vcf_files_list):
+# for i, fName in enumerate(vcf_files_list):
     
-    vcf_file = vcf.Reader(filename=fName)
+#     vcf_file = vcf.Reader(filename=fName)
     
-    for record in vcf_file:
+#     for record in vcf_file:
 
-        # if FILTER == PASS, the FILTER field is an empty list, so the length is 0
-        # only exclude variants that have FILTER = PASS. Amb variants will be in the model as missing and can discuss them as mispredictions
-        if record.POS in who_high_conf.genome_index.values and len(record.FILTER) == 0:
+#         # if FILTER == PASS, the FILTER field is an empty list, so the length is 0
+#         # only exclude variants that have FILTER = PASS. Amb variants will be in the model as missing and can discuss them as mispredictions
+#         if record.POS in who_high_conf.genome_index.values and len(record.FILTER) == 0:
 
-            variants_to_check = who_high_conf.loc[who_high_conf["genome_index"]==record.POS, "ANN"].values
+#             variants_to_check = who_high_conf.loc[who_high_conf["genome_index"]==record.POS, "ANN"].values
 
-            for variant in variants_to_check:
+#             for variant in variants_to_check:
             
-                if variant in ",".join(record.INFO['ANN']):
-                    # print(os.path.basename(fName).split(".")[0], variant)
-                    highConf_isolates.append(os.path.basename(fName).split(".")[0])
-                    break
+#                 if variant in ",".join(record.INFO['ANN']):
+#                     # print(os.path.basename(fName).split(".")[0], variant)
+#                     highConf_isolates.append(os.path.basename(fName).split(".")[0])
+#                     break
             
-    if i % 1000 == 0:
-        print(i)
+#     if i % 1000 == 0:
+#         print(i)
             
             
-df_combined = df_combined.loc[~((df_combined["ROLLINGDB_ID"].isin(highConf_isolates)) & (df_combined[f"{drug}_midpoint"] < cc/2))]
-print(f"Removed {len(vcf_files_list) - len(df_combined)} isolates with category 1 mutations and MICs < 1/2 CC")
+# df_combined = df_combined.loc[~((df_combined["ROLLINGDB_ID"].isin(highConf_isolates)) & (df_combined[f"{drug}_midpoint"] < cc/2))]
+# print(f"Removed {len(vcf_files_list) - len(df_combined)} isolates with category 1 mutations and MICs < 1/2 CC")
 
-prev_len = len(df_combined)
-df_combined = df_combined.query(f"~({drug}_lower_bound < @cc & {drug}_upper_bound > @cc)")
-print(f"Removed {prev_len - len(df_combined)} isolates with MIC bounds that span the CC of {cc}")
+# prev_len = len(df_combined)
+# df_combined = df_combined.query(f"~({drug}_lower_bound < @cc & {drug}_upper_bound > @cc)")
+# print(f"Removed {prev_len - len(df_combined)} isolates with MIC bounds that span the CC of {cc}")
 
-# save at intermediate steps in case (because the previous step takes almost 1 hour)
-df_combined.to_csv(model_df, index=False)
+# # save at intermediate steps in case (because the previous step takes almost 1 hour)
+# df_combined.to_csv(model_df, index=False)

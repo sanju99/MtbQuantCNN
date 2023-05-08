@@ -22,6 +22,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 _, config_file, permutation_test = sys.argv
 
+tracemalloc.start()
+
 permutation_test = [True if permutation_test == "True" else False][0]
 
 kwargs = yaml.safe_load(open(config_file, "r"))
@@ -69,15 +71,6 @@ train_generator = MtbGeneDataset(
 if include_lineage:
     num_lineages = train_generator[0][0][1].shape[1]
     
-#     lineages = pd.get_dummies(df_phenos["Lineage"])
-#     if "4" not in lineages.columns:
-#         raise RuntimeError("Lineage 4 is not in the lineage matrix")
-
-#     # get the index of L4 and make the one-hot encoding for H37Rv as :L4
-#     l4_idx = list(lineages).index("4")
-#     ref_lineages = np.zeros((1, num_lineages))
-#     ref_lineages[:, l4_idx] = 1
-
     # the lineage SNP schemes all use H37Rv as the reference, so it's easy because the H37Rv SNPs are all 0
     ref_lineages = np.zeros((1, num_lineages))
     ref_data = [X_h37rv, ref_lineages]
@@ -158,11 +151,11 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
                 # full scores matrix
                 genetic_attr_by_nuc.append(attributions[0])
                                                 
-                for pos, nuc_idx in enumerate(idx_to_ignore):
-                    # set the index of the reference nucleotide to 0
-                    # samples x 5 x position x 1
-                    # when the scores are summed across the nucleotides in the next line, the ref nucleotide doesn't contribute
-                    attributions[0][:, nuc_idx, pos, :] = 0
+                # for pos, nuc_idx in enumerate(idx_to_ignore):
+                #     # set the index of the reference nucleotide to 0
+                #     # samples x 5 x position x 1
+                #     # when the scores are summed across the nucleotides in the next line, the ref nucleotide doesn't contribute
+                #     attributions[0][:, nuc_idx, pos, :] = 0
     
                 genetic_attr.append(np.sum(attributions[0], axis=1))
                 
@@ -172,10 +165,10 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
                 # full scores matrix
                 genetic_attr_by_nuc.append(attributions)
                 
-                for i, nuc_idx in enumerate(idx_to_ignore):
-                    # set the index to ignore to 0
-                    # samples x 5 x position x 1
-                    attributions[:, nuc_idx, i, :] = 0
+                # for i, nuc_idx in enumerate(idx_to_ignore):
+                #     # set the index to ignore to 0
+                #     # samples x 5 x position x 1
+                #     attributions[:, nuc_idx, i, :] = 0
     
                 genetic_attr.append(np.sum(attributions, axis=1))
         
@@ -208,16 +201,18 @@ model = conv_nn(binary=binary, longest_locus=longest_locus, num_loci=num_loci, n
 if not permutation_test:
 
     saliency_dir = os.path.join(output_path, "saliency", save_prefix)
+    print(f"Saving results to {saliency_dir}")
     
     if not os.path.isdir(saliency_dir):
         os.makedirs(os.path.join(saliency_dir))
         
     # compute saliency scores for the single model
-    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix="")
+    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix="_full")
 
 else:
     # this path should already exist because that's where the models are stored
     saliency_dir = os.path.join(output_path, "saliency", save_prefix, "permutation_test")
+    print(f"Saving results to {saliency_dir}")
     
     weights_lst = glob.glob(os.path.join(saliency_dir, "*.h5"))
         
@@ -225,6 +220,20 @@ else:
                 
         print(f"Computing saliency scores for model {i+1} out of {len(weights_lst)}")
         model_num = os.path.basename(weights_path).split(".")[0].split("_")[-1]
+        
+#         # check if scores have already been computed for the model
+#         if include_lineage:
+#             check_file = os.path.join(saliency_dir, f"lineage_scores_{model_num}.npy")
+#         else:
+#             check_file = os.path.join(saliency_dir, f"scores_min_{model_num}.npy")
+            
+#         if not os.path.isfile(check_file):
 
         # compute saliency scores for the single model
-        get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=f"_{model_num}")
+        get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=f"_{model_num}_full")
+
+
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+print(f"Maximum memory used: {script_memory} GB")

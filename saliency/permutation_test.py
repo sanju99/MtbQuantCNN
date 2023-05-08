@@ -24,7 +24,7 @@ locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
 N_epochs = kwargs["N_epochs"]
-patience_epochs = kwargs["patience_epochs"]
+patience_epochs = None
 
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
@@ -51,20 +51,46 @@ X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
 longest_locus = X_h37rv.shape[2]
 del X_h37rv
 
+val_generator = MtbGeneDataset(
+    os.path.join(output_path, 'pkl_sparse_test.npz'),
+    phenotype_file,
+    drug,
+    locus_list,
+    train_or_test="original_test_set",
+    binary=binary,
+    cc=binary_thresh,
+    shuffle_phenos=False,
+    include_lineage=include_lineage,
+    bounded_loss=bounded_loss,
+    data_idx=None,
+    batch_size=BATCH_SIZE,
+    shuffle=False
+)        
+
 # update output path for the saliency folder. Save the permutation models in a new subdirectory
 saliency_dir = os.path.join(output_path, "saliency", save_prefix, "permutation_test")
+print(f"Saving results to {saliency_dir}")
     
 if not os.path.isdir(saliency_dir):
     os.makedirs(os.path.join(saliency_dir))    
+    
+# need the train dataframe indices for slicing it. Reset index so that it's the index within the values, not in the overall dataframe
+df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
+df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
         
-replicates = 10
-print(f"Performing permutation test with {replicates} replicates for {N_epochs} epochs")
-
-for rep in range(replicates):
+num_reps = 10
+for rep in range(num_reps):
     
-    print(f"Working on replicate {rep+1}/{replicates}")
+    patience_counter = 0
+    min_loss = 1e3
+    val_loss = []
     
-    # for each replicate, randomly shuffle the MICs, so get new training data each time. TRAIN ON FULL DATASET
+    if patience_epochs is None:
+        print(f"\nTraining replicate {rep+1}/{num_reps} for {N_epochs} epochs")
+    else:
+        print(f"\nTraining replicate {rep+1}/{num_reps} for {N_epochs} epochs with early stopping")
+    
+    # for each replicate, randomly shuffle the MICs, so get new training data each time. Use entire training set
     train_generator = MtbGeneDataset(
         os.path.join(output_path, 'pkl_sparse_train.npz'),
         phenotype_file,
@@ -95,7 +121,7 @@ for rep in range(replicates):
         @tf.function
         def train_step(x, y):
             '''
-            This is the training step for a single batch. Iterating over batches and epochs is done separately
+            This is the training step for a single batch. Iterating over batches and epochs is done separately. Redefine and recompile this function for every permuted model. 
             '''
 
             # the bounds are the last 2 elements of the x list
@@ -115,17 +141,67 @@ for rep in range(replicates):
             # run the optimizer
             optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 
-            # return only loss
+            # return loss
             return loss.numpy()
 
-        
-        # train the model on the permuted data
+
+        @tf.function
+        def val_step(x, y):
+
+            # the bounds are the last 2 elements of the x list
+            lower_bounds, upper_bounds = x[-2:]
+
+            y_hat = model(x, training=False)
+
+            # return loss
+            return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat).numpy()
+
+
+        # train the model
         for epoch in range(N_epochs):
+
+            # only storing validation losses in this script
+            val_epoch_loss = []
 
             # training loop: don't keep track of the train losses because we just want to train the model here
             for (x_batch_train, y_batch_train) in train_generator:
 
-                _ = train_step(x_batch_train, y_batch_train)
+                _ = train_step(x_batch_train, y_batch_train) 
+
+            # validation loop for a single epoch
+            for (x_batch_val, y_batch_val) in val_generator:
+
+                # compute bounded error
+                val_epoch_loss.append(val_step(x_batch_val, y_batch_val))
+
+            val_loss.append(np.sum(val_epoch_loss) / len(df_test))
+
+            if patience_epochs is not None:
+
+                # if loss decreases by at least 1%
+                if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
+
+                    print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
+
+                    # update min loss, then zero out the patience counter. Save the model only if the loss decreases so the the model in the patience window doesn't save
+                    model.save(os.path.join(saliency_dir, f"permutation_{rep+1}.h5"))
+                    min_loss = val_loss[-1]
+                    patience_counter = 0
+
+                else:
+                    patience_counter += 1
+
+                if patience_counter == patience_epochs:
+                    break
+
+            # train the model for the specified number of epochs
+            else:
+                if epoch % 10 == 0:
+                    print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
+
+        if patience_epochs is None:
+            model.save(os.path.join(saliency_dir, f"permutation_{rep+1}.h5"))
+
 
     else:
         
@@ -156,8 +232,13 @@ for rep in range(replicates):
                   workers=4,
                   class_weight=class_weights,
                 )
+        
+        model.save(os.path.join(saliency_dir, f"permutation_{rep+1}.h5"))
                 
-    # save the model
-    model.save(os.path.join(saliency_dir, f"permutation_{rep+1}.h5"))
-    
+
 K.clear_session()
+
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+print(f"Maximum memory used: {script_memory} GB")

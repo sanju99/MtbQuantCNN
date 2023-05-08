@@ -197,7 +197,7 @@ def compute_saliency_score_significance(locus_idx, scores_max, scores_min, permu
             
     
 
-def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save=False, significance=True, sig_thresh=0.05):
+def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save=False, significance=True, sig_thresh=0.05, suffix=""):
     
     # this is 1-indexed and in reverse order for negative sense genes
     X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
@@ -208,8 +208,8 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
         saliency_dir = os.path.join(out_dir, "saliency", "quant")
     
     # combined_mean = np.load(os.path.join(saliency_dir, "scores_mean.npy"))
-    combined_max = np.load(os.path.join(saliency_dir, "scores_max.npy"))
-    combined_min = np.load(os.path.join(saliency_dir, "scores_min.npy"))
+    combined_max = np.load(os.path.join(saliency_dir, f"scores_max{suffix}.npy"))
+    combined_min = np.load(os.path.join(saliency_dir, f"scores_min{suffix}.npy"))
     
     # check signs
     assert np.max(combined_min.flatten()) <= 0
@@ -217,8 +217,8 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
     
     # get results from the permutation test
     if significance:
-        permute_max_lst = glob.glob(os.path.join(saliency_dir, "permutation_test/scores_max*.npy"))
-        permute_min_lst = glob.glob(os.path.join(saliency_dir, "permutation_test/scores_min*.npy"))
+        permute_max_lst = glob.glob(os.path.join(saliency_dir, f"permutation_test/scores_max*{suffix}.npy"))
+        permute_min_lst = glob.glob(os.path.join(saliency_dir, f"permutation_test/scores_min*{suffix}.npy"))
 
     # initalize empty dataframe for saliency scores
     res_df = pd.DataFrame(columns=["Gene", "Pos", "Max", "Min"])
@@ -369,14 +369,14 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
 
             
             
-def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", plot_thresh=0.1, cat_to_check=["1", "2"], binary=False, save=False, significance=True, sig_thresh=0.05):
+def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", plot_thresh=0.1, cat_to_check=["1", "2"], binary=False, save=False, significance=True, sig_thresh=0.05, suffix=""):
                     
     fastas = [os.path.join(fasta_dir, gene + ".fasta") for gene in locus_list]
     print(f"{len(fastas)} loci!")
     
     # make the genetic coordinates dataframe. Includes strand sense and locus length
     gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
-    saliency_df = multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save, significance, sig_thresh)
+    saliency_df = multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, fasta_dir, plot_thresh, save, significance, sig_thresh, suffix)
     
     # update with WHO and lineage SNP annotations (crude because only the positions are checked, not the actual SNPs)
     saliency_df = did_cnn_find_pos(saliency_df, drug, cat_to_check, significance)

@@ -34,7 +34,7 @@ snpEff build -genbank -v Mycobacterium_tuberculosis_gca_000195955
 To run snpEff on a single file, run
 
 ```bash
-snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats /path/to/sample/file.vcf > /path/to/sample/file.eff.vcf
+snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -no-downstream -no-upstream /path/to/sample/file.vcf > /path/to/sample/file.eff.vcf
 ```
 
 To run it efficiently on many samples without having to reload the database every time, you need to create a text file containing the paths to all the files that you want to annotate. Once you have that file, run:

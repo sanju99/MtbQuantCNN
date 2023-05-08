@@ -44,8 +44,10 @@ isolate_order = df_phenos["ROLLINGDB_ID"].values
 
 # make a directory for the small fasta files
 ridge_dir = os.path.join(output_path, "ridge")
-if not os.path.isdir(ridge_dir):
-    os.makedirs(ridge_dir)
+bootstrap_dir = os.path.join(output_path, "ridge", "bootstrapping")
+
+if not os.path.isdir(bootstrap_dir):
+    os.makedirs(bootstrap_dir)
 
 def subset_fasta_files():
     '''
@@ -239,6 +241,8 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
         # use regularization parameter determined above
         bs_model = CustomRidge(alpha=custom_Ridge_model.alpha_)
         bs_model.fit(X_bs, y_bs, loss_type=loss_type, lower_bounds=lower_bounds_bs, upper_bounds=upper_bounds_bs)
+        
+        pickle.dump(bs_model, open(os.path.join(bootstrap_dir, f"model_{i}.sav"), "wb"))
         y_pred_bs = bs_model.predict(X_test)
         
         bs_summary_df = create_summary_df(df_test, y_pred_bs, drug, binary_thresh, num_loci, "LinReg", binarize=True, save_fName=None)
