@@ -9,7 +9,6 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 
 sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
-from dataloader import MtbGeneDataset
 import scipy.stats as st
 
 

@@ -97,14 +97,15 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
     
     with DeepExplain(session=K.get_session()) as de:
 
-        # initialize a DeepExplain model using the same inputs and outputs as the original model and get the target layer to get attributions for
-        # For quantitative models, we want to target the output layer. For binary, target the second to last layer (pre-Softmax)
+        # initialize a DeepExplain model using the same inputs and outputs as the original model
+        # For quantitative models, we want to compute saliencies for the output layer. For binary, get saliencies for the output of the penultimate layer (before the last layer, which applies Softmax)
         if binary:
             de_model = tf.keras.Model(inputs = model.inputs, outputs = model.layers[-2].output)
             predict_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
         else:
             de_model = tf.keras.Model(inputs = model.inputs, outputs = model.outputs)
 
+        # this is the layer for which we want to compute saliency scores
         target_layer = de_model(model.inputs)
 
         # check that the original and DeepExplain models give the same predictions on the H37Rv input
@@ -151,11 +152,11 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
                 # full scores matrix
                 genetic_attr_by_nuc.append(attributions[0])
                                                 
-                # for pos, nuc_idx in enumerate(idx_to_ignore):
-                #     # set the index of the reference nucleotide to 0
-                #     # samples x 5 x position x 1
-                #     # when the scores are summed across the nucleotides in the next line, the ref nucleotide doesn't contribute
-                #     attributions[0][:, nuc_idx, pos, :] = 0
+                for pos, nuc_idx in enumerate(idx_to_ignore):
+                    # set the index of the reference nucleotide to 0
+                    # samples x 5 x position x 1
+                    # when the scores are summed across the nucleotides in the next line, the ref nucleotide doesn't contribute
+                    attributions[0][:, nuc_idx, pos, :] = 0
     
                 genetic_attr.append(np.sum(attributions[0], axis=1))
                 
@@ -165,10 +166,10 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
                 # full scores matrix
                 genetic_attr_by_nuc.append(attributions)
                 
-                # for i, nuc_idx in enumerate(idx_to_ignore):
-                #     # set the index to ignore to 0
-                #     # samples x 5 x position x 1
-                #     attributions[:, nuc_idx, i, :] = 0
+                for i, nuc_idx in enumerate(idx_to_ignore):
+                    # set the index to ignore to 0
+                    # samples x 5 x position x 1
+                    attributions[:, nuc_idx, i, :] = 0
     
                 genetic_attr.append(np.sum(attributions, axis=1))
         

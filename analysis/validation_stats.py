@@ -328,6 +328,14 @@ def get_results_single_model(X, df, dataset, model_type, config_file, bootstrap=
     binary = kwargs["binary"]
     BATCH_SIZE = kwargs["batch_size"]
     
+    # whether to binarize predictions later
+    if binary:
+        binarize = False
+        model_prefix = "binary_"
+    else:
+        binarize = True
+        model_prefix = ""
+    
     if dataset not in ["Train", "Test", "Validation"]:
         raise ValueError(f"{dataset} is not a valid dataset name")
     
@@ -343,14 +351,21 @@ def get_results_single_model(X, df, dataset, model_type, config_file, bootstrap=
         longest_locus = X[0].shape[2]
         
         model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
-        model.load_weights(os.path.join(results_dir, "best_model.h5"))
-        y_pred = model.predict(X, batch_size=BATCH_SIZE).flatten()
-        
+        model.load_weights(os.path.join(results_dir, f"{model_prefix}best_model.h5"))
+        y_pred = model.predict(X, batch_size=BATCH_SIZE).flatten()        
     else:
-        model = pickle.load(open(os.path.join(results_dir, "ridge", "model.sav"), "rb"))
+        model = pickle.load(open(os.path.join(results_dir, "ridge", f"{model_prefix}model.sav"), "rb"))
         y_pred = np.squeeze(model.predict(X))
     
-    summary_df = create_summary_df(df, y_pred, drug, binary_thresh, num_loci, model_type, binarize=True, save_fName=None)
+    if binary:
+        # update y_pred to be the probabilities, not the binary predictions made with threshold of 0.5
+        y_pred = np.squeeze(model.predict_proba(X)[:, 1])        
+        pred_df = pd.DataFrame({"y_pred": y_pred, "y_test": (df[f"{drug}_midpoint"] > binary_thresh).astype(int).values})
+        pred_df = get_threshold_val(pred_df, "y_pred", "y_test")
+        summary_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred_label"], binary_thresh, binarize=False)
+    else:
+        summary_df = create_summary_df(df, y_pred, drug, binary_thresh, num_loci, model_type, binarize=binarize, save_fName=None)
+    
     summary_df[["Dataset", "CV"]] = [dataset, 0]
     summary_df = [summary_df]
     
@@ -363,12 +378,21 @@ def get_results_single_model(X, df, dataset, model_type, config_file, bootstrap=
                 model.load_weights(os.path.join(results_dir, "bootstrapping", f"model_{i}.h5"))
                 y_pred = model.predict(X, batch_size=BATCH_SIZE).flatten()
             else:
-                model = pickle.load(open(os.path.join(results_dir, "ridge", "bootstrapping", f"model_{i}.sav"), "rb"))
+                model = pickle.load(open(os.path.join(results_dir, "ridge", "bootstrapping", f"{model_prefix}model_{i}.sav"), "rb")) 
                 y_pred = np.squeeze(model.predict(X))
 
-            bs_summary = create_summary_df(df, y_pred, drug, binary_thresh, num_loci, model_type, binarize=True, save_fName=None)
-            bs_summary[["Dataset", "CV"]] = [dataset, i + 1]
-            summary_df.append(bs_summary)
+            if binary:
+                # classes are ordered according to model.classes_
+                y_pred = np.squeeze(model.predict_proba(X)[:, 1])
+                
+                bs_pred_df = pd.DataFrame({"y_pred": y_pred, "y_test": (df[f"{drug}_midpoint"] > binary_thresh).astype(int).values})
+                bs_pred_df = get_threshold_val(bs_pred_df, "y_pred", "y_test")        
+                bs_summary_df = compute_binary_metrics(bs_pred_df["y_test"], bs_pred_df["y_pred_label"], binary_thresh, binarize=False)
+            else:
+                bs_summary_df = create_summary_df(df, y_pred, drug, binary_thresh, num_loci, model_type, binarize=True, save_fName=None)
+                
+            bs_summary_df[["Dataset", "CV"]] = [dataset, i + 1]
+            summary_df.append(bs_summary_df)
 
     return pd.concat(summary_df, axis=0)
 
@@ -376,7 +400,7 @@ def get_results_single_model(X, df, dataset, model_type, config_file, bootstrap=
 
 
 
-def get_results_all_models(drug, config_file, model_type, bootstrap=True):
+def get_results_all_datasets(drug, config_file, model_type, bootstrap=True):
     
     if model_type not in ["CNN", "Regression"]:
         raise ValueError(f"{model_type} is not a valid model type")
@@ -413,35 +437,52 @@ def get_results_all_models(drug, config_file, model_type, bootstrap=True):
 
 
 
-# # python3 validation_stats.py Rifampicin RIF ../config_rif.yaml rpoBC_variants_10543isolates.csv
-# # python3 validation_stats.py Moxifloxacin MXF ../config_mxf_lineage.yaml gyrBA_variants_8569isolates.csv
-# _, drug, drug_abbr, config_file, isolate_variants_file = sys.argv
+# python3 validation_stats.py Rifampicin RIF ../config_rif.yaml ../config_rif_binary.yaml rpoBC_variants_10543isolates.csv
+# python3 validation_stats.py Moxifloxacin MXF ../config_mxf_lineage.yaml gyrBA_variants_8569isolates.csv
+_, drug, drug_abbr, config_file, binary_config_file, isolate_variants_file = sys.argv
 
-# isolate_variants = pd.read_csv(os.path.join(data_path, drug_abbr, isolate_variants_file))
+isolate_variants = pd.read_csv(os.path.join(data_path, drug_abbr, isolate_variants_file))
 
-# binary_thresh = yaml.safe_load(open(config_file, "r"))["binary_thresh"]
+binary_thresh = yaml.safe_load(open(config_file, "r"))["binary_thresh"]
 
-# if not os.path.isfile(f"{drug}/validation/catalog_stats.csv"):
-#     catalog_stats = classify_using_mutation_catalog(drug_abbr, data_path, who_variants_clean, isolate_variants, binary_thresh, return_stats=["Sensitivity", "Specificity", "AUC", "AUC_PR", "Accuracy", "Balanced_Acc"])
-#     catalog_stats.to_csv(f"{drug}/validation/catalog_stats.csv", index=False)
-# else:
-#     catalog_stats = pd.read_csv(f"{drug}/validation/catalog_stats.csv")
+if not os.path.isfile(f"{drug}/validation/catalog_stats.csv"):
+    catalog_stats = classify_using_mutation_catalog(drug_abbr, data_path, who_variants_clean, isolate_variants, binary_thresh, return_stats=["Sensitivity", "Specificity", "AUC", "AUC_PR", "Accuracy", "Balanced_Acc"])
+    catalog_stats.to_csv(f"{drug}/validation/catalog_stats.csv", index=False)
+else:
+    catalog_stats = pd.read_csv(f"{drug}/validation/catalog_stats.csv")
     
-# if not os.path.isfile(f"{drug}/validation/Reg_stats.csv"):
-#     Reg_stats = get_results_all_models(drug_abbr, config_file, "Regression", bootstrap=True)
-#     Reg_stats.to_csv(f"{drug}/validation/Reg_stats.csv", index=False)
-# else:
-#     Reg_stats = pd.read_csv(f"{drug}/validation/Reg_stats.csv")
+# linear regression
+if not os.path.isfile(f"{drug}/validation/Reg_stats.csv"):
+    Reg_stats = get_results_all_datasets(drug_abbr, config_file, "Regression", bootstrap=True)
+    Reg_stats.to_csv(f"{drug}/validation/Reg_stats.csv", index=False)
+else:
+    Reg_stats = pd.read_csv(f"{drug}/validation/Reg_stats.csv")
 
-# if not os.path.isfile(f"{drug}/validation/CNN_stats.csv"):
-#     CNN_stats = get_results_all_models(drug_abbr, config_file, "CNN", bootstrap=True)
-#     CNN_stats.to_csv(f"{drug}/validation/CNN_stats.csv", index=False)
-# else:
-#     CNN_stats = pd.read_csv(f"{drug}/validation/CNN_stats.csv")
+# quantitative CNN
+if not os.path.isfile(f"{drug}/validation/CNN_stats.csv"):
+    CNN_stats = get_results_all_datasets(drug_abbr, config_file, "CNN", bootstrap=True)
+    CNN_stats.to_csv(f"{drug}/validation/CNN_stats.csv", index=False)
+else:
+    CNN_stats = pd.read_csv(f"{drug}/validation/CNN_stats.csv")
     
-# print(catalog_stats.shape, Reg_stats.shape, CNN_stats.shape)
+# logistic regression
+if not os.path.isfile(f"{drug}/validation/binary_Reg_stats.csv"):
+    print("Computing validation statistics for logistic regression...")
+    Reg_stats = get_results_all_datasets(drug_abbr, binary_config_file, "Regression", bootstrap=True)
+    Reg_stats.to_csv(f"{drug}/validation/binary_Reg_stats.csv", index=False)
+else:
+    Reg_stats = pd.read_csv(f"{drug}/validation/binary_Reg_stats.csv")
+    
+# # binary CNN
+# if not os.path.isfile(f"{drug}/validation/binary_CNN_stats.csv"):
+#     CNN_stats = get_results_all_datasets(drug_abbr, binary_config_file, "CNN", bootstrap=True)
+#     CNN_stats.to_csv(f"{drug}/validation/binary_CNN_stats.csv", index=False)
+# else:
+#     CNN_stats = pd.read_csv(f"{drug}/validation/binary_CNN_stats.csv")
+    
+# print(catalog_stats.shape, Reg_stats.shape, CNN_stats.shape, binary_CNN_stats.shape)
 
-# # returns a tuple: current, peak memory in bytes 
-# script_memory = tracemalloc.get_traced_memory()[1] / 1e9
-# tracemalloc.stop()
-# print(f"Maximum memory used: {script_memory} GB")
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+print(f"Maximum memory used: {script_memory} GB")

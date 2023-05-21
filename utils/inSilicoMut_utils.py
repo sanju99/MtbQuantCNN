@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import glob, os, yaml, sparse, itertools, sys, vcf
+import glob, os, yaml, itertools, sys, vcf
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -135,8 +135,8 @@ def get_codon_from_seq(genome_seq, codon_num, start, end):
     # return the nucleotides of the codon and their genomic coordinates
     return gene_seq[int(codon_idx*3): int(codon_idx*3)+3], [start_pos, start_pos+1, start_pos+2]
 
-       
-    
+
+
     
 def is_list_consecutive(lst):
     '''

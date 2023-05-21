@@ -49,7 +49,7 @@ else:
     add_paths = []
 
 paths = pd.read_csv(PATHS_FILE, sep="\t", header=None)[0].values    
-print(f"Making {SENSE} multiple sequence alignment for {len(paths)} sequences and {len(add_paths)} additional sequences")
+print(f"Making multiple sequence alignment for {len(paths)} sequences and {len(add_paths)} additional sequences")
 paths = np.concatenate([paths, add_paths], axis=0)
 
 if ".fasta" not in OUT_FILE:
@@ -165,17 +165,20 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 
     vcf_file = vcf.Reader(filename=fName)
 
+    # # start is 0-indexed (exclusive) and end is 1-indexed (inclusive)
+    # for pos in np.arange(START, END + 1):
+
+    #     if 
+
     # start is 0-indexed (exclusive) and end is 1-indexed (inclusive)
     for record in vcf_file:
-        
+
         # get only the region of interest
         if record.POS > START and record.POS <= END:
 
-            print(record)
-
             # get the allele type: ref, alt, or missing
-            single_allele_type = allele_category(record)
-
+            single_allele_type = allele_category(record) 
+            
             # convert alternative allele from list to string
             alt_allele = "".join(np.array(record.ALT).astype(str))
 
@@ -220,7 +223,6 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
                 # deletion
                 else:
 
-                    print("Working on a deletion")
                     if len(alt_allele) == 1:
 
                         ref_allele = str(record.REF)
@@ -245,11 +247,7 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 
                         # Python will replace all elements if the original and replace string are the same length
                         if single_allele_type == "alt":
-
-                            # add this step so that if the allele extends more than the region of interest, it is truncated
-                            old_len = len(new_seq)
                             new_seq[idx:idx+len(ref_allele)] = new_allele
-                            new_seq = new_seq[:old_len]
                         
                         # don't do anything if reference or missing. Don't consider missing indels because they often introduce huge regions of N
                         else:
@@ -261,7 +259,9 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 
     # check lengths because both of them are lists right now 
     assert len(new_seq) == len(h37Rv_region)
+    
     return new_seq
+
 
 
 #################################### STEP 1: GET SNPS AND INDELS AND INSERT INTO EACH SEQUENCE USING THE FUNCTION ABOVE ####################################

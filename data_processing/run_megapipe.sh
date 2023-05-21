@@ -176,14 +176,19 @@ do
         #################################################### STEP 6: CALL VARIANTS USING PILON ####################################################
 
 
-        # If you specify the --outdir flag, it will create output FASTA and VCF files with the sample_id prefix in the pilon_dir directory
-        if [ ! -f "$sample_pilon_dir/$sample_ID.vcf" ]; then
+        # the fasta file that pilon creates is the polished version. The goal of pilon is to clean the genome by removing inconsistencies, gaps, etc.
+        # documentation: https://github.com/broadinstitute/pilon/wiki
+        # If you specify the --outdir flag, it will create output FASTA and VCF files with the sample_id prefix in the directory specified after outdir
+        if [ ! -f "$sample_pilon_dir/$sample_ID.fasta" ]; then
             pilon -Xmx18g --genome "$ref_genome" --bam "$sample_bam_dir/$sample_ID.dedup.bam" --output "$sample_ID" --outdir "$sample_pilon_dir" --variant
         fi
         
+        # create a VCF file using freebayes
+        freebayes -f "$sample_pilon_dir/$sample_ID.fasta" "$sample_bam_dir/$sample_ID.dedup.bam" > "$sample_pilon_dir/$sample_ID.freebayes.vcf"
+        
         # gzip the file. -c flag directs the output to stdout. Then delete the unzipped version
         gzip -c < "$sample_pilon_dir/$sample_ID.vcf" > "$sample_pilon_dir/${sample_ID}_full.vcf.gz"
-        rm "$sample_pilon_dir/$sample_ID.vcf"
+        #rm "$sample_pilon_dir/$sample_ID.vcf"
         # rm "$sample_pilon_dir/$sample_ID.fasta"
         
         # keep all variants in the rpoBC and gyrBA regions used for the models and write to new files

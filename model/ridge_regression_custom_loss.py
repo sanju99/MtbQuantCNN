@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from matplotlib import transforms
 import sys, glob, os, yaml, sparse, warnings, tracemalloc, pickle
 
 from evcouplings.align import Alignment
@@ -18,6 +17,7 @@ warnings.filterwarnings("ignore")
 
 # utils files are in the utils_file folder
 sys.path.append("utils")
+from data_utils import *
 from model_utils import *
 
 

@@ -49,7 +49,7 @@ else:
     add_paths = []
 
 paths = pd.read_csv(PATHS_FILE, sep="\t", header=None)[0].values    
-print(f"Making {SENSE} multiple sequence alignment for {len(paths)} sequences and {len(add_paths)} additional sequences")
+print(f"Making multiple sequence alignment for {len(paths)} sequences and {len(add_paths)} additional sequences")
 paths = np.concatenate([paths, add_paths], axis=0)
 
 if ".fasta" not in OUT_FILE:
@@ -167,28 +167,27 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 
     # start is 0-indexed (exclusive) and end is 1-indexed (inclusive)
     for record in vcf_file:
-        
+
         # get only the region of interest
         if record.POS > START and record.POS <= END:
 
-            print(record)
-
             # get the allele type: ref, alt, or missing
-            single_allele_type = allele_category(record)
-
+            single_allele_type = allele_category(record) 
+            
             # convert alternative allele from list to string
             alt_allele = "".join(np.array(record.ALT).astype(str))
+            ref_allele = str(record.REF)
 
             # the index to replace -- this is 0-indexed, consistent with Python
             idx = record.POS - (START + 1)
 
             # no length change -- SNP or MNP. Python will replace all elements if the original and new are the same length
-            if len(record.REF) == len(alt_allele):
+            if len(ref_allele) == len(alt_allele):
 
                 if single_allele_type == "alt":
-                    new_seq[idx:idx+len(record.REF)] = alt_allele
+                    new_seq[idx:idx+len(ref_allele)] = alt_allele
                 elif single_allele_type == "missing":
-                    new_seq[idx:idx+len(record.REF)] = ["N"]*len(alt_allele)
+                    new_seq[idx:idx+len(ref_allele)] = ["N"]*len(alt_allele)
                 # the only other option is reference, so don't do anything
                 else:
                     continue
@@ -196,72 +195,73 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
             # indels
             else:
 
-                # insertion
-                if len(alt_allele) > len(record.REF):
+                # Don't consider missing indels because they often introduce huge regions of N. So only do something if alternative
+                if single_allele_type == "alt":
+                    
+                    # insertion
+                    if len(alt_allele) > len(ref_allele):
 
-                    if len(record.REF) == 1:
-
-                        # simply replace the nucleotide at the reference index with the alternative nucleotides
-                        # also add the number of gap characters needed (len(ALT) - len(REF), where len(REF) == 1) to insertion_dict at the appropriate index
-                        # only consider high-quality insertions and deletions. Leave the others as reference
-                        if single_allele_type == "alt":
+                        # replace the nucleotide at the reference index with the alternative nucleotides
+                        # also add the number of gap characters needed (len(ALT) - len(REF) to insertion_dict at the appropriate index                        
+                        # only input short insertions and also if they pass the QC filters. Leave the others as reference
+                        if (len(alt_allele) - len(ref_allele) <= 15):
 
                             new_seq[idx] = alt_allele
-                            insertion_dict[idx] = np.max([insertion_dict[idx], (len(alt_allele) - 1)])
-                        
-                        # don't do anything if reference or missing. Don't consider missing indels because they often introduce huge regions of N
+                            insertion_dict[idx] = np.max([insertion_dict[idx], len(alt_allele) - len(ref_allele)])
+
+                        # don't do anything if indels are very long
                         else:
                             continue
 
-                    # complex variant -- don't process these
+                    # deletion
                     else:
-                        continue
 
-                # deletion
-                else:
+                        if len(alt_allele) == 1:
 
-                    print("Working on a deletion")
-                    if len(alt_allele) == 1:
+                            new_allele = []
+                            assert alt_allele in ref_allele
 
-                        ref_allele = str(record.REF)
-                        new_allele = []
-                        assert alt_allele in ref_allele
+                            # iterate through the reference to find where the alternative allele comes up first, then make everything else the gap character
+                            # boolean to check if we have found the alt_allele (assume that it would be the first instance of that nucleotide in the ref_allele)
+                            found_alt_allele = False
 
-                        # iterate through the reference to find where the alternative allele comes up first, then make everything else the gap character
-                        # boolean to check if we have found the alt_allele (assume that it would be the first instance of that nucleotide in the ref_allele)
-                        found_alt_allele = False
-
-                        for i, nuc in enumerate(ref_allele):
-                            if nuc == alt_allele:
-                                if not found_alt_allele:
-                                    new_allele.append(alt_allele)
-                                    found_alt_allele = True
+                            for i, nuc in enumerate(ref_allele):
+                                if nuc == alt_allele:
+                                    if not found_alt_allele:
+                                        new_allele.append(alt_allele)
+                                        found_alt_allele = True
+                                    else:
+                                        new_allele.append("-")
                                 else:
                                     new_allele.append("-")
-                            else:
-                                new_allele.append("-")
 
-                        assert len(new_allele) == len(ref_allele)
+                            assert len(new_allele) == len(ref_allele)
 
-                        # Python will replace all elements if the original and replace string are the same length
-                        if single_allele_type == "alt":
-
-                            # add this step so that if the allele extends more than the region of interest, it is truncated
-                            old_len = len(new_seq)
+                            # Python will replace all elements if the original and replace string are the same length
                             new_seq[idx:idx+len(ref_allele)] = new_allele
-                            new_seq = new_seq[:old_len]
+
+                        else:                        
+                            # only input short insertions and also if they pass the QC filters and if the first nucleotide of the REF and ALT are the same. 
+                            # In that case, replace the remaining characters of the REF list with the ALT nucleotides
+                            # the point of this is mainly for the insilico mutations. Some of them have differing lengths, but the net change is a deletion
+                            if alt_allele[0] == ref_allele[0] and (len(ref_allele) - len(alt_allele) <= 15):
+
+                                # the replacement is the alternative allele padded with gap characters. # of gap characters = the length difference between them 
+                                new_allele = list(alt_allele) + ['-'] * (len(ref_allele) - len(alt_allele))
+                                assert len(new_allele) == len(ref_allele)
+
+                                # Python will replace all elements if the original and replace string are the same length
+                                new_seq[idx:idx+len(ref_allele)] = new_allele
+
+                            # don't put in the deletion if it is long, or the first nucleotides of REF and ALT don't match because it can not be reliably inserted
+                            else:
+                                continue
                         
-                        # don't do anything if reference or missing. Don't consider missing indels because they often introduce huge regions of N
-                        else:
-                            continue
-
-                    # complex variant -- don't process these
-                    else:
-                        continue
-
     # check lengths because both of them are lists right now 
     assert len(new_seq) == len(h37Rv_region)
+    
     return new_seq
+
 
 
 #################################### STEP 1: GET SNPS AND INDELS AND INSERT INTO EACH SEQUENCE USING THE FUNCTION ABOVE ####################################

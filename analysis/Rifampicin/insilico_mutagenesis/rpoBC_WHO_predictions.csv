@@ -38,11 +38,11 @@ log_MIC,mutation,confidence,genome_index
 -2.7820947,rpoB_p.Asp435Glu,2) Assoc w R - Interim,761111
 2.9398224,rpoB_p.His445Pro,2) Assoc w R - Interim,761140
 -4.0241613,rpoB_p.Ser428Arg,2) Assoc w R - Interim,761088
--3.006716,rpoB_p.Ser431_Gln432insHis,2) Assoc w R - Interim,761098
+-1.9539818,rpoB_p.Ser431_Gln432insHis,2) Assoc w R - Interim,761098
 -4.077726,rpoB_p.Thr427Ile,2) Assoc w R - Interim,761086
 -3.2343662,rpoB_p.Met434Val,2) Assoc w R - Interim,761106
--2.9298618,rpoB_p.Ser431_Gln432insArg,2) Assoc w R - Interim,761094
--4.093716,rpoB_p.Gln432_Asp435delinsHis,2) Assoc w R - Interim,761100
+-3.4476907,rpoB_p.Ser431_Gln432insArg,2) Assoc w R - Interim,761094
+4.194042,rpoB_p.Gln432_Asp435delinsHis,2) Assoc w R - Interim,761100
 -2.8515399,rpoB_p.Asp435His,2) Assoc w R - Interim,761109
 -2.1793382,rpoB_p.Asn437His,2) Assoc w R - Interim,761115
 -0.6458806,rpoB_p.Gln432His,2) Assoc w R - Interim,761102
@@ -72,7 +72,7 @@ log_MIC,mutation,confidence,genome_index
 2.8627224,rpoB_p.Phe433_Asp435del,2) Assoc w R - Interim,761094
 4.3519936,rpoB_p.Gln432_Phe433del,2) Assoc w R - Interim,761098
 4.1460767,rpoB_p.Asp435_Pro439del,2) Assoc w R - Interim,761094
--4.093716,rpoB_p.Met434_Asn437delinsIle,2) Assoc w R - Interim,761106
+4.063415,rpoB_p.Met434_Asn437delinsIle,2) Assoc w R - Interim,761106
 4.1050825,rpoB_p.His445_Lys446del,2) Assoc w R - Interim,761137
 3.074445,rpoB_p.Ser450_Leu452del,2) Assoc w R - Interim,761150
 -3.604637,rpoB_p.Gly442Glu,2) Assoc w R - Interim,761131
@@ -82,7 +82,7 @@ log_MIC,mutation,confidence,genome_index
 -3.3820722,rpoB_p.Asn437Ile,2) Assoc w R - Interim,761116
 -1.1683387,rpoB_p.Asp435del,2) Assoc w R - Interim,761108
 3.2569206,rpoB_p.Ser431_Met434del,2) Assoc w R - Interim,761094
--4.093716,rpoB_p.Thr427_Gln429delinsLys,2) Assoc w R - Interim,761085
+-3.6317382,rpoB_p.Thr427_Gln429delinsLys,2) Assoc w R - Interim,761085
 3.7640998,rpoB_p.Phe433_Gln436del,2) Assoc w R - Interim,761098
 1.5533872,rpoB_p.Gln436_Asn437del,2) Assoc w R - Interim,761109
 -3.6895957,rpoB_p.Ala451Gly,2) Assoc w R - Interim,761158
@@ -94,7 +94,7 @@ log_MIC,mutation,confidence,genome_index
 -3.921343,rpoB_p.Thr427_Ser428del,2) Assoc w R - Interim,761082
 -3.5664694,rpoB_p.Thr427_Gln429del,2) Assoc w R - Interim,761083
 -2.8780935,rpoB_p.Thr427_Leu430del,2) Assoc w R - Interim,761084
--4.093716,rpoB_p.Asp435_Gln436delinsGlu,2) Assoc w R - Interim,761109
+-1.3242288,rpoB_p.Asp435_Gln436delinsGlu,2) Assoc w R - Interim,761109
 -3.4912136,rpoB_p.Leu452Met,2) Assoc w R - Interim,761160
 -4.0749836,rpoB_p.Gly426Ser,2) Assoc w R - Interim,761082
 4.403537,rpoB_p.Gln432_Met434del,2) Assoc w R - Interim,761097
@@ -272,8 +272,136 @@ log_MIC,mutation,confidence,genome_index
 -4.104138,rpoB_p.Ala868Val,3) Uncertain significance,762409
 -4.0932918,rpoB_p.Ala902Pro,3) Uncertain significance,762510
 -4.1007304,rpoB_p.Ala334Asp,3) Uncertain significance,760807
+-4.1101108,rpoC_p.Pro394Gln,3) Uncertain significance,764550
+-4.09697,rpoC_p.Pro444Ser,3) Uncertain significance,764699
+-4.144708,rpoC_p.Pro601Gln,3) Uncertain significance,765171
+-4.1013136,rpoC_p.Pro643Ser,3) Uncertain significance,765296
+-4.110158,rpoC_p.Pro658Leu,3) Uncertain significance,765342
+-4.0998006,rpoC_p.Pro682Leu,3) Uncertain significance,765414
+-4.0946193,rpoC_p.Pro906Arg,3) Uncertain significance,766086
+-4.101223,rpoC_p.Gln1125Arg,3) Uncertain significance,766743
+-4.103438,rpoC_p.Gln165Arg,3) Uncertain significance,763863
+-4.100776,rpoC_p.Gln262Arg,3) Uncertain significance,764154
+-4.085519,rpoC_p.Gln479His,3) Uncertain significance,764806
+-4.094812,rpoC_p.Gln711Glu,3) Uncertain significance,765500
+-4.0791,rpoC_p.Gln759Arg,3) Uncertain significance,765645
+-4.0896993,rpoC_p.Gln959Arg,3) Uncertain significance,766245
+-4.098057,rpoC_p.Arg1052Gly,3) Uncertain significance,766523
+-4.1050777,rpoC_p.Arg1083Gly,3) Uncertain significance,766616
+-4.097607,rpoC_p.Arg1192Leu,3) Uncertain significance,766944
+-4.0983105,rpoC_p.Arg1192Gln,3) Uncertain significance,766944
+-4.0944467,rpoC_p.Arg11His,3) Uncertain significance,763401
+-4.0893407,rpoC_p.Arg1279Ser,3) Uncertain significance,767204
+-4.0890775,rpoC_p.Arg203Cys,3) Uncertain significance,763976
+-4.0996156,rpoC_p.Arg206Cys,3) Uncertain significance,763985
+-4.0903964,rpoC_p.Arg211His,3) Uncertain significance,764001
+-4.091598,rpoC_p.Arg247His,3) Uncertain significance,764109
+-4.093795,rpoC_p.Arg282Gln,3) Uncertain significance,764214
+-4.111729,rpoC_p.Pro322Thr,3) Uncertain significance,764333
+-4.087781,rpoC_p.Pro1259Ser,3) Uncertain significance,767144
+-4.0994444,rpoC_p.Pro1259Leu,3) Uncertain significance,767145
+-4.102043,rpoC_p.Pro1200Leu,3) Uncertain significance,766968
+-4.121284,rpoC_p.Ile491Val,3) Uncertain significance,764840
+-4.095107,rpoC_p.Ile619Val,3) Uncertain significance,765224
+-4.09532,rpoC_p.Ile646Val,3) Uncertain significance,765305
+-4.098927,rpoC_p.Ile696Val,3) Uncertain significance,765455
+-4.097159,rpoC_p.Ile697Val,3) Uncertain significance,765458
+-4.0965123,rpoC_p.Ile745Leu,3) Uncertain significance,765602
+-4.1255255,rpoC_p.Ile897Thr,3) Uncertain significance,766059
+-4.0820327,rpoC_p.Ile957Thr,3) Uncertain significance,766239
+-4.083734,rpoC_p.Lys228Asn,3) Uncertain significance,764053
+-4.1039267,rpoC_p.Lys232Thr,3) Uncertain significance,764064
+-4.0958576,rpoC_p.Lys743Glu,3) Uncertain significance,765596
+-4.1281447,rpoC_p.Lys828Arg,3) Uncertain significance,765852
+-4.1035924,rpoC_p.Arg397Leu,3) Uncertain significance,764559
+-4.0895076,rpoC_p.Leu1099Val,3) Uncertain significance,766664
+-4.0913205,rpoC_p.Leu381Val,3) Uncertain significance,764510
+-4.09063,rpoC_p.Leu627Val,3) Uncertain significance,765248
+-4.0888705,rpoC_p.Leu650Arg,3) Uncertain significance,765318
+-4.107306,rpoC_p.Leu910Val,3) Uncertain significance,766097
+-4.0934367,rpoC_p.Met1161Ile,3) Uncertain significance,766852
+-4.097754,rpoC_p.Met1208Ile,3) Uncertain significance,766993
+-4.098126,rpoC_p.Met1208Val,3) Uncertain significance,766991
+-4.095965,rpoC_p.Met205Arg,3) Uncertain significance,763983
+-4.093736,rpoC_p.Met205Val,3) Uncertain significance,763982
+-4.091479,rpoC_p.Met447Thr,3) Uncertain significance,764709
+-4.0911527,rpoC_p.Met733Ile,3) Uncertain significance,765568
+-4.1503496,rpoC_p.Pro1040Arg,3) Uncertain significance,766488
+-4.095392,rpoC_p.Leu1134Val,3) Uncertain significance,766769
+-4.101182,rpoC_p.Ile34Val,3) Uncertain significance,763469
+-4.0908313,rpoC_p.Arg506Gln,3) Uncertain significance,764886
+-4.0999713,rpoC_p.Arg641Gln,3) Uncertain significance,765291
+-4.0964217,rpoC_p.Val626Ile,3) Uncertain significance,765245
+-4.093603,rpoC_p.Val629Met,3) Uncertain significance,765254
+-4.094267,rpoC_p.Val684Gly,3) Uncertain significance,765420
+-4.094729,rpoC_p.Val684Ile,3) Uncertain significance,765419
+-3.9890308,rpoC_p.Val709Phe,3) Uncertain significance,765494
+-4.079702,rpoC_p.Val756Ile,3) Uncertain significance,765635
+-4.092914,rpoC_p.Val803Leu,3) Uncertain significance,765776
+-4.097586,rpoC_p.Val899Ile,3) Uncertain significance,766064
+-4.09859,rpoC_p.Val930Ile,3) Uncertain significance,766157
+-4.097647,rpoC_p.Val974Met,3) Uncertain significance,766289
+-4.089735,rpoC_p.Trp223Arg,3) Uncertain significance,764036
+-4.09037,rpoC_p.Tyr612Ser,3) Uncertain significance,765204
+-4.0984006,rpoC_p.Tyr61Cys,3) Uncertain significance,763551
+-4.0847,rpoC_p.Tyr704Cys,3) Uncertain significance,765480
+-4.088048,rpoC_p.Tyr749His,3) Uncertain significance,765614
+-4.1018147,rpoC_p.Val611Phe,3) Uncertain significance,765200
+-4.0955615,rpoC_p.Val422Ala,3) Uncertain significance,764634
+-4.0988955,rpoC_p.Val313Ala,3) Uncertain significance,764307
+-4.0923424,rpoC_p.Val299Ile,3) Uncertain significance,764264
+-4.0979285,rpoC_p.Arg741His,3) Uncertain significance,765591
+-4.0989356,rpoC_p.Arg981Gly,3) Uncertain significance,766310
+-4.1867323,rpoC_p.Ser1095Phe,3) Uncertain significance,766653
+-4.098332,rpoC_p.Ser1242Asn,3) Uncertain significance,767094
+-4.1012278,rpoC_p.Ser403Ala,3) Uncertain significance,764576
+-4.10572,rpoC_p.Ser403Cys,3) Uncertain significance,764577
+-4.1029954,rpoC_p.Ser614Leu,3) Uncertain significance,765210
+-4.1013484,rpoC_p.Thr1262Ala,3) Uncertain significance,767153
+-4.0881705,rpoC_p.Thr1284Ala,3) Uncertain significance,767219
+-4.097894,rpoC_p.Thr1301Ser,3) Uncertain significance,767271
+-4.131506,rpoC_p.Arg636Leu,3) Uncertain significance,765276
+-4.0929646,rpoC_p.Thr16Ala,3) Uncertain significance,763415
+-4.0892367,rpoC_p.Thr845Pro,3) Uncertain significance,765902
+-4.0978208,rpoC_p.Thr893Ile,3) Uncertain significance,766047
+-4.1012926,rpoC_p.Thr909Lys,3) Uncertain significance,766095
+-4.094858,rpoC_p.Thr958Asn,3) Uncertain significance,766242
+-4.0952377,rpoC_p.Val1067Ala,3) Uncertain significance,766569
+-4.0853877,rpoC_p.Val1098Leu,3) Uncertain significance,766661
+-4.094762,rpoC_p.Val1130Met,3) Uncertain significance,766757
+-4.1016936,rpoC_p.Val1138Gly,3) Uncertain significance,766782
+-4.1170473,rpoC_p.Val1272Ala,3) Uncertain significance,767184
+-4.093317,rpoC_p.Val139Gly,3) Uncertain significance,763785
+-4.094476,rpoC_p.Val139Ile,3) Uncertain significance,763784
+-4.097732,rpoC_p.Val236Ile,3) Uncertain significance,764075
+-4.099135,rpoC_p.Thr253Ile,3) Uncertain significance,764127
+-4.095855,rpoC_p.Ile348Leu,3) Uncertain significance,764411
+-4.100046,rpoC_p.Ile270Val,3) Uncertain significance,764177
+-4.0972056,rpoC_p.Ile12Leu,3) Uncertain significance,763403
 -4.0996127,rpoB_p.Tyr564Cys,3) Uncertain significance,761497
 -4.0914116,rpoB_p.Tyr651His,3) Uncertain significance,761757
+-4.09274,rpoC_c.-16delG,3) Uncertain significance,763353
+-4.1099253,rpoC_p.Leu627dup,3) Uncertain significance,765247
+-4.09368,rpoC_p.Ala1144Thr,3) Uncertain significance,766799
+-4.0966587,rpoC_p.Ala1184Val,3) Uncertain significance,766920
+-4.094164,rpoC_p.Ala1188Ser,3) Uncertain significance,766931
+-4.093422,rpoC_p.Ala1195Val,3) Uncertain significance,766953
+-4.096804,rpoC_p.Ala1201Ser,3) Uncertain significance,766970
+-4.102446,rpoC_p.Ala1202Asp,3) Uncertain significance,766974
+-4.1135993,rpoC_p.Ala1236Gly,3) Uncertain significance,767076
+-4.040842,rpoC_p.Ala174Val,3) Uncertain significance,763890
+-4.09274,rpoC_c.-17A>G,3) Uncertain significance,763353
+-4.097297,rpoC_p.Ala189Thr,3) Uncertain significance,763934
+-4.0936227,rpoC_p.Ala212Thr,3) Uncertain significance,764003
+-4.0915065,rpoC_p.Ala448Ser,3) Uncertain significance,764711
+-4.072222,rpoC_p.Ala492Pro,3) Uncertain significance,764843
+-4.105221,rpoC_p.Ala521Val,3) Uncertain significance,764931
+-4.1030293,rpoC_p.Ala553Val,3) Uncertain significance,765027
+-4.103341,rpoC_p.Ala621Val,3) Uncertain significance,765231
+-4.0907726,rpoC_p.Ala648Thr,3) Uncertain significance,765311
+-4.097899,rpoC_c.-6A>C,3) Uncertain significance,763364
+-4.111323,rpoC_p.Ala710Val,3) Uncertain significance,765498
+-4.09096,rpoC_p.Ala773Glu,3) Uncertain significance,765687
 -4.1226435,rpoB_p.Val946Gly,3) Uncertain significance,762643
 -4.0901675,rpoB_p.Val895Phe,3) Uncertain significance,762489
 -4.0937386,rpoB_p.Val867Ala,3) Uncertain significance,762406
@@ -290,6 +418,7 @@ log_MIC,mutation,confidence,genome_index
 -4.0933123,rpoB_p.Val1129Ala,3) Uncertain significance,763192
 -4.098444,rpoB_p.Val1168Phe,3) Uncertain significance,763308
 -4.096728,rpoB_p.Val179Ala,3) Uncertain significance,760342
+-4.0975323,rpoC_p.Ala902Thr,3) Uncertain significance,766073
 -4.097033,rpoB_p.Val179Met,3) Uncertain significance,760341
 -4.1342664,rpoB_p.Val198Met,3) Uncertain significance,760398
 -4.099873,rpoB_p.Val216Ile,3) Uncertain significance,760452
@@ -304,6 +433,65 @@ log_MIC,mutation,confidence,genome_index
 -4.0955405,rpoB_p.Val77Met,3) Uncertain significance,760035
 -4.0958323,rpoB_p.Val841Leu,3) Uncertain significance,762327
 -4.208644,rpoB_p.Val198Leu,3) Uncertain significance,760398
+-4.092774,rpoC_c.-22C>T,3) Uncertain significance,763348
+-4.086,rpoC_p.Asp1093Glu,3) Uncertain significance,766648
+-4.099628,rpoC_p.Asp1169Glu,3) Uncertain significance,766876
+-4.092896,rpoC_p.Glu645Lys,3) Uncertain significance,765302
+-4.095431,rpoC_p.Glu791Ala,3) Uncertain significance,765741
+-4.1008186,rpoC_p.Glu842Ala,3) Uncertain significance,765894
+-4.1217866,rpoC_p.Phe1089Ser,3) Uncertain significance,766635
+-4.092567,rpoC_p.Gly1311Ser,3) Uncertain significance,767300
+-4.0971932,rpoC_p.Gly13Arg,3) Uncertain significance,763406
+-4.09736,rpoC_p.Gly188Ala,3) Uncertain significance,763932
+-4.0934763,rpoC_p.Gly286Glu,3) Uncertain significance,764226
+-4.104285,rpoC_p.Gly311Ser,3) Uncertain significance,764300
+-4.072926,rpoC_p.Gly332Arg,3) Uncertain significance,764363
+-4.1034217,rpoC_p.Gly411Ser,3) Uncertain significance,764600
+-4.126516,rpoC_p.Gly519Asp,3) Uncertain significance,764925
+-4.082583,rpoC_p.Glu49Ala,3) Uncertain significance,763515
+-4.0995097,rpoC_p.Gly597Asp,3) Uncertain significance,765159
+-4.1006103,rpoC_p.Gly655Val,3) Uncertain significance,765333
+-4.0960155,rpoC_p.Gly680Arg,3) Uncertain significance,765407
+-4.099287,rpoC_p.Gly680Val,3) Uncertain significance,765408
+-4.099913,rpoC_p.Gly980Arg,3) Uncertain significance,766307
+-4.1016974,rpoC_p.His145Tyr,3) Uncertain significance,763802
+-4.08616,rpoC_p.His525Tyr,3) Uncertain significance,764942
+-4.089787,rpoC_p.His606Gln,3) Uncertain significance,765187
+-4.116339,rpoC_p.His653Gln,3) Uncertain significance,765328
+-4.0962844,rpoC_p.His889Arg,3) Uncertain significance,766035
+-4.0921416,rpoC_p.Ile1066Val,3) Uncertain significance,766565
+-4.10346,rpoC_p.Ile1080Thr,3) Uncertain significance,766608
+-4.106533,rpoC_p.Ile1270Ser,3) Uncertain significance,767178
+-4.0823755,rpoC_p.Gly652Asp,3) Uncertain significance,765324
+-4.0922694,rpoC_p.Glu259Lys,3) Uncertain significance,764144
+-4.0961456,rpoC_p.Glu18Gln,3) Uncertain significance,763421
+-4.0954576,rpoC_p.Asp192Gly,3) Uncertain significance,763944
+-4.0977373,rpoC_p.Asp19Ala,3) Uncertain significance,763425
+-4.095803,rpoC_p.Asp221Asn,3) Uncertain significance,764030
+-4.099404,rpoC_p.Asp271Asn,3) Uncertain significance,764180
+-4.0948043,rpoC_p.Asp279Gly,3) Uncertain significance,764205
+-4.0925803,rpoC_p.Asp331Ala,3) Uncertain significance,764361
+-4.0945444,rpoC_p.Asp462Gly,3) Uncertain significance,764754
+-4.1081963,rpoC_p.Asp595Ala,3) Uncertain significance,765153
+-4.0978947,rpoC_p.Asp754Ala,3) Uncertain significance,765630
+-4.097503,rpoC_p.Asp795Glu,3) Uncertain significance,765754
+-4.0957294,rpoC_p.Asp796Gly,3) Uncertain significance,765756
+-4.09413,rpoC_p.Asp890Glu,3) Uncertain significance,766039
+-4.094827,rpoC_p.Glu220Lys,3) Uncertain significance,764027
+-4.078366,rpoC_p.Glu1033Ala,3) Uncertain significance,766467
+-4.089952,rpoC_p.Glu1073Asp,3) Uncertain significance,766588
+-4.090615,rpoC_p.Glu1096Asp,3) Uncertain significance,766657
+-4.097873,rpoC_p.Glu1113Asp,3) Uncertain significance,766708
+-4.09801,rpoC_p.Glu1140Gly,3) Uncertain significance,766788
+-4.101683,rpoC_p.Glu1189Asp,3) Uncertain significance,766936
+-4.0926013,rpoC_p.Glu126Asp,3) Uncertain significance,763747
+-4.1030974,rpoC_p.Glu1277Lys,3) Uncertain significance,767198
+-4.0925484,rpoC_p.Glu142Ala,3) Uncertain significance,763794
+-4.0985413,rpoC_p.Glu142Gly,3) Uncertain significance,763794
+-4.08144,rpoC_p.Glu171Lys,3) Uncertain significance,763880
+-4.1012015,rpoC_p.Glu185Gln,3) Uncertain significance,763922
+-4.0990887,rpoC_p.Glu18Asp,3) Uncertain significance,763423
+-4.0930085,rpoC_p.Glu1056Asp,3) Uncertain significance,766537
 -4.069971,rpoB_p.Pro45Leu,3) Uncertain significance,759940
 -4.086079,rpoB_p.Thr399Ile,3) Uncertain significance,761002
 -4.1078486,rpoB_p.Arg552His,3) Uncertain significance,761461
@@ -331,8 +519,11 @@ log_MIC,mutation,confidence,genome_index
 -4.1022615,rpoB_p.Thr400Ala,3) Uncertain significance,761004
 -2.9758155,rpoB_p.Ile491Leu,3) Uncertain significance,761277
 -4.099116,rpoB_p.Glu761Asp,3) Uncertain significance,762089
+-4.1094947,rpoC_p.Met663Ile,3) Uncertain significance,765358
 -4.096961,rpoB_p.Arg827Cys,3) Uncertain significance,762285
 -4.087315,rpoB_p.Leu731Pro,3) Uncertain significance,761998
+-4.10647,rpoC_p.Asp44Glu,3) Uncertain significance,763501
+-4.0034733,rpoC_p.Ala1044Val,3) Uncertain significance,766500
 -4.1013045,rpoB_p.Gln975His,3) Uncertain significance,762731
 -4.0678873,rpoB_p.Ala692Thr,3) Uncertain significance,761880
 -4.0948997,rpoB_p.Ile488Val,3) Uncertain significance,761268
@@ -343,7 +534,13 @@ log_MIC,mutation,confidence,genome_index
 -4.078701,rpoB_p.Arg552Leu,3) Uncertain significance,761461
 -4.1385245,rpoB_p.Val496Ala,3) Uncertain significance,761293
 -4.1331983,rpoB_c.-159C>T,3) Uncertain significance,759648
+-4.0850067,rpoC_p.Glu948Ala,3) Uncertain significance,766212
+-4.1153836,rpoC_p.Lys1082Glu,3) Uncertain significance,766613
+-4.092913,rpoC_p.Val197Ile,3) Uncertain significance,763958
 -4.086713,rpoB_c.-180A>C,3) Uncertain significance,759627
+-4.0921845,rpoC_p.Gly1198Ser,3) Uncertain significance,766961
+-4.1099157,rpoC_p.Gly980Glu,3) Uncertain significance,766308
+-4.1169395,rpoC_p.Thr667Met,3) Uncertain significance,765369
 -4.0750856,rpoB_p.His835Arg,3) Uncertain significance,762310
 -4.084748,rpoB_p.Gln409Arg,3) Uncertain significance,761032
 -4.1000123,rpoB_p.Asp574Glu,3) Uncertain significance,761528
@@ -626,10 +823,44 @@ log_MIC,mutation,confidence,genome_index
 -4.1106715,rpoB_c.-134T>G,3) Uncertain significance,759673
 -4.095905,rpoB_p.Val129Gly,3) Uncertain significance,760192
 -4.095238,rpoB_p.Tyr572Cys,3) Uncertain significance,761521
+-4.098819,rpoC_p.Ala1299Val,3) Uncertain significance,767265
+-4.0214424,rpoC_p.Ala172Gly,3) Uncertain significance,763884
+-4.115811,rpoC_p.Ala316Thr,3) Uncertain significance,764315
+-4.092141,rpoC_p.Ala994Thr,3) Uncertain significance,766349
+-4.0962377,rpoC_p.Asp795Gly,3) Uncertain significance,765753
+-4.100506,rpoC_p.Asp907Gly,3) Uncertain significance,766089
+-4.0935493,rpoC_p.Glu1140Asp,3) Uncertain significance,766789
+-4.0875473,rpoC_p.Glu591Gln,3) Uncertain significance,765140
+-4.0989547,rpoC_p.Glu932Lys,3) Uncertain significance,766163
+-4.089657,rpoC_c.-15G>A,3) Uncertain significance,763355
 -4.097368,rpoB_p.Glu156Asp,3) Uncertain significance,760274
 -4.094786,rpoB_c.-62C>T,3) Uncertain significance,759745
 -4.1003594,rpoB_c.-181C>T,3) Uncertain significance,759626
+-4.1296377,rpoC_p.Met541Ile,3) Uncertain significance,764992
+-4.0945916,rpoC_p.Met581Ile,3) Uncertain significance,765112
+-4.0978603,rpoC_p.Asn1246Asp,3) Uncertain significance,767105
+-4.0910606,rpoC_p.Asn5Asp,3) Uncertain significance,763382
+-4.101853,rpoC_p.Pro514Leu,3) Uncertain significance,764910
+-4.093351,rpoC_p.Arg1163His,3) Uncertain significance,766857
+-4.1000943,rpoC_p.Arg247Cys,3) Uncertain significance,764108
+-4.08449,rpoC_p.Arg478Cys,3) Uncertain significance,764801
+-4.086536,rpoC_p.Arg752His,3) Uncertain significance,765624
+-4.1028523,rpoC_p.Arg963Cys,3) Uncertain significance,766256
+-4.0927444,rpoC_p.Ser1172Ala,3) Uncertain significance,766883
+-4.0930386,rpoC_p.Ser1294Asn,3) Uncertain significance,767250
+-4.1035886,rpoC_p.Gly655Ser,3) Uncertain significance,765332
+-4.1102614,rpoC_p.Thr909Met,3) Uncertain significance,766095
+-4.120482,rpoC_p.Tyr722Cys,3) Uncertain significance,765534
 -4.1253676,rpoB_p.Ala1002Pro,3) Uncertain significance,762810
+-4.0931025,rpoC_p.Val1049Phe,3) Uncertain significance,766514
+-4.1021137,rpoC_p.Leu679Arg,3) Uncertain significance,765405
+-4.0937934,rpoC_p.Asn1239Asp,3) Uncertain significance,767084
+-4.104119,rpoC_p.Gln657Arg,3) Uncertain significance,765339
+-4.0958495,rpoC_p.Gln1273Arg,3) Uncertain significance,767187
+-4.091433,rpoC_p.Gln303Leu,3) Uncertain significance,764277
+-4.0658174,rpoC_p.Arg741Cys,3) Uncertain significance,765590
+-4.0884748,rpoC_p.Arg912His,3) Uncertain significance,766104
+-4.0934987,rpoC_p.Val692Ala,3) Uncertain significance,765444
 -4.098762,rpoB_p.Ala943Thr,3) Uncertain significance,762633
 -4.0957313,rpoB_p.Asp3Gly,3) Uncertain significance,759814
 -4.0937295,rpoB_p.Gly28Arg,3) Uncertain significance,759888
@@ -637,9 +868,17 @@ log_MIC,mutation,confidence,genome_index
 -4.097742,rpoB_p.Pro27His,3) Uncertain significance,759886
 -3.685313,rpoB_p.Pro454Leu,3) Uncertain significance,761167
 -4.09178,rpoB_p.Val613Phe,3) Uncertain significance,761643
+-4.1006665,rpoC_p.Glu1073Lys,3) Uncertain significance,766586
+-4.117371,rpoC_p.Met559Ile,3) Uncertain significance,765046
+-4.09954,rpoC_p.Val1135Ala,3) Uncertain significance,766773
 -4.0946307,rpoB_c.-113C>T,3) Uncertain significance,759694
 -4.0943403,rpoB_p.Glu721Lys,3) Uncertain significance,761967
+-4.107367,rpoC_p.Thr227Ile,3) Uncertain significance,764049
+-4.0911484,rpoC_p.Leu737Arg,3) Uncertain significance,765579
+-4.0952306,rpoC_p.Ile802Val,3) Uncertain significance,765773
+-4.0923057,rpoC_c.-28C>A,3) Uncertain significance,763342
 -4.0960593,rpoB_p.Ser936Arg,3) Uncertain significance,762612
+-4.0209165,rpoC_p.Arg173Gln,3) Uncertain significance,763887
 -4.102978,rpoB_c.-173A>G,3) Uncertain significance,759634
 -4.073227,rpoB_c.-66C>T,3) Uncertain significance,759741
 -4.1195893,rpoB_p.Asp107Glu,3) Uncertain significance,760127
@@ -649,11 +888,21 @@ log_MIC,mutation,confidence,genome_index
 -4.102734,rpoB_p.Glu344Gln,3) Uncertain significance,760836
 -4.0932164,rpoB_p.Phe295Leu,3) Uncertain significance,760691
 -4.0901313,rpoB_p.Ile965Val,3) Uncertain significance,762699
+-4.0348225,rpoC_p.Pro481Ser,3) Uncertain significance,764810
 -4.0789413,rpoB_p.Leu48Phe,3) Uncertain significance,759948
 -4.1222596,rpoB_c.-160T>C,3) Uncertain significance,759647
+-4.0953765,rpoC_p.Ala929Gly,3) Uncertain significance,766155
+-4.0855684,rpoC_p.His525Gln,3) Uncertain significance,764944
+-4.0959215,rpoC_p.Ile1264Thr,3) Uncertain significance,767160
+-4.098533,rpoC_p.Leu151Phe,3) Uncertain significance,763820
+-4.097423,rpoC_p.Arg1163Cys,3) Uncertain significance,766856
+-4.084064,rpoC_p.Arg741Ser,3) Uncertain significance,765590
 -4.0991883,rpoB_p.Glu639Gly,3) Uncertain significance,761722
 -4.101654,rpoB_p.Asn292Ser,3) Uncertain significance,760681
 -4.0916524,rpoB_p.Ser12Thr,3) Uncertain significance,759841
+-4.0985017,rpoC_p.Leu14Phe,3) Uncertain significance,763409
+-4.1029773,rpoC_p.Ile12Val,3) Uncertain significance,763403
+-4.1029544,rpoC_p.Ile1132Met,3) Uncertain significance,766765
 -4.0984397,rpoB_c.-169_-168insA,3) Uncertain significance,759638
 -4.104754,rpoB_p.Ala334Val,3) Uncertain significance,760807
 -4.0927844,rpoB_c.-53A>G,3) Uncertain significance,759754
@@ -667,7 +916,30 @@ log_MIC,mutation,confidence,genome_index
 -4.097001,rpoB_p.Glu132Asp,3) Uncertain significance,760202
 -4.106013,rpoB_p.Glu507Lys,3) Uncertain significance,761325
 -4.0933623,rpoB_p.Glu66Lys,3) Uncertain significance,760002
+-4.1109195,rpoC_c.-38C>T,3) Uncertain significance,763332
+-4.0917106,rpoC_p.Asp660Asn,3) Uncertain significance,765347
+-4.1016645,rpoC_p.Asp795Tyr,3) Uncertain significance,765752
+-4.093702,rpoC_p.Glu1073Gln,3) Uncertain significance,766586
+-4.093577,rpoC_p.Glu1196Lys,3) Uncertain significance,766955
+-4.099365,rpoC_p.Glu1289Ala,3) Uncertain significance,767235
+-4.0988865,rpoC_p.Glu1289Gly,3) Uncertain significance,767235
+-4.0927258,rpoC_p.Glu215Ala,3) Uncertain significance,764013
+-4.097969,rpoC_p.Glu791Gln,3) Uncertain significance,765740
+-4.094911,rpoC_p.Glu894Gly,3) Uncertain significance,766050
+-4.0948973,rpoC_p.Phe1061Leu,3) Uncertain significance,766552
+-4.105478,rpoC_p.Phe1175Leu,3) Uncertain significance,766892
+-4.096267,rpoC_p.Ala85Thr,3) Uncertain significance,763622
+-4.094195,rpoC_p.Phe831Leu,3) Uncertain significance,765860
+-4.0857253,rpoC_p.Gly1026Ala,3) Uncertain significance,766446
+-4.092326,rpoC_p.Gly1197Arg,3) Uncertain significance,766958
+-4.0949106,rpoC_p.Gly254Ser,3) Uncertain significance,764129
+-4.09685,rpoC_c.-40G>A,3) Uncertain significance,763330
+-4.081302,rpoC_p.Gly594Arg,3) Uncertain significance,765149
+-4.094769,rpoC_p.Gly63Ala,3) Uncertain significance,763557
+-4.1084228,rpoC_p.His767Pro,3) Uncertain significance,765669
 -4.1067233,rpoB_p.Ala686Thr,3) Uncertain significance,761862
+-4.095227,rpoC_p.Ala661Thr,3) Uncertain significance,765350
+-4.099398,rpoC_p.Ala618Val,3) Uncertain significance,765222
 -4.0796595,rpoB_p.Phe208Leu,3) Uncertain significance,760428
 -4.0999207,rpoB_p.Phe93Leu,3) Uncertain significance,760085
 -4.091077,rpoB_c.-150G>A,3) Uncertain significance,759657
@@ -680,6 +952,7 @@ log_MIC,mutation,confidence,genome_index
 -4.093675,rpoB_p.Ile892Thr,3) Uncertain significance,762481
 -4.0953493,rpoB_p.Lys939Gln,3) Uncertain significance,762621
 -4.110909,rpoB_p.Lys944Asn,3) Uncertain significance,762638
+-4.0942483,rpoC_p.Ala648Asp,3) Uncertain significance,765312
 -4.097243,rpoB_p.Met153Thr,3) Uncertain significance,760264
 -4.097178,rpoB_p.Asn963Ser,3) Uncertain significance,762694
 -4.0906906,rpoB_p.Pro30Ser,3) Uncertain significance,759894
@@ -690,23 +963,53 @@ log_MIC,mutation,confidence,genome_index
 -4.1344028,rpoB_c.-169T>C,3) Uncertain significance,759638
 -4.096326,rpoB_p.Thr215Ala,3) Uncertain significance,760449
 -4.0876226,rpoB_p.Tyr866His,3) Uncertain significance,762402
+-4.111771,rpoC_c.-42_-41insT,3) Uncertain significance,763328
+-4.1352315,rpoC_p.Ala1037Val,3) Uncertain significance,766479
+-4.1143613,rpoC_p.Ala1304Val,3) Uncertain significance,767280
 -4.0985656,rpoB_p.Met587Ile,3) Uncertain significance,761567
 -4.104581,rpoB_p.Ala69Pro,3) Uncertain significance,760011
+-4.0917015,rpoC_p.Gly1072Asp,3) Uncertain significance,766584
+-4.094936,rpoC_p.Met92Thr,3) Uncertain significance,763644
 -4.0974083,rpoB_p.Thr350Ile,3) Uncertain significance,760855
+-4.100466,rpoC_p.His748Pro,3) Uncertain significance,765612
+-4.1007214,rpoC_p.Met515Ile,3) Uncertain significance,764914
+-4.111863,rpoC_p.Gln440Arg,3) Uncertain significance,764688
+-4.1004615,rpoC_p.Gln22Arg,3) Uncertain significance,763434
+-4.090094,rpoC_p.Thr225Asn,3) Uncertain significance,764043
 -4.034268,rpoB_p.Asp515Tyr,3) Uncertain significance,761349
+-4.0753894,rpoC_p.Ala230Val,3) Uncertain significance,764058
+-4.0960107,rpoC_p.Ile1264Val,3) Uncertain significance,767159
+-4.0985065,rpoC_p.Leu151Arg,3) Uncertain significance,763821
 -4.1078653,rpoB_p.Glu563Asp,3) Uncertain significance,761495
+-4.02289,rpoC_p.Pro481Thr,3) Uncertain significance,764810
 -4.091443,rpoB_p.Met655Thr,3) Uncertain significance,761770
+-4.080896,rpoC_p.Thr958Ile,3) Uncertain significance,766242
+-4.1054473,rpoC_p.Arg641Trp,3) Uncertain significance,765290
 -4.0972605,rpoB_p.Ser16Cys,3) Uncertain significance,759852
+-4.0945764,rpoC_p.Ser1100Ala,3) Uncertain significance,766667
 -4.1140556,rpoB_p.Asp103Glu,3) Uncertain significance,760115
+-4.0895267,rpoC_p.Ser1287Gln,3) Uncertain significance,"767228,767229"
+-4.108472,rpoC_p.Ser308Phe,3) Uncertain significance,"764292,764293"
 0.039531797,rpoB_p.Ile491Tyr,3) Uncertain significance,"761277,761278"
 -4.095988,rpoB_p.Ile542Lys,3) Uncertain significance,"761431,761432"
 -4.090366,rpoB_p.Val549Gly,3) Uncertain significance,"761452,761453"
 -4.0959635,rpoB_p.Asp851Pro,3) Uncertain significance,"762357,762358"
+-4.1069574,rpoC_p.Leu789Ala,3) Uncertain significance,"765734,765735"
 -4.0917745,rpoB_p.Ile925Val,5) Not assoc w R,762579
 -4.0988393,rpoB_p.Glu639Asp,5) Not assoc w R,761723
 -4.092366,rpoB_p.Glu250Gly,5) Not assoc w R,760555
 -3.969505,rpoB_p.Val695Leu,5) Not assoc w R,761889
+-4.0952563,rpoC_p.Ala621Thr,5) Not assoc w R,765230
+-4.406302,rpoC_p.Pro601Leu,5) Not assoc w R,765171
 -4.045419,rpoB_c.-61C>T,5) Not assoc w R,759746
+-4.0935116,rpoC_p.Glu1092Asp,5) Not assoc w R,766645
+-3.9957483,rpoC_p.Gly594Glu,5) Not assoc w R,765150
 -4.1126246,rpoB_p.Ser388Leu,5) Not assoc w R,760969
 -4.099633,rpoB_p.Lys944Glu,5) Not assoc w R,762636
+-4.095286,rpoC_p.Glu784Gln,5) Not assoc w R,765719
 -4.1031766,rpoB_p.Asn381His,5) Not assoc w R,760947
+-4.1120343,rpoC_p.Arg69Pro,5) Not assoc w R,763575
+-4.099149,rpoC_p.Pro906Ala,5) Not assoc w R,766085
+-4.0964417,rpoC_p.Asp271Gly,5) Not assoc w R,764181
+-3.9814847,rpoC_p.Ala172Val,5) Not assoc w R,"763884,763885"
+-4.0937176,MT_H37Rv,,
