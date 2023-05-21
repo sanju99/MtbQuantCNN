@@ -208,7 +208,7 @@ if not permutation_test:
         os.makedirs(os.path.join(saliency_dir))
         
     # compute saliency scores for the single model
-    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix="_full")
+    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix="")
 
 else:
     # this path should already exist because that's where the models are stored
@@ -231,7 +231,7 @@ else:
 #         if not os.path.isfile(check_file):
 
         # compute saliency scores for the single model
-        get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=f"_{model_num}_full")
+        get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=f"_{model_num}")
 
 
 # returns a tuple: current, peak memory in bytes 

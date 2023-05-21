@@ -3,7 +3,8 @@ conda create --name tf1_saliency python=3.7 numpy pandas pyyaml sparse scikit-le
 
 # activate the environment
 conda activate tf1_saliency
-cd ~
+# cd ~
+cd anaconda3/envs/tf1_saliency
 
 # install deepexplain in the home directory
 pip install -e "git+https://github.com/marcoancona/DeepExplain.git#egg=deepexplain"

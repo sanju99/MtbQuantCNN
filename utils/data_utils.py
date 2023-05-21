@@ -5,6 +5,7 @@ from Bio import SeqIO
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 import sklearn.metrics
 import sklearn.utils
+import scipy.stats as st
 
 
 def get_one_hot(sequence):
@@ -405,6 +406,33 @@ def compute_proportion_within_1bin(df, y_pred_col, y_true_col, lower_bounds_col,
 
 
 
+def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col="y_test", lower_bounds_col="lower", upper_bounds_col="upper"):
+    '''
+    y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated. 
+    
+    This function returns bounded MAE, MSE, and the proportion of points measured within 1 MIC doubling (1 log2 unit)
+    ''' 
+    
+    # make copies to avoid changing the original dataframe
+    lower_bounds = np.copy(pred_df[lower_bounds_col].values)
+    upper_bounds = np.copy(pred_df[upper_bounds_col].values)
+    
+    lower_bounds[lower_bounds==0] += 1e-6
+    lower_bounds = np.log2(lower_bounds)
+    upper_bounds = np.log2(upper_bounds)
+    
+    bound_to_compute_error = np.clip(pred_df[y_pred_col].values, lower_bounds, upper_bounds)
+
+    pred_df["compute_error"] = ((pred_df[y_pred_col] < lower_bounds) | (pred_df[y_pred_col] > upper_bounds)).astype(int)
+    mae = np.mean(pred_df["compute_error"] * (np.abs(bound_to_compute_error - pred_df[y_pred_col])))
+    mse = np.mean(pred_df["compute_error"] * (np.square(bound_to_compute_error - pred_df[y_pred_col])))
+    
+    pred_df = compute_proportion_within_1bin(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col, binary_thresh)
+    
+    # return error and proportion within 1 doubline of the measured MIC
+    return mae, mse, pred_df["within_1bin"].mean()      
+
+    
 
 
 def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name, binarize=True, save_fName=None):

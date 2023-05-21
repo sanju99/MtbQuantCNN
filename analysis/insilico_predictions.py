@@ -28,6 +28,10 @@ data_path = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
 who_variants["gene"] = [mut.split("_")[0] for mut in who_variants["mutation"].values]
 
+coll_2014 = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
+coll_2014["lineage"] = coll_2014["#lineage"].str.replace("lineage", "")
+del coll_2014["#lineage"]
+
 
 # inclusive
 # 759611 767320
@@ -115,10 +119,68 @@ def get_insilico_mutation_predictions(drug,
 
 
 
-df_rif_pred = get_insilico_mutation_predictions("RIF",
-                                              ['rpoBC'],
-                                              "config_rif.yaml",
-                                              "rpoBC_WHO_mutations.txt"
+def get_lineage_MIC_predictions(drug, 
+                                config_file,
+                               ):
+    
+    # load in previously trained model
+    kwargs = yaml.safe_load(open(config_file, "r"))
+    filter_size = kwargs["filter_size"]
+    N_epochs = kwargs["N_epochs"]
+    BATCH_SIZE = kwargs["batch_size"]
+
+    output_path = kwargs["output_path"]
+    binary_thresh = kwargs["binary_thresh"]
+    loss_type = kwargs["loss_type"]
+    binary = kwargs["binary"]
+    bounded_loss = kwargs["bounded_loss"]
+    
+    lineages = coll_2014.copy()
+    lineages["Count"] = 1
+    lineages = lineages.pivot(index="lineage", columns="position", values="Count").fillna(0).astype(int)
+    
+    num_lineages = lineages.shape[1]
+    assert np.min(lineages.sum(axis=1).values) == 1
+    assert np.max(lineages.sum(axis=1).values) == 1
+    
+    # add reference lineage, which is all 0s
+    lineages = pd.concat([lineages, pd.DataFrame(np.zeros((1, lineages.shape[1])), columns=lineages.columns, index=["MT_H37Rv"])])
+
+    # get longest locus from the pickle file
+    X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz')).todense()
+    
+    # copy so that there is one reference sequence for each lineage
+    X = np.repeat(X_h37rv, lineages.shape[0], axis=0)
+
+    # shape = 1 x 5 x longest_locus x num_loci
+    longest_locus = X_h37rv.shape[2]
+    num_loci = X_h37rv.shape[-1]
+    del X_h37rv
+
+    best_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+    best_model.load_weights(os.path.join(output_path, "best_model.h5"))
+
+    # X and df_genos are in the same order because df_genos is passed in as an argument to the function to make X
+    predicted_mics = best_model.predict([X, lineages.values, np.zeros(X.shape[0]), np.zeros(X.shape[0])], batch_size=BATCH_SIZE).flatten()
+    
+    df_results = pd.DataFrame({"Lineage": lineages.index.values, "pred_log2_MIC": predicted_mics}).sort_values("pred_log2_MIC", ascending=False).reset_index(drop=True)
+    ref_pred = df_results.query("Lineage=='MT_H37Rv'")["pred_log2_MIC"].values[0]    
+    return df_results
+
+
+
+_, drug, drug_abbr, locus = sys.argv
+
+
+# df_pred = get_insilico_mutation_predictions(drug_abbr",
+#                                             [locus],
+#                                             "config_rif.yaml",
+#                                             "rpoBC_WHO_mutations.txt"
+#                                            )
+
+df_lineage_pred = get_lineage_MIC_predictions(drug_abbr, 
+                                              "config_mxf_lineage.yaml",
                                              )
 
-df_rif_pred.to_csv("analysis/Rifampicin/insilico_mutagenesis/rpoBC_WHO_predictions.csv", index=False)
+# df_pred.to_csv(f"analysis/{drug}/insilico_mutagenesis/{_locus}WHO_predictions.csv", index=False)
+df_lineage_pred.to_csv(f"analysis/{drug}/insilico_mutagenesis/lineage_predictions.csv", index=False)

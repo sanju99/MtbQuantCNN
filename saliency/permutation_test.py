@@ -9,6 +9,7 @@ tf.config.run_functions_eagerly(True)
 
 # utils files are in the utils_files directory
 sys.path.append("utils")
+from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
@@ -86,9 +87,9 @@ for rep in range(num_reps):
     val_loss = []
     
     if patience_epochs is None:
-        print(f"\nTraining replicate {rep+1}/{num_reps} for {N_epochs} epochs")
+        print(f"\nTraining replicate {rep+1}/{num_reps} with {loss_type} loss for {N_epochs} epochs")
     else:
-        print(f"\nTraining replicate {rep+1}/{num_reps} for {N_epochs} epochs with early stopping")
+        print(f"\nTraining replicate {rep+1}/{num_reps} with {loss_type} loss and a delay of {patience_epochs}")
     
     # for each replicate, randomly shuffle the MICs, so get new training data each time. Use entire training set
     train_generator = MtbGeneDataset(

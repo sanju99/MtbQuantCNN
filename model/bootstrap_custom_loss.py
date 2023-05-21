@@ -32,7 +32,7 @@ BATCH_SIZE = kwargs["batch_size"]
 patience_epochs = kwargs["patience_epochs"]
 
 if patience_epochs is not None:
-    N_epochs = 250
+    N_epochs = 500
 else:
     raise ValueError("patience_epochs must not be None!")
 
@@ -103,7 +103,7 @@ for rep in range(num_reps):
     min_loss = 1e3
     val_loss = []
 
-    print(f"\nTraining replicate {rep+1}/{num_reps} for {N_epochs} epochs with early stopping")
+    print(f"\nTraining replicate {rep+1}/{num_reps} with an {loss_type} and a delay of {patience_epochs} epochs")
     
     # sample indices with replacement
     train_idx = np.random.choice(np.arange(0, len(df_train)), size=len(df_train), replace=True)

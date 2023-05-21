@@ -109,165 +109,165 @@ num_val = len(df_phenos.query("category=='original_test_set'"))
 print(f"Training on {num_train} isolates and validating on {num_val} isolates")
 
 
-# @tf.function
-# def train_step(x, y):
-#     '''
-#     This is the training step for a single batch. Iterating over batches and epochs is done separately
-#     '''
+@tf.function
+def train_step(x, y):
+    '''
+    This is the training step for a single batch. Iterating over batches and epochs is done separately
+    '''
     
-#     # the bounds are the last 2 elements of the x list
-#     lower_bounds, upper_bounds = x[-2:]
+    # the bounds are the last 2 elements of the x list
+    lower_bounds, upper_bounds = x[-2:]
     
-#     with tf.GradientTape() as tape:
+    with tf.GradientTape() as tape:
 
-#         # Make predictions using the model
-#         y_hat = model(x, training=True)
+        # Make predictions using the model
+        y_hat = model(x, training=True)
 
-#         # Calculate the loss using the two bounds tensors. custom_bounded_mae is imported from cnn_utils
-#         loss = boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat)
+        # Calculate the loss using the two bounds tensors. custom_bounded_mae is imported from cnn_utils
+        loss = boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat)
 
-#     # Calculate the gradients
-#     gradients = tape.gradient(loss, model.trainable_weights)
+    # Calculate the gradients
+    gradients = tape.gradient(loss, model.trainable_weights)
 
-#     # run the optimizer
-#     optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+    # run the optimizer
+    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
     
-#     # return loss and error. quantLoss_CNN returns a numpy object from a tensor
-#     return loss.numpy(), quantLoss_CNN(y, y_hat, loss_type)
+    # return loss and error. quantLoss_CNN returns a numpy object from a tensor
+    return loss.numpy(), quantLoss_CNN(y, y_hat, loss_type)
     
     
-# @tf.function
-# def val_step(x, y):
+@tf.function
+def val_step(x, y):
         
-#     # the bounds are the last 2 elements of the x list
-#     lower_bounds, upper_bounds = x[-2:]
+    # the bounds are the last 2 elements of the x list
+    lower_bounds, upper_bounds = x[-2:]
     
-#     # y_hat = model.predict(x)
-#     y_hat = model(x, training=False)
+    # y_hat = model.predict(x)
+    y_hat = model(x, training=False)
     
-#     # return loss and error. quantLoss_CNN returns a numpy object from a tensor
-#     return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat).numpy(), quantLoss_CNN(y, y_hat, loss_type)
+    # return loss and error. quantLoss_CNN returns a numpy object from a tensor
+    return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat).numpy(), quantLoss_CNN(y, y_hat, loss_type)
 
 
-# # initialize the model using the function from cnn_utils and the optimizer
-# model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
-# optimizer = Adam(learning_rate = np.exp(-1.0 * 9))
+# initialize the model using the function from cnn_utils and the optimizer
+model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+optimizer = Adam(learning_rate = np.exp(-1.0 * 9))
 
-# # manual implementation of model callbacks
-# patience_counter = 0
-# min_loss = 1e3
+# manual implementation of model callbacks
+patience_counter = 0
+min_loss = 1e3
 
-# # initialize lists to store losses
-# train_loss = []
-# train_error = []
-# val_loss = []
-# val_error = []
+# initialize lists to store losses
+train_loss = []
+train_error = []
+val_loss = []
+val_error = []
 
-# history = pd.DataFrame(columns=["loss", "error", "val_loss", "val_error"])
+history = pd.DataFrame(columns=["loss", "error", "val_loss", "val_error"])
 
-# if patience_epochs is None:
-#     print(f"Training the model with an {loss_type} loss for {N_epochs} epochs")
-# else:
-#     print(f"Using early stopping with an {loss_type} loss and a delay of {patience_epochs} epochs")
+if patience_epochs is None:
+    print(f"Training the model with an {loss_type} loss for {N_epochs} epochs")
+else:
+    print(f"Using early stopping with an {loss_type} loss and a delay of {patience_epochs} epochs")
 
 
-# for epoch in range(N_epochs):
+for epoch in range(N_epochs):
                
-#     # list to keep track of the losses for each batch
-#     train_epoch_loss = []
-#     train_epoch_error = []
-#     val_epoch_loss = []
-#     val_epoch_error = []
+    # list to keep track of the losses for each batch
+    train_epoch_loss = []
+    train_epoch_error = []
+    val_epoch_loss = []
+    val_epoch_error = []
     
-#     # training loop
-#     for x_batch_train, y_batch_train in train_generator:
+    # training loop
+    for x_batch_train, y_batch_train in train_generator:
                 
-#         # compute loss and error. These are sums over the points in the batch
-#         loss, error = train_step(x_batch_train, y_batch_train)
+        # compute loss and error. These are sums over the points in the batch
+        loss, error = train_step(x_batch_train, y_batch_train)
         
-#         train_epoch_loss.append(loss)
-#         train_epoch_error.append(error)
+        train_epoch_loss.append(loss)
+        train_epoch_error.append(error)
         
-#     # store losses for the epoch -- mean of all the batches
-#     train_loss.append(np.sum(train_epoch_loss) / num_train)   
-#     train_error.append(np.sum(train_epoch_error) / num_train)
-#     # train_loss.append(np.mean(train_epoch_loss))   
-#     # train_error.append(np.mean(train_epoch_error))
+    # store losses for the epoch -- mean of all the batches
+    train_loss.append(np.sum(train_epoch_loss) / num_train)   
+    train_error.append(np.sum(train_epoch_error) / num_train)
+    # train_loss.append(np.mean(train_epoch_loss))   
+    # train_error.append(np.mean(train_epoch_error))
 
-#     # validation loop -- iterate through all batches
-#     for x_batch_val, y_batch_val in val_generator:
+    # validation loop -- iterate through all batches
+    for x_batch_val, y_batch_val in val_generator:
                         
-#         # compute loss and error
-#         loss, error = val_step(x_batch_val, y_batch_val)
+        # compute loss and error
+        loss, error = val_step(x_batch_val, y_batch_val)
         
-#         val_epoch_loss.append(loss)
-#         val_epoch_error.append(error)
+        val_epoch_loss.append(loss)
+        val_epoch_error.append(error)
       
-#     # store the mean loss of the batch
-#     val_loss.append(np.sum(val_epoch_loss) / num_val)
-#     val_error.append(np.sum(val_epoch_error) / num_val)
+    # store the mean loss of the batch
+    val_loss.append(np.sum(val_epoch_loss) / num_val)
+    val_error.append(np.sum(val_epoch_error) / num_val)
     
-#     # val_loss.append(np.mean(val_epoch_loss))
-#     # val_error.append(np.mean(val_epoch_error))
+    # val_loss.append(np.mean(val_epoch_loss))
+    # val_error.append(np.mean(val_epoch_error))
     
-#     history.loc[epoch, :] = [train_loss[-1], train_error[-1], val_loss[-1], val_error[-1]]    
+    history.loc[epoch, :] = [train_loss[-1], train_error[-1], val_loss[-1], val_error[-1]]    
     
-#     if patience_epochs is not None:
-#         #if val_loss[-1] < min_loss:
+    if patience_epochs is not None:
+        #if val_loss[-1] < min_loss:
 
-#         # if loss decreases by at least 1%
-#         if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
+        # if loss decreases by at least 1%
+        if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
         
-#             print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
+            print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
             
-#             # save the model because it is better than the previous iteration
-#             # also save the history dataframe to monitor progress
-#             model.save(os.path.join(output_path, "best_model.h5"))
-#             history.to_csv(os.path.join(output_path, "history.csv"), index=False)
+            # save the model because it is better than the previous iteration
+            # also save the history dataframe to monitor progress
+            model.save(os.path.join(output_path, "best_model.h5"))
+            history.to_csv(os.path.join(output_path, "history.csv"), index=False)
 
-#             # update min loss, then zero out the patience counter
-#             min_loss = val_loss[-1]
-#             patience_counter = 0
+            # update min loss, then zero out the patience counter
+            min_loss = val_loss[-1]
+            patience_counter = 0
             
-#         else:
-#             patience_counter += 1
+        else:
+            patience_counter += 1
 
-#         if patience_counter == patience_epochs:
-#             break
+        if patience_counter == patience_epochs:
+            break
     
-#     # train the model for the specified number of epochs
-#     else:
-#         print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
-#         continue
+    # train the model for the specified number of epochs
+    else:
+        print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
+        continue
         
     
-# # save the history dataframe to see the additional 25 epochs. DON'T SAVE THE MODEL because we want the model at the early stop point
-# history.to_csv(os.path.join(output_path, "history.csv"), index=False)
+# save the history dataframe to see the additional 25 epochs. DON'T SAVE THE MODEL because we want the model at the early stop point
+history.to_csv(os.path.join(output_path, "history.csv"), index=False)
 
-# # only save the model if not using early stopping because it doesn't get saved as you go in the above loop
-# if patience_epochs is None:
-#     model.save(os.path.join(output_path, "best_model.h5"))
+# only save the model if not using early stopping because it doesn't get saved as you go in the above loop
+if patience_epochs is None:
+    model.save(os.path.join(output_path, "best_model.h5"))
 
-# # initialize a new model and load the weights of the best model
-# best_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
-# best_model.load_weights(os.path.join(output_path, "best_model.h5"))
+# initialize a new model and load the weights of the best model
+best_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+best_model.load_weights(os.path.join(output_path, "best_model.h5"))
 
-# # get final model predictions
-# y_pred = best_model.predict(
-#     x=val_generator,
-#     workers=4,
-#     use_multiprocessing=True,
-# )
+# get final model predictions
+y_pred = best_model.predict(
+    x=val_generator,
+    workers=4,
+    use_multiprocessing=True,
+)
 
-# summary_df = create_summary_df(df_phenos.query("category=='original_test_set'").reset_index(drop=True), 
-#                                y_pred, 
-#                                drug, 
-#                                binary_thresh, 
-#                                num_loci, 
-#                                model_name="CNN", 
-#                                binarize=True, 
-#                                save_fName=os.path.join(output_path, "test_predictions.csv")
-#                               )
+summary_df = create_summary_df(df_phenos.query("category=='original_test_set'").reset_index(drop=True), 
+                               y_pred, 
+                               drug, 
+                               binary_thresh, 
+                               num_loci, 
+                               model_name="CNN", 
+                               binarize=True, 
+                               save_fName=os.path.join(output_path, "test_predictions.csv")
+                              )
     
 # summary_df.to_csv(os.path.join(output_path, "cnn_results.csv"), index=False)
 K.clear_session()

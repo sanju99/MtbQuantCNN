@@ -171,8 +171,6 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
         # get only the region of interest
         if record.POS > START and record.POS <= END:
 
-            print(record)
-
             # get the allele type: ref, alt, or missing
             single_allele_type = allele_category(record)
 
@@ -220,7 +218,6 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
                 # deletion
                 else:
 
-                    print("Working on a deletion")
                     if len(alt_allele) == 1:
 
                         ref_allele = str(record.REF)
