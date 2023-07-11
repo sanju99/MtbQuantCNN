@@ -12,6 +12,7 @@ __pycache__/
 temp.py
 *_paths.txt
 config_*.yaml
+*insertion_sites_dict.csv
 
 # sensitive analysis info
 *.png
