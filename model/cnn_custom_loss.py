@@ -11,6 +11,7 @@ tf.config.run_functions_eagerly(True)
 # utils files are in the utils_files directory
 sys.path.append("utils")
 from data_utils import *
+from analysis_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
@@ -98,7 +99,7 @@ val_generator = MtbGeneDataset(
 )
 
 if include_lineage:
-    num_lineages = train_generator[0][0][1].shape[1]
+    num_lineages = val_generator[0][0][1].shape[1]
 else:
     num_lineages = 0
 
@@ -191,8 +192,6 @@ for epoch in range(N_epochs):
     # store losses for the epoch -- mean of all the batches
     train_loss.append(np.sum(train_epoch_loss) / num_train)   
     train_error.append(np.sum(train_epoch_error) / num_train)
-    # train_loss.append(np.mean(train_epoch_loss))   
-    # train_error.append(np.mean(train_epoch_error))
 
     # validation loop -- iterate through all batches
     for x_batch_val, y_batch_val in val_generator:
@@ -206,10 +205,7 @@ for epoch in range(N_epochs):
     # store the mean loss of the batch
     val_loss.append(np.sum(val_epoch_loss) / num_val)
     val_error.append(np.sum(val_epoch_error) / num_val)
-    
-    # val_loss.append(np.mean(val_epoch_loss))
-    # val_error.append(np.mean(val_epoch_error))
-    
+
     history.loc[epoch, :] = [train_loss[-1], train_error[-1], val_loss[-1], val_error[-1]]    
     
     if patience_epochs is not None:
@@ -268,8 +264,8 @@ summary_df = create_summary_df(df_phenos.query("category=='original_test_set'").
                                binarize=True, 
                                save_fName=os.path.join(output_path, "test_predictions.csv")
                               )
-    
-# summary_df.to_csv(os.path.join(output_path, "cnn_results.csv"), index=False)
+summary_df["CV"] = 0
+summary_df.to_csv(os.path.join(output_path, "cnn_results.csv"), index=False)
 K.clear_session()
 
 # returns a tuple: current, peak memory in bytes 

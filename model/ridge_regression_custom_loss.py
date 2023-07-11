@@ -19,6 +19,7 @@ warnings.filterwarnings("ignore")
 sys.path.append("utils")
 from data_utils import *
 from model_utils import *
+from analysis_utils import *
 
 
 _, config_file = sys.argv
@@ -61,13 +62,16 @@ def subset_fasta_files():
         
         # the fasta files contain sequences for all isolates. Keep only the isolates in the phenotypes file
         # need indices for splitting alignment in evcouplings
-        keep_ids = [i for i, name in enumerate(aln.ids) if os.path.basename(name).split(".")[0] in isolate_order]
-        # assert len(keep_ids) == len(isolate_order)
+        keep_idx = [i for i, fName in enumerate(aln.ids) if os.path.basename(fName).replace(".eff", "").replace(".vcf", "") in isolate_order]
+        assert len(keep_idx) == len(isolate_order)
+        
+        # if len(keep_idx) != len(isolate_order):
+        #     raise ValueError(len(keep_idx), len(isolate_order))
         
         # this keeps only sites where the major allele frequency is less than 1. Major allele frequence = 1 means that all isolates are the same at the site
         # drop sites that are identical in all isolates because they have no impact on the regression
         indices_to_keep = np.where(aln.frequencies.max(axis=1) < 1)[0]
-        subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_ids)        
+        subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_idx)        
        
         print("original alignment shape", aln.matrix.shape)
         print("reduced alignment shape", subset_alignment.matrix.shape)
@@ -76,11 +80,10 @@ def subset_fasta_files():
         del aln
 
         # First, correct the ids in the alignment so that they match the ROLLINGDB_IDs in the dataframe of phenotypes
-        subset_alignment.ids = [os.path.basename(path).split(".")[0] for path in subset_alignment.ids]
-        
-        # First, correct the ids in the alignment so that they match the ROLLINGDB_IDs in the dataframe of phenotypes
-        subset_alignment.id_to_index = {x:idx for idx,x in enumerate(subset_alignment.ids)}
+        subset_alignment.ids = [os.path.basename(fName).replace(".eff", "").replace(".vcf", "") for fName in subset_alignment.ids]
 
+        subset_alignment.id_to_index = {x:idx for idx,x in enumerate(subset_alignment.ids)}
+    
         # Get the indices that would correctly reorder the alignment to match isolate_order
         reorder_index = [
             subset_alignment.id_to_index[x] if x in list(subset_alignment.id_to_index.keys()) else print(x) for x in isolate_order
@@ -221,6 +224,7 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
     
     print(f"Regularization parameter: {custom_Ridge_model.alpha_}")
     pickle.dump(custom_Ridge_model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
+    custom_Ridge_model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
     
     y_pred = custom_Ridge_model.predict(X_test)
     summary_df = create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name="LinReg", binarize=True, save_fName=os.path.join(ridge_dir, "test_predictions.csv"))
@@ -243,6 +247,7 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
         bs_model.fit(X_bs, y_bs, loss_type=loss_type, lower_bounds=lower_bounds_bs, upper_bounds=upper_bounds_bs)
         
         pickle.dump(bs_model, open(os.path.join(bootstrap_dir, f"model_{i}.sav"), "wb"))
+        bs_model = pickle.load(open(os.path.join(bootstrap_dir, f"model_{i}.sav"), "rb"))
         y_pred_bs = bs_model.predict(X_test)
         
         bs_summary_df = create_summary_df(df_test, y_pred_bs, drug, binary_thresh, num_loci, "LinReg", binarize=True, save_fName=None)

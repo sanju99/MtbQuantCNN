@@ -1,7 +1,9 @@
-import sys, glob, os, vcf, tracemalloc
+import sys, glob, os, vcf, tracemalloc, pickle
 import numpy as np
 import pandas as pd
 from Bio import SeqIO
+sys.path.append("utils")
+from inSilicoMut_utils import *
 
 # starting the memory monitoring
 tracemalloc.start()
@@ -20,7 +22,7 @@ elif len(sys.argv) == 7:
     _, PATHS_FILE, ADDITIONAL_ISOLATES_FILE, START, END, SENSE, OUT_FILE  = sys.argv
 else:
     raise ValueError(f"Must pass in 6 or 7 command line arguments. You passed in {len(sys.argv)-1}")
-    
+
 START = int(START)
 END = int(END)
 
@@ -48,7 +50,7 @@ if ADDITIONAL_ISOLATES_FILE is not None:
 else:
     add_paths = []
 
-paths = pd.read_csv(PATHS_FILE, sep="\t", header=None)[0].values    
+paths = pd.read_csv(PATHS_FILE, sep="\t", header=None)[0].values
 print(f"Making multiple sequence alignment for {len(paths)} sequences and {len(add_paths)} additional sequences")
 paths = np.concatenate([paths, add_paths], axis=0)
 
@@ -59,7 +61,7 @@ if not os.path.isdir(os.path.dirname(OUT_FILE)):
     os.makedirs(os.path.dirname(OUT_FILE))
     
 # H37Rv reference strain
-h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
+h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
 genome_len = len(h37Rv)
 print(f"Reference genome size: {genome_len}")
 
@@ -67,24 +69,6 @@ print(f"Reference genome size: {genome_len}")
 h37Rv_region = list(str(h37Rv.seq[START:END]))
 print(f"Unaligned region size: {len(h37Rv_region)}")
 del h37Rv
-
-    
-def reverse_complement(seq):
-    
-    comp_dict = {'A': 'T', 
-                 'C': 'G', 
-                 'G': 'C', 
-                 'T': 'A', 
-                 'N': 'N', 
-                 '-': '-'
-                }
-    
-    # this is to turn it into a list where each element is of length 1
-    seq = list("".join(seq))
-    seq = [comp_dict[base] for base in seq] 
-    
-    # reverse the sequence and return as a list
-    return "".join(seq[::-1])
 
     
     
@@ -158,17 +142,11 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
 
 
 
-
 def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
     
     new_seq = h37Rv_region.copy()
 
     vcf_file = vcf.Reader(filename=fName)
-
-    # # start is 0-indexed (exclusive) and end is 1-indexed (inclusive)
-    # for pos in np.arange(START, END + 1):
-
-    #     if 
 
     # start is 0-indexed (exclusive) and end is 1-indexed (inclusive)
     for record in vcf_file:
@@ -181,42 +159,49 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
             
             # convert alternative allele from list to string
             alt_allele = "".join(np.array(record.ALT).astype(str))
+            ref_allele = str(record.REF)
 
             # the index to replace -- this is 0-indexed, consistent with Python
             idx = record.POS - (START + 1)
 
             # no length change -- SNP or MNP. Python will replace all elements if the original and new are the same length
-            if len(record.REF) == len(alt_allele):
+            if len(ref_allele) == len(alt_allele):
 
                 if single_allele_type == "alt":
-                    new_seq[idx:idx+len(record.REF)] = alt_allele
+                    new_seq[idx:idx+len(ref_allele)] = alt_allele
                 elif single_allele_type == "missing":
-                    new_seq[idx:idx+len(record.REF)] = ["N"]*len(alt_allele)
+                    new_seq[idx:idx+len(ref_allele)] = ["N"]*len(alt_allele)
                 # the only other option is reference, so don't do anything
                 else:
                     continue
 
             # indels
             else:
-
+                
                 # insertion
-                if len(alt_allele) > len(record.REF):
+                if len(alt_allele) > len(ref_allele):
 
-                    if len(record.REF) == 1:
+                    # replace the nucleotide at the reference index with the alternative nucleotides
+                    # also add the number of gap characters needed (len(ALT) - len(REF) to insertion_dict at the appropriate index                        
+                    # only input short insertions and also if they pass the QC filters. Leave the others as reference
+                    if (len(alt_allele) - len(ref_allele) <= 15):
 
-                        # simply replace the nucleotide at the reference index with the alternative nucleotides
-                        # also add the number of gap characters needed (len(ALT) - len(REF), where len(REF) == 1) to insertion_dict at the appropriate index
-                        # only consider high-quality insertions and deletions. Leave the others as reference
-                        if single_allele_type == "alt":
+                        if single_allele_type != "alt":
+                            alt_allele = "N"*len(alt_allele)
 
-                            new_seq[idx] = alt_allele
-                            insertion_dict[idx] = np.max([insertion_dict[idx], (len(alt_allele) - 1)])
-                        
-                        # don't do anything if reference or missing. Don't consider missing indels because they often introduce huge regions of N
-                        else:
-                            continue
+                        # if REF > 1, then the entire REF allele must be removed (across all positions) and replaced with the ALT allele
+                        # do this with a dummy character, X, which will be later removed. 
+                        # This is generalizable to even the case where REF == 1 because it will just replace the first index
 
-                    # complex variant -- don't process these
+                        # replace everything with X first
+                        new_seq[idx:idx+len(ref_allele)] = ["X"] * len(ref_allele)
+
+                        # then make the first position the alternative allele
+                        new_seq[idx] = alt_allele
+
+                        insertion_dict[idx] = np.max([insertion_dict[idx], len(alt_allele) - len(ref_allele)])
+
+                    # don't do anything if indels are very long
                     else:
                         continue
 
@@ -225,7 +210,6 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 
                     if len(alt_allele) == 1:
 
-                        ref_allele = str(record.REF)
                         new_allele = []
                         assert alt_allele in ref_allele
 
@@ -246,22 +230,34 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
                         assert len(new_allele) == len(ref_allele)
 
                         # Python will replace all elements if the original and replace string are the same length
-                        if single_allele_type == "alt":
+                        # add this step so that if the allele extends more than the region of interest, it is truncated
+                        old_len = len(new_seq)
+                        new_seq[idx:idx+len(ref_allele)] = new_allele
+                        new_seq = new_seq[:old_len]
+
+                    else:                        
+                        # only input short insertions and also if they pass the QC filters and if the first nucleotide of the REF and ALT are the same. 
+                        # In that case, replace the remaining characters of the REF list with the ALT nucleotides
+                        # the point of this is mainly for the insilico mutations. Some of them have differing lengths, but the net change is a deletion
+                        if alt_allele[0] == ref_allele[0] and (len(ref_allele) - len(alt_allele) <= 15):
+
+                            # the replacement is the alternative allele padded with gap characters. # of gap characters = the length difference between them 
+                            new_allele = list(alt_allele) + ['-'] * (len(ref_allele) - len(alt_allele))
+                            assert len(new_allele) == len(ref_allele)
+
+                            # Python will replace all elements if the original and replace string are the same length
+                            # add this step so that if the allele extends more than the region of interest, it is truncated
+                            old_len = len(new_seq)
                             new_seq[idx:idx+len(ref_allele)] = new_allele
-                        
-                        # don't do anything if reference or missing. Don't consider missing indels because they often introduce huge regions of N
+                            new_seq = new_seq[:old_len]
+
+                        # don't put in the deletion if it is long, or the first nucleotides of REF and ALT don't match because it can not be reliably inserted
                         else:
                             continue
-
-                    # complex variant -- don't process these
-                    else:
-                        continue
-
+                        
     # check lengths because both of them are lists right now 
     assert len(new_seq) == len(h37Rv_region)
-    
     return new_seq
-
 
 
 #################################### STEP 1: GET SNPS AND INDELS AND INSERT INTO EACH SEQUENCE USING THE FUNCTION ABOVE ####################################
@@ -289,6 +285,16 @@ insertion_sites = insertion_sites.query("len_insertion > 0").reset_index(drop=Tr
 insertion_sites[insertion_sites.columns] = insertion_sites[insertion_sites.columns].astype(int)
 print(insertion_sites)
 
+insertion_sites.to_csv("/home/sak0914/MtbQuantCNN/insertion_sites_dict.csv")
+
+with open("/n/data1/hms/dbmi/farhat/Sanjana/temp_seq", 'wb') as pickle_file:
+    pickle.dump(seq_dict, pickle_file)
+
+# insertion_sites = pd.read_csv("/home/sak0914/MtbQuantCNN/insertion_sites_dict.csv")
+
+# with open("/n/data1/hms/dbmi/farhat/Sanjana/temp_seq", 'rb') as pickle_file:
+#     seq_dict = pickle.load(pickle_file)
+    
 
 #################################### STEP 2: FILL IN GAP CHARACTERS IN THE REFERENCE SEQUENCE ####################################
 
@@ -328,19 +334,22 @@ with open(OUT_FILE, "w+") as file:
 
             # compare the lengths of the nucleotides at the given index and the pos_length (with gap characters)
             if len(seq[row["idx"]]) < pos_length:
-
                 seq[row["idx"]] = seq[row["idx"]] + "-" * int(pos_length - len(seq[row["idx"]]))
 
-            assert len(seq[row["idx"]]) == pos_length
+            # assert len(seq[row["idx"]]) == pos_length
+            if len(seq[row["idx"]]) != pos_length:
+                print(os.path.basename(OUT_FILE).split(".")[0], isolate, len(seq[row["idx"]]), pos_length)
 
+        # remove X characters, which are used for some insertions
         # check that the new length matches with the reference sequence, which has already had gap characters inserted
-        assert len("".join(seq)) == len(new_ref_seq)
+        seq = "".join(seq).replace("X", "")
+        # assert len(seq) == len(new_ref_seq)
+        if len(seq) != len(new_ref_seq):
+            print(os.path.basename(OUT_FILE).split(".")[0], isolate, len(seq), len(new_ref_seq))
 
         # get the reverse complement if negative sense
         if SENSE == "NEG":
             seq = reverse_complement(seq)
-        else:
-            seq = "".join(seq)
         
         # write the new sequence to the alignment file
         file.write(">" + isolate + "\n")

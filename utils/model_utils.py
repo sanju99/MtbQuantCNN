@@ -146,7 +146,7 @@ def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_
     else:
         dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
 
-    # change regularization strength
+    # change regularization strength, if desired
     # kernel_regularizer=regularizers.L2(0.01)
     
     # dense = layers.Dense(256, activation='relu', name='dense1', kernel_regularizer='l2')(dense_inputs)
@@ -155,10 +155,8 @@ def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_
     dense = layers.Dense(256, activation='relu', name='dense2')(dense)
     
     if binary:
-        print("Fitting binary model")
         output = layers.Dense(1, activation='sigmoid', name='output')(dense)
     else:
-        print("Fitting quantitative model")
         output = layers.Dense(1, activation=None, name='output')(dense)
 
     if num_lineages > 0:

@@ -258,50 +258,6 @@ def get_threshold_val(pred_df, pred_col, test_col, spec_thresh=None):
 
 
 
-# def get_threshold_val(pred_df, pred_col, test_col):
-    
-#     y_pred = pred_df[pred_col].values
-#     y_test = pred_df[test_col].values
-    
-#     # Compute number resistant and sensitive
-#     num_samples = len(pred_df)
-#     num_resistant = np.sum(y_test).astype(int)
-#     num_sensitive = num_samples - num_resistant
-
-#     # Test thresholds from 0 to 1, in 0.01 increments
-#     thresholds = np.linspace(0, 1, 101)
-    
-#     fpr_ = []
-#     tpr_ = []
-
-#     for thresh in thresholds:
-        
-#         # binarize using the threshold, then compute true and false positives
-#         pred_df["y_pred_label"] = (pred_df[pred_col] > thresh).astype(int)
-        
-#         tp = len(pred_df.loc[(pred_df["y_pred_label"] == 1) & (pred_df[test_col] == 1)])
-#         fp = len(pred_df.loc[(pred_df["y_pred_label"] == 1) & (pred_df[test_col] == 0)])
-
-#         # Compute FPR and TPR. FPR = FP / N. TPR = TP / P
-#         fpr_.append(fp / num_sensitive)
-#         tpr_.append(tp / num_resistant)
-
-#     fpr_ = np.array(fpr_)
-#     tpr_ = np.array(tpr_)
-
-#     sens_spec_sum = (1 - fpr_) + tpr_
-
-#     # get index of highest sum(s) of sens and spec. Arbitrarily take the first threshold when there are multiple
-#     best_sens_spec_sum_idx = np.where(sens_spec_sum == np.max(sens_spec_sum))[0][0]
-#     select_thresh = thresholds[best_sens_spec_sum_idx]
-#     print(f"Binarization threshold: {select_thresh}")
-
-#     # add the labels using the selected threshold
-#     pred_df["y_pred_label"] = (pred_df[pred_col] > select_thresh).astype(int)    
-#     return pred_df
-
-
-
 
 def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
         
@@ -313,8 +269,8 @@ def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
         y_val_binary = np.copy(y_val)
         y_pred_binary = np.copy(y_pred)
         
-    assert len(np.unique(y_val_binary)) == 2
-    assert len(np.unique(y_pred_binary)) == 2
+    assert len(np.unique(y_val_binary)) <= 2
+    assert len(np.unique(y_pred_binary)) <= 2
     
     tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_val_binary, y_pred_binary).ravel()
     sens = tp / (tp+fn)
@@ -330,20 +286,6 @@ def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
                          "Balanced_Acc": balanced_acc
                         }, index=[0]
                        )
-
-
-
-# def class_weighting_dictionary(y):
-#     '''
-#     Returns a dictionary of weights for the binary CNN to weight the loss and metrics functions by. 
-#     '''
-    
-#     weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',
-#                                                               classes=np.unique(y),
-#                                                               y=y
-#                                                              )
-#     return dict(zip(np.unique(y), weights))
-
 
 
     
@@ -398,11 +340,12 @@ def compute_proportion_within_1bin(df, y_pred_col, y_true_col, lower_bounds_col,
     assert np.nan not in df["within_1bin"].unique()
     df["within_1bin"] = df["within_1bin"].astype(int)
     
-    log_binary_thresh = np.log2(binary_thresh)
-    df.loc[((df[y_pred_col] < log_binary_thresh) & (df[y_true_col] < log_binary_thresh)) | ((df[y_pred_col] > log_binary_thresh) & (df[y_true_col] > log_binary_thresh)), "binary"] = 1
-    df["binary"] = df["binary"].fillna(0).astype(int)
+    # log_binary_thresh = np.log2(binary_thresh)
+    # df.loc[((df[y_pred_col] < log_binary_thresh) & (df[y_true_col] < log_binary_thresh)) | ((df[y_pred_col] > log_binary_thresh) & (df[y_true_col] > log_binary_thresh)), "binary"] = 1
+    # df["binary"] = df["binary"].fillna(0).astype(int)
     
     return df
+
 
 
 
@@ -412,7 +355,24 @@ def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col=
     
     This function returns bounded MAE, MSE, and the proportion of points measured within 1 MIC doubling (1 log2 unit)
     ''' 
+
+    del_cols = [f"{y_pred_col}_exp", "within_doubling", "within_1bin", "compute_error", f"{lower_bounds_col}_rounded", f"{upper_bounds_col}_rounded"]
+
+    for col in del_cols:
+        if col in pred_df.columns:
+            del pred_df[col]
+
+    # first add essential agreement (proportion within 1 doubling dilution)
+    pred_df[f"{y_pred_col}_exp"] = np.round(np.exp2(pred_df[y_pred_col]), 2)
     
+    pred_df.loc[(pred_df[lower_bounds_col] / 2 <= pred_df[f"{y_pred_col}_exp"]) & 
+                (pred_df[upper_bounds_col] * 2 >= pred_df[f"{y_pred_col}_exp"])
+                , "within_doubling"] = 1
+
+    # manual fix....
+    pred_df.loc[(pred_df[f"{y_pred_col}_exp"] == 0.06) & (pred_df[lower_bounds_col] == 0.12), "within_doubling"] = 1
+    pred_df["within_doubling"] = pred_df["within_doubling"].fillna(0).astype(int)
+        
     # make copies to avoid changing the original dataframe
     lower_bounds = np.copy(pred_df[lower_bounds_col].values)
     upper_bounds = np.copy(pred_df[upper_bounds_col].values)
@@ -421,116 +381,17 @@ def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col=
     lower_bounds = np.log2(lower_bounds)
     upper_bounds = np.log2(upper_bounds)
     
+    pred_df["compute_error"] = ((pred_df[y_pred_col] < lower_bounds) | (pred_df[y_pred_col] > upper_bounds)).astype(int)
+
+    # compute error relative to the bounds, NOT RELATIVE TO THE MIDPOINT (y_test) of each isolate
+    # np.clip returns one of the values from lower_bounds or upper_bounds, whichever is closest to the prediction, if the value is outside the bounds
+    # if the value is within the bounds, the value is returned. In this case, it doesn't matter because compute_error = 0 and y_pred - bound_to_compute_error = 0
     bound_to_compute_error = np.clip(pred_df[y_pred_col].values, lower_bounds, upper_bounds)
 
-    pred_df["compute_error"] = ((pred_df[y_pred_col] < lower_bounds) | (pred_df[y_pred_col] > upper_bounds)).astype(int)
     mae = np.mean(pred_df["compute_error"] * (np.abs(bound_to_compute_error - pred_df[y_pred_col])))
     mse = np.mean(pred_df["compute_error"] * (np.square(bound_to_compute_error - pred_df[y_pred_col])))
     
     pred_df = compute_proportion_within_1bin(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col, binary_thresh)
-    
+
     # return error and proportion within 1 doubline of the measured MIC
-    return mae, mse, pred_df["within_1bin"].mean()      
-
-    
-
-
-def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name, binarize=True, save_fName=None):
-    
-    # predictions dataframe: get indices of validation data in the cv splits
-    pred_df = df_test[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
-
-    # rename columns to make them easier to read
-    pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
-                            f"{drug}_midpoint": "y_test",
-                            f"{drug}_lower_bound": "lower",
-                            f"{drug}_upper_bound": "upper"
-                           }, 
-                   inplace=True
-                  )
-
-    # add model predictions, and log-transform the test values
-    pred_df["y_pred"] = np.squeeze(y_pred)
-    pred_df["y_test"] = np.log2(pred_df["y_test"])
-
-    binned_mae, binned_mse, within_1bin = boundedLoss_predict(pred_df, binary_thresh)
-    
-    if save_fName is not None:
-        pred_df.to_csv(save_fName, index=False)
-
-    summary_df = pd.DataFrame({"Drug": drug,
-                               "Model": model_name,
-                               "Num_Loci": num_loci,
-                               "Binned_MAE": binned_mae,
-                               "Binned_MSE": binned_mse,
-                               "MAE": np.mean(np.abs(pred_df["y_pred"]-pred_df["y_test"])),
-                               "MSE": np.mean(np.square(pred_df["y_pred"]-pred_df["y_test"])),
-                               "Within_1Bin": within_1bin,
-                               "Spearman": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[0],
-                               "Pearson": st.pearsonr(pred_df["y_pred"], pred_df["y_test"])[0],
-                              }, index=[0])
-
-    binary_metrics_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred"], binary_thresh, binarize=binarize)
-    summary_df = pd.concat([summary_df, binary_metrics_df], axis=1)
-    return summary_df
-
-
-
-# def get_all_higher_lineages(lineage):
-
-#     if "," in lineage:
-#         raise ValueError("Lineage entry can't have multiple lineages")
-                
-#     if "." in lineage:
-
-#         hierarchical_lineages = []
-#         split_lineages = lineage.split(".")
-
-#         for k in range(len(split_lineages)):
-
-#             hierarchical_lineages.append(".".join(split_lineages[:k+1]))
-
-#         # check that there are N + 1 lineages in the list, where N is the number of divisions (.)
-#         assert len(hierarchical_lineages) == lineage.count(".") + 1
-#         return hierarchical_lineages
-
-#     # nothing to split, so return a list with the input lineage
-#     else:
-#         return [lineage]
-
-    
-
-# def get_lineages_matrix(df_phenos):
-    
-#     lineage_indicator_df = pd.get_dummies(df_phenos[["Lineage"]], prefix="", prefix_sep="")
-    
-#     # check that before filling in the hierarchical lineages, each sample has a single lineage
-#     assert len(np.unique(lineage_indicator_df.sum(axis=1))) == 1
-#     assert np.unique(lineage_indicator_df.sum(axis=1))[0] == 1
-
-#     for i, col in enumerate(lineage_indicator_df.columns):
-
-#         hierarchical_lineages = get_all_higher_lineages(col)
-
-#         found_cols = []
-#         primary_lineage = hierarchical_lineages[0]
-
-#         # the primary lineage should definitely be in the dataframe
-#         assert primary_lineage in lineage_indicator_df.columns
-
-#         for col in hierarchical_lineages:
-#             if col in lineage_indicator_df.columns:
-#                 found_cols.append(col)
-
-#         # remove the last lineage from the list (this column already has 1)
-#         final_lineage = found_cols.pop(-1)
-
-#         lineage_indicator_df.loc[lineage_indicator_df[final_lineage]==1, found_cols] += 1
-
-#     # check that every row (sample) has at least one lineage and every column (lineage) has at least one isolate
-#     assert np.min(lineage_indicator_df.sum(axis=1)) >= 1
-#     assert np.min(lineage_indicator_df.sum(axis=0)) >= 1
-
-#     lineage_indicator_df.index = df_phenos["ROLLINGDB_ID"].values
-
-#     return lineage_indicator_df
+    return mae, mse, pred_df["within_1bin"].mean(), pred_df["within_doubling"].mean() 

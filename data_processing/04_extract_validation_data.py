@@ -4,20 +4,17 @@ import sys, os, glob
 
 
 _, drug, cc = sys.argv
+cc = float(cc)
 
-# paths_df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML_data.csv")
-validation_data = pd.read_csv("/n/data1/hms/dbmi/farhat/rollingDB/metadata/MIC/MIC_ML_consortium_MIC_table.csv").rename(columns={"MOXI_lower_bound": "MXF_lower_bound",
-                                                                                                                                  "MOXI_midpoint": "MXF_midpoint",
-                                                                                                                                  "MOXI_upper_bound": "MXF_upper_bound",
-                                                                                                                                  "MOXI_quality": "MXF_quality"
-                                                                                                                                 })
-
+validation_data = pd.read_csv("/n/data1/hms/dbmi/farhat/rollingDB/metadata/MIC/MIC_ML_consortium_MIC_table.csv")
 validation_data_metadata = pd.read_csv("/n/data1/hms/dbmi/farhat/rollingDB/metadata/isolate_metadata.csv")
 
-MIC_ML_data = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML_data.csv"
+MIC_ML_data = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML/data.csv"
 
 if not os.path.isfile(MIC_ML_data):
 
+    print(f"Combining MIC-ML data into a single dataframe {MIC_ML_data}")
+    
     paths_df = pd.DataFrame(columns=["ROLLINGDB_ID", "FASTQ1_FILE", "FASTQ2_FILE"] + list(validation_data.columns[~validation_data.columns.isin(["ID", "BIOSAMPLE_ACCESSION", "ROLLINGDB_ID"])])).set_index("ROLLINGDB_ID")
 
     for _, row in validation_data.iterrows():
@@ -55,6 +52,15 @@ if not os.path.isfile(MIC_ML_data):
 
     assert len(paths_df.ROLLINGDB_ID.unique()) == len(paths_df)
 
+    # standardize names for use with the World Health Organization mutation catalog   
+    prefix_conv_dict = {"MOXI": "MXF", "LEVO": "LEV", "LIN": "LZD", "CLO": "CFZ", "ETA": "ETH"}
+    
+    for i, (old, new) in enumerate(prefix_conv_dict.items()):
+        for col in paths_df.columns:
+            if old in col and col != "ROLLINGDB_ID":
+                print(col)
+                paths_df.rename(columns={col: col.replace(old, new)}, inplace=True)
+
     # save full dataframe
     paths_df.to_csv(MIC_ML_data, index=False)
     
@@ -70,10 +76,25 @@ paths_df = paths_df.loc[~pd.isnull(paths_df[f"{drug}_midpoint"])]
 
 # only keep the columns relevant for the drug of interest, then save the dataframe
 metadata_cols = 9
-paths_df = paths_df[list(paths_df.columns[:metadata_cols]) + [f"{drug}_quality", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]       
+
+col_list = []
+
+for col in [f"{drug}_quality", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]:
+    if col in paths_df.columns:
+        col_list.append(col)
+        
+paths_df = paths_df[list(paths_df.columns[:metadata_cols]) + col_list]       
 
 prev_len = len(paths_df)
 paths_df = paths_df.query(f"~({drug}_lower_bound < @cc & {drug}_upper_bound > @cc)")
 print(f"Removed {prev_len - len(paths_df)} isolates with MIC bounds that span the CC of {cc}")
 
 paths_df.to_csv(os.path.join(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/validation_data.csv"), index=False)
+
+# create text file for later to get the paths of the VCF files in the validation dataset
+paths_txt_file = pd.Series([f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML/VCF/{isolate}/pilon/{isolate}.vcf" for isolate in paths_df["ROLLINGDB_ID"].values])
+
+for fName in paths_txt_file:
+    assert os.path.isfile(fName)
+
+paths_txt_file.to_csv(os.path.join(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/validation_paths.txt"), sep="\t", header=None, index=False)

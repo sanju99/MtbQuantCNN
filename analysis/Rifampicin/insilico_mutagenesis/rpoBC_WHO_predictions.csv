@@ -1,1015 +1,1015 @@
-log_MIC,mutation,confidence,genome_index
-4.4103165,rpoB_p.Gln432Lys,1) Assoc w R,761100
-4.1447916,rpoB_p.Gln432Pro,1) Assoc w R,761101
-2.6888502,rpoB_p.Ser441Leu,1) Assoc w R,761128
-3.66482,rpoB_p.Gln432Leu,1) Assoc w R,761101
-2.8043,rpoB_p.Phe433dup,1) Assoc w R,761102
-0.44554728,rpoB_p.His445Asn,1) Assoc w R,761139
-0.96773094,rpoB_p.Ile491Phe,1) Assoc w R,761277
-3.9703758,rpoB_p.Val170Phe,1) Assoc w R,760314
-4.4341664,rpoB_p.Asp435Val,1) Assoc w R,761110
-4.001936,rpoB_p.His445Tyr,1) Assoc w R,761139
-3.8600905,rpoB_p.His445Asp,1) Assoc w R,761139
-1.012124,rpoB_p.Asp435Tyr,1) Assoc w R,761109
-4.356173,rpoB_p.Ser450Trp,1) Assoc w R,761155
-1.3278068,rpoB_p.His445Leu,1) Assoc w R,761140
-0.58632004,rpoB_p.Leu430Pro,1) Assoc w R,761095
-3.799127,rpoB_p.His445Arg,1) Assoc w R,761140
-0.81446904,rpoB_p.Leu452Pro,1) Assoc w R,761161
-4.175968,rpoB_p.His445Cys,1) Assoc w R,"761139,761140"
-4.0240417,rpoB_p.His445Ser,1) Assoc w R,"761139,761140"
--0.8864895,rpoB_p.Ser441Gln,1) Assoc w R,"761127,761128"
-4.157755,rpoB_p.Asp435Phe,1) Assoc w R,"761109,761110"
-4.7172866,rpoB_p.Ser450Leu,1) Assoc w R,"761154,761155"
-4.9156575,rpoB_p.Ser450Phe,1) Assoc w R,"761155,761156"
--3.6836827,rpoB_p.Pro439Ser,2) Assoc w R - Interim,761121
--4.029213,rpoB_p.Thr427Asn,2) Assoc w R - Interim,761086
--3.809025,rpoB_p.Pro439Leu,2) Assoc w R - Interim,761122
--1.6668004,rpoB_p.Asn437Tyr,2) Assoc w R - Interim,761115
--0.83720565,rpoB_p.Met434Leu,2) Assoc w R - Interim,761106
--0.92282236,rpoB_p.Leu452Gln,2) Assoc w R - Interim,761161
--3.5985768,rpoB_p.Gln429Pro,2) Assoc w R - Interim,761092
--3.6236136,rpoB_p.Ala451Val,2) Assoc w R - Interim,761158
--3.5868075,rpoB_p.Asn438del,2) Assoc w R - Interim,761114
-1.7544662,rpoB_p.Arg448Gln,2) Assoc w R - Interim,761149
--2.4241564,rpoB_p.Ser431Gly,2) Assoc w R - Interim,761097
--4.092037,rpoB_p.Gln429His,2) Assoc w R - Interim,761093
--0.51242554,rpoB_p.Asp435Ala,2) Assoc w R - Interim,761110
--2.7820947,rpoB_p.Asp435Glu,2) Assoc w R - Interim,761111
-2.9398224,rpoB_p.His445Pro,2) Assoc w R - Interim,761140
--4.0241613,rpoB_p.Ser428Arg,2) Assoc w R - Interim,761088
--1.9539818,rpoB_p.Ser431_Gln432insHis,2) Assoc w R - Interim,761098
--4.077726,rpoB_p.Thr427Ile,2) Assoc w R - Interim,761086
--3.2343662,rpoB_p.Met434Val,2) Assoc w R - Interim,761106
--3.4476907,rpoB_p.Ser431_Gln432insArg,2) Assoc w R - Interim,761094
-4.194042,rpoB_p.Gln432_Asp435delinsHis,2) Assoc w R - Interim,761100
--2.8515399,rpoB_p.Asp435His,2) Assoc w R - Interim,761109
--2.1793382,rpoB_p.Asn437His,2) Assoc w R - Interim,761115
--0.6458806,rpoB_p.Gln432His,2) Assoc w R - Interim,761102
--2.9906151,rpoB_p.Lys446Gln,2) Assoc w R - Interim,761142
--3.9022272,rpoB_p.Gln429Leu,2) Assoc w R - Interim,761092
--4.0476885,rpoB_p.Thr427Ser,2) Assoc w R - Interim,761086
--2.7573874,rpoB_p.Ser450Ala,2) Assoc w R - Interim,761154
--3.6061141,rpoB_p.Ser441Ala,2) Assoc w R - Interim,761127
--2.5918927,rpoB_p.Ser431Thr,2) Assoc w R - Interim,761098
--4.0563145,rpoB_p.Ser428Ile,2) Assoc w R - Interim,761089
--4.0736895,rpoB_p.Ser428Gly,2) Assoc w R - Interim,761088
--2.6672108,rpoB_p.Gln436Pro,2) Assoc w R - Interim,761113
-2.1016881,rpoB_p.Gln432Glu,2) Assoc w R - Interim,761100
-0.25389552,rpoB_p.Asp435Gly,2) Assoc w R - Interim,761110
--1.6181138,rpoB_p.Leu430Arg,2) Assoc w R - Interim,761095
--1.5064459,rpoB_p.His445Gln,2) Assoc w R - Interim,761141
--2.6218393,rpoB_p.Met434Ile,2) Assoc w R - Interim,761108
--3.1380403,rpoB_p.Asn437Asp,2) Assoc w R - Interim,761115
--3.6672306,rpoB_p.Leu449Met,2) Assoc w R - Interim,761151
--2.8881125,rpoB_p.Thr444Ser,2) Assoc w R - Interim,761137
--3.9678133,rpoB_p.Ser428Thr,2) Assoc w R - Interim,761089
--3.3488357,rpoB_p.Ser431Arg,2) Assoc w R - Interim,761097
--2.121485,rpoB_p.Gln436del,2) Assoc w R - Interim,761094
-3.8225155,rpoB_p.Gln432del,2) Assoc w R - Interim,761094
-1.9372307,rpoB_p.Met434_Asp435del,2) Assoc w R - Interim,761094
-3.0628672,rpoB_p.Ser431_Phe433del,2) Assoc w R - Interim,761094
-2.8627224,rpoB_p.Phe433_Asp435del,2) Assoc w R - Interim,761094
-4.3519936,rpoB_p.Gln432_Phe433del,2) Assoc w R - Interim,761098
-4.1460767,rpoB_p.Asp435_Pro439del,2) Assoc w R - Interim,761094
-4.063415,rpoB_p.Met434_Asn437delinsIle,2) Assoc w R - Interim,761106
-4.1050825,rpoB_p.His445_Lys446del,2) Assoc w R - Interim,761137
-3.074445,rpoB_p.Ser450_Leu452del,2) Assoc w R - Interim,761150
--3.604637,rpoB_p.Gly442Glu,2) Assoc w R - Interim,761131
--3.0643632,rpoB_p.Lys446Glu,2) Assoc w R - Interim,761142
--2.5374105,rpoB_p.Lys446Thr,2) Assoc w R - Interim,761143
--3.1719625,rpoB_p.Leu452Val,2) Assoc w R - Interim,761160
--3.3820722,rpoB_p.Asn437Ile,2) Assoc w R - Interim,761116
--1.1683387,rpoB_p.Asp435del,2) Assoc w R - Interim,761108
-3.2569206,rpoB_p.Ser431_Met434del,2) Assoc w R - Interim,761094
--3.6317382,rpoB_p.Thr427_Gln429delinsLys,2) Assoc w R - Interim,761085
-3.7640998,rpoB_p.Phe433_Gln436del,2) Assoc w R - Interim,761098
-1.5533872,rpoB_p.Gln436_Asn437del,2) Assoc w R - Interim,761109
--3.6895957,rpoB_p.Ala451Gly,2) Assoc w R - Interim,761158
--2.785383,rpoB_p.Lys446Arg,2) Assoc w R - Interim,761143
--2.233741,rpoB_p.Thr444Ile,2) Assoc w R - Interim,761137
--3.3244908,rpoB_p.Leu443Phe,2) Assoc w R - Interim,761135
--3.952698,rpoB_p.Asn437Ser,2) Assoc w R - Interim,761116
--4.1797137,rpoB_p.Thr427Ala,2) Assoc w R - Interim,761085
--3.921343,rpoB_p.Thr427_Ser428del,2) Assoc w R - Interim,761082
--3.5664694,rpoB_p.Thr427_Gln429del,2) Assoc w R - Interim,761083
--2.8780935,rpoB_p.Thr427_Leu430del,2) Assoc w R - Interim,761084
--1.3242288,rpoB_p.Asp435_Gln436delinsGlu,2) Assoc w R - Interim,761109
--3.4912136,rpoB_p.Leu452Met,2) Assoc w R - Interim,761160
--4.0749836,rpoB_p.Gly426Ser,2) Assoc w R - Interim,761082
-4.403537,rpoB_p.Gln432_Met434del,2) Assoc w R - Interim,761097
--3.7985382,rpoB_p.Gly426_Thr427del,2) Assoc w R - Interim,761080
--4.136628,rpoB_p.Thr427Gly,2) Assoc w R - Interim,"761085,761086"
--3.4104998,rpoB_p.Gln436Asn,2) Assoc w R - Interim,"761112,761114"
-4.2133107,rpoB_p.His445Gly,2) Assoc w R - Interim,"761139,761140"
-4.686055,rpoB_p.Ser450Met,2) Assoc w R - Interim,"761154,761155"
-3.8835454,rpoB_p.His445Thr,2) Assoc w R - Interim,"761139,761140"
-4.0634484,rpoB_p.Ser450Gly,2) Assoc w R - Interim,"761154,761155"
-4.022343,rpoB_p.Ser450Gln,2) Assoc w R - Interim,"761154,761155"
-3.0817103,rpoB_p.Gln432Asn,2) Assoc w R - Interim,"761100,761102"
-4.100711,rpoB_p.His445Phe,2) Assoc w R - Interim,"761139,761140"
-4.1723795,rpoB_p.Asp435Leu,2) Assoc w R - Interim,"761109,761110"
-3.8418193,rpoB_p.Arg448Lys,2) Assoc w R - Interim,"761148,761149"
--0.3062207,rpoB_p.Ser441Val,2) Assoc w R - Interim,"761127,761128"
-3.9383829,rpoB_p.Ser450Tyr,2) Assoc w R - Interim,"761155,761156"
-4.6979365,rpoB_p.Ser450Val,2) Assoc w R - Interim,"761154,761155"
--0.13716586,rpoB_p.Ser441Met,2) Assoc w R - Interim,"761127,761128"
-4.1775436,rpoB_p.Ser450Cys,2) Assoc w R - Interim,"761155,761156"
--4.096849,rpoB_p.Glu825Gly,3) Uncertain significance,762280
--4.1001344,rpoB_p.Phe1005Val,3) Uncertain significance,762819
--4.1082697,rpoB_p.Phe548Leu,3) Uncertain significance,761448
--4.090483,rpoB_p.Phe669Leu,3) Uncertain significance,761813
--4.091029,rpoB_c.-117G>A,3) Uncertain significance,759690
--4.1032667,rpoB_c.-136G>C,3) Uncertain significance,759671
--4.114381,rpoB_c.-167G>A,3) Uncertain significance,759640
--4.092499,rpoB_p.Gly236Asp,3) Uncertain significance,760513
--4.095537,rpoB_p.Gly345Ser,3) Uncertain significance,760839
--4.0601187,rpoB_p.Gly492Ser,3) Uncertain significance,761280
--4.0927525,rpoB_p.Gly546Ser,3) Uncertain significance,761442
--4.0911546,rpoB_p.Gly560Ala,3) Uncertain significance,761485
--4.1231422,rpoB_c.-56G>T,3) Uncertain significance,759751
--4.0948615,rpoB_p.Gly642Ser,3) Uncertain significance,761730
--4.093021,rpoB_p.Gly659Asp,3) Uncertain significance,761782
--4.0856013,rpoB_p.Gly693Val,3) Uncertain significance,761884
--4.141471,rpoB_p.Gly945Arg,3) Uncertain significance,762639
--4.099984,rpoB_p.Gly95Arg,3) Uncertain significance,760089
--4.09024,rpoB_c.-96G>A,3) Uncertain significance,759711
--4.098761,rpoB_p.His317Tyr,3) Uncertain significance,760755
--4.0923247,rpoB_p.His533Arg,3) Uncertain significance,761404
--4.091292,rpoB_p.Glu805Ala,3) Uncertain significance,762220
--4.1081862,rpoB_p.Glu789Lys,3) Uncertain significance,762171
--4.098805,rpoB_p.Glu738Ala,3) Uncertain significance,762019
--4.0960436,rpoB_p.Glu737Gly,3) Uncertain significance,762016
--4.0932117,rpoB_p.Asp120Gly,3) Uncertain significance,760165
--4.1064153,rpoB_p.Asp211Val,3) Uncertain significance,760438
--4.0920925,rpoB_p.Asp362His,3) Uncertain significance,760890
--4.0934052,rpoB_p.Asp49His,3) Uncertain significance,759951
--4.0934014,rpoB_p.Asp520Val,3) Uncertain significance,761365
--4.095778,rpoB_p.Asp543Gly,3) Uncertain significance,761434
--4.097074,rpoB_p.Asp545Ala,3) Uncertain significance,761440
--4.095508,rpoB_p.Asp594Ala,3) Uncertain significance,761587
--4.096608,rpoB_p.Asp703Glu,3) Uncertain significance,761915
--4.0986495,rpoB_p.Asp777His,3) Uncertain significance,762135
--4.1055956,rpoB_p.Asp851Gly,3) Uncertain significance,762358
--4.0987678,rpoB_p.Asp903Asn,3) Uncertain significance,762513
--4.102659,rpoB_p.His935Arg,3) Uncertain significance,762610
--4.09902,rpoB_p.Asp993Gly,3) Uncertain significance,762784
--4.105471,rpoB_p.Glu1011Ala,3) Uncertain significance,762838
--4.098769,rpoB_p.Glu1130Val,3) Uncertain significance,763195
--4.0919943,rpoB_p.Glu1169Ala,3) Uncertain significance,763312
--4.088512,rpoB_p.Glu240Gly,3) Uncertain significance,760525
--4.0928783,rpoB_p.Glu320Gly,3) Uncertain significance,760765
--4.126452,rpoB_p.Glu337Lys,3) Uncertain significance,760815
--4.0979867,rpoB_p.Glu639Ala,3) Uncertain significance,761722
--4.1353426,rpoB_p.Glu639Gln,3) Uncertain significance,761721
--4.101052,rpoB_p.Glu645Gly,3) Uncertain significance,761740
--4.08935,rpoB_p.Glu646Gly,3) Uncertain significance,761743
--4.0979505,rpoB_p.Glu721Asp,3) Uncertain significance,761969
--4.0920596,rpoB_p.Glu721Gly,3) Uncertain significance,761968
--4.093876,rpoB_p.Asp997Glu,3) Uncertain significance,762797
--4.0946794,rpoB_p.Asp1148Glu,3) Uncertain significance,763250
--4.0990057,rpoB_p.Ile751Val,3) Uncertain significance,762057
--4.097735,rpoB_p.Lys298Arg,3) Uncertain significance,760699
--4.108853,rpoB_p.Pro682Thr,3) Uncertain significance,761850
--4.1014004,rpoB_p.Pro719Ser,3) Uncertain significance,761961
--4.0872917,rpoB_p.Pro834Leu,3) Uncertain significance,762307
--4.113248,rpoB_p.Pro89Ser,3) Uncertain significance,760071
--4.1080728,rpoB_p.Pro906Leu,3) Uncertain significance,762523
--4.1102405,rpoB_p.Pro988Ala,3) Uncertain significance,762768
--4.1087317,rpoB_p.Pro988Ser,3) Uncertain significance,762768
--4.0880904,rpoB_p.Arg225Gln,3) Uncertain significance,760480
--4.1009574,rpoB_p.Arg304Cys,3) Uncertain significance,760716
--4.0075874,rpoB_p.Arg499Gln,3) Uncertain significance,761302
--4.049813,rpoB_p.Arg499Trp,3) Uncertain significance,761301
--4.0988026,rpoB_p.Arg511Leu,3) Uncertain significance,761338
--4.0941625,rpoB_p.Arg532Cys,3) Uncertain significance,761400
--4.094643,rpoB_p.Arg547Ser,3) Uncertain significance,761445
--4.112969,rpoB_p.Arg552Ser,3) Uncertain significance,761460
--4.0987024,rpoB_p.Arg734His,3) Uncertain significance,762007
--4.101026,rpoB_p.Arg952Lys,3) Uncertain significance,762661
--4.096735,rpoB_p.Ser1009Thr,3) Uncertain significance,762832
--4.095012,rpoB_p.Ser1134Arg,3) Uncertain significance,763206
--4.093766,rpoB_p.Ser20Ile,3) Uncertain significance,759865
--4.092501,rpoB_p.Ser21Phe,3) Uncertain significance,759868
--4.0986023,rpoB_p.Ser239Arg,3) Uncertain significance,760521
--4.0939016,rpoB_p.Ser641Arg,3) Uncertain significance,761729
--4.1012197,rpoB_p.Ser67Phe,3) Uncertain significance,760006
--4.1431546,rpoB_p.Ser984Leu,3) Uncertain significance,762757
--4.098473,rpoB_p.Pro541Leu,3) Uncertain significance,761428
--4.0960145,rpoB_p.Pro509Ser,3) Uncertain significance,761331
--4.096011,rpoB_p.Pro358Ser,3) Uncertain significance,760878
--4.0884376,rpoB_p.Pro321Ser,3) Uncertain significance,760767
--4.084358,rpoB_p.Lys309Glu,3) Uncertain significance,760731
--4.0990005,rpoB_p.Lys711Arg,3) Uncertain significance,761938
--4.096209,rpoB_p.Leu1004Ile,3) Uncertain significance,762816
--4.094485,rpoB_p.Leu1132Val,3) Uncertain significance,763200
--4.0801787,rpoB_p.Leu232Val,3) Uncertain significance,760500
--4.0898933,rpoB_p.Leu235Arg,3) Uncertain significance,760510
--4.0911365,rpoB_p.Leu290Phe,3) Uncertain significance,760676
--4.0921397,rpoB_p.Leu314Val,3) Uncertain significance,760746
--4.0980196,rpoB_p.Leu316Val,3) Uncertain significance,760752
--4.0934963,rpoB_p.Leu893Arg,3) Uncertain significance,762484
--4.0938525,rpoB_p.Leu893Val,3) Uncertain significance,762483
--4.0938025,rpoB_p.Met1070Ile,3) Uncertain significance,763016
--4.0928054,rpoB_p.Lys1102Arg,3) Uncertain significance,763111
--4.109282,rpoB_p.Met1070Thr,3) Uncertain significance,763015
--4.0951805,rpoB_p.Met154Ile,3) Uncertain significance,760268
--4.092484,rpoB_p.Met398Val,3) Uncertain significance,760998
--4.098618,rpoB_p.Met477Arg,3) Uncertain significance,761236
--4.0993,rpoB_p.Met624Thr,3) Uncertain significance,761677
--4.108245,rpoB_p.Asn163Lys,3) Uncertain significance,760295
--4.093232,rpoB_p.Asn24Asp,3) Uncertain significance,759876
--4.09162,rpoB_p.Asn369Asp,3) Uncertain significance,760911
--4.1020494,rpoB_p.Asn673Thr,3) Uncertain significance,761824
--4.0980916,rpoB_p.Asn724Ser,3) Uncertain significance,761977
--4.0957975,rpoB_p.Asn963Asp,3) Uncertain significance,762693
--4.0994034,rpoB_p.Pro1014Arg,3) Uncertain significance,762847
--4.1209726,rpoB_p.Pro1014Ser,3) Uncertain significance,762846
--4.099007,rpoB_p.Met153Val,3) Uncertain significance,760263
--4.0907106,rpoB_p.Asp1146Gly,3) Uncertain significance,763243
--4.105922,rpoB_p.Asp108Glu,3) Uncertain significance,760130
--4.1040545,rpoB_p.Asp1006Gly,3) Uncertain significance,762823
--4.109401,rpoB_p.Ala977Val,3) Uncertain significance,762736
--4.0922203,rpoB_p.Cys1067Gly,3) Uncertain significance,763005
--4.1049123,rpoB_p.Cys116Phe,3) Uncertain significance,760153
--4.0910134,rpoB_c.-122C>A,3) Uncertain significance,759685
--4.0890326,rpoB_c.-122C>T,3) Uncertain significance,759685
--4.0628133,rpoB_c.-137C>T,3) Uncertain significance,759670
--4.0804386,rpoB_c.-140C>T,3) Uncertain significance,759667
--4.0828557,rpoB_c.-152C>T,3) Uncertain significance,759655
--4.097077,rpoB_c.-153C>G,3) Uncertain significance,759654
--4.102839,rpoB_c.-179C>T,3) Uncertain significance,759628
--4.094817,rpoB_c.-185C>A,3) Uncertain significance,759622
--4.0965714,rpoB_c.-188C>T,3) Uncertain significance,759619
--4.1061068,rpoB_p.Ala974Gly,3) Uncertain significance,762727
--4.0934467,rpoB_c.-195C>A,3) Uncertain significance,759612
--4.0874133,rpoB_c.-51C>T,3) Uncertain significance,759756
--4.0958962,rpoB_c.-54C>A,3) Uncertain significance,759753
--4.093686,rpoB_c.-60C>T,3) Uncertain significance,759747
--4.094536,rpoB_c.-73C>T,3) Uncertain significance,759734
--4.094012,rpoB_c.-84C>A,3) Uncertain significance,759723
--4.0906467,rpoB_c.-94C>T,3) Uncertain significance,759713
--4.0892334,rpoB_p.Ser98Ala,3) Uncertain significance,760098
--4.105829,rpoB_p.Ala950Val,3) Uncertain significance,762655
--4.0971828,rpoB_p.Ala934Val,3) Uncertain significance,762607
--4.106692,rpoB_c.-159_-158insT,3) Uncertain significance,759648
--4.085212,rpoB_c.-59delG,3) Uncertain significance,759747
--4.093964,rpoB_c.-106A>G,3) Uncertain significance,759701
--4.09554,rpoB_c.-110A>G,3) Uncertain significance,759697
--4.096358,rpoB_p.Ala29Thr,3) Uncertain significance,759891
--4.1191573,rpoB_p.Ala942Thr,3) Uncertain significance,762630
--4.0949097,rpoB_p.Ala29Val,3) Uncertain significance,759892
--4.0947914,rpoB_c.-3A>G,3) Uncertain significance,759804
--4.032946,rpoB_p.Ala498Gly,3) Uncertain significance,761299
--4.1036344,rpoB_p.Ala527Val,3) Uncertain significance,761386
--4.097841,rpoB_p.Ala544Val,3) Uncertain significance,761437
--4.099219,rpoB_p.Ala628Gly,3) Uncertain significance,761689
--4.091491,rpoB_p.Ala632Gly,3) Uncertain significance,761701
--4.0913014,rpoB_p.Ala632Ser,3) Uncertain significance,761700
--4.0932345,rpoB_p.Ala68Val,3) Uncertain significance,760009
--4.1061735,rpoB_p.Ala776Val,3) Uncertain significance,762133
--4.0988507,rpoB_c.-77A>G,3) Uncertain significance,759730
--4.104138,rpoB_p.Ala868Val,3) Uncertain significance,762409
--4.0932918,rpoB_p.Ala902Pro,3) Uncertain significance,762510
--4.1007304,rpoB_p.Ala334Asp,3) Uncertain significance,760807
--4.1101108,rpoC_p.Pro394Gln,3) Uncertain significance,764550
--4.09697,rpoC_p.Pro444Ser,3) Uncertain significance,764699
--4.144708,rpoC_p.Pro601Gln,3) Uncertain significance,765171
--4.1013136,rpoC_p.Pro643Ser,3) Uncertain significance,765296
--4.110158,rpoC_p.Pro658Leu,3) Uncertain significance,765342
--4.0998006,rpoC_p.Pro682Leu,3) Uncertain significance,765414
--4.0946193,rpoC_p.Pro906Arg,3) Uncertain significance,766086
--4.101223,rpoC_p.Gln1125Arg,3) Uncertain significance,766743
--4.103438,rpoC_p.Gln165Arg,3) Uncertain significance,763863
--4.100776,rpoC_p.Gln262Arg,3) Uncertain significance,764154
--4.085519,rpoC_p.Gln479His,3) Uncertain significance,764806
--4.094812,rpoC_p.Gln711Glu,3) Uncertain significance,765500
--4.0791,rpoC_p.Gln759Arg,3) Uncertain significance,765645
--4.0896993,rpoC_p.Gln959Arg,3) Uncertain significance,766245
--4.098057,rpoC_p.Arg1052Gly,3) Uncertain significance,766523
--4.1050777,rpoC_p.Arg1083Gly,3) Uncertain significance,766616
--4.097607,rpoC_p.Arg1192Leu,3) Uncertain significance,766944
--4.0983105,rpoC_p.Arg1192Gln,3) Uncertain significance,766944
--4.0944467,rpoC_p.Arg11His,3) Uncertain significance,763401
--4.0893407,rpoC_p.Arg1279Ser,3) Uncertain significance,767204
--4.0890775,rpoC_p.Arg203Cys,3) Uncertain significance,763976
--4.0996156,rpoC_p.Arg206Cys,3) Uncertain significance,763985
--4.0903964,rpoC_p.Arg211His,3) Uncertain significance,764001
--4.091598,rpoC_p.Arg247His,3) Uncertain significance,764109
--4.093795,rpoC_p.Arg282Gln,3) Uncertain significance,764214
--4.111729,rpoC_p.Pro322Thr,3) Uncertain significance,764333
--4.087781,rpoC_p.Pro1259Ser,3) Uncertain significance,767144
--4.0994444,rpoC_p.Pro1259Leu,3) Uncertain significance,767145
--4.102043,rpoC_p.Pro1200Leu,3) Uncertain significance,766968
--4.121284,rpoC_p.Ile491Val,3) Uncertain significance,764840
--4.095107,rpoC_p.Ile619Val,3) Uncertain significance,765224
--4.09532,rpoC_p.Ile646Val,3) Uncertain significance,765305
--4.098927,rpoC_p.Ile696Val,3) Uncertain significance,765455
--4.097159,rpoC_p.Ile697Val,3) Uncertain significance,765458
--4.0965123,rpoC_p.Ile745Leu,3) Uncertain significance,765602
--4.1255255,rpoC_p.Ile897Thr,3) Uncertain significance,766059
--4.0820327,rpoC_p.Ile957Thr,3) Uncertain significance,766239
--4.083734,rpoC_p.Lys228Asn,3) Uncertain significance,764053
--4.1039267,rpoC_p.Lys232Thr,3) Uncertain significance,764064
--4.0958576,rpoC_p.Lys743Glu,3) Uncertain significance,765596
--4.1281447,rpoC_p.Lys828Arg,3) Uncertain significance,765852
--4.1035924,rpoC_p.Arg397Leu,3) Uncertain significance,764559
--4.0895076,rpoC_p.Leu1099Val,3) Uncertain significance,766664
--4.0913205,rpoC_p.Leu381Val,3) Uncertain significance,764510
--4.09063,rpoC_p.Leu627Val,3) Uncertain significance,765248
--4.0888705,rpoC_p.Leu650Arg,3) Uncertain significance,765318
--4.107306,rpoC_p.Leu910Val,3) Uncertain significance,766097
--4.0934367,rpoC_p.Met1161Ile,3) Uncertain significance,766852
--4.097754,rpoC_p.Met1208Ile,3) Uncertain significance,766993
--4.098126,rpoC_p.Met1208Val,3) Uncertain significance,766991
--4.095965,rpoC_p.Met205Arg,3) Uncertain significance,763983
--4.093736,rpoC_p.Met205Val,3) Uncertain significance,763982
--4.091479,rpoC_p.Met447Thr,3) Uncertain significance,764709
--4.0911527,rpoC_p.Met733Ile,3) Uncertain significance,765568
--4.1503496,rpoC_p.Pro1040Arg,3) Uncertain significance,766488
--4.095392,rpoC_p.Leu1134Val,3) Uncertain significance,766769
--4.101182,rpoC_p.Ile34Val,3) Uncertain significance,763469
--4.0908313,rpoC_p.Arg506Gln,3) Uncertain significance,764886
--4.0999713,rpoC_p.Arg641Gln,3) Uncertain significance,765291
--4.0964217,rpoC_p.Val626Ile,3) Uncertain significance,765245
--4.093603,rpoC_p.Val629Met,3) Uncertain significance,765254
--4.094267,rpoC_p.Val684Gly,3) Uncertain significance,765420
--4.094729,rpoC_p.Val684Ile,3) Uncertain significance,765419
--3.9890308,rpoC_p.Val709Phe,3) Uncertain significance,765494
--4.079702,rpoC_p.Val756Ile,3) Uncertain significance,765635
--4.092914,rpoC_p.Val803Leu,3) Uncertain significance,765776
--4.097586,rpoC_p.Val899Ile,3) Uncertain significance,766064
--4.09859,rpoC_p.Val930Ile,3) Uncertain significance,766157
--4.097647,rpoC_p.Val974Met,3) Uncertain significance,766289
--4.089735,rpoC_p.Trp223Arg,3) Uncertain significance,764036
--4.09037,rpoC_p.Tyr612Ser,3) Uncertain significance,765204
--4.0984006,rpoC_p.Tyr61Cys,3) Uncertain significance,763551
--4.0847,rpoC_p.Tyr704Cys,3) Uncertain significance,765480
--4.088048,rpoC_p.Tyr749His,3) Uncertain significance,765614
--4.1018147,rpoC_p.Val611Phe,3) Uncertain significance,765200
--4.0955615,rpoC_p.Val422Ala,3) Uncertain significance,764634
--4.0988955,rpoC_p.Val313Ala,3) Uncertain significance,764307
--4.0923424,rpoC_p.Val299Ile,3) Uncertain significance,764264
--4.0979285,rpoC_p.Arg741His,3) Uncertain significance,765591
--4.0989356,rpoC_p.Arg981Gly,3) Uncertain significance,766310
--4.1867323,rpoC_p.Ser1095Phe,3) Uncertain significance,766653
--4.098332,rpoC_p.Ser1242Asn,3) Uncertain significance,767094
--4.1012278,rpoC_p.Ser403Ala,3) Uncertain significance,764576
--4.10572,rpoC_p.Ser403Cys,3) Uncertain significance,764577
--4.1029954,rpoC_p.Ser614Leu,3) Uncertain significance,765210
--4.1013484,rpoC_p.Thr1262Ala,3) Uncertain significance,767153
--4.0881705,rpoC_p.Thr1284Ala,3) Uncertain significance,767219
--4.097894,rpoC_p.Thr1301Ser,3) Uncertain significance,767271
--4.131506,rpoC_p.Arg636Leu,3) Uncertain significance,765276
--4.0929646,rpoC_p.Thr16Ala,3) Uncertain significance,763415
--4.0892367,rpoC_p.Thr845Pro,3) Uncertain significance,765902
--4.0978208,rpoC_p.Thr893Ile,3) Uncertain significance,766047
--4.1012926,rpoC_p.Thr909Lys,3) Uncertain significance,766095
--4.094858,rpoC_p.Thr958Asn,3) Uncertain significance,766242
--4.0952377,rpoC_p.Val1067Ala,3) Uncertain significance,766569
--4.0853877,rpoC_p.Val1098Leu,3) Uncertain significance,766661
--4.094762,rpoC_p.Val1130Met,3) Uncertain significance,766757
--4.1016936,rpoC_p.Val1138Gly,3) Uncertain significance,766782
--4.1170473,rpoC_p.Val1272Ala,3) Uncertain significance,767184
--4.093317,rpoC_p.Val139Gly,3) Uncertain significance,763785
--4.094476,rpoC_p.Val139Ile,3) Uncertain significance,763784
--4.097732,rpoC_p.Val236Ile,3) Uncertain significance,764075
--4.099135,rpoC_p.Thr253Ile,3) Uncertain significance,764127
--4.095855,rpoC_p.Ile348Leu,3) Uncertain significance,764411
--4.100046,rpoC_p.Ile270Val,3) Uncertain significance,764177
--4.0972056,rpoC_p.Ile12Leu,3) Uncertain significance,763403
--4.0996127,rpoB_p.Tyr564Cys,3) Uncertain significance,761497
--4.0914116,rpoB_p.Tyr651His,3) Uncertain significance,761757
--4.09274,rpoC_c.-16delG,3) Uncertain significance,763353
--4.1099253,rpoC_p.Leu627dup,3) Uncertain significance,765247
--4.09368,rpoC_p.Ala1144Thr,3) Uncertain significance,766799
--4.0966587,rpoC_p.Ala1184Val,3) Uncertain significance,766920
--4.094164,rpoC_p.Ala1188Ser,3) Uncertain significance,766931
--4.093422,rpoC_p.Ala1195Val,3) Uncertain significance,766953
--4.096804,rpoC_p.Ala1201Ser,3) Uncertain significance,766970
--4.102446,rpoC_p.Ala1202Asp,3) Uncertain significance,766974
--4.1135993,rpoC_p.Ala1236Gly,3) Uncertain significance,767076
--4.040842,rpoC_p.Ala174Val,3) Uncertain significance,763890
--4.09274,rpoC_c.-17A>G,3) Uncertain significance,763353
--4.097297,rpoC_p.Ala189Thr,3) Uncertain significance,763934
--4.0936227,rpoC_p.Ala212Thr,3) Uncertain significance,764003
--4.0915065,rpoC_p.Ala448Ser,3) Uncertain significance,764711
--4.072222,rpoC_p.Ala492Pro,3) Uncertain significance,764843
--4.105221,rpoC_p.Ala521Val,3) Uncertain significance,764931
--4.1030293,rpoC_p.Ala553Val,3) Uncertain significance,765027
--4.103341,rpoC_p.Ala621Val,3) Uncertain significance,765231
--4.0907726,rpoC_p.Ala648Thr,3) Uncertain significance,765311
--4.097899,rpoC_c.-6A>C,3) Uncertain significance,763364
--4.111323,rpoC_p.Ala710Val,3) Uncertain significance,765498
--4.09096,rpoC_p.Ala773Glu,3) Uncertain significance,765687
--4.1226435,rpoB_p.Val946Gly,3) Uncertain significance,762643
--4.0901675,rpoB_p.Val895Phe,3) Uncertain significance,762489
--4.0937386,rpoB_p.Val867Ala,3) Uncertain significance,762406
--4.0964017,rpoB_p.Val865Met,3) Uncertain significance,762399
--4.0994673,rpoB_p.Thr347Ile,3) Uncertain significance,760846
--4.1006017,rpoB_p.Thr508Ala,3) Uncertain significance,761328
--4.114271,rpoB_p.Thr526Ser,3) Uncertain significance,761382
--4.086534,rpoB_p.Thr52Ser,3) Uncertain significance,759960
--4.1018324,rpoB_p.Thr653Ala,3) Uncertain significance,761763
--4.1306987,rpoB_p.Thr660Ile,3) Uncertain significance,761785
--4.1314034,rpoB_p.Thr660Asn,3) Uncertain significance,761785
--4.101211,rpoB_p.Thr756Ile,3) Uncertain significance,762073
--4.097006,rpoB_p.Val1117Leu,3) Uncertain significance,763155
--4.0933123,rpoB_p.Val1129Ala,3) Uncertain significance,763192
--4.098444,rpoB_p.Val1168Phe,3) Uncertain significance,763308
--4.096728,rpoB_p.Val179Ala,3) Uncertain significance,760342
--4.0975323,rpoC_p.Ala902Thr,3) Uncertain significance,766073
--4.097033,rpoB_p.Val179Met,3) Uncertain significance,760341
--4.1342664,rpoB_p.Val198Met,3) Uncertain significance,760398
--4.099873,rpoB_p.Val216Ile,3) Uncertain significance,760452
--4.0984426,rpoB_p.Val262Phe,3) Uncertain significance,760590
--4.0984488,rpoB_p.Val310Gly,3) Uncertain significance,760735
--4.0920153,rpoB_p.Val332Ile,3) Uncertain significance,760800
--4.089109,rpoB_p.Val33Leu,3) Uncertain significance,759903
--4.0957513,rpoB_p.Val351Ile,3) Uncertain significance,760857
--4.0687485,rpoB_p.Val44Ala,3) Uncertain significance,759937
--4.093468,rpoB_p.Val517Met,3) Uncertain significance,761355
--4.0896583,rpoB_p.Val549Ile,3) Uncertain significance,761451
--4.0955405,rpoB_p.Val77Met,3) Uncertain significance,760035
--4.0958323,rpoB_p.Val841Leu,3) Uncertain significance,762327
--4.208644,rpoB_p.Val198Leu,3) Uncertain significance,760398
--4.092774,rpoC_c.-22C>T,3) Uncertain significance,763348
--4.086,rpoC_p.Asp1093Glu,3) Uncertain significance,766648
--4.099628,rpoC_p.Asp1169Glu,3) Uncertain significance,766876
--4.092896,rpoC_p.Glu645Lys,3) Uncertain significance,765302
--4.095431,rpoC_p.Glu791Ala,3) Uncertain significance,765741
--4.1008186,rpoC_p.Glu842Ala,3) Uncertain significance,765894
--4.1217866,rpoC_p.Phe1089Ser,3) Uncertain significance,766635
--4.092567,rpoC_p.Gly1311Ser,3) Uncertain significance,767300
--4.0971932,rpoC_p.Gly13Arg,3) Uncertain significance,763406
--4.09736,rpoC_p.Gly188Ala,3) Uncertain significance,763932
--4.0934763,rpoC_p.Gly286Glu,3) Uncertain significance,764226
--4.104285,rpoC_p.Gly311Ser,3) Uncertain significance,764300
--4.072926,rpoC_p.Gly332Arg,3) Uncertain significance,764363
--4.1034217,rpoC_p.Gly411Ser,3) Uncertain significance,764600
--4.126516,rpoC_p.Gly519Asp,3) Uncertain significance,764925
--4.082583,rpoC_p.Glu49Ala,3) Uncertain significance,763515
--4.0995097,rpoC_p.Gly597Asp,3) Uncertain significance,765159
--4.1006103,rpoC_p.Gly655Val,3) Uncertain significance,765333
--4.0960155,rpoC_p.Gly680Arg,3) Uncertain significance,765407
--4.099287,rpoC_p.Gly680Val,3) Uncertain significance,765408
--4.099913,rpoC_p.Gly980Arg,3) Uncertain significance,766307
--4.1016974,rpoC_p.His145Tyr,3) Uncertain significance,763802
--4.08616,rpoC_p.His525Tyr,3) Uncertain significance,764942
--4.089787,rpoC_p.His606Gln,3) Uncertain significance,765187
--4.116339,rpoC_p.His653Gln,3) Uncertain significance,765328
--4.0962844,rpoC_p.His889Arg,3) Uncertain significance,766035
--4.0921416,rpoC_p.Ile1066Val,3) Uncertain significance,766565
--4.10346,rpoC_p.Ile1080Thr,3) Uncertain significance,766608
--4.106533,rpoC_p.Ile1270Ser,3) Uncertain significance,767178
--4.0823755,rpoC_p.Gly652Asp,3) Uncertain significance,765324
--4.0922694,rpoC_p.Glu259Lys,3) Uncertain significance,764144
--4.0961456,rpoC_p.Glu18Gln,3) Uncertain significance,763421
--4.0954576,rpoC_p.Asp192Gly,3) Uncertain significance,763944
--4.0977373,rpoC_p.Asp19Ala,3) Uncertain significance,763425
--4.095803,rpoC_p.Asp221Asn,3) Uncertain significance,764030
--4.099404,rpoC_p.Asp271Asn,3) Uncertain significance,764180
--4.0948043,rpoC_p.Asp279Gly,3) Uncertain significance,764205
--4.0925803,rpoC_p.Asp331Ala,3) Uncertain significance,764361
--4.0945444,rpoC_p.Asp462Gly,3) Uncertain significance,764754
--4.1081963,rpoC_p.Asp595Ala,3) Uncertain significance,765153
--4.0978947,rpoC_p.Asp754Ala,3) Uncertain significance,765630
--4.097503,rpoC_p.Asp795Glu,3) Uncertain significance,765754
--4.0957294,rpoC_p.Asp796Gly,3) Uncertain significance,765756
--4.09413,rpoC_p.Asp890Glu,3) Uncertain significance,766039
--4.094827,rpoC_p.Glu220Lys,3) Uncertain significance,764027
--4.078366,rpoC_p.Glu1033Ala,3) Uncertain significance,766467
--4.089952,rpoC_p.Glu1073Asp,3) Uncertain significance,766588
--4.090615,rpoC_p.Glu1096Asp,3) Uncertain significance,766657
--4.097873,rpoC_p.Glu1113Asp,3) Uncertain significance,766708
--4.09801,rpoC_p.Glu1140Gly,3) Uncertain significance,766788
--4.101683,rpoC_p.Glu1189Asp,3) Uncertain significance,766936
--4.0926013,rpoC_p.Glu126Asp,3) Uncertain significance,763747
--4.1030974,rpoC_p.Glu1277Lys,3) Uncertain significance,767198
--4.0925484,rpoC_p.Glu142Ala,3) Uncertain significance,763794
--4.0985413,rpoC_p.Glu142Gly,3) Uncertain significance,763794
--4.08144,rpoC_p.Glu171Lys,3) Uncertain significance,763880
--4.1012015,rpoC_p.Glu185Gln,3) Uncertain significance,763922
--4.0990887,rpoC_p.Glu18Asp,3) Uncertain significance,763423
--4.0930085,rpoC_p.Glu1056Asp,3) Uncertain significance,766537
--4.069971,rpoB_p.Pro45Leu,3) Uncertain significance,759940
--4.086079,rpoB_p.Thr399Ile,3) Uncertain significance,761002
--4.1078486,rpoB_p.Arg552His,3) Uncertain significance,761461
--3.9177566,rpoB_p.Phe424Val,3) Uncertain significance,761076
--4.0932794,rpoB_p.Val496Met,3) Uncertain significance,761292
--4.099758,rpoB_p.Glu550Gly,3) Uncertain significance,761455
--4.0797095,rpoB_p.Ile1106Thr,3) Uncertain significance,763123
--4.0963473,rpoB_p.Lys891Glu,3) Uncertain significance,762477
--4.0992413,rpoB_p.Val534Met,3) Uncertain significance,761406
--4.116762,rpoB_p.Phe971Leu,3) Uncertain significance,762717
--4.0959563,rpoB_p.His723Asp,3) Uncertain significance,761973
--3.6280618,rpoB_p.Val168Ala,3) Uncertain significance,760309
--3.4070485,rpoB_p.Ile491Met,3) Uncertain significance,761279
--4.1007476,rpoB_p.Phe503Ser,3) Uncertain significance,761314
--4.0875187,rpoB_p.Leu554Pro,3) Uncertain significance,761467
--4.1372437,rpoB_p.Ile873Phe,3) Uncertain significance,762423
--4.0928597,rpoB_p.Leu42Val,3) Uncertain significance,759930
--4.096665,rpoB_p.Arg827His,3) Uncertain significance,762286
--4.08631,rpoB_p.Tyr564His,3) Uncertain significance,761496
--4.0787244,rpoB_p.Glu481Ala,3) Uncertain significance,761248
--3.5395913,rpoB_p.Ile491Val,3) Uncertain significance,761277
--4.0934563,rpoB_p.Arg552Cys,3) Uncertain significance,761460
--4.1191387,rpoB_p.Ser874Tyr,3) Uncertain significance,762427
--4.094532,rpoB_p.Arg827Leu,3) Uncertain significance,762286
--4.1022615,rpoB_p.Thr400Ala,3) Uncertain significance,761004
--2.9758155,rpoB_p.Ile491Leu,3) Uncertain significance,761277
--4.099116,rpoB_p.Glu761Asp,3) Uncertain significance,762089
--4.1094947,rpoC_p.Met663Ile,3) Uncertain significance,765358
--4.096961,rpoB_p.Arg827Cys,3) Uncertain significance,762285
--4.087315,rpoB_p.Leu731Pro,3) Uncertain significance,761998
--4.10647,rpoC_p.Asp44Glu,3) Uncertain significance,763501
--4.0034733,rpoC_p.Ala1044Val,3) Uncertain significance,766500
--4.1013045,rpoB_p.Gln975His,3) Uncertain significance,762731
--4.0678873,rpoB_p.Ala692Thr,3) Uncertain significance,761880
--4.0948997,rpoB_p.Ile488Val,3) Uncertain significance,761268
--4.1013465,rpoB_p.Ile480Val,3) Uncertain significance,761244
--4.0869207,rpoB_p.Ala286Val,3) Uncertain significance,760663
--4.0250134,rpoB_p.Val496Leu,3) Uncertain significance,761292
--4.067228,rpoB_p.Pro45Ser,3) Uncertain significance,759939
--4.078701,rpoB_p.Arg552Leu,3) Uncertain significance,761461
--4.1385245,rpoB_p.Val496Ala,3) Uncertain significance,761293
--4.1331983,rpoB_c.-159C>T,3) Uncertain significance,759648
--4.0850067,rpoC_p.Glu948Ala,3) Uncertain significance,766212
--4.1153836,rpoC_p.Lys1082Glu,3) Uncertain significance,766613
--4.092913,rpoC_p.Val197Ile,3) Uncertain significance,763958
--4.086713,rpoB_c.-180A>C,3) Uncertain significance,759627
--4.0921845,rpoC_p.Gly1198Ser,3) Uncertain significance,766961
--4.1099157,rpoC_p.Gly980Glu,3) Uncertain significance,766308
--4.1169395,rpoC_p.Thr667Met,3) Uncertain significance,765369
--4.0750856,rpoB_p.His835Arg,3) Uncertain significance,762310
--4.084748,rpoB_p.Gln409Arg,3) Uncertain significance,761032
--4.1000123,rpoB_p.Asp574Glu,3) Uncertain significance,761528
--4.0904703,rpoB_p.Ala596Gly,3) Uncertain significance,761593
--4.103241,rpoB_p.Gly973Asp,3) Uncertain significance,762724
--4.092839,rpoB_p.Lys832Glu,3) Uncertain significance,762300
--4.0938296,rpoB_p.Leu378Arg,3) Uncertain significance,760939
--4.0979047,rpoB_p.Pro577Ala,3) Uncertain significance,761535
--4.0935388,rpoB_p.Ser254Pro,3) Uncertain significance,760566
--4.07973,rpoB_p.Thr400Asn,3) Uncertain significance,761005
--4.093404,rpoB_p.Val534Leu,3) Uncertain significance,761406
--4.091162,rpoB_p.Val736Leu,3) Uncertain significance,762012
--4.102697,rpoB_p.Asp265Gly,3) Uncertain significance,760600
--4.0942807,rpoB_p.Lys37Arg,3) Uncertain significance,759916
--4.093431,rpoB_c.-21G>C,3) Uncertain significance,759786
--4.0931726,rpoB_p.Pro358Leu,3) Uncertain significance,760879
--4.0736156,rpoB_p.Gly504dup,3) Uncertain significance,761315
--4.093871,rpoB_p.Asp520Ala,3) Uncertain significance,761365
--4.069853,rpoB_p.Gly456Ser,3) Uncertain significance,761172
--4.09055,rpoB_p.Gly46Val,3) Uncertain significance,759943
--4.0997043,rpoB_p.Ile480Thr,3) Uncertain significance,761245
--4.090259,rpoB_p.Lys799Gln,3) Uncertain significance,762201
--4.0990195,rpoB_p.Leu293Ser,3) Uncertain significance,760684
--4.105552,rpoB_p.Gln1056Arg,3) Uncertain significance,762973
--4.103585,rpoB_p.Arg273Cys,3) Uncertain significance,760623
--4.0905004,rpoB_p.Ser582Ala,3) Uncertain significance,761550
--4.1252275,rpoB_p.Val113Ile,3) Uncertain significance,760143
--4.107217,rpoB_p.Glu460Gly,3) Uncertain significance,761185
--3.5037453,rpoB_p.Ser493Leu,3) Uncertain significance,761284
--4.070781,rpoB_p.Arg167Cys,3) Uncertain significance,760305
--4.04608,rpoB_p.Glu207Lys,3) Uncertain significance,760425
--4.0886083,rpoB_p.Ile588Val,3) Uncertain significance,761568
--4.088568,rpoB_p.Pro45Arg,3) Uncertain significance,759940
--3.9549634,rpoB_p.Gln172Arg,3) Uncertain significance,760321
--4.094138,rpoB_p.Thr400Ser,3) Uncertain significance,761005
--4.0955205,rpoB_p.Ala584Asp,3) Uncertain significance,761557
--4.0925136,rpoB_p.Ala753Val,3) Uncertain significance,762064
--4.0921674,rpoB_p.Asp571Ala,3) Uncertain significance,761518
--3.9513757,rpoB_p.Phe424Leu,3) Uncertain significance,761076
--3.978533,rpoB_p.Val170Ala,3) Uncertain significance,760315
--3.48012,rpoB_p.Ile491Thr,3) Uncertain significance,761278
--4.076197,rpoB_p.Pro45Thr,3) Uncertain significance,759939
--4.112704,rpoB_p.Arg219Cys,3) Uncertain significance,760461
--4.2243524,rpoB_c.-83A>G,3) Uncertain significance,759724
--4.079784,rpoB_p.Val359Ala,3) Uncertain significance,760882
--4.097283,rpoB_p.Glu592Asp,3) Uncertain significance,761582
--4.0924153,rpoB_p.His1028Tyr,3) Uncertain significance,762888
--4.1004205,rpoB_p.Leu862Arg,3) Uncertain significance,762391
--4.100069,rpoB_p.Thr159Pro,3) Uncertain significance,760281
--4.0868096,rpoB_p.Thr52Pro,3) Uncertain significance,759960
--4.094297,rpoB_p.Val534Ala,3) Uncertain significance,761407
--4.097419,rpoB_p.Val562Ala,3) Uncertain significance,761491
--4.0968156,rpoB_p.Tyr308Cys,3) Uncertain significance,760729
--4.084005,rpoB_p.Met920Val,3) Uncertain significance,762564
--4.09112,rpoB_p.Thr756Ala,3) Uncertain significance,762072
--4.09909,rpoB_p.Val562Met,3) Uncertain significance,761490
--4.0898013,rpoB_p.Tyr308Asp,3) Uncertain significance,760728
--3.5955405,rpoB_p.Pro454Arg,3) Uncertain significance,761167
--4.086268,rpoB_p.Pro45Gln,3) Uncertain significance,759940
--4.0873,rpoB_p.Pro700Arg,3) Uncertain significance,761905
--4.0968423,rpoB_p.Pro834Thr,3) Uncertain significance,762306
--4.112411,rpoB_p.Pro856Leu,3) Uncertain significance,762373
--4.115984,rpoB_p.Gln1080Arg,3) Uncertain significance,763045
--4.0391054,rpoB_p.Gln172Lys,3) Uncertain significance,760320
--4.0954413,rpoB_p.Gln19Arg,3) Uncertain significance,759862
--4.0896425,rpoB_p.Gln226Glu,3) Uncertain significance,760482
--4.087543,rpoB_p.Gln51Pro,3) Uncertain significance,759958
--4.114652,rpoB_p.Gln980Lys,3) Uncertain significance,762744
--4.0940967,rpoB_p.Gln980Arg,3) Uncertain significance,762745
--4.0933795,rpoB_p.Arg219Ser,3) Uncertain significance,760461
--4.090176,rpoB_p.Arg224Cys,3) Uncertain significance,760476
--4.0950065,rpoB_p.Arg578Gly,3) Uncertain significance,761538
--4.0943456,rpoB_p.Arg578His,3) Uncertain significance,761539
--4.0990186,rpoB_p.Arg607Ser,3) Uncertain significance,761625
--4.1140504,rpoB_p.Arg665Trp,3) Uncertain significance,761799
--4.0954385,rpoB_p.Arg824Cys,3) Uncertain significance,762276
--4.0957446,rpoB_p.Arg824Leu,3) Uncertain significance,762277
--4.092302,rpoB_p.Arg827Ser,3) Uncertain significance,762285
--4.0901017,rpoB_p.Arg845Gln,3) Uncertain significance,762340
--4.097694,rpoB_p.Arg845Trp,3) Uncertain significance,762339
--4.0991826,rpoB_p.Arg871His,3) Uncertain significance,762418
--4.1130104,rpoB_p.Arg871Leu,3) Uncertain significance,762418
--4.096052,rpoB_p.Pro280Ser,3) Uncertain significance,760644
--4.098049,rpoB_p.Pro280Leu,3) Uncertain significance,760645
--4.0919137,rpoB_p.Asn75Thr,3) Uncertain significance,760030
--4.101903,rpoB_p.Asn604Ser,3) Uncertain significance,761617
--4.092105,rpoB_p.His533Asn,3) Uncertain significance,761403
--4.0933433,rpoB_p.His674Asn,3) Uncertain significance,761826
--4.104052,rpoB_p.His835Asp,3) Uncertain significance,762309
--4.092336,rpoB_p.His835Pro,3) Uncertain significance,762310
--4.0934386,rpoB_p.Ile1035Thr,3) Uncertain significance,762910
--4.0955076,rpoB_p.Ile1035Val,3) Uncertain significance,762909
--4.1015353,rpoB_p.Ile1046Val,3) Uncertain significance,762942
--4.092068,rpoB_p.Ile1111Val,3) Uncertain significance,763137
--4.1026473,rpoB_p.Ile199Thr,3) Uncertain significance,760402
--3.9842901,rpoB_p.Ile488Met,3) Uncertain significance,761270
--3.67116,rpoB_p.Ile491Ser,3) Uncertain significance,761278
--4.0883727,rpoB_p.Ser567Pro,3) Uncertain significance,761505
--4.101355,rpoB_p.Ile909Val,3) Uncertain significance,762531
--4.09775,rpoB_p.Lys1095Arg,3) Uncertain significance,763090
--4.0906377,rpoB_p.Lys110Arg,3) Uncertain significance,760135
--4.09648,rpoB_p.Lys274Glu,3) Uncertain significance,760626
--4.102465,rpoB_p.Lys274Asn,3) Uncertain significance,760628
--4.0964003,rpoB_p.Lys832Gln,3) Uncertain significance,762300
--4.0865107,rpoB_p.Lys891Thr,3) Uncertain significance,762478
--4.113469,rpoB_p.Leu232Arg,3) Uncertain significance,760501
--4.067222,rpoB_p.Leu42Phe,3) Uncertain significance,759930
--4.0957913,rpoB_p.Leu775Pro,3) Uncertain significance,762130
--4.0986037,rpoB_p.Met707Thr,3) Uncertain significance,761926
--4.0969815,rpoB_p.Asn135Asp,3) Uncertain significance,760209
--4.101176,rpoB_p.Asn501Lys,3) Uncertain significance,761309
--4.106445,rpoB_p.Lys1054Arg,3) Uncertain significance,762967
--4.0858493,rpoB_p.His1028Asp,3) Uncertain significance,762888
--4.0904393,rpoB_p.Ser582Thr,3) Uncertain significance,761550
--4.100529,rpoB_p.Ser88Pro,3) Uncertain significance,760068
--4.090652,rpoB_p.Pro700Leu,3) Uncertain significance,761905
--4.099655,rpoB_p.Ser195Arg,3) Uncertain significance,760389
--4.084694,rpoB_p.Thr676Pro,3) Uncertain significance,761832
--4.1061645,rpoB_p.Thr9Ile,3) Uncertain significance,759832
--4.0977015,rpoB_p.Met121Ile,3) Uncertain significance,760169
--4.1028247,rpoB_p.Gly945Glu,3) Uncertain significance,762640
--4.0987744,rpoB_p.Asp545Glu,3) Uncertain significance,761441
--4.112585,rpoB_p.His194Tyr,3) Uncertain significance,760386
--4.104536,rpoB_c.-6T>C,3) Uncertain significance,759801
--4.101648,rpoB_p.His343Gln,3) Uncertain significance,760835
--4.131595,rpoB_p.Arg791Cys,3) Uncertain significance,762177
--3.8228586,rpoB_p.Pro454Ser,3) Uncertain significance,761166
--4.106467,rpoB_p.His674Gln,3) Uncertain significance,761828
--4.0792994,rpoB_p.His1028Arg,3) Uncertain significance,762889
--4.0964794,rpoB_p.Ala753Thr,3) Uncertain significance,762063
--4.0882716,rpoB_p.Thr399Asn,3) Uncertain significance,761002
--4.101878,rpoB_c.-45T>G,3) Uncertain significance,759762
--4.0826564,rpoB_p.Thr482Ile,3) Uncertain significance,761251
--4.105761,rpoB_p.Thr508Pro,3) Uncertain significance,761328
--4.094167,rpoB_p.Thr585Ala,3) Uncertain significance,761559
--4.0905375,rpoB_p.Thr676Ala,3) Uncertain significance,761832
--4.099506,rpoB_p.Thr742Ala,3) Uncertain significance,762030
--4.0883756,rpoB_p.Thr928Asn,3) Uncertain significance,762589
--3.7948837,rpoB_p.Val168Gly,3) Uncertain significance,760309
--4.011728,rpoB_p.Val170Gly,3) Uncertain significance,760315
--4.1259885,rpoB_p.Val228Ile,3) Uncertain significance,760488
--4.090764,rpoB_p.Val355Ile,3) Uncertain significance,760869
--4.172778,rpoB_p.Ser874Phe,3) Uncertain significance,762427
--4.0982385,rpoB_p.Val394Leu,3) Uncertain significance,760986
--4.0956044,rpoB_p.Val496Gly,3) Uncertain significance,761293
--4.1018767,rpoB_p.Val523Leu,3) Uncertain significance,761373
--4.099266,rpoB_p.Val534Gly,3) Uncertain significance,761407
--4.0899353,rpoB_p.Val797Leu,3) Uncertain significance,762195
--4.0928044,rpoB_p.Val833Met,3) Uncertain significance,762303
--4.0918727,rpoB_p.Val867Met,3) Uncertain significance,762405
--4.1048093,rpoB_p.Val996Ala,3) Uncertain significance,762793
--4.0959773,rpoB_p.Val996Gly,3) Uncertain significance,762793
--4.09795,rpoB_p.Tyr1015Cys,3) Uncertain significance,762850
--4.0954742,rpoB_p.Tyr474His,3) Uncertain significance,761226
--4.0968313,rpoB_p.Tyr510His,3) Uncertain significance,761334
--4.056466,rpoB_p.Val44Gly,3) Uncertain significance,759937
--4.0923753,rpoB_p.Gly992Arg,3) Uncertain significance,762780
--4.094255,rpoB_p.Gly981Asp,3) Uncertain significance,762748
--4.1045527,rpoB_p.Gly915Ser,3) Uncertain significance,762549
--4.0958266,rpoB_p.Asn539Lys,3) Uncertain significance,761423
--4.1014285,rpoB_p.Asn673Ser,3) Uncertain significance,761824
--4.08378,rpoB_p.Pro483Ser,3) Uncertain significance,761253
--4.1088767,rpoB_p.Pro768Leu,3) Uncertain significance,762109
--4.08981,rpoB_p.Gln401Arg,3) Uncertain significance,761008
--4.1089907,rpoB_p.Arg1008Cys,3) Uncertain significance,762828
--4.100251,rpoB_p.Arg219Leu,3) Uncertain significance,760462
--4.0876675,rpoB_p.Arg225Gly,3) Uncertain significance,760479
--4.095453,rpoB_p.Ser540Pro,3) Uncertain significance,761424
--4.0898347,rpoB_p.Thr399Ala,3) Uncertain significance,761001
--4.0929446,rpoB_p.Thr399Pro,3) Uncertain significance,761001
--4.008613,rpoB_p.Val168Met,3) Uncertain significance,760308
--4.0904155,rpoB_p.Val262Ala,3) Uncertain significance,760591
--4.0927606,rpoB_p.Val305Ile,3) Uncertain significance,760719
--4.0843987,rpoB_p.Val50Gly,3) Uncertain significance,759955
--4.094965,rpoB_p.Val800Ala,3) Uncertain significance,762205
--4.118084,rpoB_p.Val970Ala,3) Uncertain significance,762715
--4.1149673,rpoB_p.Val970Met,3) Uncertain significance,762714
--4.0999875,rpoB_p.Gly217Ser,3) Uncertain significance,760455
--4.0968127,rpoB_p.Asn1155Ser,3) Uncertain significance,763270
--4.0651355,rpoB_p.Pro483Leu,3) Uncertain significance,761254
--3.991349,rpoB_p.Arg167His,3) Uncertain significance,760306
--4.1009645,rpoB_p.Ala960Glu,3) Uncertain significance,762685
--3.7741783,rpoB_p.Pro454His,3) Uncertain significance,761167
--4.0919976,rpoB_p.Pro30Ala,3) Uncertain significance,759894
--4.1065264,rpoB_p.Asn487His,3) Uncertain significance,761265
--4.095615,rpoB_p.Asn24Lys,3) Uncertain significance,759878
--4.103013,rpoB_p.Met587Thr,3) Uncertain significance,761566
--4.097916,rpoB_p.Asp92Gly,3) Uncertain significance,760081
--4.1286697,rpoB_p.Asn487Ser,3) Uncertain significance,761266
--4.0764666,rpoB_p.Pro45Ala,3) Uncertain significance,759939
--4.1103435,rpoB_p.Ser672Phe,3) Uncertain significance,761821
--4.094933,rpoB_p.His674Arg,3) Uncertain significance,761827
--4.0964346,rpoB_p.Asp634Gly,3) Uncertain significance,761707
--3.8635554,rpoB_p.Lys422_Thr427del,3) Uncertain significance,761068
--4.0962915,rpoB_p.Ala538Val,3) Uncertain significance,761419
--4.0961576,rpoB_p.Ala584Gly,3) Uncertain significance,761557
--4.0938444,rpoB_c.-87C>T,3) Uncertain significance,759720
--4.102798,rpoB_p.Asp595Glu,3) Uncertain significance,761591
--4.093513,rpoB_p.His749Tyr,3) Uncertain significance,762051
--4.1011024,rpoB_p.Glu156Gly,3) Uncertain significance,760273
--4.093635,rpoB_p.Phe151Leu,3) Uncertain significance,760259
--3.694038,rpoB_p.Gly453Ala,3) Uncertain significance,761164
--4.0938735,rpoB_p.Gly79Ser,3) Uncertain significance,760041
--4.087465,rpoB_p.Gly836Ser,3) Uncertain significance,762312
--4.034651,rpoB_p.Ile488Leu,3) Uncertain significance,761268
--4.089724,rpoB_p.Ile90Leu,3) Uncertain significance,760074
--4.09014,rpoB_p.Lys1102Thr,3) Uncertain significance,763111
--3.9112966,rpoB_p.Leu173Pro,3) Uncertain significance,760324
--3.9972436,rpoB_p.Leu490Val,3) Uncertain significance,761274
--4.089432,rpoB_p.Leu525Pro,3) Uncertain significance,761380
--4.093255,rpoB_p.Leu554Val,3) Uncertain significance,761466
--4.1000915,rpoB_p.Leu778Val,3) Uncertain significance,762138
--4.0913873,rpoB_p.Glu807Gly,3) Uncertain significance,762226
--4.0994344,rpoB_p.Met390Thr,3) Uncertain significance,760975
--4.0956063,rpoB_p.Asp631Gly,3) Uncertain significance,761698
--4.0852337,rpoB_p.Glu1140Gln,3) Uncertain significance,763224
--4.087112,rpoB_p.Glu166Gly,3) Uncertain significance,760303
--4.029908,rpoB_p.Glu166Lys,3) Uncertain significance,760302
--4.085177,rpoB_p.Glu284Gly,3) Uncertain significance,760657
--4.0921807,rpoB_p.Glu291Lys,3) Uncertain significance,760677
--4.1015825,rpoB_p.Glu330Asp,3) Uncertain significance,760796
--4.1028495,rpoB_p.Glu377Val,3) Uncertain significance,760936
--4.112298,rpoB_p.Glu423Ala,3) Uncertain significance,761074
--4.0507426,rpoB_p.Glu423Gly,3) Uncertain significance,761074
--4.098516,rpoB_p.Glu550Lys,3) Uncertain significance,761454
--4.1035056,rpoB_p.Glu563Ala,3) Uncertain significance,761494
--4.0982904,rpoB_p.Asp571Tyr,3) Uncertain significance,761517
--4.090565,rpoB_p.Glu750Gln,3) Uncertain significance,762054
--4.09555,rpoB_p.Glu821Val,3) Uncertain significance,762268
--4.0978575,rpoB_p.Glu82Gly,3) Uncertain significance,760051
--4.0893946,rpoB_p.Glu896Lys,3) Uncertain significance,762492
--4.0968738,rpoB_p.Phe424Cys,3) Uncertain significance,761077
--4.108385,rpoB_p.Phe503Val,3) Uncertain significance,761313
--4.0928125,rpoB_p.Gly158Ser,3) Uncertain significance,760278
--4.0973196,rpoB_p.Gly203Arg,3) Uncertain significance,760413
--3.7833147,rpoB_p.Gly453Arg,3) Uncertain significance,761163
--4.095407,rpoB_c.-50G>A,3) Uncertain significance,759757
--4.0915127,rpoB_p.Gly602Ala,3) Uncertain significance,761611
--4.087204,rpoB_p.Gly699Ser,3) Uncertain significance,761901
--4.097006,rpoB_p.Gly890Cys,3) Uncertain significance,762474
--4.0917764,rpoB_p.Glu807Gln,3) Uncertain significance,762225
--4.0943975,rpoB_p.Val581Met,3) Uncertain significance,761547
--4.09987,rpoB_p.Asp531Tyr,3) Uncertain significance,761397
--4.096347,rpoB_p.Asp363Asn,3) Uncertain significance,760893
--4.0476832,rpoB_p.Ala670dup,3) Uncertain significance,761813
--4.1020694,rpoB_p.Gly876dup,3) Uncertain significance,762431
--4.1013694,rpoB_p.Ala1055Pro,3) Uncertain significance,762969
--4.1009817,rpoB_p.Ala1153Val,3) Uncertain significance,763264
--4.092428,rpoB_p.Ala2Thr,3) Uncertain significance,759810
--4.0961757,rpoB_c.-42A>G,3) Uncertain significance,759765
--3.9895182,rpoB_p.Ala498Val,3) Uncertain significance,761299
--4.0924015,rpoB_p.Ala538Pro,3) Uncertain significance,761418
--4.1047726,rpoB_p.Ala559Val,3) Uncertain significance,761482
--4.1097236,rpoB_p.Ala599Thr,3) Uncertain significance,761601
--4.149687,rpoB_p.Ala599Val,3) Uncertain significance,761602
--4.100332,rpoB_p.Asp531Glu,3) Uncertain significance,761399
--4.093493,rpoB_p.Ala628Pro,3) Uncertain significance,761688
--4.1001496,rpoB_p.Ala708Ser,3) Uncertain significance,761928
--4.1015325,rpoB_c.-90A>G,3) Uncertain significance,759717
--4.1001906,rpoB_p.Ala934Thr,3) Uncertain significance,762606
--4.091723,rpoB_p.Ala951Thr,3) Uncertain significance,762657
--4.100823,rpoB_p.Ala974Thr,3) Uncertain significance,762726
--4.0912805,rpoB_c.-37C>G,3) Uncertain significance,759770
--4.099734,rpoB_c.-4C>T,3) Uncertain significance,759803
--4.097078,rpoB_p.Cys681Arg,3) Uncertain significance,761847
--4.105582,rpoB_p.Cys701Trp,3) Uncertain significance,761909
--4.124688,rpoB_p.Asp186Ala,3) Uncertain significance,760363
--4.096418,rpoB_p.Asp190Ala,3) Uncertain significance,760375
--4.096546,rpoB_p.Asp301Asn,3) Uncertain significance,760707
--4.0938683,rpoB_p.Ala638Gly,3) Uncertain significance,761719
--4.0895033,rpoB_p.Glu320Asp,3) Uncertain significance,760766
--4.092359,rpoB_c.-127G>A,3) Uncertain significance,759680
--4.086657,rpoB_p.Gly675Asp,3) Uncertain significance,761830
--4.093209,rpoB_p.Ile783Val,3) Uncertain significance,762153
--4.0988765,rpoB_p.Ile910Val,3) Uncertain significance,762534
--4.1031737,rpoB_p.Leu80Val,3) Uncertain significance,760044
--4.090923,rpoB_p.Asn163Asp,3) Uncertain significance,760293
--4.099824,rpoB_p.Pro954Arg,3) Uncertain significance,762667
--3.6901503,rpoB_p.Ser493Trp,3) Uncertain significance,761284
--4.1106715,rpoB_c.-134T>G,3) Uncertain significance,759673
--4.095905,rpoB_p.Val129Gly,3) Uncertain significance,760192
--4.095238,rpoB_p.Tyr572Cys,3) Uncertain significance,761521
--4.098819,rpoC_p.Ala1299Val,3) Uncertain significance,767265
--4.0214424,rpoC_p.Ala172Gly,3) Uncertain significance,763884
--4.115811,rpoC_p.Ala316Thr,3) Uncertain significance,764315
--4.092141,rpoC_p.Ala994Thr,3) Uncertain significance,766349
--4.0962377,rpoC_p.Asp795Gly,3) Uncertain significance,765753
--4.100506,rpoC_p.Asp907Gly,3) Uncertain significance,766089
--4.0935493,rpoC_p.Glu1140Asp,3) Uncertain significance,766789
--4.0875473,rpoC_p.Glu591Gln,3) Uncertain significance,765140
--4.0989547,rpoC_p.Glu932Lys,3) Uncertain significance,766163
--4.089657,rpoC_c.-15G>A,3) Uncertain significance,763355
--4.097368,rpoB_p.Glu156Asp,3) Uncertain significance,760274
--4.094786,rpoB_c.-62C>T,3) Uncertain significance,759745
--4.1003594,rpoB_c.-181C>T,3) Uncertain significance,759626
--4.1296377,rpoC_p.Met541Ile,3) Uncertain significance,764992
--4.0945916,rpoC_p.Met581Ile,3) Uncertain significance,765112
--4.0978603,rpoC_p.Asn1246Asp,3) Uncertain significance,767105
--4.0910606,rpoC_p.Asn5Asp,3) Uncertain significance,763382
--4.101853,rpoC_p.Pro514Leu,3) Uncertain significance,764910
--4.093351,rpoC_p.Arg1163His,3) Uncertain significance,766857
--4.1000943,rpoC_p.Arg247Cys,3) Uncertain significance,764108
--4.08449,rpoC_p.Arg478Cys,3) Uncertain significance,764801
--4.086536,rpoC_p.Arg752His,3) Uncertain significance,765624
--4.1028523,rpoC_p.Arg963Cys,3) Uncertain significance,766256
--4.0927444,rpoC_p.Ser1172Ala,3) Uncertain significance,766883
--4.0930386,rpoC_p.Ser1294Asn,3) Uncertain significance,767250
--4.1035886,rpoC_p.Gly655Ser,3) Uncertain significance,765332
--4.1102614,rpoC_p.Thr909Met,3) Uncertain significance,766095
--4.120482,rpoC_p.Tyr722Cys,3) Uncertain significance,765534
--4.1253676,rpoB_p.Ala1002Pro,3) Uncertain significance,762810
--4.0931025,rpoC_p.Val1049Phe,3) Uncertain significance,766514
--4.1021137,rpoC_p.Leu679Arg,3) Uncertain significance,765405
--4.0937934,rpoC_p.Asn1239Asp,3) Uncertain significance,767084
--4.104119,rpoC_p.Gln657Arg,3) Uncertain significance,765339
--4.0958495,rpoC_p.Gln1273Arg,3) Uncertain significance,767187
--4.091433,rpoC_p.Gln303Leu,3) Uncertain significance,764277
--4.0658174,rpoC_p.Arg741Cys,3) Uncertain significance,765590
--4.0884748,rpoC_p.Arg912His,3) Uncertain significance,766104
--4.0934987,rpoC_p.Val692Ala,3) Uncertain significance,765444
--4.098762,rpoB_p.Ala943Thr,3) Uncertain significance,762633
--4.0957313,rpoB_p.Asp3Gly,3) Uncertain significance,759814
--4.0937295,rpoB_p.Gly28Arg,3) Uncertain significance,759888
--4.092534,rpoB_p.Met573Thr,3) Uncertain significance,761524
--4.097742,rpoB_p.Pro27His,3) Uncertain significance,759886
--3.685313,rpoB_p.Pro454Leu,3) Uncertain significance,761167
--4.09178,rpoB_p.Val613Phe,3) Uncertain significance,761643
--4.1006665,rpoC_p.Glu1073Lys,3) Uncertain significance,766586
--4.117371,rpoC_p.Met559Ile,3) Uncertain significance,765046
--4.09954,rpoC_p.Val1135Ala,3) Uncertain significance,766773
--4.0946307,rpoB_c.-113C>T,3) Uncertain significance,759694
--4.0943403,rpoB_p.Glu721Lys,3) Uncertain significance,761967
--4.107367,rpoC_p.Thr227Ile,3) Uncertain significance,764049
--4.0911484,rpoC_p.Leu737Arg,3) Uncertain significance,765579
--4.0952306,rpoC_p.Ile802Val,3) Uncertain significance,765773
--4.0923057,rpoC_c.-28C>A,3) Uncertain significance,763342
--4.0960593,rpoB_p.Ser936Arg,3) Uncertain significance,762612
--4.0209165,rpoC_p.Arg173Gln,3) Uncertain significance,763887
--4.102978,rpoB_c.-173A>G,3) Uncertain significance,759634
--4.073227,rpoB_c.-66C>T,3) Uncertain significance,759741
--4.1195893,rpoB_p.Asp107Glu,3) Uncertain significance,760127
--4.090091,rpoB_p.Asp53Asn,3) Uncertain significance,759963
--4.100904,rpoB_p.Asp955Asn,3) Uncertain significance,762669
--4.0939946,rpoB_p.Glu1145Gly,3) Uncertain significance,763240
--4.102734,rpoB_p.Glu344Gln,3) Uncertain significance,760836
--4.0932164,rpoB_p.Phe295Leu,3) Uncertain significance,760691
--4.0901313,rpoB_p.Ile965Val,3) Uncertain significance,762699
--4.0348225,rpoC_p.Pro481Ser,3) Uncertain significance,764810
--4.0789413,rpoB_p.Leu48Phe,3) Uncertain significance,759948
--4.1222596,rpoB_c.-160T>C,3) Uncertain significance,759647
--4.0953765,rpoC_p.Ala929Gly,3) Uncertain significance,766155
--4.0855684,rpoC_p.His525Gln,3) Uncertain significance,764944
--4.0959215,rpoC_p.Ile1264Thr,3) Uncertain significance,767160
--4.098533,rpoC_p.Leu151Phe,3) Uncertain significance,763820
--4.097423,rpoC_p.Arg1163Cys,3) Uncertain significance,766856
--4.084064,rpoC_p.Arg741Ser,3) Uncertain significance,765590
--4.0991883,rpoB_p.Glu639Gly,3) Uncertain significance,761722
--4.101654,rpoB_p.Asn292Ser,3) Uncertain significance,760681
--4.0916524,rpoB_p.Ser12Thr,3) Uncertain significance,759841
--4.0985017,rpoC_p.Leu14Phe,3) Uncertain significance,763409
--4.1029773,rpoC_p.Ile12Val,3) Uncertain significance,763403
--4.1029544,rpoC_p.Ile1132Met,3) Uncertain significance,766765
--4.0984397,rpoB_c.-169_-168insA,3) Uncertain significance,759638
--4.104754,rpoB_p.Ala334Val,3) Uncertain significance,760807
--4.0927844,rpoB_c.-53A>G,3) Uncertain significance,759754
--4.1011667,rpoB_p.Ala977Thr,3) Uncertain significance,762735
--4.099145,rpoB_p.Ala998Val,3) Uncertain significance,762799
--4.0906606,rpoB_c.-126C>G,3) Uncertain significance,759681
--4.107664,rpoB_c.-44C>T,3) Uncertain significance,759763
--4.099653,rpoB_p.Cys681Gly,3) Uncertain significance,761847
--4.09741,rpoB_p.Asp209Asn,3) Uncertain significance,760431
--4.0934687,rpoB_p.Asp270Glu,3) Uncertain significance,760616
--4.097001,rpoB_p.Glu132Asp,3) Uncertain significance,760202
--4.106013,rpoB_p.Glu507Lys,3) Uncertain significance,761325
--4.0933623,rpoB_p.Glu66Lys,3) Uncertain significance,760002
--4.1109195,rpoC_c.-38C>T,3) Uncertain significance,763332
--4.0917106,rpoC_p.Asp660Asn,3) Uncertain significance,765347
--4.1016645,rpoC_p.Asp795Tyr,3) Uncertain significance,765752
--4.093702,rpoC_p.Glu1073Gln,3) Uncertain significance,766586
--4.093577,rpoC_p.Glu1196Lys,3) Uncertain significance,766955
--4.099365,rpoC_p.Glu1289Ala,3) Uncertain significance,767235
--4.0988865,rpoC_p.Glu1289Gly,3) Uncertain significance,767235
--4.0927258,rpoC_p.Glu215Ala,3) Uncertain significance,764013
--4.097969,rpoC_p.Glu791Gln,3) Uncertain significance,765740
--4.094911,rpoC_p.Glu894Gly,3) Uncertain significance,766050
--4.0948973,rpoC_p.Phe1061Leu,3) Uncertain significance,766552
--4.105478,rpoC_p.Phe1175Leu,3) Uncertain significance,766892
--4.096267,rpoC_p.Ala85Thr,3) Uncertain significance,763622
--4.094195,rpoC_p.Phe831Leu,3) Uncertain significance,765860
--4.0857253,rpoC_p.Gly1026Ala,3) Uncertain significance,766446
--4.092326,rpoC_p.Gly1197Arg,3) Uncertain significance,766958
--4.0949106,rpoC_p.Gly254Ser,3) Uncertain significance,764129
--4.09685,rpoC_c.-40G>A,3) Uncertain significance,763330
--4.081302,rpoC_p.Gly594Arg,3) Uncertain significance,765149
--4.094769,rpoC_p.Gly63Ala,3) Uncertain significance,763557
--4.1084228,rpoC_p.His767Pro,3) Uncertain significance,765669
--4.1067233,rpoB_p.Ala686Thr,3) Uncertain significance,761862
--4.095227,rpoC_p.Ala661Thr,3) Uncertain significance,765350
--4.099398,rpoC_p.Ala618Val,3) Uncertain significance,765222
--4.0796595,rpoB_p.Phe208Leu,3) Uncertain significance,760428
--4.0999207,rpoB_p.Phe93Leu,3) Uncertain significance,760085
--4.091077,rpoB_c.-150G>A,3) Uncertain significance,759657
--4.1107864,rpoB_c.-176G>A,3) Uncertain significance,759631
--4.0788856,rpoB_c.-40G>C,3) Uncertain significance,759767
--4.105573,rpoB_p.Gly516Asp,3) Uncertain significance,761353
--4.0867333,rpoB_p.Gly890Asp,3) Uncertain significance,762475
--4.0937495,rpoB_p.His656Gln,3) Uncertain significance,761774
--4.0928116,rpoB_p.Ile506Val,3) Uncertain significance,761322
--4.093675,rpoB_p.Ile892Thr,3) Uncertain significance,762481
--4.0953493,rpoB_p.Lys939Gln,3) Uncertain significance,762621
--4.110909,rpoB_p.Lys944Asn,3) Uncertain significance,762638
--4.0942483,rpoC_p.Ala648Asp,3) Uncertain significance,765312
--4.097243,rpoB_p.Met153Thr,3) Uncertain significance,760264
--4.097178,rpoB_p.Asn963Ser,3) Uncertain significance,762694
--4.0906906,rpoB_p.Pro30Ser,3) Uncertain significance,759894
--4.0999885,rpoB_p.Pro682Ala,3) Uncertain significance,761850
--4.1034694,rpoB_p.Arg661Gln,3) Uncertain significance,761788
--4.104915,rpoB_p.Ser1124Ala,3) Uncertain significance,763176
--4.1214194,rpoB_c.-160T>G,3) Uncertain significance,759647
--4.1344028,rpoB_c.-169T>C,3) Uncertain significance,759638
--4.096326,rpoB_p.Thr215Ala,3) Uncertain significance,760449
--4.0876226,rpoB_p.Tyr866His,3) Uncertain significance,762402
--4.111771,rpoC_c.-42_-41insT,3) Uncertain significance,763328
--4.1352315,rpoC_p.Ala1037Val,3) Uncertain significance,766479
--4.1143613,rpoC_p.Ala1304Val,3) Uncertain significance,767280
--4.0985656,rpoB_p.Met587Ile,3) Uncertain significance,761567
--4.104581,rpoB_p.Ala69Pro,3) Uncertain significance,760011
--4.0917015,rpoC_p.Gly1072Asp,3) Uncertain significance,766584
--4.094936,rpoC_p.Met92Thr,3) Uncertain significance,763644
--4.0974083,rpoB_p.Thr350Ile,3) Uncertain significance,760855
--4.100466,rpoC_p.His748Pro,3) Uncertain significance,765612
--4.1007214,rpoC_p.Met515Ile,3) Uncertain significance,764914
--4.111863,rpoC_p.Gln440Arg,3) Uncertain significance,764688
--4.1004615,rpoC_p.Gln22Arg,3) Uncertain significance,763434
--4.090094,rpoC_p.Thr225Asn,3) Uncertain significance,764043
--4.034268,rpoB_p.Asp515Tyr,3) Uncertain significance,761349
--4.0753894,rpoC_p.Ala230Val,3) Uncertain significance,764058
--4.0960107,rpoC_p.Ile1264Val,3) Uncertain significance,767159
--4.0985065,rpoC_p.Leu151Arg,3) Uncertain significance,763821
--4.1078653,rpoB_p.Glu563Asp,3) Uncertain significance,761495
--4.02289,rpoC_p.Pro481Thr,3) Uncertain significance,764810
--4.091443,rpoB_p.Met655Thr,3) Uncertain significance,761770
--4.080896,rpoC_p.Thr958Ile,3) Uncertain significance,766242
--4.1054473,rpoC_p.Arg641Trp,3) Uncertain significance,765290
--4.0972605,rpoB_p.Ser16Cys,3) Uncertain significance,759852
--4.0945764,rpoC_p.Ser1100Ala,3) Uncertain significance,766667
--4.1140556,rpoB_p.Asp103Glu,3) Uncertain significance,760115
--4.0895267,rpoC_p.Ser1287Gln,3) Uncertain significance,"767228,767229"
--4.108472,rpoC_p.Ser308Phe,3) Uncertain significance,"764292,764293"
-0.039531797,rpoB_p.Ile491Tyr,3) Uncertain significance,"761277,761278"
--4.095988,rpoB_p.Ile542Lys,3) Uncertain significance,"761431,761432"
--4.090366,rpoB_p.Val549Gly,3) Uncertain significance,"761452,761453"
--4.0959635,rpoB_p.Asp851Pro,3) Uncertain significance,"762357,762358"
--4.1069574,rpoC_p.Leu789Ala,3) Uncertain significance,"765734,765735"
--4.0917745,rpoB_p.Ile925Val,5) Not assoc w R,762579
--4.0988393,rpoB_p.Glu639Asp,5) Not assoc w R,761723
--4.092366,rpoB_p.Glu250Gly,5) Not assoc w R,760555
--3.969505,rpoB_p.Val695Leu,5) Not assoc w R,761889
--4.0952563,rpoC_p.Ala621Thr,5) Not assoc w R,765230
--4.406302,rpoC_p.Pro601Leu,5) Not assoc w R,765171
--4.045419,rpoB_c.-61C>T,5) Not assoc w R,759746
--4.0935116,rpoC_p.Glu1092Asp,5) Not assoc w R,766645
--3.9957483,rpoC_p.Gly594Glu,5) Not assoc w R,765150
--4.1126246,rpoB_p.Ser388Leu,5) Not assoc w R,760969
--4.099633,rpoB_p.Lys944Glu,5) Not assoc w R,762636
--4.095286,rpoC_p.Glu784Gln,5) Not assoc w R,765719
--4.1031766,rpoB_p.Asn381His,5) Not assoc w R,760947
--4.1120343,rpoC_p.Arg69Pro,5) Not assoc w R,763575
--4.099149,rpoC_p.Pro906Ala,5) Not assoc w R,766085
--4.0964417,rpoC_p.Asp271Gly,5) Not assoc w R,764181
--3.9814847,rpoC_p.Ala172Val,5) Not assoc w R,"763884,763885"
--4.0937176,MT_H37Rv,,
+CNN_log_MIC,mutation,confidence,genome_index,codon_num,gene,Reg_log_MIC
+4.4103165,rpoB_p.Gln432Lys,1) Assoc w R,761100,432,rpoB,1.193072699741614
+4.1447916,rpoB_p.Gln432Pro,1) Assoc w R,761101,432,rpoB,2.4650607443779142
+2.6888502,rpoB_p.Ser441Leu,1) Assoc w R,761128,441,rpoB,1.9282468435194933
+3.66482,rpoB_p.Gln432Leu,1) Assoc w R,761101,432,rpoB,2.4650607443779142
+2.8043,rpoB_p.Phe433dup,1) Assoc w R,761102,433,rpoB,4.782643462731017
+0.44554728,rpoB_p.His445Asn,1) Assoc w R,761139,445,rpoB,9.676820955772316
+0.96773094,rpoB_p.Ile491Phe,1) Assoc w R,761277,491,rpoB,0.5568008484580069
+3.9703758,rpoB_p.Val170Phe,1) Assoc w R,760314,170,rpoB,9.151633445024016
+4.4341664,rpoB_p.Asp435Val,1) Assoc w R,761110,435,rpoB,12.161750041630276
+4.001936,rpoB_p.His445Tyr,1) Assoc w R,761139,445,rpoB,9.676820955772316
+3.8600905,rpoB_p.His445Asp,1) Assoc w R,761139,445,rpoB,9.676820955772316
+1.012124,rpoB_p.Asp435Tyr,1) Assoc w R,761109,435,rpoB,1.8483436321738125
+4.356173,rpoB_p.Ser450Trp,1) Assoc w R,761155,450,rpoB,29.3809162758506
+1.3278068,rpoB_p.His445Leu,1) Assoc w R,761140,445,rpoB,2.8631251914633964
+0.58632004,rpoB_p.Leu430Pro,1) Assoc w R,761095,430,rpoB,3.156667791273864
+3.799127,rpoB_p.His445Arg,1) Assoc w R,761140,445,rpoB,2.8631251914633964
+0.81446904,rpoB_p.Leu452Pro,1) Assoc w R,761161,452,rpoB,6.075559887337761
+4.175968,rpoB_p.His445Cys,1) Assoc w R,"761139,761140",445,rpoB,14.327938794063815
+4.0240417,rpoB_p.His445Ser,1) Assoc w R,"761139,761140",445,rpoB,14.327938794063815
+-0.8864895,rpoB_p.Ser441Gln,1) Assoc w R,"761127,761128",441,rpoB,2.0794027758475755
+4.157755,rpoB_p.Asp435Phe,1) Assoc w R,"761109,761110",435,rpoB,15.798086320632189
+4.7172866,rpoB_p.Ser450Leu,1) Assoc w R,"761154,761155",450,rpoB,29.904325920933893
+4.9156575,rpoB_p.Ser450Phe,1) Assoc w R,"761155,761156",450,rpoB,29.53035299632973
+-3.6836827,rpoB_p.Pro439Ser,2) Assoc w R - Interim,761121,439,rpoB,-3.5955586987549983
+-4.029213,rpoB_p.Thr427Asn,2) Assoc w R - Interim,761086,427,rpoB,-1.87145908648904
+-3.809025,rpoB_p.Pro439Leu,2) Assoc w R - Interim,761122,439,rpoB,-1.5869232447148316
+-1.6668004,rpoB_p.Asn437Tyr,2) Assoc w R - Interim,761115,437,rpoB,-0.527775923281148
+-0.83720565,rpoB_p.Met434Leu,2) Assoc w R - Interim,761106,434,rpoB,-1.712718529682356
+-0.92282236,rpoB_p.Leu452Gln,2) Assoc w R - Interim,761161,452,rpoB,6.075559887337761
+-3.5985768,rpoB_p.Gln429Pro,2) Assoc w R - Interim,761092,429,rpoB,-0.9474472306235076
+-3.6236136,rpoB_p.Ala451Val,2) Assoc w R - Interim,761158,451,rpoB,-1.7995130036547629
+-3.5868075,rpoB_p.Asn438del,2) Assoc w R - Interim,761114,438,rpoB,-2.728493723673573
+1.7544662,rpoB_p.Arg448Gln,2) Assoc w R - Interim,761149,448,rpoB,1.155422711160224
+-2.4241564,rpoB_p.Ser431Gly,2) Assoc w R - Interim,761097,431,rpoB,-0.1300811095156022
+-4.092037,rpoB_p.Gln429His,2) Assoc w R - Interim,761093,429,rpoB,-1.3943240774753425
+-0.51242554,rpoB_p.Asp435Ala,2) Assoc w R - Interim,761110,435,rpoB,12.161750041630276
+-2.7820947,rpoB_p.Asp435Glu,2) Assoc w R - Interim,761111,435,rpoB,-1.7402020296825045
+2.9398224,rpoB_p.His445Pro,2) Assoc w R - Interim,761140,445,rpoB,2.8631251914633964
+-4.0241613,rpoB_p.Ser428Arg,2) Assoc w R - Interim,761088,428,rpoB,-3.0712160648442914
+-1.9539818,rpoB_p.Ser431_Gln432insHis,2) Assoc w R - Interim,761098,431,rpoB,-1.7879926468281004
+-4.077726,rpoB_p.Thr427Ile,2) Assoc w R - Interim,761086,427,rpoB,-1.87145908648904
+-3.2343662,rpoB_p.Met434Val,2) Assoc w R - Interim,761106,434,rpoB,-1.712718529682356
+-3.4476907,rpoB_p.Ser431_Gln432insArg,2) Assoc w R - Interim,761094,431,rpoB,-1.7879926468281004
+4.194042,rpoB_p.Gln432_Asp435delinsHis,2) Assoc w R - Interim,761100,432,rpoB,15.359925127221585
+-2.8515399,rpoB_p.Asp435His,2) Assoc w R - Interim,761109,435,rpoB,1.8483436321738125
+-2.1793382,rpoB_p.Asn437His,2) Assoc w R - Interim,761115,437,rpoB,-0.527775923281148
+-0.6458806,rpoB_p.Gln432His,2) Assoc w R - Interim,761102,432,rpoB,-1.7490360134433895
+-2.9906151,rpoB_p.Lys446Gln,2) Assoc w R - Interim,761142,446,rpoB,-2.286227665528867
+-3.9022272,rpoB_p.Gln429Leu,2) Assoc w R - Interim,761092,429,rpoB,-0.9474472306235076
+-4.0476885,rpoB_p.Thr427Ser,2) Assoc w R - Interim,761086,427,rpoB,-1.87145908648904
+-2.7573874,rpoB_p.Ser450Ala,2) Assoc w R - Interim,761154,450,rpoB,-1.2645830017448068
+-3.6061141,rpoB_p.Ser441Ala,2) Assoc w R - Interim,761127,441,rpoB,-1.636836714500018
+-2.5918927,rpoB_p.Ser431Thr,2) Assoc w R - Interim,761098,431,rpoB,-2.2943681088680474
+-4.0563145,rpoB_p.Ser428Ile,2) Assoc w R - Interim,761089,428,rpoB,-1.7042489444626563
+-4.0736895,rpoB_p.Ser428Gly,2) Assoc w R - Interim,761088,428,rpoB,-3.0712160648442914
+-2.6672108,rpoB_p.Gln436Pro,2) Assoc w R - Interim,761113,436,rpoB,-1.9559815550905364
+2.1016881,rpoB_p.Gln432Glu,2) Assoc w R - Interim,761100,432,rpoB,1.193072699741614
+0.25389552,rpoB_p.Asp435Gly,2) Assoc w R - Interim,761110,435,rpoB,12.161750041630276
+-1.6181138,rpoB_p.Leu430Arg,2) Assoc w R - Interim,761095,430,rpoB,3.156667791273864
+-1.5064459,rpoB_p.His445Gln,2) Assoc w R - Interim,761141,445,rpoB,-0.3066300692406208
+-2.6218393,rpoB_p.Met434Ile,2) Assoc w R - Interim,761108,434,rpoB,-0.5086365033449048
+-3.1380403,rpoB_p.Asn437Asp,2) Assoc w R - Interim,761115,437,rpoB,-0.527775923281148
+-3.6672306,rpoB_p.Leu449Met,2) Assoc w R - Interim,761151,449,rpoB,-1.3503753342412306
+-2.8881125,rpoB_p.Thr444Ser,2) Assoc w R - Interim,761137,444,rpoB,-0.4236082833513225
+-3.9678133,rpoB_p.Ser428Thr,2) Assoc w R - Interim,761089,428,rpoB,-1.7042489444626563
+-3.3488357,rpoB_p.Ser431Arg,2) Assoc w R - Interim,761097,431,rpoB,-0.1300811095156022
+-2.121485,rpoB_p.Gln436del,2) Assoc w R - Interim,761094,436,rpoB,-2.291959371615396
+3.8225155,rpoB_p.Gln432del,2) Assoc w R - Interim,761094,432,rpoB,5.485082724332339
+1.9372307,rpoB_p.Met434_Asp435del,2) Assoc w R - Interim,761094,434,rpoB,15.514477112320762
+3.0628672,rpoB_p.Ser431_Phe433del,2) Assoc w R - Interim,761094,431,rpoB,3.2808934513419006
+2.8627224,rpoB_p.Phe433_Asp435del,2) Assoc w R - Interim,761094,433,rpoB,15.320968493836872
+4.3519936,rpoB_p.Gln432_Phe433del,2) Assoc w R - Interim,761098,432,rpoB,5.291574105848452
+4.1460767,rpoB_p.Asp435_Pro439del,2) Assoc w R - Interim,761094,435,rpoB,15.78177002859602
+4.063415,rpoB_p.Met434_Asn437delinsIle,2) Assoc w R - Interim,761106,434,rpoB,19.60812389873832
+4.1050825,rpoB_p.His445_Lys446del,2) Assoc w R - Interim,761137,445,rpoB,16.187469002520675
+3.074445,rpoB_p.Ser450_Leu452del,2) Assoc w R - Interim,761150,450,rpoB,38.51388860914022
+-3.604637,rpoB_p.Gly442Glu,2) Assoc w R - Interim,761131,442,rpoB,-0.2931044692277108
+-3.0643632,rpoB_p.Lys446Glu,2) Assoc w R - Interim,761142,446,rpoB,-2.286227665528867
+-2.5374105,rpoB_p.Lys446Thr,2) Assoc w R - Interim,761143,446,rpoB,-0.911589997257954
+-3.1719625,rpoB_p.Leu452Val,2) Assoc w R - Interim,761160,452,rpoB,-1.179898856440184
+-3.3820722,rpoB_p.Asn437Ile,2) Assoc w R - Interim,761116,437,rpoB,-2.122313728174568
+-1.1683387,rpoB_p.Asp435del,2) Assoc w R - Interim,761108,435,rpoB,15.845876937777785
+3.2569206,rpoB_p.Ser431_Met434del,2) Assoc w R - Interim,761094,431,rpoB,2.949493625884874
+-3.6317382,rpoB_p.Thr427_Gln429delinsLys,2) Assoc w R - Interim,761085,427,rpoB,-0.8942785817889609
+3.7640998,rpoB_p.Phe433_Gln436del,2) Assoc w R - Interim,761098,433,rpoB,14.81700176904958
+1.5533872,rpoB_p.Gln436_Asn437del,2) Assoc w R - Interim,761109,436,rpoB,0.6948981706492368
+-3.6895957,rpoB_p.Ala451Gly,2) Assoc w R - Interim,761158,451,rpoB,-1.7995130036547629
+-2.785383,rpoB_p.Lys446Arg,2) Assoc w R - Interim,761143,446,rpoB,-0.911589997257954
+-2.233741,rpoB_p.Thr444Ile,2) Assoc w R - Interim,761137,444,rpoB,-0.4236082833513225
+-3.3244908,rpoB_p.Leu443Phe,2) Assoc w R - Interim,761135,443,rpoB,-1.7879926468281004
+-3.952698,rpoB_p.Asn437Ser,2) Assoc w R - Interim,761116,437,rpoB,-2.122313728174568
+-4.1797137,rpoB_p.Thr427Ala,2) Assoc w R - Interim,761085,427,rpoB,-2.223277736843932
+-3.921343,rpoB_p.Thr427_Ser428del,2) Assoc w R - Interim,761082,427,rpoB,-2.563777657362144
+-3.5664694,rpoB_p.Thr427_Gln429del,2) Assoc w R - Interim,761083,427,rpoB,-1.3295636718047932
+-2.8780935,rpoB_p.Thr427_Leu430del,2) Assoc w R - Interim,761084,427,rpoB,2.738895834968938
+-1.3242288,rpoB_p.Asp435_Gln436delinsGlu,2) Assoc w R - Interim,761109,435,rpoB,-2.2441687544698
+-3.4912136,rpoB_p.Leu452Met,2) Assoc w R - Interim,761160,452,rpoB,-1.179898856440184
+-4.0749836,rpoB_p.Gly426Ser,2) Assoc w R - Interim,761082,426,rpoB,-1.7879926468281004
+4.403537,rpoB_p.Gln432_Met434del,2) Assoc w R - Interim,761097,432,rpoB,4.960174280391429
+-3.7985382,rpoB_p.Gly426_Thr427del,2) Assoc w R - Interim,761080,426,rpoB,0.1264392524802302
+-4.136628,rpoB_p.Thr427Gly,2) Assoc w R - Interim,"761085,761086",427,rpoB,-2.306744176504872
+-3.4104998,rpoB_p.Gln436Asn,2) Assoc w R - Interim,"761112,761114",436,rpoB,-2.1239704633529595
+4.2133107,rpoB_p.His445Gly,2) Assoc w R - Interim,"761139,761140",445,rpoB,14.327938794063815
+4.686055,rpoB_p.Ser450Met,2) Assoc w R - Interim,"761154,761155",450,rpoB,29.904325920933893
+3.8835454,rpoB_p.His445Thr,2) Assoc w R - Interim,"761139,761140",445,rpoB,14.327938794063815
+4.0634484,rpoB_p.Ser450Gly,2) Assoc w R - Interim,"761154,761155",450,rpoB,29.904325920933893
+4.022343,rpoB_p.Ser450Gln,2) Assoc w R - Interim,"761154,761155",450,rpoB,29.904325920933893
+3.0817103,rpoB_p.Gln432Asn,2) Assoc w R - Interim,"761100,761102",432,rpoB,1.2320293331263248
+4.100711,rpoB_p.His445Phe,2) Assoc w R - Interim,"761139,761140",445,rpoB,14.327938794063815
+4.1723795,rpoB_p.Asp435Leu,2) Assoc w R - Interim,"761109,761110",435,rpoB,15.798086320632189
+3.8418193,rpoB_p.Arg448Lys,2) Assoc w R - Interim,"761148,761149",448,rpoB,3.99429941352657
+-0.3062207,rpoB_p.Ser441Val,2) Assoc w R - Interim,"761127,761128",441,rpoB,2.0794027758475755
+3.9383829,rpoB_p.Ser450Tyr,2) Assoc w R - Interim,"761155,761156",450,rpoB,29.53035299632973
+4.6979365,rpoB_p.Ser450Val,2) Assoc w R - Interim,"761154,761155",450,rpoB,29.904325920933893
+-0.13716586,rpoB_p.Ser441Met,2) Assoc w R - Interim,"761127,761128",441,rpoB,2.0794027758475755
+4.1775436,rpoB_p.Ser450Cys,2) Assoc w R - Interim,"761155,761156",450,rpoB,29.53035299632973
+-4.096849,rpoB_p.Glu825Gly,3) Uncertain significance,762280,825,rpoB,-1.7879926468281004
+-4.1001344,rpoB_p.Phe1005Val,3) Uncertain significance,762819,1005,rpoB,-2.507049465739981
+-4.1082697,rpoB_p.Phe548Leu,3) Uncertain significance,761448,548,rpoB,-1.7879926468281004
+-4.090483,rpoB_p.Phe669Leu,3) Uncertain significance,761813,669,rpoB,-2.054423818755403
+-4.091029,rpoB_c.-117G>A,3) Uncertain significance,759690,0,rpoB,-1.7879926468281004
+-4.1032667,rpoB_c.-136G>C,3) Uncertain significance,759671,0,rpoB,-1.7879926468281004
+-4.114381,rpoB_c.-167G>A,3) Uncertain significance,759640,0,rpoB,-1.7879926468281004
+-4.092499,rpoB_p.Gly236Asp,3) Uncertain significance,760513,236,rpoB,-1.7879926468281004
+-4.095537,rpoB_p.Gly345Ser,3) Uncertain significance,760839,345,rpoB,-1.7879926468281004
+-4.0601187,rpoB_p.Gly492Ser,3) Uncertain significance,761280,492,rpoB,-1.7879926468281004
+-4.0927525,rpoB_p.Gly546Ser,3) Uncertain significance,761442,546,rpoB,-1.7879926468281004
+-4.0911546,rpoB_p.Gly560Ala,3) Uncertain significance,761485,560,rpoB,-1.7879926468281004
+-4.1231422,rpoB_c.-56G>T,3) Uncertain significance,759751,0,rpoB,-2.0544238187553523
+-4.0948615,rpoB_p.Gly642Ser,3) Uncertain significance,761730,642,rpoB,-1.7879926468281004
+-4.093021,rpoB_p.Gly659Asp,3) Uncertain significance,761782,659,rpoB,-1.7879926468281004
+-4.0856013,rpoB_p.Gly693Val,3) Uncertain significance,761884,693,rpoB,-1.7879926468281004
+-4.141471,rpoB_p.Gly945Arg,3) Uncertain significance,762639,945,rpoB,-1.7879926468281004
+-4.099984,rpoB_p.Gly95Arg,3) Uncertain significance,760089,95,rpoB,-1.7879926468281004
+-4.09024,rpoB_c.-96G>A,3) Uncertain significance,759711,0,rpoB,-1.7879926468281004
+-4.098761,rpoB_p.His317Tyr,3) Uncertain significance,760755,317,rpoB,-1.7879926468281004
+-4.0923247,rpoB_p.His533Arg,3) Uncertain significance,761404,533,rpoB,-1.7879926468281004
+-4.091292,rpoB_p.Glu805Ala,3) Uncertain significance,762220,805,rpoB,-1.7879926468281004
+-4.1081862,rpoB_p.Glu789Lys,3) Uncertain significance,762171,789,rpoB,-1.7879926468281004
+-4.098805,rpoB_p.Glu738Ala,3) Uncertain significance,762019,738,rpoB,-1.9457110884866504
+-4.0960436,rpoB_p.Glu737Gly,3) Uncertain significance,762016,737,rpoB,-1.7879926468281004
+-4.0932117,rpoB_p.Asp120Gly,3) Uncertain significance,760165,120,rpoB,-1.7879926468281004
+-4.1064153,rpoB_p.Asp211Val,3) Uncertain significance,760438,211,rpoB,-1.7879926468281004
+-4.0920925,rpoB_p.Asp362His,3) Uncertain significance,760890,362,rpoB,-1.7879926468281004
+-4.0934052,rpoB_p.Asp49His,3) Uncertain significance,759951,49,rpoB,-1.7879926468281004
+-4.0934014,rpoB_p.Asp520Val,3) Uncertain significance,761365,520,rpoB,-2.0128733675371957
+-4.095778,rpoB_p.Asp543Gly,3) Uncertain significance,761434,543,rpoB,-1.8461895589800008
+-4.097074,rpoB_p.Asp545Ala,3) Uncertain significance,761440,545,rpoB,-1.7879926468281004
+-4.095508,rpoB_p.Asp594Ala,3) Uncertain significance,761587,594,rpoB,-1.7879926468281004
+-4.096608,rpoB_p.Asp703Glu,3) Uncertain significance,761915,703,rpoB,-1.7879926468281004
+-4.0986495,rpoB_p.Asp777His,3) Uncertain significance,762135,777,rpoB,-1.7879926468281004
+-4.1055956,rpoB_p.Asp851Gly,3) Uncertain significance,762358,851,rpoB,-1.7879926468281004
+-4.0987678,rpoB_p.Asp903Asn,3) Uncertain significance,762513,903,rpoB,-1.7879926468281004
+-4.102659,rpoB_p.His935Arg,3) Uncertain significance,762610,935,rpoB,-1.7879926468281004
+-4.09902,rpoB_p.Asp993Gly,3) Uncertain significance,762784,993,rpoB,-1.7879926468281004
+-4.105471,rpoB_p.Glu1011Ala,3) Uncertain significance,762838,1011,rpoB,-1.9541058465434555
+-4.098769,rpoB_p.Glu1130Val,3) Uncertain significance,763195,1130,rpoB,-1.7879926468281004
+-4.0919943,rpoB_p.Glu1169Ala,3) Uncertain significance,763312,1169,rpoB,-1.7879926468281004
+-4.088512,rpoB_p.Glu240Gly,3) Uncertain significance,760525,240,rpoB,-1.7879926468281004
+-4.0928783,rpoB_p.Glu320Gly,3) Uncertain significance,760765,320,rpoB,-1.7879926468281004
+-4.126452,rpoB_p.Glu337Lys,3) Uncertain significance,760815,337,rpoB,-1.7879926468281004
+-4.0979867,rpoB_p.Glu639Ala,3) Uncertain significance,761722,639,rpoB,-1.6396571062657972
+-4.1353426,rpoB_p.Glu639Gln,3) Uncertain significance,761721,639,rpoB,-2.2661541591802266
+-4.101052,rpoB_p.Glu645Gly,3) Uncertain significance,761740,645,rpoB,-1.7879926468281004
+-4.08935,rpoB_p.Glu646Gly,3) Uncertain significance,761743,646,rpoB,-1.7879926468281004
+-4.0979505,rpoB_p.Glu721Asp,3) Uncertain significance,761969,721,rpoB,-1.846189558980006
+-4.0920596,rpoB_p.Glu721Gly,3) Uncertain significance,761968,721,rpoB,-1.7879926468281004
+-4.093876,rpoB_p.Asp997Glu,3) Uncertain significance,762797,997,rpoB,-1.7879926468281004
+-4.0946794,rpoB_p.Asp1148Glu,3) Uncertain significance,763250,1148,rpoB,-1.7879926468281004
+-4.0990057,rpoB_p.Ile751Val,3) Uncertain significance,762057,751,rpoB,-1.7879926468281004
+-4.097735,rpoB_p.Lys298Arg,3) Uncertain significance,760699,298,rpoB,-1.7879926468281004
+-4.108853,rpoB_p.Pro682Thr,3) Uncertain significance,761850,682,rpoB,-1.7879926468281004
+-4.1014004,rpoB_p.Pro719Ser,3) Uncertain significance,761961,719,rpoB,-1.7879926468281004
+-4.0872917,rpoB_p.Pro834Leu,3) Uncertain significance,762307,834,rpoB,-1.7879926468281004
+-4.113248,rpoB_p.Pro89Ser,3) Uncertain significance,760071,89,rpoB,-1.7879926468281004
+-4.1080728,rpoB_p.Pro906Leu,3) Uncertain significance,762523,906,rpoB,-1.7879926468281004
+-4.1102405,rpoB_p.Pro988Ala,3) Uncertain significance,762768,988,rpoB,-1.829164424870033
+-4.1087317,rpoB_p.Pro988Ser,3) Uncertain significance,762768,988,rpoB,-1.829164424870033
+-4.0880904,rpoB_p.Arg225Gln,3) Uncertain significance,760480,225,rpoB,-1.8677826762486616
+-4.1009574,rpoB_p.Arg304Cys,3) Uncertain significance,760716,304,rpoB,-1.7879926468281004
+-4.0075874,rpoB_p.Arg499Gln,3) Uncertain significance,761302,499,rpoB,-1.7879926468281004
+-4.049813,rpoB_p.Arg499Trp,3) Uncertain significance,761301,499,rpoB,-1.7879926468281004
+-4.0988026,rpoB_p.Arg511Leu,3) Uncertain significance,761338,511,rpoB,-1.7879926468281004
+-4.0941625,rpoB_p.Arg532Cys,3) Uncertain significance,761400,532,rpoB,-1.7879926468281004
+-4.094643,rpoB_p.Arg547Ser,3) Uncertain significance,761445,547,rpoB,-1.7879926468281004
+-4.112969,rpoB_p.Arg552Ser,3) Uncertain significance,761460,552,rpoB,-1.7454547174857438
+-4.0987024,rpoB_p.Arg734His,3) Uncertain significance,762007,734,rpoB,-1.7879926468281004
+-4.101026,rpoB_p.Arg952Lys,3) Uncertain significance,762661,952,rpoB,-1.7879926468281004
+-4.096735,rpoB_p.Ser1009Thr,3) Uncertain significance,762832,1009,rpoB,-1.7879926468281004
+-4.095012,rpoB_p.Ser1134Arg,3) Uncertain significance,763206,1134,rpoB,-1.8461895589800077
+-4.093766,rpoB_p.Ser20Ile,3) Uncertain significance,759865,20,rpoB,-1.7879926468281004
+-4.092501,rpoB_p.Ser21Phe,3) Uncertain significance,759868,21,rpoB,-1.7879926468281004
+-4.0986023,rpoB_p.Ser239Arg,3) Uncertain significance,760521,239,rpoB,-1.7879926468281004
+-4.0939016,rpoB_p.Ser641Arg,3) Uncertain significance,761729,641,rpoB,-1.7879926468281004
+-4.1012197,rpoB_p.Ser67Phe,3) Uncertain significance,760006,67,rpoB,-1.7879926468281004
+-4.1431546,rpoB_p.Ser984Leu,3) Uncertain significance,762757,984,rpoB,-1.7879926468281004
+-4.098473,rpoB_p.Pro541Leu,3) Uncertain significance,761428,541,rpoB,-1.7879926468281004
+-4.0960145,rpoB_p.Pro509Ser,3) Uncertain significance,761331,509,rpoB,-1.7879926468281004
+-4.096011,rpoB_p.Pro358Ser,3) Uncertain significance,760878,358,rpoB,-1.7879926468281004
+-4.0884376,rpoB_p.Pro321Ser,3) Uncertain significance,760767,321,rpoB,-1.7879926468281004
+-4.084358,rpoB_p.Lys309Glu,3) Uncertain significance,760731,309,rpoB,-1.7879926468281004
+-4.0990005,rpoB_p.Lys711Arg,3) Uncertain significance,761938,711,rpoB,-1.7879926468281004
+-4.096209,rpoB_p.Leu1004Ile,3) Uncertain significance,762816,1004,rpoB,-1.7879926468281004
+-4.094485,rpoB_p.Leu1132Val,3) Uncertain significance,763200,1132,rpoB,-1.7879926468281004
+-4.0801787,rpoB_p.Leu232Val,3) Uncertain significance,760500,232,rpoB,-1.7879926468281004
+-4.0898933,rpoB_p.Leu235Arg,3) Uncertain significance,760510,235,rpoB,-1.7879926468281004
+-4.0911365,rpoB_p.Leu290Phe,3) Uncertain significance,760676,290,rpoB,-1.7879926468281004
+-4.0921397,rpoB_p.Leu314Val,3) Uncertain significance,760746,314,rpoB,-1.7879926468281004
+-4.0980196,rpoB_p.Leu316Val,3) Uncertain significance,760752,316,rpoB,-1.7879926468281004
+-4.0934963,rpoB_p.Leu893Arg,3) Uncertain significance,762484,893,rpoB,-1.7879926468281004
+-4.0938525,rpoB_p.Leu893Val,3) Uncertain significance,762483,893,rpoB,-1.1934646795961508
+-4.0938025,rpoB_p.Met1070Ile,3) Uncertain significance,763016,1070,rpoB,-1.4480908064149005
+-4.0928054,rpoB_p.Lys1102Arg,3) Uncertain significance,763111,1102,rpoB,-1.7879926468281004
+-4.109282,rpoB_p.Met1070Thr,3) Uncertain significance,763015,1070,rpoB,-1.7879926468281004
+-4.0951805,rpoB_p.Met154Ile,3) Uncertain significance,760268,154,rpoB,-1.7879926468281004
+-4.092484,rpoB_p.Met398Val,3) Uncertain significance,760998,398,rpoB,-1.7879926468281004
+-4.098618,rpoB_p.Met477Arg,3) Uncertain significance,761236,477,rpoB,-1.7879926468281004
+-4.0993,rpoB_p.Met624Thr,3) Uncertain significance,761677,624,rpoB,-1.7879926468281004
+-4.108245,rpoB_p.Asn163Lys,3) Uncertain significance,760295,163,rpoB,-2.0633326111752464
+-4.093232,rpoB_p.Asn24Asp,3) Uncertain significance,759876,24,rpoB,-1.7879926468281004
+-4.09162,rpoB_p.Asn369Asp,3) Uncertain significance,760911,369,rpoB,-1.7879926468281004
+-4.1020494,rpoB_p.Asn673Thr,3) Uncertain significance,761824,673,rpoB,-1.7879926468281004
+-4.0980916,rpoB_p.Asn724Ser,3) Uncertain significance,761977,724,rpoB,-1.7879926468281004
+-4.0957975,rpoB_p.Asn963Asp,3) Uncertain significance,762693,963,rpoB,-1.7879926468281004
+-4.0994034,rpoB_p.Pro1014Arg,3) Uncertain significance,762847,1014,rpoB,-1.7879926468281004
+-4.1209726,rpoB_p.Pro1014Ser,3) Uncertain significance,762846,1014,rpoB,-1.7879926468281004
+-4.099007,rpoB_p.Met153Val,3) Uncertain significance,760263,153,rpoB,-1.7879926468281004
+-4.0907106,rpoB_p.Asp1146Gly,3) Uncertain significance,763243,1146,rpoB,-1.5783181845225132
+-4.105922,rpoB_p.Asp108Glu,3) Uncertain significance,760130,108,rpoB,-1.7879926468281004
+-4.1040545,rpoB_p.Asp1006Gly,3) Uncertain significance,762823,1006,rpoB,-1.7879926468281004
+-4.109401,rpoB_p.Ala977Val,3) Uncertain significance,762736,977,rpoB,-1.7879926468281004
+-4.0922203,rpoB_p.Cys1067Gly,3) Uncertain significance,763005,1067,rpoB,-1.7879926468281004
+-4.1049123,rpoB_p.Cys116Phe,3) Uncertain significance,760153,116,rpoB,-1.7879926468281004
+-4.0910134,rpoB_c.-122C>A,3) Uncertain significance,759685,0,rpoB,-1.7879926468281004
+-4.0890326,rpoB_c.-122C>T,3) Uncertain significance,759685,0,rpoB,-1.7879926468281004
+-4.0628133,rpoB_c.-137C>T,3) Uncertain significance,759670,0,rpoB,-1.7879926468281004
+-4.0804386,rpoB_c.-140C>T,3) Uncertain significance,759667,0,rpoB,-1.7879926468281004
+-4.0828557,rpoB_c.-152C>T,3) Uncertain significance,759655,0,rpoB,-1.1209726954078625
+-4.097077,rpoB_c.-153C>G,3) Uncertain significance,759654,0,rpoB,-1.7879926468281004
+-4.102839,rpoB_c.-179C>T,3) Uncertain significance,759628,0,rpoB,-1.7879926468281004
+-4.094817,rpoB_c.-185C>A,3) Uncertain significance,759622,0,rpoB,-1.7879926468281004
+-4.0965714,rpoB_c.-188C>T,3) Uncertain significance,759619,0,rpoB,-1.7879926468281004
+-4.1061068,rpoB_p.Ala974Gly,3) Uncertain significance,762727,974,rpoB,-1.7879926468281004
+-4.0934467,rpoB_c.-195C>A,3) Uncertain significance,759612,0,rpoB,-2.0512430873301115
+-4.0874133,rpoB_c.-51C>T,3) Uncertain significance,759756,0,rpoB,-1.7879926468281004
+-4.0958962,rpoB_c.-54C>A,3) Uncertain significance,759753,0,rpoB,-1.7879926468281004
+-4.093686,rpoB_c.-60C>T,3) Uncertain significance,759747,0,rpoB,-1.7879926468281004
+-4.094536,rpoB_c.-73C>T,3) Uncertain significance,759734,0,rpoB,-1.7879926468281004
+-4.094012,rpoB_c.-84C>A,3) Uncertain significance,759723,0,rpoB,-1.7879926468281004
+-4.0906467,rpoB_c.-94C>T,3) Uncertain significance,759713,0,rpoB,-1.7879926468281004
+-4.0892334,rpoB_p.Ser98Ala,3) Uncertain significance,760098,98,rpoB,-1.7879926468281004
+-4.105829,rpoB_p.Ala950Val,3) Uncertain significance,762655,950,rpoB,-1.7879926468281004
+-4.0971828,rpoB_p.Ala934Val,3) Uncertain significance,762607,934,rpoB,-1.7879926468281004
+-4.106692,rpoB_c.-159_-158insT,3) Uncertain significance,759648,0,rpoB,-2.131736430080542
+-4.085212,rpoB_c.-59delG,3) Uncertain significance,759747,0,rpoB,-1.7879926468281004
+-4.093964,rpoB_c.-106A>G,3) Uncertain significance,759701,0,rpoB,-1.7879926468281004
+-4.09554,rpoB_c.-110A>G,3) Uncertain significance,759697,0,rpoB,-1.7879926468281004
+-4.096358,rpoB_p.Ala29Thr,3) Uncertain significance,759891,29,rpoB,-1.7879926468281004
+-4.1191573,rpoB_p.Ala942Thr,3) Uncertain significance,762630,942,rpoB,-1.7879926468281004
+-4.0949097,rpoB_p.Ala29Val,3) Uncertain significance,759892,29,rpoB,-1.8194363790450925
+-4.0947914,rpoB_c.-3A>G,3) Uncertain significance,759804,0,rpoB,-2.060177809340579
+-4.032946,rpoB_p.Ala498Gly,3) Uncertain significance,761299,498,rpoB,-1.6432315242491429
+-4.1036344,rpoB_p.Ala527Val,3) Uncertain significance,761386,527,rpoB,-2.1606221603367657
+-4.097841,rpoB_p.Ala544Val,3) Uncertain significance,761437,544,rpoB,-1.7879926468281004
+-4.099219,rpoB_p.Ala628Gly,3) Uncertain significance,761689,628,rpoB,-1.7879926468281004
+-4.091491,rpoB_p.Ala632Gly,3) Uncertain significance,761701,632,rpoB,-1.7879926468281004
+-4.0913014,rpoB_p.Ala632Ser,3) Uncertain significance,761700,632,rpoB,-1.7879926468281004
+-4.0932345,rpoB_p.Ala68Val,3) Uncertain significance,760009,68,rpoB,-1.7879926468281004
+-4.1061735,rpoB_p.Ala776Val,3) Uncertain significance,762133,776,rpoB,-1.7879926468281004
+-4.0988507,rpoB_c.-77A>G,3) Uncertain significance,759730,0,rpoB,-2.0544238187553523
+-4.104138,rpoB_p.Ala868Val,3) Uncertain significance,762409,868,rpoB,-1.7879926468281004
+-4.0932918,rpoB_p.Ala902Pro,3) Uncertain significance,762510,902,rpoB,-1.07012813060916
+-4.1007304,rpoB_p.Ala334Asp,3) Uncertain significance,760807,334,rpoB,-2.051611781499763
+-4.1101108,rpoC_p.Pro394Gln,3) Uncertain significance,764550,394,rpoC,-1.7879926468281004
+-4.09697,rpoC_p.Pro444Ser,3) Uncertain significance,764699,444,rpoC,-1.7879926468281004
+-4.144708,rpoC_p.Pro601Gln,3) Uncertain significance,765171,601,rpoC,-4.36176543683929
+-4.1013136,rpoC_p.Pro643Ser,3) Uncertain significance,765296,643,rpoC,-1.7879926468281004
+-4.110158,rpoC_p.Pro658Leu,3) Uncertain significance,765342,658,rpoC,-1.7879926468281004
+-4.0998006,rpoC_p.Pro682Leu,3) Uncertain significance,765414,682,rpoC,-1.7879926468281004
+-4.0946193,rpoC_p.Pro906Arg,3) Uncertain significance,766086,906,rpoC,-1.7879926468281004
+-4.101223,rpoC_p.Gln1125Arg,3) Uncertain significance,766743,1125,rpoC,-1.7879926468281004
+-4.103438,rpoC_p.Gln165Arg,3) Uncertain significance,763863,165,rpoC,-1.7879926468281004
+-4.100776,rpoC_p.Gln262Arg,3) Uncertain significance,764154,262,rpoC,-1.7879926468281004
+-4.085519,rpoC_p.Gln479His,3) Uncertain significance,764806,479,rpoC,-1.7879926468281004
+-4.094812,rpoC_p.Gln711Glu,3) Uncertain significance,765500,711,rpoC,-1.7879926468281004
+-4.0791,rpoC_p.Gln759Arg,3) Uncertain significance,765645,759,rpoC,-1.7879926468281004
+-4.0896993,rpoC_p.Gln959Arg,3) Uncertain significance,766245,959,rpoC,-1.7879926468281004
+-4.098057,rpoC_p.Arg1052Gly,3) Uncertain significance,766523,1052,rpoC,-1.7879926468281004
+-4.1050777,rpoC_p.Arg1083Gly,3) Uncertain significance,766616,1083,rpoC,-1.9205119386577283
+-4.097607,rpoC_p.Arg1192Leu,3) Uncertain significance,766944,1192,rpoC,-1.7879926468281004
+-4.0983105,rpoC_p.Arg1192Gln,3) Uncertain significance,766944,1192,rpoC,-1.7879926468281004
+-4.0944467,rpoC_p.Arg11His,3) Uncertain significance,763401,11,rpoC,-1.7879926468281004
+-4.0893407,rpoC_p.Arg1279Ser,3) Uncertain significance,767204,1279,rpoC,-1.7879926468281004
+-4.0890775,rpoC_p.Arg203Cys,3) Uncertain significance,763976,203,rpoC,-1.7879926468281004
+-4.0996156,rpoC_p.Arg206Cys,3) Uncertain significance,763985,206,rpoC,-2.0544238187553505
+-4.0903964,rpoC_p.Arg211His,3) Uncertain significance,764001,211,rpoC,-1.7879926468281004
+-4.091598,rpoC_p.Arg247His,3) Uncertain significance,764109,247,rpoC,-2.020385610469897
+-4.093795,rpoC_p.Arg282Gln,3) Uncertain significance,764214,282,rpoC,-1.7879926468281004
+-4.111729,rpoC_p.Pro322Thr,3) Uncertain significance,764333,322,rpoC,-1.8186868329054409
+-4.087781,rpoC_p.Pro1259Ser,3) Uncertain significance,767144,1259,rpoC,-1.7879926468281004
+-4.0994444,rpoC_p.Pro1259Leu,3) Uncertain significance,767145,1259,rpoC,-1.7879926468281004
+-4.102043,rpoC_p.Pro1200Leu,3) Uncertain significance,766968,1200,rpoC,-1.8194363790450363
+-4.121284,rpoC_p.Ile491Val,3) Uncertain significance,764840,491,rpoC,-1.5901686352749982
+-4.095107,rpoC_p.Ile619Val,3) Uncertain significance,765224,619,rpoC,-1.7879926468281004
+-4.09532,rpoC_p.Ile646Val,3) Uncertain significance,765305,646,rpoC,-1.7879926468281004
+-4.098927,rpoC_p.Ile696Val,3) Uncertain significance,765455,696,rpoC,-1.7879926468281004
+-4.097159,rpoC_p.Ile697Val,3) Uncertain significance,765458,697,rpoC,-1.7879926468281004
+-4.0965123,rpoC_p.Ile745Leu,3) Uncertain significance,765602,745,rpoC,-1.7879926468281004
+-4.1255255,rpoC_p.Ile897Thr,3) Uncertain significance,766059,897,rpoC,-1.7879926468281004
+-4.0820327,rpoC_p.Ile957Thr,3) Uncertain significance,766239,957,rpoC,-1.5783181845223997
+-4.083734,rpoC_p.Lys228Asn,3) Uncertain significance,764053,228,rpoC,-1.7879926468281004
+-4.1039267,rpoC_p.Lys232Thr,3) Uncertain significance,764064,232,rpoC,-1.7879926468281004
+-4.0958576,rpoC_p.Lys743Glu,3) Uncertain significance,765596,743,rpoC,-1.7879926468281004
+-4.1281447,rpoC_p.Lys828Arg,3) Uncertain significance,765852,828,rpoC,-1.7079330472678738
+-4.1035924,rpoC_p.Arg397Leu,3) Uncertain significance,764559,397,rpoC,-1.7879926468281004
+-4.0895076,rpoC_p.Leu1099Val,3) Uncertain significance,766664,1099,rpoC,-1.7879926468281004
+-4.0913205,rpoC_p.Leu381Val,3) Uncertain significance,764510,381,rpoC,-2.160622160336695
+-4.09063,rpoC_p.Leu627Val,3) Uncertain significance,765248,627,rpoC,-1.7879926468281004
+-4.0888705,rpoC_p.Leu650Arg,3) Uncertain significance,765318,650,rpoC,-1.5783181845224032
+-4.107306,rpoC_p.Leu910Val,3) Uncertain significance,766097,910,rpoC,-1.8172887557741544
+-4.0934367,rpoC_p.Met1161Ile,3) Uncertain significance,766852,1161,rpoC,-1.7879926468281004
+-4.097754,rpoC_p.Met1208Ile,3) Uncertain significance,766993,1208,rpoC,-1.1732783337277946
+-4.098126,rpoC_p.Met1208Val,3) Uncertain significance,766991,1208,rpoC,-1.7879926468281004
+-4.095965,rpoC_p.Met205Arg,3) Uncertain significance,763983,205,rpoC,-1.7879926468281004
+-4.093736,rpoC_p.Met205Val,3) Uncertain significance,763982,205,rpoC,-1.7879926468281004
+-4.091479,rpoC_p.Met447Thr,3) Uncertain significance,764709,447,rpoC,-1.7879926468281004
+-4.0911527,rpoC_p.Met733Ile,3) Uncertain significance,765568,733,rpoC,-1.7879926468281004
+-4.1503496,rpoC_p.Pro1040Arg,3) Uncertain significance,766488,1040,rpoC,-2.3159739928407985
+-4.095392,rpoC_p.Leu1134Val,3) Uncertain significance,766769,1134,rpoC,-1.7879926468281004
+-4.101182,rpoC_p.Ile34Val,3) Uncertain significance,763469,34,rpoC,-1.7879926468281004
+-4.0908313,rpoC_p.Arg506Gln,3) Uncertain significance,764886,506,rpoC,-1.7879926468281004
+-4.0999713,rpoC_p.Arg641Gln,3) Uncertain significance,765291,641,rpoC,-1.7879926468281004
+-4.0964217,rpoC_p.Val626Ile,3) Uncertain significance,765245,626,rpoC,-2.401740354859398
+-4.093603,rpoC_p.Val629Met,3) Uncertain significance,765254,629,rpoC,-1.7879926468281004
+-4.094267,rpoC_p.Val684Gly,3) Uncertain significance,765420,684,rpoC,-1.7879926468281004
+-4.094729,rpoC_p.Val684Ile,3) Uncertain significance,765419,684,rpoC,-1.7879926468281004
+-3.9890308,rpoC_p.Val709Phe,3) Uncertain significance,765494,709,rpoC,-1.16811280654709
+-4.079702,rpoC_p.Val756Ile,3) Uncertain significance,765635,756,rpoC,-1.7879926468281004
+-4.092914,rpoC_p.Val803Leu,3) Uncertain significance,765776,803,rpoC,-1.7879926468281004
+-4.097586,rpoC_p.Val899Ile,3) Uncertain significance,766064,899,rpoC,-1.7879926468281004
+-4.09859,rpoC_p.Val930Ile,3) Uncertain significance,766157,930,rpoC,-1.846189558980004
+-4.097647,rpoC_p.Val974Met,3) Uncertain significance,766289,974,rpoC,-1.7879926468281004
+-4.089735,rpoC_p.Trp223Arg,3) Uncertain significance,764036,223,rpoC,-1.7879926468281004
+-4.09037,rpoC_p.Tyr612Ser,3) Uncertain significance,765204,612,rpoC,-1.7879926468281004
+-4.0984006,rpoC_p.Tyr61Cys,3) Uncertain significance,763551,61,rpoC,-1.945711088486634
+-4.0847,rpoC_p.Tyr704Cys,3) Uncertain significance,765480,704,rpoC,-1.7879926468281004
+-4.088048,rpoC_p.Tyr749His,3) Uncertain significance,765614,749,rpoC,-1.7879926468281004
+-4.1018147,rpoC_p.Val611Phe,3) Uncertain significance,765200,611,rpoC,-1.7879926468281004
+-4.0955615,rpoC_p.Val422Ala,3) Uncertain significance,764634,422,rpoC,-1.639621548940408
+-4.0988955,rpoC_p.Val313Ala,3) Uncertain significance,764307,313,rpoC,-1.7879926468281004
+-4.0923424,rpoC_p.Val299Ile,3) Uncertain significance,764264,299,rpoC,-1.7879926468281004
+-4.0979285,rpoC_p.Arg741His,3) Uncertain significance,765591,741,rpoC,-1.7879926468281004
+-4.0989356,rpoC_p.Arg981Gly,3) Uncertain significance,766310,981,rpoC,-1.7879926468281004
+-4.1867323,rpoC_p.Ser1095Phe,3) Uncertain significance,766653,1095,rpoC,-3.9366692161770223
+-4.098332,rpoC_p.Ser1242Asn,3) Uncertain significance,767094,1242,rpoC,-1.7879926468281004
+-4.1012278,rpoC_p.Ser403Ala,3) Uncertain significance,764576,403,rpoC,-1.7879926468281004
+-4.10572,rpoC_p.Ser403Cys,3) Uncertain significance,764577,403,rpoC,-1.7879926468281004
+-4.1029954,rpoC_p.Ser614Leu,3) Uncertain significance,765210,614,rpoC,-1.7879926468281004
+-4.1013484,rpoC_p.Thr1262Ala,3) Uncertain significance,767153,1262,rpoC,-1.7879926468281004
+-4.0881705,rpoC_p.Thr1284Ala,3) Uncertain significance,767219,1284,rpoC,-1.7879926468281004
+-4.097894,rpoC_p.Thr1301Ser,3) Uncertain significance,767271,1301,rpoC,-1.7879926468281004
+-4.131506,rpoC_p.Arg636Leu,3) Uncertain significance,765276,636,rpoC,-1.7879926468281004
+-4.0929646,rpoC_p.Thr16Ala,3) Uncertain significance,763415,16,rpoC,-2.080141457328988
+-4.0892367,rpoC_p.Thr845Pro,3) Uncertain significance,765902,845,rpoC,-1.7879926468281004
+-4.0978208,rpoC_p.Thr893Ile,3) Uncertain significance,766047,893,rpoC,-1.7879926468281004
+-4.1012926,rpoC_p.Thr909Lys,3) Uncertain significance,766095,909,rpoC,-2.160781585985037
+-4.094858,rpoC_p.Thr958Asn,3) Uncertain significance,766242,958,rpoC,-1.4286627636271023
+-4.0952377,rpoC_p.Val1067Ala,3) Uncertain significance,766569,1067,rpoC,-1.7879926468281004
+-4.0853877,rpoC_p.Val1098Leu,3) Uncertain significance,766661,1098,rpoC,-1.7879926468281004
+-4.094762,rpoC_p.Val1130Met,3) Uncertain significance,766757,1130,rpoC,-1.7879926468281004
+-4.1016936,rpoC_p.Val1138Gly,3) Uncertain significance,766782,1138,rpoC,-1.9076700476358763
+-4.1170473,rpoC_p.Val1272Ala,3) Uncertain significance,767184,1272,rpoC,-1.7879926468281004
+-4.093317,rpoC_p.Val139Gly,3) Uncertain significance,763785,139,rpoC,-1.7879926468281004
+-4.094476,rpoC_p.Val139Ile,3) Uncertain significance,763784,139,rpoC,-2.0544238187553465
+-4.097732,rpoC_p.Val236Ile,3) Uncertain significance,764075,236,rpoC,-1.7879926468281004
+-4.099135,rpoC_p.Thr253Ile,3) Uncertain significance,764127,253,rpoC,-1.7879926468281004
+-4.095855,rpoC_p.Ile348Leu,3) Uncertain significance,764411,348,rpoC,-1.7879926468281004
+-4.100046,rpoC_p.Ile270Val,3) Uncertain significance,764177,270,rpoC,-1.7879926468281004
+-4.0972056,rpoC_p.Ile12Leu,3) Uncertain significance,763403,12,rpoC,-1.7879926468281004
+-4.0996127,rpoB_p.Tyr564Cys,3) Uncertain significance,761497,564,rpoB,-2.55552040658738
+-4.0914116,rpoB_p.Tyr651His,3) Uncertain significance,761757,651,rpoB,-1.578318184522404
+-4.09274,rpoC_c.-16delG,3) Uncertain significance,763353,0,rpoC,-1.7879926468281004
+-4.1099253,rpoC_p.Leu627dup,3) Uncertain significance,765247,627,rpoC,-1.5764149079972862
+-4.09368,rpoC_p.Ala1144Thr,3) Uncertain significance,766799,1144,rpoC,-1.7879926468281004
+-4.0966587,rpoC_p.Ala1184Val,3) Uncertain significance,766920,1184,rpoC,-1.7879926468281004
+-4.094164,rpoC_p.Ala1188Ser,3) Uncertain significance,766931,1188,rpoC,-1.7879926468281004
+-4.093422,rpoC_p.Ala1195Val,3) Uncertain significance,766953,1195,rpoC,-2.0601778093405825
+-4.096804,rpoC_p.Ala1201Ser,3) Uncertain significance,766970,1201,rpoC,-1.7879926468281004
+-4.102446,rpoC_p.Ala1202Asp,3) Uncertain significance,766974,1202,rpoC,-2.380774756298348
+-4.1135993,rpoC_p.Ala1236Gly,3) Uncertain significance,767076,1236,rpoC,-2.4218167227196226
+-4.040842,rpoC_p.Ala174Val,3) Uncertain significance,763890,174,rpoC,-1.7879926468281004
+-4.09274,rpoC_c.-17A>G,3) Uncertain significance,763353,0,rpoC,-1.7879926468281004
+-4.097297,rpoC_p.Ala189Thr,3) Uncertain significance,763934,189,rpoC,-1.7879926468281004
+-4.0936227,rpoC_p.Ala212Thr,3) Uncertain significance,764003,212,rpoC,-1.7879926468281004
+-4.0915065,rpoC_p.Ala448Ser,3) Uncertain significance,764711,448,rpoC,-1.7879926468281004
+-4.072222,rpoC_p.Ala492Pro,3) Uncertain significance,764843,492,rpoC,-0.9122914399051032
+-4.105221,rpoC_p.Ala521Val,3) Uncertain significance,764931,521,rpoC,-1.6232466472515
+-4.1030293,rpoC_p.Ala553Val,3) Uncertain significance,765027,553,rpoC,-1.7879926468281004
+-4.103341,rpoC_p.Ala621Val,3) Uncertain significance,765231,621,rpoC,-1.7879926468281004
+-4.0907726,rpoC_p.Ala648Thr,3) Uncertain significance,765311,648,rpoC,-1.7879926468281004
+-4.097899,rpoC_c.-6A>C,3) Uncertain significance,763364,0,rpoC,-1.7879926468281004
+-4.111323,rpoC_p.Ala710Val,3) Uncertain significance,765498,710,rpoC,-1.9205119386577147
+-4.09096,rpoC_p.Ala773Glu,3) Uncertain significance,765687,773,rpoC,-1.7879926468281004
+-4.1226435,rpoB_p.Val946Gly,3) Uncertain significance,762643,946,rpoB,-1.7879926468281004
+-4.0901675,rpoB_p.Val895Phe,3) Uncertain significance,762489,895,rpoB,-1.7879926468281004
+-4.0937386,rpoB_p.Val867Ala,3) Uncertain significance,762406,867,rpoB,-1.7879926468281004
+-4.0964017,rpoB_p.Val865Met,3) Uncertain significance,762399,865,rpoB,-1.7879926468281004
+-4.0994673,rpoB_p.Thr347Ile,3) Uncertain significance,760846,347,rpoB,-1.7879926468281004
+-4.1006017,rpoB_p.Thr508Ala,3) Uncertain significance,761328,508,rpoB,-1.8455920286136336
+-4.114271,rpoB_p.Thr526Ser,3) Uncertain significance,761382,526,rpoB,-1.7879926468281004
+-4.086534,rpoB_p.Thr52Ser,3) Uncertain significance,759960,52,rpoB,-2.1209900209773336
+-4.1018324,rpoB_p.Thr653Ala,3) Uncertain significance,761763,653,rpoB,-1.7879926468281004
+-4.1306987,rpoB_p.Thr660Ile,3) Uncertain significance,761785,660,rpoB,-2.0516117814997568
+-4.1314034,rpoB_p.Thr660Asn,3) Uncertain significance,761785,660,rpoB,-2.0516117814997568
+-4.101211,rpoB_p.Thr756Ile,3) Uncertain significance,762073,756,rpoB,-1.7879926468281004
+-4.097006,rpoB_p.Val1117Leu,3) Uncertain significance,763155,1117,rpoB,-1.7879926468281004
+-4.0933123,rpoB_p.Val1129Ala,3) Uncertain significance,763192,1129,rpoB,-1.7879926468281004
+-4.098444,rpoB_p.Val1168Phe,3) Uncertain significance,763308,1168,rpoB,-1.7879926468281004
+-4.096728,rpoB_p.Val179Ala,3) Uncertain significance,760342,179,rpoB,-1.7879926468281004
+-4.0975323,rpoC_p.Ala902Thr,3) Uncertain significance,766073,902,rpoC,-1.7879926468281004
+-4.097033,rpoB_p.Val179Met,3) Uncertain significance,760341,179,rpoB,-1.7879926468281004
+-4.1342664,rpoB_p.Val198Met,3) Uncertain significance,760398,198,rpoB,-2.3861855313591493
+-4.099873,rpoB_p.Val216Ile,3) Uncertain significance,760452,216,rpoB,-1.7879926468281004
+-4.0984426,rpoB_p.Val262Phe,3) Uncertain significance,760590,262,rpoB,-1.7879926468281004
+-4.0984488,rpoB_p.Val310Gly,3) Uncertain significance,760735,310,rpoB,-1.7879926468281004
+-4.0920153,rpoB_p.Val332Ile,3) Uncertain significance,760800,332,rpoB,-1.7879926468281004
+-4.089109,rpoB_p.Val33Leu,3) Uncertain significance,759903,33,rpoB,-1.578318184522398
+-4.0957513,rpoB_p.Val351Ile,3) Uncertain significance,760857,351,rpoB,-1.7879926468281004
+-4.0687485,rpoB_p.Val44Ala,3) Uncertain significance,759937,44,rpoB,-1.7879926468281004
+-4.093468,rpoB_p.Val517Met,3) Uncertain significance,761355,517,rpoB,-1.7879926468281004
+-4.0896583,rpoB_p.Val549Ile,3) Uncertain significance,761451,549,rpoB,-1.7879926468281004
+-4.0955405,rpoB_p.Val77Met,3) Uncertain significance,760035,77,rpoB,-1.7879926468281004
+-4.0958323,rpoB_p.Val841Leu,3) Uncertain significance,762327,841,rpoB,-1.7879926468281004
+-4.208644,rpoB_p.Val198Leu,3) Uncertain significance,760398,198,rpoB,-2.3861855313591493
+-4.092774,rpoC_c.-22C>T,3) Uncertain significance,763348,0,rpoC,-1.7879926468281004
+-4.086,rpoC_p.Asp1093Glu,3) Uncertain significance,766648,1093,rpoC,-1.7879926468281004
+-4.099628,rpoC_p.Asp1169Glu,3) Uncertain significance,766876,1169,rpoC,-1.676267995192963
+-4.092896,rpoC_p.Glu645Lys,3) Uncertain significance,765302,645,rpoC,-2.160622160336704
+-4.095431,rpoC_p.Glu791Ala,3) Uncertain significance,765741,791,rpoC,-1.7879926468281004
+-4.1008186,rpoC_p.Glu842Ala,3) Uncertain significance,765894,842,rpoC,-1.7879926468281004
+-4.1217866,rpoC_p.Phe1089Ser,3) Uncertain significance,766635,1089,rpoC,-1.7879926468281004
+-4.092567,rpoC_p.Gly1311Ser,3) Uncertain significance,767300,1311,rpoC,-1.7879926468281004
+-4.0971932,rpoC_p.Gly13Arg,3) Uncertain significance,763406,13,rpoC,-1.7879926468281004
+-4.09736,rpoC_p.Gly188Ala,3) Uncertain significance,763932,188,rpoC,-1.7879926468281004
+-4.0934763,rpoC_p.Gly286Glu,3) Uncertain significance,764226,286,rpoC,-1.7879926468281004
+-4.104285,rpoC_p.Gly311Ser,3) Uncertain significance,764300,311,rpoC,-1.7031795525531517
+-4.072926,rpoC_p.Gly332Arg,3) Uncertain significance,764363,332,rpoC,-0.9131583557255232
+-4.1034217,rpoC_p.Gly411Ser,3) Uncertain significance,764600,411,rpoC,-1.7879926468281004
+-4.126516,rpoC_p.Gly519Asp,3) Uncertain significance,764925,519,rpoC,-1.0961724846317114
+-4.082583,rpoC_p.Glu49Ala,3) Uncertain significance,763515,49,rpoC,-3.437903197731448
+-4.0995097,rpoC_p.Gly597Asp,3) Uncertain significance,765159,597,rpoC,-1.7879926468281004
+-4.1006103,rpoC_p.Gly655Val,3) Uncertain significance,765333,655,rpoC,-1.7879926468281004
+-4.0960155,rpoC_p.Gly680Arg,3) Uncertain significance,765407,680,rpoC,-1.7879926468281004
+-4.099287,rpoC_p.Gly680Val,3) Uncertain significance,765408,680,rpoC,-1.7879926468281004
+-4.099913,rpoC_p.Gly980Arg,3) Uncertain significance,766307,980,rpoC,-1.7879926468281004
+-4.1016974,rpoC_p.His145Tyr,3) Uncertain significance,763802,145,rpoC,-1.7879926468281004
+-4.08616,rpoC_p.His525Tyr,3) Uncertain significance,764942,525,rpoC,-1.4177301475538129
+-4.089787,rpoC_p.His606Gln,3) Uncertain significance,765187,606,rpoC,-2.3082315804710047
+-4.116339,rpoC_p.His653Gln,3) Uncertain significance,765328,653,rpoC,-1.7879926468281004
+-4.0962844,rpoC_p.His889Arg,3) Uncertain significance,766035,889,rpoC,-1.7879926468281004
+-4.0921416,rpoC_p.Ile1066Val,3) Uncertain significance,766565,1066,rpoC,-1.7879926468281004
+-4.10346,rpoC_p.Ile1080Thr,3) Uncertain significance,766608,1080,rpoC,-1.7879926468281004
+-4.106533,rpoC_p.Ile1270Ser,3) Uncertain significance,767178,1270,rpoC,-1.7879926468281004
+-4.0823755,rpoC_p.Gly652Asp,3) Uncertain significance,765324,652,rpoC,-1.7879926468281004
+-4.0922694,rpoC_p.Glu259Lys,3) Uncertain significance,764144,259,rpoC,-1.4778738335262986
+-4.0961456,rpoC_p.Glu18Gln,3) Uncertain significance,763421,18,rpoC,-1.7879926468281004
+-4.0954576,rpoC_p.Asp192Gly,3) Uncertain significance,763944,192,rpoC,-1.7879926468281004
+-4.0977373,rpoC_p.Asp19Ala,3) Uncertain significance,763425,19,rpoC,-1.7879926468281004
+-4.095803,rpoC_p.Asp221Asn,3) Uncertain significance,764030,221,rpoC,-1.7879926468281004
+-4.099404,rpoC_p.Asp271Asn,3) Uncertain significance,764180,271,rpoC,-2.0129049038251816
+-4.0948043,rpoC_p.Asp279Gly,3) Uncertain significance,764205,279,rpoC,-1.7879926468281004
+-4.0925803,rpoC_p.Asp331Ala,3) Uncertain significance,764361,331,rpoC,-1.7879926468281004
+-4.0945444,rpoC_p.Asp462Gly,3) Uncertain significance,764754,462,rpoC,-1.7879926468281004
+-4.1081963,rpoC_p.Asp595Ala,3) Uncertain significance,765153,595,rpoC,-2.097171371389177
+-4.0978947,rpoC_p.Asp754Ala,3) Uncertain significance,765630,754,rpoC,-1.7879926468281004
+-4.097503,rpoC_p.Asp795Glu,3) Uncertain significance,765754,795,rpoC,-1.7879926468281004
+-4.0957294,rpoC_p.Asp796Gly,3) Uncertain significance,765756,796,rpoC,-1.7879926468281004
+-4.09413,rpoC_p.Asp890Glu,3) Uncertain significance,766039,890,rpoC,-1.7879926468281004
+-4.094827,rpoC_p.Glu220Lys,3) Uncertain significance,764027,220,rpoC,-1.7879926468281004
+-4.078366,rpoC_p.Glu1033Ala,3) Uncertain significance,766467,1033,rpoC,-0.934596243911214
+-4.089952,rpoC_p.Glu1073Asp,3) Uncertain significance,766588,1073,rpoC,-1.7879926468281004
+-4.090615,rpoC_p.Glu1096Asp,3) Uncertain significance,766657,1096,rpoC,-1.7879926468281004
+-4.097873,rpoC_p.Glu1113Asp,3) Uncertain significance,766708,1113,rpoC,-1.7879926468281004
+-4.09801,rpoC_p.Glu1140Gly,3) Uncertain significance,766788,1140,rpoC,-1.7879926468281004
+-4.101683,rpoC_p.Glu1189Asp,3) Uncertain significance,766936,1189,rpoC,-1.7879926468281004
+-4.0926013,rpoC_p.Glu126Asp,3) Uncertain significance,763747,126,rpoC,-1.7879926468281004
+-4.1030974,rpoC_p.Glu1277Lys,3) Uncertain significance,767198,1277,rpoC,-1.7879926468281004
+-4.0925484,rpoC_p.Glu142Ala,3) Uncertain significance,763794,142,rpoC,-1.7879926468281004
+-4.0985413,rpoC_p.Glu142Gly,3) Uncertain significance,763794,142,rpoC,-1.7879926468281004
+-4.08144,rpoC_p.Glu171Lys,3) Uncertain significance,763880,171,rpoC,-1.7879926468281004
+-4.1012015,rpoC_p.Glu185Gln,3) Uncertain significance,763922,185,rpoC,-1.7879926468281004
+-4.0990887,rpoC_p.Glu18Asp,3) Uncertain significance,763423,18,rpoC,-2.1606221603367537
+-4.0930085,rpoC_p.Glu1056Asp,3) Uncertain significance,766537,1056,rpoC,-1.7879926468281004
+-4.069971,rpoB_p.Pro45Leu,3) Uncertain significance,759940,45,rpoB,-2.0302491840297643
+-4.086079,rpoB_p.Thr399Ile,3) Uncertain significance,761002,399,rpoB,-1.03062296776518
+-4.1078486,rpoB_p.Arg552His,3) Uncertain significance,761461,552,rpoB,-2.1671808698696786
+-3.9177566,rpoB_p.Phe424Val,3) Uncertain significance,761076,424,rpoB,-0.956557065917865
+-4.0932794,rpoB_p.Val496Met,3) Uncertain significance,761292,496,rpoB,-1.944811103326116
+-4.099758,rpoB_p.Glu550Gly,3) Uncertain significance,761455,550,rpoB,-1.6806998225022602
+-4.0797095,rpoB_p.Ile1106Thr,3) Uncertain significance,763123,1106,rpoB,-7.2025781913085085
+-4.0963473,rpoB_p.Lys891Glu,3) Uncertain significance,762477,891,rpoB,-1.588660081843298
+-4.0992413,rpoB_p.Val534Met,3) Uncertain significance,761406,534,rpoB,-1.50732163990329
+-4.116762,rpoB_p.Phe971Leu,3) Uncertain significance,762717,971,rpoB,-1.7879926468281004
+-4.0959563,rpoB_p.His723Asp,3) Uncertain significance,761973,723,rpoB,-1.13673101859786
+-3.6280618,rpoB_p.Val168Ala,3) Uncertain significance,760309,168,rpoB,-1.7219158004578488
+-3.4070485,rpoB_p.Ile491Met,3) Uncertain significance,761279,491,rpoB,0.4050350427283558
+-4.1007476,rpoB_p.Phe503Ser,3) Uncertain significance,761314,503,rpoB,-1.7879926468281004
+-4.0875187,rpoB_p.Leu554Pro,3) Uncertain significance,761467,554,rpoB,-0.8863456567753946
+-4.1372437,rpoB_p.Ile873Phe,3) Uncertain significance,762423,873,rpoB,-1.7090853773394168
+-4.0928597,rpoB_p.Leu42Val,3) Uncertain significance,759930,42,rpoB,-1.6784185554654334
+-4.096665,rpoB_p.Arg827His,3) Uncertain significance,762286,827,rpoB,-1.5976781553298722
+-4.08631,rpoB_p.Tyr564His,3) Uncertain significance,761496,564,rpoB,-1.793201694088116
+-4.0787244,rpoB_p.Glu481Ala,3) Uncertain significance,761248,481,rpoB,-0.3092793123371292
+-3.5395913,rpoB_p.Ile491Val,3) Uncertain significance,761277,491,rpoB,0.5568008484580069
+-4.0934563,rpoB_p.Arg552Cys,3) Uncertain significance,761460,552,rpoB,-1.7454547174857438
+-4.1191387,rpoB_p.Ser874Tyr,3) Uncertain significance,762427,874,rpoB,-1.5691231260064438
+-4.094532,rpoB_p.Arg827Leu,3) Uncertain significance,762286,827,rpoB,-1.5976781553298722
+-4.1022615,rpoB_p.Thr400Ala,3) Uncertain significance,761004,400,rpoB,-0.8652594748681283
+-2.9758155,rpoB_p.Ile491Leu,3) Uncertain significance,761277,491,rpoB,0.5568008484580069
+-4.099116,rpoB_p.Glu761Asp,3) Uncertain significance,762089,761,rpoB,-1.764510012647059
+-4.1094947,rpoC_p.Met663Ile,3) Uncertain significance,765358,663,rpoC,-2.094850112378012
+-4.096961,rpoB_p.Arg827Cys,3) Uncertain significance,762285,827,rpoB,-2.2284361389655
+-4.087315,rpoB_p.Leu731Pro,3) Uncertain significance,761998,731,rpoB,-0.8688912814950434
+-4.10647,rpoC_p.Asp44Glu,3) Uncertain significance,763501,44,rpoC,-2.5310253830328757
+-4.0034733,rpoC_p.Ala1044Val,3) Uncertain significance,766500,1044,rpoC,-1.3286674680118622
+-4.1013045,rpoB_p.Gln975His,3) Uncertain significance,762731,975,rpoB,-3.2791064809185846
+-4.0678873,rpoB_p.Ala692Thr,3) Uncertain significance,761880,692,rpoB,2.1774963778428376
+-4.0948997,rpoB_p.Ile488Val,3) Uncertain significance,761268,488,rpoB,-1.8462007521727823
+-4.1013465,rpoB_p.Ile480Val,3) Uncertain significance,761244,480,rpoB,-1.4696663079127383
+-4.0869207,rpoB_p.Ala286Val,3) Uncertain significance,760663,286,rpoB,-1.8876477995973373
+-4.0250134,rpoB_p.Val496Leu,3) Uncertain significance,761292,496,rpoB,-1.944811103326116
+-4.067228,rpoB_p.Pro45Ser,3) Uncertain significance,759939,45,rpoB,-0.7356005448477164
+-4.078701,rpoB_p.Arg552Leu,3) Uncertain significance,761461,552,rpoB,-2.1671808698696786
+-4.1385245,rpoB_p.Val496Ala,3) Uncertain significance,761293,496,rpoB,-1.2569329271941896
+-4.1331983,rpoB_c.-159C>T,3) Uncertain significance,759648,0,rpoB,-2.5555204065873536
+-4.0850067,rpoC_p.Glu948Ala,3) Uncertain significance,766212,948,rpoC,-0.4812554945087085
+-4.1153836,rpoC_p.Lys1082Glu,3) Uncertain significance,766613,1082,rpoC,-1.7879926468281004
+-4.092913,rpoC_p.Val197Ile,3) Uncertain significance,763958,197,rpoC,-1.7879926468281004
+-4.086713,rpoB_c.-180A>C,3) Uncertain significance,759627,0,rpoB,-1.945711088486604
+-4.0921845,rpoC_p.Gly1198Ser,3) Uncertain significance,766961,1198,rpoC,-1.7879926468281004
+-4.1099157,rpoC_p.Gly980Glu,3) Uncertain significance,766308,980,rpoC,-2.1103897787748425
+-4.1169395,rpoC_p.Thr667Met,3) Uncertain significance,765369,667,rpoC,-2.0611326316856307
+-4.0750856,rpoB_p.His835Arg,3) Uncertain significance,762310,835,rpoB,-1.0903255703092776
+-4.084748,rpoB_p.Gln409Arg,3) Uncertain significance,761032,409,rpoB,-0.2925818493122271
+-4.1000123,rpoB_p.Asp574Glu,3) Uncertain significance,761528,574,rpoB,-1.7879926468281004
+-4.0904703,rpoB_p.Ala596Gly,3) Uncertain significance,761593,596,rpoB,-1.7879926468281004
+-4.103241,rpoB_p.Gly973Asp,3) Uncertain significance,762724,973,rpoB,-1.163613002045848
+-4.092839,rpoB_p.Lys832Glu,3) Uncertain significance,762300,832,rpoB,-1.5433461344504995
+-4.0938296,rpoB_p.Leu378Arg,3) Uncertain significance,760939,378,rpoB,-0.7449571471514209
+-4.0979047,rpoB_p.Pro577Ala,3) Uncertain significance,761535,577,rpoB,-1.8477063083884528
+-4.0935388,rpoB_p.Ser254Pro,3) Uncertain significance,760566,254,rpoB,-1.987064996740265
+-4.07973,rpoB_p.Thr400Asn,3) Uncertain significance,761005,400,rpoB,-2.0085221950457672
+-4.093404,rpoB_p.Val534Leu,3) Uncertain significance,761406,534,rpoB,-1.50732163990329
+-4.091162,rpoB_p.Val736Leu,3) Uncertain significance,762012,736,rpoB,-1.7879926468281004
+-4.102697,rpoB_p.Asp265Gly,3) Uncertain significance,760600,265,rpoB,-2.525722135166172
+-4.0942807,rpoB_p.Lys37Arg,3) Uncertain significance,759916,37,rpoB,-2.829230457552179
+-4.093431,rpoB_c.-21G>C,3) Uncertain significance,759786,0,rpoB,-1.9008252773577907
+-4.0931726,rpoB_p.Pro358Leu,3) Uncertain significance,760879,358,rpoB,-1.4721198429410798
+-4.0736156,rpoB_p.Gly504dup,3) Uncertain significance,761315,504,rpoB,-0.7666885355998722
+-4.093871,rpoB_p.Asp520Ala,3) Uncertain significance,761365,520,rpoB,-2.0128733675371957
+-4.069853,rpoB_p.Gly456Ser,3) Uncertain significance,761172,456,rpoB,-1.7879926468281004
+-4.09055,rpoB_p.Gly46Val,3) Uncertain significance,759943,46,rpoB,-1.3528974534568288
+-4.0997043,rpoB_p.Ile480Thr,3) Uncertain significance,761245,480,rpoB,-2.2002372646275035
+-4.090259,rpoB_p.Lys799Gln,3) Uncertain significance,762201,799,rpoB,-2.391243072938266
+-4.0990195,rpoB_p.Leu293Ser,3) Uncertain significance,760684,293,rpoB,-1.7879926468281004
+-4.105552,rpoB_p.Gln1056Arg,3) Uncertain significance,762973,1056,rpoB,-1.7879926468281004
+-4.103585,rpoB_p.Arg273Cys,3) Uncertain significance,760623,273,rpoB,-1.7879926468281004
+-4.0905004,rpoB_p.Ser582Ala,3) Uncertain significance,761550,582,rpoB,-1.9414257547580327
+-4.1252275,rpoB_p.Val113Ile,3) Uncertain significance,760143,113,rpoB,-3.239895172916741
+-4.107217,rpoB_p.Glu460Gly,3) Uncertain significance,761185,460,rpoB,-4.893582347996352
+-3.5037453,rpoB_p.Ser493Leu,3) Uncertain significance,761284,493,rpoB,-1.030531183595718
+-4.070781,rpoB_p.Arg167Cys,3) Uncertain significance,760305,167,rpoB,-0.9180000880191328
+-4.04608,rpoB_p.Glu207Lys,3) Uncertain significance,760425,207,rpoB,0.8747269313231656
+-4.0886083,rpoB_p.Ile588Val,3) Uncertain significance,761568,588,rpoB,-1.9141995494463675
+-4.088568,rpoB_p.Pro45Arg,3) Uncertain significance,759940,45,rpoB,-2.0302491840297643
+-3.9549634,rpoB_p.Gln172Arg,3) Uncertain significance,760321,172,rpoB,-0.8532510537310848
+-4.094138,rpoB_p.Thr400Ser,3) Uncertain significance,761005,400,rpoB,-2.0085221950457672
+-4.0955205,rpoB_p.Ala584Asp,3) Uncertain significance,761557,584,rpoB,-1.6232598351183545
+-4.0925136,rpoB_p.Ala753Val,3) Uncertain significance,762064,753,rpoB,-1.873802678229723
+-4.0921674,rpoB_p.Asp571Ala,3) Uncertain significance,761518,571,rpoB,-1.4738326103393222
+-3.9513757,rpoB_p.Phe424Leu,3) Uncertain significance,761076,424,rpoB,-0.956557065917865
+-3.978533,rpoB_p.Val170Ala,3) Uncertain significance,760315,170,rpoB,-0.7399671331534605
+-3.48012,rpoB_p.Ile491Thr,3) Uncertain significance,761278,491,rpoB,-0.9149079707795637
+-4.076197,rpoB_p.Pro45Thr,3) Uncertain significance,759939,45,rpoB,-0.7356005448477164
+-4.112704,rpoB_p.Arg219Cys,3) Uncertain significance,760461,219,rpoB,-1.7287812524553028
+-4.2243524,rpoB_c.-83A>G,3) Uncertain significance,759724,0,rpoB,-2.247744923271595
+-4.079784,rpoB_p.Val359Ala,3) Uncertain significance,760882,359,rpoB,1.4152230068655915
+-4.097283,rpoB_p.Glu592Asp,3) Uncertain significance,761582,592,rpoB,-1.7712668041539597
+-4.0924153,rpoB_p.His1028Tyr,3) Uncertain significance,762888,1028,rpoB,-1.9688961378979688
+-4.1004205,rpoB_p.Leu862Arg,3) Uncertain significance,762391,862,rpoB,-2.7087668257584205
+-4.100069,rpoB_p.Thr159Pro,3) Uncertain significance,760281,159,rpoB,-2.016449030573161
+-4.0868096,rpoB_p.Thr52Pro,3) Uncertain significance,759960,52,rpoB,-2.1209900209773336
+-4.094297,rpoB_p.Val534Ala,3) Uncertain significance,761407,534,rpoB,-1.119247818156625
+-4.097419,rpoB_p.Val562Ala,3) Uncertain significance,761491,562,rpoB,-2.144932817945401
+-4.0968156,rpoB_p.Tyr308Cys,3) Uncertain significance,760729,308,rpoB,-1.875648068118748
+-4.084005,rpoB_p.Met920Val,3) Uncertain significance,762564,920,rpoB,-1.618323084793902
+-4.09112,rpoB_p.Thr756Ala,3) Uncertain significance,762072,756,rpoB,-1.7820010581730172
+-4.09909,rpoB_p.Val562Met,3) Uncertain significance,761490,562,rpoB,-1.4781228008720482
+-4.0898013,rpoB_p.Tyr308Asp,3) Uncertain significance,760728,308,rpoB,-1.7797767528869304
+-3.5955405,rpoB_p.Pro454Arg,3) Uncertain significance,761167,454,rpoB,-1.995293458920285
+-4.086268,rpoB_p.Pro45Gln,3) Uncertain significance,759940,45,rpoB,-2.0302491840297643
+-4.0873,rpoB_p.Pro700Arg,3) Uncertain significance,761905,700,rpoB,-1.4884088085842146
+-4.0968423,rpoB_p.Pro834Thr,3) Uncertain significance,762306,834,rpoB,-1.444219973128404
+-4.112411,rpoB_p.Pro856Leu,3) Uncertain significance,762373,856,rpoB,-2.2661541591802328
+-4.115984,rpoB_p.Gln1080Arg,3) Uncertain significance,763045,1080,rpoB,-1.8677826762486704
+-4.0391054,rpoB_p.Gln172Lys,3) Uncertain significance,760320,172,rpoB,-1.7879926468281004
+-4.0954413,rpoB_p.Gln19Arg,3) Uncertain significance,759862,19,rpoB,-1.7879926468281004
+-4.0896425,rpoB_p.Gln226Glu,3) Uncertain significance,760482,226,rpoB,-1.7879926468281004
+-4.087543,rpoB_p.Gln51Pro,3) Uncertain significance,759958,51,rpoB,-1.7879926468281004
+-4.114652,rpoB_p.Gln980Lys,3) Uncertain significance,762744,980,rpoB,-1.7879926468281004
+-4.0940967,rpoB_p.Gln980Arg,3) Uncertain significance,762745,980,rpoB,-0.5089794011992173
+-4.0933795,rpoB_p.Arg219Ser,3) Uncertain significance,760461,219,rpoB,-1.7287812524553028
+-4.090176,rpoB_p.Arg224Cys,3) Uncertain significance,760476,224,rpoB,-1.715077386956661
+-4.0950065,rpoB_p.Arg578Gly,3) Uncertain significance,761538,578,rpoB,-1.7879926468281004
+-4.0943456,rpoB_p.Arg578His,3) Uncertain significance,761539,578,rpoB,-2.833628193789129
+-4.0990186,rpoB_p.Arg607Ser,3) Uncertain significance,761625,607,rpoB,-1.7879926468281004
+-4.1140504,rpoB_p.Arg665Trp,3) Uncertain significance,761799,665,rpoB,-1.7879926468281004
+-4.0954385,rpoB_p.Arg824Cys,3) Uncertain significance,762276,824,rpoB,-0.8811700526920693
+-4.0957446,rpoB_p.Arg824Leu,3) Uncertain significance,762277,824,rpoB,-1.7879926468281004
+-4.092302,rpoB_p.Arg827Ser,3) Uncertain significance,762285,827,rpoB,-2.2284361389655
+-4.0901017,rpoB_p.Arg845Gln,3) Uncertain significance,762340,845,rpoB,-1.7879926468281004
+-4.097694,rpoB_p.Arg845Trp,3) Uncertain significance,762339,845,rpoB,-1.7879926468281004
+-4.0991826,rpoB_p.Arg871His,3) Uncertain significance,762418,871,rpoB,-1.095166033752791
+-4.1130104,rpoB_p.Arg871Leu,3) Uncertain significance,762418,871,rpoB,-1.095166033752791
+-4.096052,rpoB_p.Pro280Ser,3) Uncertain significance,760644,280,rpoB,-1.7879926468281004
+-4.098049,rpoB_p.Pro280Leu,3) Uncertain significance,760645,280,rpoB,-1.7951010171947854
+-4.0919137,rpoB_p.Asn75Thr,3) Uncertain significance,760030,75,rpoB,-1.7879926468281004
+-4.101903,rpoB_p.Asn604Ser,3) Uncertain significance,761617,604,rpoB,-1.7879926468281004
+-4.092105,rpoB_p.His533Asn,3) Uncertain significance,761403,533,rpoB,-1.847706308388367
+-4.0933433,rpoB_p.His674Asn,3) Uncertain significance,761826,674,rpoB,-1.7879926468281004
+-4.104052,rpoB_p.His835Asp,3) Uncertain significance,762309,835,rpoB,-1.7879926468281004
+-4.092336,rpoB_p.His835Pro,3) Uncertain significance,762310,835,rpoB,-1.0903255703092776
+-4.0934386,rpoB_p.Ile1035Thr,3) Uncertain significance,762910,1035,rpoB,-0.9021283099449788
+-4.0955076,rpoB_p.Ile1035Val,3) Uncertain significance,762909,1035,rpoB,-1.7879926468281004
+-4.1015353,rpoB_p.Ile1046Val,3) Uncertain significance,762942,1046,rpoB,-1.8477063083883716
+-4.092068,rpoB_p.Ile1111Val,3) Uncertain significance,763137,1111,rpoB,-1.7879926468281004
+-4.1026473,rpoB_p.Ile199Thr,3) Uncertain significance,760402,199,rpoB,-1.7879926468281004
+-3.9842901,rpoB_p.Ile488Met,3) Uncertain significance,761270,488,rpoB,-1.7879926468281004
+-3.67116,rpoB_p.Ile491Ser,3) Uncertain significance,761278,491,rpoB,-0.9149079707795637
+-4.0883727,rpoB_p.Ser567Pro,3) Uncertain significance,761505,567,rpoB,-1.7879926468281004
+-4.101355,rpoB_p.Ile909Val,3) Uncertain significance,762531,909,rpoB,-1.7879926468281004
+-4.09775,rpoB_p.Lys1095Arg,3) Uncertain significance,763090,1095,rpoB,-1.6748245897415717
+-4.0906377,rpoB_p.Lys110Arg,3) Uncertain significance,760135,110,rpoB,-1.7879926468281004
+-4.09648,rpoB_p.Lys274Glu,3) Uncertain significance,760626,274,rpoB,-0.8232757912882455
+-4.102465,rpoB_p.Lys274Asn,3) Uncertain significance,760628,274,rpoB,-1.7879926468281004
+-4.0964003,rpoB_p.Lys832Gln,3) Uncertain significance,762300,832,rpoB,-1.5433461344504995
+-4.0865107,rpoB_p.Lys891Thr,3) Uncertain significance,762478,891,rpoB,-2.2120590121092656
+-4.113469,rpoB_p.Leu232Arg,3) Uncertain significance,760501,232,rpoB,-1.7879926468281004
+-4.067222,rpoB_p.Leu42Phe,3) Uncertain significance,759930,42,rpoB,-1.6784185554654334
+-4.0957913,rpoB_p.Leu775Pro,3) Uncertain significance,762130,775,rpoB,-1.7879926468281004
+-4.0986037,rpoB_p.Met707Thr,3) Uncertain significance,761926,707,rpoB,-1.7879926468281004
+-4.0969815,rpoB_p.Asn135Asp,3) Uncertain significance,760209,135,rpoB,-1.7879926468281004
+-4.101176,rpoB_p.Asn501Lys,3) Uncertain significance,761309,501,rpoB,-1.7879926468281004
+-4.106445,rpoB_p.Lys1054Arg,3) Uncertain significance,762967,1054,rpoB,-1.7879926468281004
+-4.0858493,rpoB_p.His1028Asp,3) Uncertain significance,762888,1028,rpoB,-1.9688961378979688
+-4.0904393,rpoB_p.Ser582Thr,3) Uncertain significance,761550,582,rpoB,-1.9414257547580327
+-4.100529,rpoB_p.Ser88Pro,3) Uncertain significance,760068,88,rpoB,-1.7879926468281004
+-4.090652,rpoB_p.Pro700Leu,3) Uncertain significance,761905,700,rpoB,-1.4884088085842146
+-4.099655,rpoB_p.Ser195Arg,3) Uncertain significance,760389,195,rpoB,-1.7879926468281004
+-4.084694,rpoB_p.Thr676Pro,3) Uncertain significance,761832,676,rpoB,-1.6291377311972668
+-4.1061645,rpoB_p.Thr9Ile,3) Uncertain significance,759832,9,rpoB,-2.139656561775751
+-4.0977015,rpoB_p.Met121Ile,3) Uncertain significance,760169,121,rpoB,-2.2661541591802163
+-4.1028247,rpoB_p.Gly945Glu,3) Uncertain significance,762640,945,rpoB,-2.139656561775713
+-4.0987744,rpoB_p.Asp545Glu,3) Uncertain significance,761441,545,rpoB,-2.387806743501722
+-4.112585,rpoB_p.His194Tyr,3) Uncertain significance,760386,194,rpoB,-1.7879926468281004
+-4.104536,rpoB_c.-6T>C,3) Uncertain significance,759801,0,rpoB,-1.867712585085528
+-4.101648,rpoB_p.His343Gln,3) Uncertain significance,760835,343,rpoB,-2.9852659583456376
+-4.131595,rpoB_p.Arg791Cys,3) Uncertain significance,762177,791,rpoB,-2.849707462196826
+-3.8228586,rpoB_p.Pro454Ser,3) Uncertain significance,761166,454,rpoB,-2.110389778774854
+-4.106467,rpoB_p.His674Gln,3) Uncertain significance,761828,674,rpoB,-1.7879926468281004
+-4.0792994,rpoB_p.His1028Arg,3) Uncertain significance,762889,1028,rpoB,-1.287633624947067
+-4.0964794,rpoB_p.Ala753Thr,3) Uncertain significance,762063,753,rpoB,-2.03434745089511
+-4.0882716,rpoB_p.Thr399Asn,3) Uncertain significance,761002,399,rpoB,-1.03062296776518
+-4.101878,rpoB_c.-45T>G,3) Uncertain significance,759762,0,rpoB,-1.7879926468281004
+-4.0826564,rpoB_p.Thr482Ile,3) Uncertain significance,761251,482,rpoB,-0.4881748120395358
+-4.105761,rpoB_p.Thr508Pro,3) Uncertain significance,761328,508,rpoB,-1.8455920286136336
+-4.094167,rpoB_p.Thr585Ala,3) Uncertain significance,761559,585,rpoB,-1.7879926468281004
+-4.0905375,rpoB_p.Thr676Ala,3) Uncertain significance,761832,676,rpoB,-1.6291377311972668
+-4.099506,rpoB_p.Thr742Ala,3) Uncertain significance,762030,742,rpoB,-1.7879926468281004
+-4.0883756,rpoB_p.Thr928Asn,3) Uncertain significance,762589,928,rpoB,-1.7879926468281004
+-3.7948837,rpoB_p.Val168Gly,3) Uncertain significance,760309,168,rpoB,-1.7219158004578488
+-4.011728,rpoB_p.Val170Gly,3) Uncertain significance,760315,170,rpoB,-0.7399671331534605
+-4.1259885,rpoB_p.Val228Ile,3) Uncertain significance,760488,228,rpoB,-2.139656561775725
+-4.090764,rpoB_p.Val355Ile,3) Uncertain significance,760869,355,rpoB,-2.543014889537289
+-4.172778,rpoB_p.Ser874Phe,3) Uncertain significance,762427,874,rpoB,-1.5691231260064438
+-4.0982385,rpoB_p.Val394Leu,3) Uncertain significance,760986,394,rpoB,-2.079513016673439
+-4.0956044,rpoB_p.Val496Gly,3) Uncertain significance,761293,496,rpoB,-1.2569329271941896
+-4.1018767,rpoB_p.Val523Leu,3) Uncertain significance,761373,523,rpoB,-1.991739044630148
+-4.099266,rpoB_p.Val534Gly,3) Uncertain significance,761407,534,rpoB,-1.119247818156625
+-4.0899353,rpoB_p.Val797Leu,3) Uncertain significance,762195,797,rpoB,-1.7879926468281004
+-4.0928044,rpoB_p.Val833Met,3) Uncertain significance,762303,833,rpoB,-1.7879926468281004
+-4.0918727,rpoB_p.Val867Met,3) Uncertain significance,762405,867,rpoB,-1.3715076824339385
+-4.1048093,rpoB_p.Val996Ala,3) Uncertain significance,762793,996,rpoB,-1.7879926468281004
+-4.0959773,rpoB_p.Val996Gly,3) Uncertain significance,762793,996,rpoB,-1.7879926468281004
+-4.09795,rpoB_p.Tyr1015Cys,3) Uncertain significance,762850,1015,rpoB,-1.7879926468281004
+-4.0954742,rpoB_p.Tyr474His,3) Uncertain significance,761226,474,rpoB,-1.6544207922808207
+-4.0968313,rpoB_p.Tyr510His,3) Uncertain significance,761334,510,rpoB,-1.7879926468281004
+-4.056466,rpoB_p.Val44Gly,3) Uncertain significance,759937,44,rpoB,-1.7879926468281004
+-4.0923753,rpoB_p.Gly992Arg,3) Uncertain significance,762780,992,rpoB,-1.7879926468281004
+-4.094255,rpoB_p.Gly981Asp,3) Uncertain significance,762748,981,rpoB,-1.7879926468281004
+-4.1045527,rpoB_p.Gly915Ser,3) Uncertain significance,762549,915,rpoB,-1.9583772871608176
+-4.0958266,rpoB_p.Asn539Lys,3) Uncertain significance,761423,539,rpoB,-2.0053837041242923
+-4.1014285,rpoB_p.Asn673Ser,3) Uncertain significance,761824,673,rpoB,-1.7879926468281004
+-4.08378,rpoB_p.Pro483Ser,3) Uncertain significance,761253,483,rpoB,-1.7879926468281004
+-4.1088767,rpoB_p.Pro768Leu,3) Uncertain significance,762109,768,rpoB,-1.7879926468281004
+-4.08981,rpoB_p.Gln401Arg,3) Uncertain significance,761008,401,rpoB,-2.137519280862871
+-4.1089907,rpoB_p.Arg1008Cys,3) Uncertain significance,762828,1008,rpoB,-1.7879926468281004
+-4.100251,rpoB_p.Arg219Leu,3) Uncertain significance,760462,219,rpoB,-1.87243489558206
+-4.0876675,rpoB_p.Arg225Gly,3) Uncertain significance,760479,225,rpoB,-0.7407861094842597
+-4.095453,rpoB_p.Ser540Pro,3) Uncertain significance,761424,540,rpoB,-1.7879926468281004
+-4.0898347,rpoB_p.Thr399Ala,3) Uncertain significance,761001,399,rpoB,-1.5703229972202208
+-4.0929446,rpoB_p.Thr399Pro,3) Uncertain significance,761001,399,rpoB,-1.5703229972202208
+-4.008613,rpoB_p.Val168Met,3) Uncertain significance,760308,168,rpoB,-1.7879926468281004
+-4.0904155,rpoB_p.Val262Ala,3) Uncertain significance,760591,262,rpoB,-1.7879926468281004
+-4.0927606,rpoB_p.Val305Ile,3) Uncertain significance,760719,305,rpoB,-1.1841478190347177
+-4.0843987,rpoB_p.Val50Gly,3) Uncertain significance,759955,50,rpoB,-1.7879926468281004
+-4.094965,rpoB_p.Val800Ala,3) Uncertain significance,762205,800,rpoB,-1.7879926468281004
+-4.118084,rpoB_p.Val970Ala,3) Uncertain significance,762715,970,rpoB,-2.1256198398624355
+-4.1149673,rpoB_p.Val970Met,3) Uncertain significance,762714,970,rpoB,-1.7879926468281004
+-4.0999875,rpoB_p.Gly217Ser,3) Uncertain significance,760455,217,rpoB,-1.7879926468281004
+-4.0968127,rpoB_p.Asn1155Ser,3) Uncertain significance,763270,1155,rpoB,-1.4803134044241175
+-4.0651355,rpoB_p.Pro483Leu,3) Uncertain significance,761254,483,rpoB,-1.648873117135834
+-3.991349,rpoB_p.Arg167His,3) Uncertain significance,760306,167,rpoB,-1.7879926468281004
+-4.1009645,rpoB_p.Ala960Glu,3) Uncertain significance,762685,960,rpoB,-1.973981017830016
+-3.7741783,rpoB_p.Pro454His,3) Uncertain significance,761167,454,rpoB,-1.995293458920285
+-4.0919976,rpoB_p.Pro30Ala,3) Uncertain significance,759894,30,rpoB,-1.7879926468281004
+-4.1065264,rpoB_p.Asn487His,3) Uncertain significance,761265,487,rpoB,-0.3665951743454566
+-4.095615,rpoB_p.Asn24Lys,3) Uncertain significance,759878,24,rpoB,-1.8753761741399055
+-4.103013,rpoB_p.Met587Thr,3) Uncertain significance,761566,587,rpoB,-1.8677826762486585
+-4.097916,rpoB_p.Asp92Gly,3) Uncertain significance,760081,92,rpoB,-1.0785561133640462
+-4.1286697,rpoB_p.Asn487Ser,3) Uncertain significance,761266,487,rpoB,-1.615402274158028
+-4.0764666,rpoB_p.Pro45Ala,3) Uncertain significance,759939,45,rpoB,-0.7356005448477164
+-4.1103435,rpoB_p.Ser672Phe,3) Uncertain significance,761821,672,rpoB,-2.0343474508951624
+-4.094933,rpoB_p.His674Arg,3) Uncertain significance,761827,674,rpoB,-0.5891541135989613
+-4.0964346,rpoB_p.Asp634Gly,3) Uncertain significance,761707,634,rpoB,-1.7090376630234427
+-3.8635554,rpoB_p.Lys422_Thr427del,3) Uncertain significance,761068,422,rpoB,0.9578748333904668
+-4.0962915,rpoB_p.Ala538Val,3) Uncertain significance,761419,538,rpoB,-1.7879926468281004
+-4.0961576,rpoB_p.Ala584Gly,3) Uncertain significance,761557,584,rpoB,-1.6232598351183545
+-4.0938444,rpoB_c.-87C>T,3) Uncertain significance,759720,0,rpoB,-1.5245297699590847
+-4.102798,rpoB_p.Asp595Glu,3) Uncertain significance,761591,595,rpoB,-1.7879926468281004
+-4.093513,rpoB_p.His749Tyr,3) Uncertain significance,762051,749,rpoB,-2.1069396072053785
+-4.1011024,rpoB_p.Glu156Gly,3) Uncertain significance,760273,156,rpoB,-1.7879926468281004
+-4.093635,rpoB_p.Phe151Leu,3) Uncertain significance,760259,151,rpoB,-1.531356343279897
+-3.694038,rpoB_p.Gly453Ala,3) Uncertain significance,761164,453,rpoB,-1.1959014049455223
+-4.0938735,rpoB_p.Gly79Ser,3) Uncertain significance,760041,79,rpoB,-1.7879926468281004
+-4.087465,rpoB_p.Gly836Ser,3) Uncertain significance,762312,836,rpoB,-1.0897762179505464
+-4.034651,rpoB_p.Ile488Leu,3) Uncertain significance,761268,488,rpoB,-1.8462007521727823
+-4.089724,rpoB_p.Ile90Leu,3) Uncertain significance,760074,90,rpoB,-1.8477063083883716
+-4.09014,rpoB_p.Lys1102Thr,3) Uncertain significance,763111,1102,rpoB,-1.7879926468281004
+-3.9112966,rpoB_p.Leu173Pro,3) Uncertain significance,760324,173,rpoB,-1.84205085046543
+-3.9972436,rpoB_p.Leu490Val,3) Uncertain significance,761274,490,rpoB,-1.7879926468281004
+-4.089432,rpoB_p.Leu525Pro,3) Uncertain significance,761380,525,rpoB,-1.4955893954814934
+-4.093255,rpoB_p.Leu554Val,3) Uncertain significance,761466,554,rpoB,-1.7879926468281004
+-4.1000915,rpoB_p.Leu778Val,3) Uncertain significance,762138,778,rpoB,-2.001933085183709
+-4.0913873,rpoB_p.Glu807Gly,3) Uncertain significance,762226,807,rpoB,-1.8846522800583143
+-4.0994344,rpoB_p.Met390Thr,3) Uncertain significance,760975,390,rpoB,-1.4812196841318426
+-4.0956063,rpoB_p.Asp631Gly,3) Uncertain significance,761698,631,rpoB,-2.050653508818261
+-4.0852337,rpoB_p.Glu1140Gln,3) Uncertain significance,763224,1140,rpoB,-1.7879926468281004
+-4.087112,rpoB_p.Glu166Gly,3) Uncertain significance,760303,166,rpoB,-1.7879926468281004
+-4.029908,rpoB_p.Glu166Lys,3) Uncertain significance,760302,166,rpoB,-1.7879926468281004
+-4.085177,rpoB_p.Glu284Gly,3) Uncertain significance,760657,284,rpoB,-1.7879926468281004
+-4.0921807,rpoB_p.Glu291Lys,3) Uncertain significance,760677,291,rpoB,-1.7879926468281004
+-4.1015825,rpoB_p.Glu330Asp,3) Uncertain significance,760796,330,rpoB,-1.7879926468281004
+-4.1028495,rpoB_p.Glu377Val,3) Uncertain significance,760936,377,rpoB,-1.7879926468281004
+-4.112298,rpoB_p.Glu423Ala,3) Uncertain significance,761074,423,rpoB,-1.7879926468281004
+-4.0507426,rpoB_p.Glu423Gly,3) Uncertain significance,761074,423,rpoB,-1.7879926468281004
+-4.098516,rpoB_p.Glu550Lys,3) Uncertain significance,761454,550,rpoB,-1.7879926468281004
+-4.1035056,rpoB_p.Glu563Ala,3) Uncertain significance,761494,563,rpoB,-1.7879926468281004
+-4.0982904,rpoB_p.Asp571Tyr,3) Uncertain significance,761517,571,rpoB,-1.7879926468281004
+-4.090565,rpoB_p.Glu750Gln,3) Uncertain significance,762054,750,rpoB,0.3183244995959009
+-4.09555,rpoB_p.Glu821Val,3) Uncertain significance,762268,821,rpoB,-1.7527489851389095
+-4.0978575,rpoB_p.Glu82Gly,3) Uncertain significance,760051,82,rpoB,-1.7879926468281004
+-4.0893946,rpoB_p.Glu896Lys,3) Uncertain significance,762492,896,rpoB,-1.0522096717809286
+-4.0968738,rpoB_p.Phe424Cys,3) Uncertain significance,761077,424,rpoB,-1.7879926468281004
+-4.108385,rpoB_p.Phe503Val,3) Uncertain significance,761313,503,rpoB,-1.7879926468281004
+-4.0928125,rpoB_p.Gly158Ser,3) Uncertain significance,760278,158,rpoB,-1.7879926468281004
+-4.0973196,rpoB_p.Gly203Arg,3) Uncertain significance,760413,203,rpoB,-1.7879926468281004
+-3.7833147,rpoB_p.Gly453Arg,3) Uncertain significance,761163,453,rpoB,-1.7879926468281004
+-4.095407,rpoB_c.-50G>A,3) Uncertain significance,759757,0,rpoB,-1.7879926468281004
+-4.0915127,rpoB_p.Gly602Ala,3) Uncertain significance,761611,602,rpoB,-1.7879926468281004
+-4.087204,rpoB_p.Gly699Ser,3) Uncertain significance,761901,699,rpoB,-1.97123858861632
+-4.097006,rpoB_p.Gly890Cys,3) Uncertain significance,762474,890,rpoB,-1.727917088237369
+-4.0917764,rpoB_p.Glu807Gln,3) Uncertain significance,762225,807,rpoB,-1.7879926468281004
+-4.0943975,rpoB_p.Val581Met,3) Uncertain significance,761547,581,rpoB,-2.746370324328536
+-4.09987,rpoB_p.Asp531Tyr,3) Uncertain significance,761397,531,rpoB,-1.7879926468281004
+-4.096347,rpoB_p.Asp363Asn,3) Uncertain significance,760893,363,rpoB,-1.7879926468281004
+-4.0476832,rpoB_p.Ala670dup,3) Uncertain significance,761813,670,rpoB,-0.6427069291085256
+-4.1020694,rpoB_p.Gly876dup,3) Uncertain significance,762431,876,rpoB,-1.4775205097964443
+-4.1013694,rpoB_p.Ala1055Pro,3) Uncertain significance,762969,1055,rpoB,-1.7879926468281004
+-4.1009817,rpoB_p.Ala1153Val,3) Uncertain significance,763264,1153,rpoB,-1.4187702914640283
+-4.092428,rpoB_p.Ala2Thr,3) Uncertain significance,759810,2,rpoB,-1.7879926468281004
+-4.0961757,rpoB_c.-42A>G,3) Uncertain significance,759765,0,rpoB,-1.7879926468281004
+-3.9895182,rpoB_p.Ala498Val,3) Uncertain significance,761299,498,rpoB,-1.6432315242491429
+-4.0924015,rpoB_p.Ala538Pro,3) Uncertain significance,761418,538,rpoB,-2.03495177092125
+-4.1047726,rpoB_p.Ala559Val,3) Uncertain significance,761482,559,rpoB,-1.7879926468281004
+-4.1097236,rpoB_p.Ala599Thr,3) Uncertain significance,761601,599,rpoB,-1.7879926468281004
+-4.149687,rpoB_p.Ala599Val,3) Uncertain significance,761602,599,rpoB,-1.7879926468281004
+-4.100332,rpoB_p.Asp531Glu,3) Uncertain significance,761399,531,rpoB,-1.7879926468281004
+-4.093493,rpoB_p.Ala628Pro,3) Uncertain significance,761688,628,rpoB,-1.7879926468281004
+-4.1001496,rpoB_p.Ala708Ser,3) Uncertain significance,761928,708,rpoB,-1.7879926468281004
+-4.1015325,rpoB_c.-90A>G,3) Uncertain significance,759717,0,rpoB,-1.7879926468281004
+-4.1001906,rpoB_p.Ala934Thr,3) Uncertain significance,762606,934,rpoB,-1.7879926468281004
+-4.091723,rpoB_p.Ala951Thr,3) Uncertain significance,762657,951,rpoB,-1.86778267624867
+-4.100823,rpoB_p.Ala974Thr,3) Uncertain significance,762726,974,rpoB,-2.1404428908741355
+-4.0912805,rpoB_c.-37C>G,3) Uncertain significance,759770,0,rpoB,-1.7879926468281004
+-4.099734,rpoB_c.-4C>T,3) Uncertain significance,759803,0,rpoB,-1.976129353667823
+-4.097078,rpoB_p.Cys681Arg,3) Uncertain significance,761847,681,rpoB,-1.7561600998796942
+-4.105582,rpoB_p.Cys701Trp,3) Uncertain significance,761909,701,rpoB,-1.7879926468281004
+-4.124688,rpoB_p.Asp186Ala,3) Uncertain significance,760363,186,rpoB,-1.7879926468281004
+-4.096418,rpoB_p.Asp190Ala,3) Uncertain significance,760375,190,rpoB,-1.7879926468281004
+-4.096546,rpoB_p.Asp301Asn,3) Uncertain significance,760707,301,rpoB,-1.679634086193429
+-4.0938683,rpoB_p.Ala638Gly,3) Uncertain significance,761719,638,rpoB,-2.0118154124904395
+-4.0895033,rpoB_p.Glu320Asp,3) Uncertain significance,760766,320,rpoB,-1.452043475080903
+-4.092359,rpoB_c.-127G>A,3) Uncertain significance,759680,0,rpoB,-1.7879926468281004
+-4.086657,rpoB_p.Gly675Asp,3) Uncertain significance,761830,675,rpoB,-1.9204103863505328
+-4.093209,rpoB_p.Ile783Val,3) Uncertain significance,762153,783,rpoB,-1.7879926468281004
+-4.0988765,rpoB_p.Ile910Val,3) Uncertain significance,762534,910,rpoB,-2.097171371389252
+-4.1031737,rpoB_p.Leu80Val,3) Uncertain significance,760044,80,rpoB,-1.7879926468281004
+-4.090923,rpoB_p.Asn163Asp,3) Uncertain significance,760293,163,rpoB,-1.9457110884866329
+-4.099824,rpoB_p.Pro954Arg,3) Uncertain significance,762667,954,rpoB,-1.7879926468281004
+-3.6901503,rpoB_p.Ser493Trp,3) Uncertain significance,761284,493,rpoB,-1.030531183595718
+-4.1106715,rpoB_c.-134T>G,3) Uncertain significance,759673,0,rpoB,-2.834472722357253
+-4.095905,rpoB_p.Val129Gly,3) Uncertain significance,760192,129,rpoB,-1.7879926468281004
+-4.095238,rpoB_p.Tyr572Cys,3) Uncertain significance,761521,572,rpoB,-1.7879926468281004
+-4.098819,rpoC_p.Ala1299Val,3) Uncertain significance,767265,1299,rpoC,-1.4520434750808366
+-4.0214424,rpoC_p.Ala172Gly,3) Uncertain significance,763884,172,rpoC,-1.6012497354519295
+-4.115811,rpoC_p.Ala316Thr,3) Uncertain significance,764315,316,rpoC,-1.7879926468281004
+-4.092141,rpoC_p.Ala994Thr,3) Uncertain significance,766349,994,rpoC,-1.7879926468281004
+-4.0962377,rpoC_p.Asp795Gly,3) Uncertain significance,765753,795,rpoC,-1.7879926468281004
+-4.100506,rpoC_p.Asp907Gly,3) Uncertain significance,766089,907,rpoC,-2.038427704743184
+-4.0935493,rpoC_p.Glu1140Asp,3) Uncertain significance,766789,1140,rpoC,-1.205344753002527
+-4.0875473,rpoC_p.Glu591Gln,3) Uncertain significance,765140,591,rpoC,-2.327776867062291
+-4.0989547,rpoC_p.Glu932Lys,3) Uncertain significance,766163,932,rpoC,-1.7879926468281004
+-4.089657,rpoC_c.-15G>A,3) Uncertain significance,763355,0,rpoC,-1.7879926468281004
+-4.097368,rpoB_p.Glu156Asp,3) Uncertain significance,760274,156,rpoB,-1.7879926468281004
+-4.094786,rpoB_c.-62C>T,3) Uncertain significance,759745,0,rpoB,-1.7879926468281004
+-4.1003594,rpoB_c.-181C>T,3) Uncertain significance,759626,0,rpoB,-1.7879926468281004
+-4.1296377,rpoC_p.Met541Ile,3) Uncertain significance,764992,541,rpoC,-1.7879926468281004
+-4.0945916,rpoC_p.Met581Ile,3) Uncertain significance,765112,581,rpoC,-1.7879926468281004
+-4.0978603,rpoC_p.Asn1246Asp,3) Uncertain significance,767105,1246,rpoC,-1.7879926468281004
+-4.0910606,rpoC_p.Asn5Asp,3) Uncertain significance,763382,5,rpoC,-1.7879926468281004
+-4.101853,rpoC_p.Pro514Leu,3) Uncertain significance,764910,514,rpoC,-1.7879926468281004
+-4.093351,rpoC_p.Arg1163His,3) Uncertain significance,766857,1163,rpoC,-1.7879926468281004
+-4.1000943,rpoC_p.Arg247Cys,3) Uncertain significance,764108,247,rpoC,-1.7879926468281004
+-4.08449,rpoC_p.Arg478Cys,3) Uncertain significance,764801,478,rpoC,-1.5531858007274522
+-4.086536,rpoC_p.Arg752His,3) Uncertain significance,765624,752,rpoC,-1.7879926468281004
+-4.1028523,rpoC_p.Arg963Cys,3) Uncertain significance,766256,963,rpoC,-2.07057245651733
+-4.0927444,rpoC_p.Ser1172Ala,3) Uncertain significance,766883,1172,rpoC,-1.7879926468281004
+-4.0930386,rpoC_p.Ser1294Asn,3) Uncertain significance,767250,1294,rpoC,-1.7879926468281004
+-4.1035886,rpoC_p.Gly655Ser,3) Uncertain significance,765332,655,rpoC,-1.7879926468281004
+-4.1102614,rpoC_p.Thr909Met,3) Uncertain significance,766095,909,rpoC,-2.160781585985037
+-4.120482,rpoC_p.Tyr722Cys,3) Uncertain significance,765534,722,rpoC,-2.0343474508950923
+-4.1253676,rpoB_p.Ala1002Pro,3) Uncertain significance,762810,1002,rpoB,-1.7879926468281004
+-4.0931025,rpoC_p.Val1049Phe,3) Uncertain significance,766514,1049,rpoC,-1.7879926468281004
+-4.1021137,rpoC_p.Leu679Arg,3) Uncertain significance,765405,679,rpoC,-1.7879926468281004
+-4.0937934,rpoC_p.Asn1239Asp,3) Uncertain significance,767084,1239,rpoC,-1.7879926468281004
+-4.104119,rpoC_p.Gln657Arg,3) Uncertain significance,765339,657,rpoC,-1.859328237773743
+-4.0958495,rpoC_p.Gln1273Arg,3) Uncertain significance,767187,1273,rpoC,-1.7879926468281004
+-4.091433,rpoC_p.Gln303Leu,3) Uncertain significance,764277,303,rpoC,-1.7879926468281004
+-4.0658174,rpoC_p.Arg741Cys,3) Uncertain significance,765590,741,rpoC,0.275730847709255
+-4.0884748,rpoC_p.Arg912His,3) Uncertain significance,766104,912,rpoC,-1.7879926468281004
+-4.0934987,rpoC_p.Val692Ala,3) Uncertain significance,765444,692,rpoC,-1.7879926468281004
+-4.098762,rpoB_p.Ala943Thr,3) Uncertain significance,762633,943,rpoB,-1.7879926468281004
+-4.0957313,rpoB_p.Asp3Gly,3) Uncertain significance,759814,3,rpoB,-1.7879926468281004
+-4.0937295,rpoB_p.Gly28Arg,3) Uncertain significance,759888,28,rpoB,-1.7879926468281004
+-4.092534,rpoB_p.Met573Thr,3) Uncertain significance,761524,573,rpoB,-1.7879926468281004
+-4.097742,rpoB_p.Pro27His,3) Uncertain significance,759886,27,rpoB,-1.1732783337278
+-3.685313,rpoB_p.Pro454Leu,3) Uncertain significance,761167,454,rpoB,-1.995293458920285
+-4.09178,rpoB_p.Val613Phe,3) Uncertain significance,761643,613,rpoB,-1.7879926468281004
+-4.1006665,rpoC_p.Glu1073Lys,3) Uncertain significance,766586,1073,rpoC,-1.7879926468281004
+-4.117371,rpoC_p.Met559Ile,3) Uncertain significance,765046,559,rpoC,-1.7879926468281004
+-4.09954,rpoC_p.Val1135Ala,3) Uncertain significance,766773,1135,rpoC,-2.065735703917711
+-4.0946307,rpoB_c.-113C>T,3) Uncertain significance,759694,0,rpoB,-2.7771946487251444
+-4.0943403,rpoB_p.Glu721Lys,3) Uncertain significance,761967,721,rpoB,-1.7879926468281004
+-4.107367,rpoC_p.Thr227Ile,3) Uncertain significance,764049,227,rpoC,-1.7879926468281004
+-4.0911484,rpoC_p.Leu737Arg,3) Uncertain significance,765579,737,rpoC,-1.6328854608408574
+-4.0952306,rpoC_p.Ile802Val,3) Uncertain significance,765773,802,rpoC,-2.652876432331678
+-4.0923057,rpoC_c.-28C>A,3) Uncertain significance,763342,0,rpoC,-1.7879926468281004
+-4.0960593,rpoB_p.Ser936Arg,3) Uncertain significance,762612,936,rpoB,-2.022974218441549
+-4.0209165,rpoC_p.Arg173Gln,3) Uncertain significance,763887,173,rpoC,-1.7879926468281004
+-4.102978,rpoB_c.-173A>G,3) Uncertain significance,759634,0,rpoB,-2.169016918393523
+-4.073227,rpoB_c.-66C>T,3) Uncertain significance,759741,0,rpoB,-2.054423818755345
+-4.1195893,rpoB_p.Asp107Glu,3) Uncertain significance,760127,107,rpoB,-1.7879926468281004
+-4.090091,rpoB_p.Asp53Asn,3) Uncertain significance,759963,53,rpoB,-1.7879926468281004
+-4.100904,rpoB_p.Asp955Asn,3) Uncertain significance,762669,955,rpoB,-1.7879926468281004
+-4.0939946,rpoB_p.Glu1145Gly,3) Uncertain significance,763240,1145,rpoB,-1.7879926468281004
+-4.102734,rpoB_p.Glu344Gln,3) Uncertain significance,760836,344,rpoB,-1.7879926468281004
+-4.0932164,rpoB_p.Phe295Leu,3) Uncertain significance,760691,295,rpoB,-1.7879926468281004
+-4.0901313,rpoB_p.Ile965Val,3) Uncertain significance,762699,965,rpoB,-1.7879926468281004
+-4.0348225,rpoC_p.Pro481Ser,3) Uncertain significance,764810,481,rpoC,-0.1566360411495375
+-4.0789413,rpoB_p.Leu48Phe,3) Uncertain significance,759948,48,rpoB,-1.7879926468281004
+-4.1222596,rpoB_c.-160T>C,3) Uncertain significance,759647,0,rpoB,-1.7879926468281004
+-4.0953765,rpoC_p.Ala929Gly,3) Uncertain significance,766155,929,rpoC,-1.7879926468281004
+-4.0855684,rpoC_p.His525Gln,3) Uncertain significance,764944,525,rpoC,-0.770467423295784
+-4.0959215,rpoC_p.Ile1264Thr,3) Uncertain significance,767160,1264,rpoC,-1.7879926468281004
+-4.098533,rpoC_p.Leu151Phe,3) Uncertain significance,763820,151,rpoC,-1.7879926468281004
+-4.097423,rpoC_p.Arg1163Cys,3) Uncertain significance,766856,1163,rpoC,-1.7879926468281004
+-4.084064,rpoC_p.Arg741Ser,3) Uncertain significance,765590,741,rpoC,0.275730847709255
+-4.0991883,rpoB_p.Glu639Gly,3) Uncertain significance,761722,639,rpoB,-1.6396571062657972
+-4.101654,rpoB_p.Asn292Ser,3) Uncertain significance,760681,292,rpoB,-1.5097312278052968
+-4.0916524,rpoB_p.Ser12Thr,3) Uncertain significance,759841,12,rpoB,-1.7879926468281004
+-4.0985017,rpoC_p.Leu14Phe,3) Uncertain significance,763409,14,rpoC,-1.7879926468281004
+-4.1029773,rpoC_p.Ile12Val,3) Uncertain significance,763403,12,rpoC,-1.7879926468281004
+-4.1029544,rpoC_p.Ile1132Met,3) Uncertain significance,766765,1132,rpoC,-1.7879926468281004
+-4.0984397,rpoB_c.-169_-168insA,3) Uncertain significance,759638,0,rpoB,-1.4889894467507734
+-4.104754,rpoB_p.Ala334Val,3) Uncertain significance,760807,334,rpoB,-2.051611781499763
+-4.0927844,rpoB_c.-53A>G,3) Uncertain significance,759754,0,rpoB,-1.7879926468281004
+-4.1011667,rpoB_p.Ala977Thr,3) Uncertain significance,762735,977,rpoB,-1.7879926468281004
+-4.099145,rpoB_p.Ala998Val,3) Uncertain significance,762799,998,rpoB,-1.7879926468281004
+-4.0906606,rpoB_c.-126C>G,3) Uncertain significance,759681,0,rpoB,-1.7879926468281004
+-4.107664,rpoB_c.-44C>T,3) Uncertain significance,759763,0,rpoB,-1.7879926468281004
+-4.099653,rpoB_p.Cys681Gly,3) Uncertain significance,761847,681,rpoB,-1.7561600998796942
+-4.09741,rpoB_p.Asp209Asn,3) Uncertain significance,760431,209,rpoB,-1.7879926468281004
+-4.0934687,rpoB_p.Asp270Glu,3) Uncertain significance,760616,270,rpoB,-0.7407861094842706
+-4.097001,rpoB_p.Glu132Asp,3) Uncertain significance,760202,132,rpoB,-1.7879926468281004
+-4.106013,rpoB_p.Glu507Lys,3) Uncertain significance,761325,507,rpoB,-1.7879926468281004
+-4.0933623,rpoB_p.Glu66Lys,3) Uncertain significance,760002,66,rpoB,-1.7879926468281004
+-4.1109195,rpoC_c.-38C>T,3) Uncertain significance,763332,0,rpoC,-1.7879926468281004
+-4.0917106,rpoC_p.Asp660Asn,3) Uncertain significance,765347,660,rpoC,-1.7879926468281004
+-4.1016645,rpoC_p.Asp795Tyr,3) Uncertain significance,765752,795,rpoC,-1.7879926468281004
+-4.093702,rpoC_p.Glu1073Gln,3) Uncertain significance,766586,1073,rpoC,-1.7879926468281004
+-4.093577,rpoC_p.Glu1196Lys,3) Uncertain significance,766955,1196,rpoC,-1.7879926468281004
+-4.099365,rpoC_p.Glu1289Ala,3) Uncertain significance,767235,1289,rpoC,-1.7879926468281004
+-4.0988865,rpoC_p.Glu1289Gly,3) Uncertain significance,767235,1289,rpoC,-1.7879926468281004
+-4.0927258,rpoC_p.Glu215Ala,3) Uncertain significance,764013,215,rpoC,-1.7879926468281004
+-4.097969,rpoC_p.Glu791Gln,3) Uncertain significance,765740,791,rpoC,-1.7879926468281004
+-4.094911,rpoC_p.Glu894Gly,3) Uncertain significance,766050,894,rpoC,-1.7879926468281004
+-4.0948973,rpoC_p.Phe1061Leu,3) Uncertain significance,766552,1061,rpoC,-1.7879926468281004
+-4.105478,rpoC_p.Phe1175Leu,3) Uncertain significance,766892,1175,rpoC,-1.7879926468281004
+-4.096267,rpoC_p.Ala85Thr,3) Uncertain significance,763622,85,rpoC,-1.7879926468281004
+-4.094195,rpoC_p.Phe831Leu,3) Uncertain significance,765860,831,rpoC,-1.9718987320158743
+-4.0857253,rpoC_p.Gly1026Ala,3) Uncertain significance,766446,1026,rpoC,-3.0101388233142687
+-4.092326,rpoC_p.Gly1197Arg,3) Uncertain significance,766958,1197,rpoC,-1.7879926468281004
+-4.0949106,rpoC_p.Gly254Ser,3) Uncertain significance,764129,254,rpoC,-1.7879926468281004
+-4.09685,rpoC_c.-40G>A,3) Uncertain significance,763330,0,rpoC,-1.7879926468281004
+-4.081302,rpoC_p.Gly594Arg,3) Uncertain significance,765149,594,rpoC,-1.212753310058058
+-4.094769,rpoC_p.Gly63Ala,3) Uncertain significance,763557,63,rpoC,-1.7879926468281004
+-4.1084228,rpoC_p.His767Pro,3) Uncertain significance,765669,767,rpoC,-1.3602476587826773
+-4.1067233,rpoB_p.Ala686Thr,3) Uncertain significance,761862,686,rpoB,-2.695730869758769
+-4.095227,rpoC_p.Ala661Thr,3) Uncertain significance,765350,661,rpoC,-1.7879926468281004
+-4.099398,rpoC_p.Ala618Val,3) Uncertain significance,765222,618,rpoC,-1.7879926468281004
+-4.0796595,rpoB_p.Phe208Leu,3) Uncertain significance,760428,208,rpoB,-1.7879926468281004
+-4.0999207,rpoB_p.Phe93Leu,3) Uncertain significance,760085,93,rpoB,-2.0343474508951083
+-4.091077,rpoB_c.-150G>A,3) Uncertain significance,759657,0,rpoB,-1.7879926468281004
+-4.1107864,rpoB_c.-176G>A,3) Uncertain significance,759631,0,rpoB,-1.7879926468281004
+-4.0788856,rpoB_c.-40G>C,3) Uncertain significance,759767,0,rpoB,-1.7879926468281004
+-4.105573,rpoB_p.Gly516Asp,3) Uncertain significance,761353,516,rpoB,-1.7879926468281004
+-4.0867333,rpoB_p.Gly890Asp,3) Uncertain significance,762475,890,rpoB,-1.7879926468281004
+-4.0937495,rpoB_p.His656Gln,3) Uncertain significance,761774,656,rpoB,-1.7879926468281004
+-4.0928116,rpoB_p.Ile506Val,3) Uncertain significance,761322,506,rpoB,-1.7879926468281004
+-4.093675,rpoB_p.Ile892Thr,3) Uncertain significance,762481,892,rpoB,-1.7879926468281004
+-4.0953493,rpoB_p.Lys939Gln,3) Uncertain significance,762621,939,rpoB,-2.2854835283674677
+-4.110909,rpoB_p.Lys944Asn,3) Uncertain significance,762638,944,rpoB,-1.945711088486592
+-4.0942483,rpoC_p.Ala648Asp,3) Uncertain significance,765312,648,rpoC,-1.7879926468281004
+-4.097243,rpoB_p.Met153Thr,3) Uncertain significance,760264,153,rpoB,-1.7879926468281004
+-4.097178,rpoB_p.Asn963Ser,3) Uncertain significance,762694,963,rpoB,-2.4527832937151217
+-4.0906906,rpoB_p.Pro30Ser,3) Uncertain significance,759894,30,rpoB,-1.7879926468281004
+-4.0999885,rpoB_p.Pro682Ala,3) Uncertain significance,761850,682,rpoB,-1.7879926468281004
+-4.1034694,rpoB_p.Arg661Gln,3) Uncertain significance,761788,661,rpoB,-1.7879926468281004
+-4.104915,rpoB_p.Ser1124Ala,3) Uncertain significance,763176,1124,rpoB,-1.7879926468281004
+-4.1214194,rpoB_c.-160T>G,3) Uncertain significance,759647,0,rpoB,-1.7879926468281004
+-4.1344028,rpoB_c.-169T>C,3) Uncertain significance,759638,0,rpoB,-1.8172887557741524
+-4.096326,rpoB_p.Thr215Ala,3) Uncertain significance,760449,215,rpoB,-1.7879926468281004
+-4.0876226,rpoB_p.Tyr866His,3) Uncertain significance,762402,866,rpoB,-1.7879926468281004
+-4.111771,rpoC_c.-42_-41insT,3) Uncertain significance,763328,0,rpoC,-1.9457110884866025
+-4.1352315,rpoC_p.Ala1037Val,3) Uncertain significance,766479,1037,rpoC,-1.7879926468281004
+-4.1143613,rpoC_p.Ala1304Val,3) Uncertain significance,767280,1304,rpoC,-1.7879926468281004
+-4.0985656,rpoB_p.Met587Ile,3) Uncertain significance,761567,587,rpoB,-2.0343474508951616
+-4.104581,rpoB_p.Ala69Pro,3) Uncertain significance,760011,69,rpoB,-1.7879926468281004
+-4.0917015,rpoC_p.Gly1072Asp,3) Uncertain significance,766584,1072,rpoC,-1.9032115984869984
+-4.094936,rpoC_p.Met92Thr,3) Uncertain significance,763644,92,rpoC,-1.499103301818283
+-4.0974083,rpoB_p.Thr350Ile,3) Uncertain significance,760855,350,rpoB,-1.7879926468281004
+-4.100466,rpoC_p.His748Pro,3) Uncertain significance,765612,748,rpoC,-1.0301523568914182
+-4.1007214,rpoC_p.Met515Ile,3) Uncertain significance,764914,515,rpoC,-2.2297165591762784
+-4.111863,rpoC_p.Gln440Arg,3) Uncertain significance,764688,440,rpoC,-1.9995212300050176
+-4.1004615,rpoC_p.Gln22Arg,3) Uncertain significance,763434,22,rpoC,-1.9844128000344712
+-4.090094,rpoC_p.Thr225Asn,3) Uncertain significance,764043,225,rpoC,-1.4520434750809268
+-4.034268,rpoB_p.Asp515Tyr,3) Uncertain significance,761349,515,rpoB,-1.7038699589157025
+-4.0753894,rpoC_p.Ala230Val,3) Uncertain significance,764058,230,rpoC,-1.4520434750808242
+-4.0960107,rpoC_p.Ile1264Val,3) Uncertain significance,767159,1264,rpoC,-1.7879926468281004
+-4.0985065,rpoC_p.Leu151Arg,3) Uncertain significance,763821,151,rpoC,-1.7879926468281004
+-4.1078653,rpoB_p.Glu563Asp,3) Uncertain significance,761495,563,rpoB,-1.7879926468281004
+-4.02289,rpoC_p.Pro481Thr,3) Uncertain significance,764810,481,rpoC,-0.1566360411495375
+-4.091443,rpoB_p.Met655Thr,3) Uncertain significance,761770,655,rpoB,-1.7879926468281004
+-4.080896,rpoC_p.Thr958Ile,3) Uncertain significance,766242,958,rpoC,-1.4286627636271023
+-4.1054473,rpoC_p.Arg641Trp,3) Uncertain significance,765290,641,rpoC,-1.7879926468281004
+-4.0972605,rpoB_p.Ser16Cys,3) Uncertain significance,759852,16,rpoB,-1.3980198490411189
+-4.0945764,rpoC_p.Ser1100Ala,3) Uncertain significance,766667,1100,rpoC,-2.6335470631444293
+-4.1140556,rpoB_p.Asp103Glu,3) Uncertain significance,760115,103,rpoB,-2.887465123372717
+-4.0895267,rpoC_p.Ser1287Gln,3) Uncertain significance,"767228,767229",1287,rpoC,-1.7879926468281004
+-4.108472,rpoC_p.Ser308Phe,3) Uncertain significance,"764292,764293",308,rpoC,-1.6258935653432942
+0.039531797,rpoB_p.Ile491Tyr,3) Uncertain significance,"761277,761278",491,rpoB,1.4298855245065438
+-4.095988,rpoB_p.Ile542Lys,3) Uncertain significance,"761431,761432",542,rpoB,-1.868324654430555
+-4.090366,rpoB_p.Val549Gly,3) Uncertain significance,"761452,761453",549,rpoB,-1.7879926468281004
+-4.0959635,rpoB_p.Asp851Pro,3) Uncertain significance,"762357,762358",851,rpoB,-1.7879926468281004
+-4.1069574,rpoC_p.Leu789Ala,3) Uncertain significance,"765734,765735",789,rpoC,-1.7879926468281004
+-4.0917745,rpoB_p.Ile925Val,5) Not assoc w R,762579,925,rpoB,-1.7879926468281004
+-4.0988393,rpoB_p.Glu639Asp,5) Not assoc w R,761723,639,rpoB,-1.7879926468281004
+-4.092366,rpoB_p.Glu250Gly,5) Not assoc w R,760555,250,rpoB,-1.7066522845412335
+-3.969505,rpoB_p.Val695Leu,5) Not assoc w R,761889,695,rpoB,2.701362245196684
+-4.0952563,rpoC_p.Ala621Thr,5) Not assoc w R,765230,621,rpoC,-1.3826178841934178
+-4.406302,rpoC_p.Pro601Leu,5) Not assoc w R,765171,601,rpoC,-4.36176543683929
+-4.045419,rpoB_c.-61C>T,5) Not assoc w R,759746,0,rpoB,-3.6680140742479024
+-4.0935116,rpoC_p.Glu1092Asp,5) Not assoc w R,766645,1092,rpoC,-2.582248150756256
+-3.9957483,rpoC_p.Gly594Glu,5) Not assoc w R,765150,594,rpoC,3.4272558328750904
+-4.1126246,rpoB_p.Ser388Leu,5) Not assoc w R,760969,388,rpoB,-1.7879926468281004
+-4.099633,rpoB_p.Lys944Glu,5) Not assoc w R,762636,944,rpoB,-2.417172045716639
+-4.095286,rpoC_p.Glu784Gln,5) Not assoc w R,765719,784,rpoC,-1.574828630044922
+-4.1031766,rpoB_p.Asn381His,5) Not assoc w R,760947,381,rpoB,-1.7879926468281004
+-4.1120343,rpoC_p.Arg69Pro,5) Not assoc w R,763575,69,rpoC,-2.831583153634436
+-4.099149,rpoC_p.Pro906Ala,5) Not assoc w R,766085,906,rpoC,-2.747573602638756
+-4.0964417,rpoC_p.Asp271Gly,5) Not assoc w R,764181,271,rpoC,-1.7995214061744071
+-3.9814847,rpoC_p.Ala172Val,5) Not assoc w R,"763884,763885",172,rpoC,0.7088369400073129
+-4.0937176,MT_H37Rv,,,0,MT,

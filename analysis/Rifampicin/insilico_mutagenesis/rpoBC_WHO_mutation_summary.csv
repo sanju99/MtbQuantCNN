@@ -1,0 +1,1028 @@
+mutation,POS,REF,ALT,gene,variant,included?,confidence
+rpoB_c.-106A>G,759701,A,G,rpoB,c.-106A>G,1,3) Uncertain significance
+rpoB_c.-110A>G,759697,A,G,rpoB,c.-110A>G,1,3) Uncertain significance
+rpoB_c.-113C>T,759694,C,T,rpoB,c.-113C>T,1,3) Uncertain significance
+rpoB_c.-117G>A,759690,G,A,rpoB,c.-117G>A,1,3) Uncertain significance
+rpoB_c.-121_-120insT,759686,G,GT,rpoB,c.-121_-120insT,1,3) Uncertain significance
+rpoB_c.-122C>A,759685,C,A,rpoB,c.-122C>A,1,3) Uncertain significance
+rpoB_c.-122C>T,759685,C,T,rpoB,c.-122C>T,1,3) Uncertain significance
+rpoB_c.-126C>G,759681,C,G,rpoB,c.-126C>G,1,3) Uncertain significance
+rpoB_c.-127G>A,759680,G,A,rpoB,c.-127G>A,1,3) Uncertain significance
+rpoB_c.-134T>G,759673,T,G,rpoB,c.-134T>G,1,3) Uncertain significance
+rpoB_c.-136G>C,759671,G,C,rpoB,c.-136G>C,1,3) Uncertain significance
+rpoB_c.-137C>T,759670,C,T,rpoB,c.-137C>T,1,3) Uncertain significance
+rpoB_c.-140C>T,759667,C,T,rpoB,c.-140C>T,1,3) Uncertain significance
+rpoB_c.-150G>A,759657,G,A,rpoB,c.-150G>A,1,3) Uncertain significance
+rpoB_c.-151_-150insGT,759656,A,AGT,rpoB,c.-151_-150insGT,1,3) Uncertain significance
+rpoB_c.-152C>T,759655,C,T,rpoB,c.-152C>T,1,3) Uncertain significance
+rpoB_c.-153C>G,759654,C,G,rpoB,c.-153C>G,1,3) Uncertain significance
+rpoB_c.-159C>T,759648,C,T,rpoB,c.-159C>T,1,3) Uncertain significance
+rpoB_c.-159_-158insT,759648,C,CT,rpoB,c.-159_-158insT,1,3) Uncertain significance
+rpoB_c.-160T>C,759647,T,C,rpoB,c.-160T>C,1,3) Uncertain significance
+rpoB_c.-160T>G,759647,T,G,rpoB,c.-160T>G,1,3) Uncertain significance
+rpoB_c.-165_-164insG,759642,C,CG,rpoB,c.-165_-164insG,1,3) Uncertain significance
+rpoB_c.-167G>A,759640,G,A,rpoB,c.-167G>A,1,3) Uncertain significance
+rpoB_c.-169T>C,759638,T,C,rpoB,c.-169T>C,1,3) Uncertain significance
+rpoB_c.-169_-168insA,759638,T,TA,rpoB,c.-169_-168insA,1,3) Uncertain significance
+rpoB_c.-173A>G,759634,A,G,rpoB,c.-173A>G,1,3) Uncertain significance
+rpoB_c.-176G>A,759631,G,A,rpoB,c.-176G>A,1,3) Uncertain significance
+rpoB_c.-179C>T,759628,C,T,rpoB,c.-179C>T,1,3) Uncertain significance
+rpoB_c.-180A>C,759627,A,C,rpoB,c.-180A>C,1,3) Uncertain significance
+rpoB_c.-180_-179insCTTGACACCGTGGTCTTAGTC,759623,C,CCTTGACACCGTGGTCTTAGTC,rpoB,c.-180_-179insCTTGACACCGTGGTCTTAGTC,1,3) Uncertain significance
+rpoB_c.-181C>T,759626,C,T,rpoB,c.-181C>T,1,3) Uncertain significance
+rpoB_c.-185C>A,759622,C,A,rpoB,c.-185C>A,1,3) Uncertain significance
+rpoB_c.-188C>T,759619,C,T,rpoB,c.-188C>T,1,3) Uncertain significance
+rpoB_c.-195C>A,759612,C,A,rpoB,c.-195C>A,1,3) Uncertain significance
+rpoB_c.-21G>C,759786,G,C,rpoB,c.-21G>C,1,3) Uncertain significance
+rpoB_c.-37C>G,759770,C,G,rpoB,c.-37C>G,1,3) Uncertain significance
+rpoB_c.-3A>G,759804,A,G,rpoB,c.-3A>G,1,3) Uncertain significance
+rpoB_c.-40G>C,759767,G,C,rpoB,c.-40G>C,1,3) Uncertain significance
+rpoB_c.-42A>G,759765,A,G,rpoB,c.-42A>G,1,3) Uncertain significance
+rpoB_c.-42_-41insT,763323,T,TT,rpoB,c.-42_-41insT,1,3) Uncertain significance
+rpoB_c.-44C>T,759763,C,T,rpoB,c.-44C>T,1,3) Uncertain significance
+rpoB_c.-45T>G,759762,T,G,rpoB,c.-45T>G,1,3) Uncertain significance
+rpoB_c.-4C>T,759803,C,T,rpoB,c.-4C>T,1,3) Uncertain significance
+rpoB_c.-50G>A,759757,G,A,rpoB,c.-50G>A,1,3) Uncertain significance
+rpoB_c.-51C>T,759756,C,T,rpoB,c.-51C>T,1,3) Uncertain significance
+rpoB_c.-53A>G,759754,A,G,rpoB,c.-53A>G,1,3) Uncertain significance
+rpoB_c.-54C>A,759753,C,A,rpoB,c.-54C>A,1,3) Uncertain significance
+rpoB_c.-56G>T,759751,G,T,rpoB,c.-56G>T,1,3) Uncertain significance
+rpoB_c.-59_-58insT,759748,G,GT,rpoB,c.-59_-58insT,1,3) Uncertain significance
+rpoB_c.-59delG,759747,C,G,rpoB,c.-59delG,1,3) Uncertain significance
+rpoB_c.-60C>T,759747,C,T,rpoB,c.-60C>T,1,3) Uncertain significance
+rpoB_c.-61C>T,759746,C,T,rpoB,c.-61C>T,1,5) Not assoc w R
+rpoB_c.-62C>T,759745,C,T,rpoB,c.-62C>T,1,3) Uncertain significance
+rpoB_c.-66C>T,759741,C,T,rpoB,c.-66C>T,1,3) Uncertain significance
+rpoB_c.-6T>C,759801,T,C,rpoB,c.-6T>C,1,3) Uncertain significance
+rpoB_c.-73C>T,759734,C,T,rpoB,c.-73C>T,1,3) Uncertain significance
+rpoB_c.-77A>G,759730,A,G,rpoB,c.-77A>G,1,3) Uncertain significance
+rpoB_c.-80_-79insTT,759727,A,ATT,rpoB,c.-80_-79insTT,1,3) Uncertain significance
+rpoB_c.-83A>G,759724,A,G,rpoB,c.-83A>G,1,3) Uncertain significance
+rpoB_c.-84C>A,759723,C,A,rpoB,c.-84C>A,1,3) Uncertain significance
+rpoB_c.-87C>T,759720,C,T,rpoB,c.-87C>T,1,3) Uncertain significance
+rpoB_c.-90A>G,759717,A,G,rpoB,c.-90A>G,1,3) Uncertain significance
+rpoB_c.-94C>T,759713,C,T,rpoB,c.-94C>T,1,3) Uncertain significance
+rpoB_c.-96G>A,759711,G,A,rpoB,c.-96G>A,1,3) Uncertain significance
+rpoB_p.Ala1002Pro,762810,G,C,rpoB,p.Ala1002Pro,1,3) Uncertain significance
+rpoB_p.Ala1055Pro,762969,G,C,rpoB,p.Ala1055Pro,1,3) Uncertain significance
+rpoB_p.Ala1153Val,763264,C,T,rpoB,p.Ala1153Val,1,3) Uncertain significance
+rpoB_p.Ala286Val,760663,C,T,rpoB,p.Ala286Val,1,3) Uncertain significance
+rpoB_p.Ala29Thr,759891,G,A,rpoB,p.Ala29Thr,1,3) Uncertain significance
+rpoB_p.Ala29Val,759892,C,T,rpoB,p.Ala29Val,1,3) Uncertain significance
+rpoB_p.Ala2Thr,759810,G,A,rpoB,p.Ala2Thr,1,3) Uncertain significance
+rpoB_p.Ala334Asp,760807,C,A,rpoB,p.Ala334Asp,1,3) Uncertain significance
+rpoB_p.Ala334Val,760807,C,T,rpoB,p.Ala334Val,1,3) Uncertain significance
+rpoB_p.Ala451Gly,761158,C,G,rpoB,p.Ala451Gly,1,2) Assoc w R - Interim
+rpoB_p.Ala451Val,761158,C,T,rpoB,p.Ala451Val,1,2) Assoc w R - Interim
+rpoB_p.Ala498Gly,761299,C,G,rpoB,p.Ala498Gly,1,3) Uncertain significance
+rpoB_p.Ala498Val,761299,C,T,rpoB,p.Ala498Val,1,3) Uncertain significance
+rpoB_p.Ala527Val,761386,C,T,rpoB,p.Ala527Val,1,3) Uncertain significance
+rpoB_p.Ala538Pro,761418,G,C,rpoB,p.Ala538Pro,1,3) Uncertain significance
+rpoB_p.Ala538Val,761419,C,T,rpoB,p.Ala538Val,1,3) Uncertain significance
+rpoB_p.Ala544Val,761437,C,T,rpoB,p.Ala544Val,1,3) Uncertain significance
+rpoB_p.Ala559Val,761482,C,T,rpoB,p.Ala559Val,1,3) Uncertain significance
+rpoB_p.Ala584Asp,761557,C,A,rpoB,p.Ala584Asp,1,3) Uncertain significance
+rpoB_p.Ala584Gly,761557,C,G,rpoB,p.Ala584Gly,1,3) Uncertain significance
+rpoB_p.Ala596Gly,761593,C,G,rpoB,p.Ala596Gly,1,3) Uncertain significance
+rpoB_p.Ala599Thr,761601,G,A,rpoB,p.Ala599Thr,1,3) Uncertain significance
+rpoB_p.Ala599Val,761602,C,T,rpoB,p.Ala599Val,1,3) Uncertain significance
+rpoB_p.Ala628Gly,761689,C,G,rpoB,p.Ala628Gly,1,3) Uncertain significance
+rpoB_p.Ala628Pro,761688,G,C,rpoB,p.Ala628Pro,1,3) Uncertain significance
+rpoB_p.Ala632Gly,761701,C,G,rpoB,p.Ala632Gly,1,3) Uncertain significance
+rpoB_p.Ala632Ser,761700,G,T,rpoB,p.Ala632Ser,1,3) Uncertain significance
+rpoB_p.Ala638Gly,761719,C,G,rpoB,p.Ala638Gly,1,3) Uncertain significance
+rpoB_p.Ala670dup,761813,T,TGCC,rpoB,p.Ala670dup,1,3) Uncertain significance
+rpoB_p.Ala686Thr,761862,G,A,rpoB,p.Ala686Thr,1,3) Uncertain significance
+rpoB_p.Ala68Val,760009,C,T,rpoB,p.Ala68Val,1,3) Uncertain significance
+rpoB_p.Ala692Thr,761880,G,A,rpoB,p.Ala692Thr,1,3) Uncertain significance
+rpoB_p.Ala69Pro,760011,G,C,rpoB,p.Ala69Pro,1,3) Uncertain significance
+rpoB_p.Ala708Ser,761928,G,T,rpoB,p.Ala708Ser,1,3) Uncertain significance
+rpoB_p.Ala753Thr,762063,G,A,rpoB,p.Ala753Thr,1,3) Uncertain significance
+rpoB_p.Ala753Val,762064,C,T,rpoB,p.Ala753Val,1,3) Uncertain significance
+rpoB_p.Ala776Val,762133,C,T,rpoB,p.Ala776Val,1,3) Uncertain significance
+rpoB_p.Ala868Val,762409,C,T,rpoB,p.Ala868Val,1,3) Uncertain significance
+rpoB_p.Ala902Pro,762510,G,C,rpoB,p.Ala902Pro,1,3) Uncertain significance
+rpoB_p.Ala934Thr,762606,G,A,rpoB,p.Ala934Thr,1,3) Uncertain significance
+rpoB_p.Ala934Val,762607,C,T,rpoB,p.Ala934Val,1,3) Uncertain significance
+rpoB_p.Ala942Thr,762630,G,A,rpoB,p.Ala942Thr,1,3) Uncertain significance
+rpoB_p.Ala943Thr,762633,G,A,rpoB,p.Ala943Thr,1,3) Uncertain significance
+rpoB_p.Ala950Val,762655,C,T,rpoB,p.Ala950Val,1,3) Uncertain significance
+rpoB_p.Ala951Thr,762657,G,A,rpoB,p.Ala951Thr,1,3) Uncertain significance
+rpoB_p.Ala960Glu,762685,C,A,rpoB,p.Ala960Glu,1,3) Uncertain significance
+rpoB_p.Ala974Gly,762727,C,G,rpoB,p.Ala974Gly,1,3) Uncertain significance
+rpoB_p.Ala974Thr,762726,G,A,rpoB,p.Ala974Thr,1,3) Uncertain significance
+rpoB_p.Ala977Thr,762735,G,A,rpoB,p.Ala977Thr,1,3) Uncertain significance
+rpoB_p.Ala977Val,762736,C,T,rpoB,p.Ala977Val,1,3) Uncertain significance
+rpoB_p.Ala998Val,762799,C,T,rpoB,p.Ala998Val,1,3) Uncertain significance
+rpoB_p.Arg1008Cys,762828,C,T,rpoB,p.Arg1008Cys,1,3) Uncertain significance
+rpoB_p.Arg167Cys,760305,C,T,rpoB,p.Arg167Cys,1,3) Uncertain significance
+rpoB_p.Arg167His,760306,G,A,rpoB,p.Arg167His,1,3) Uncertain significance
+rpoB_p.Arg219Cys,760461,C,T,rpoB,p.Arg219Cys,1,3) Uncertain significance
+rpoB_p.Arg219Leu,760462,G,T,rpoB,p.Arg219Leu,1,3) Uncertain significance
+rpoB_p.Arg219Ser,760461,C,A,rpoB,p.Arg219Ser,1,3) Uncertain significance
+rpoB_p.Arg224Cys,760476,C,T,rpoB,p.Arg224Cys,1,3) Uncertain significance
+rpoB_p.Arg225Gln,760480,G,A,rpoB,p.Arg225Gln,1,3) Uncertain significance
+rpoB_p.Arg225Gly,760479,C,G,rpoB,p.Arg225Gly,1,3) Uncertain significance
+rpoB_p.Arg273Cys,760623,C,T,rpoB,p.Arg273Cys,1,3) Uncertain significance
+rpoB_p.Arg304Cys,760716,C,T,rpoB,p.Arg304Cys,1,3) Uncertain significance
+rpoB_p.Arg448Gln,761149,G,A,rpoB,p.Arg448Gln,1,2) Assoc w R - Interim
+rpoB_p.Arg448Lys,"761148,761149","C,G","A,A",rpoB,p.Arg448Lys,1,2) Assoc w R - Interim
+rpoB_p.Arg499Gln,761302,G,A,rpoB,p.Arg499Gln,1,3) Uncertain significance
+rpoB_p.Arg499Trp,761301,C,T,rpoB,p.Arg499Trp,1,3) Uncertain significance
+rpoB_p.Arg499_Asn501dup,761309,C,CCGGGTCAAC,rpoB,p.Arg499_Asn501dup,1,3) Uncertain significance
+rpoB_p.Arg511Leu,761338,G,T,rpoB,p.Arg511Leu,1,3) Uncertain significance
+rpoB_p.Arg532Cys,761400,C,T,rpoB,p.Arg532Cys,1,3) Uncertain significance
+rpoB_p.Arg547Ser,761445,C,A,rpoB,p.Arg547Ser,1,3) Uncertain significance
+rpoB_p.Arg552Cys,761460,C,T,rpoB,p.Arg552Cys,1,3) Uncertain significance
+rpoB_p.Arg552His,761461,G,A,rpoB,p.Arg552His,1,3) Uncertain significance
+rpoB_p.Arg552Leu,761461,G,T,rpoB,p.Arg552Leu,1,3) Uncertain significance
+rpoB_p.Arg552Ser,761460,C,A,rpoB,p.Arg552Ser,1,3) Uncertain significance
+rpoB_p.Arg578Gly,761538,C,G,rpoB,p.Arg578Gly,1,3) Uncertain significance
+rpoB_p.Arg578His,761539,G,A,rpoB,p.Arg578His,1,3) Uncertain significance
+rpoB_p.Arg607Ser,761625,C,A,rpoB,p.Arg607Ser,1,3) Uncertain significance
+rpoB_p.Arg661Gln,761788,G,A,rpoB,p.Arg661Gln,1,3) Uncertain significance
+rpoB_p.Arg665Trp,761799,C,T,rpoB,p.Arg665Trp,1,3) Uncertain significance
+rpoB_p.Arg734His,762007,G,A,rpoB,p.Arg734His,1,3) Uncertain significance
+rpoB_p.Arg791Cys,762177,C,T,rpoB,p.Arg791Cys,1,3) Uncertain significance
+rpoB_p.Arg824Cys,762276,C,T,rpoB,p.Arg824Cys,1,3) Uncertain significance
+rpoB_p.Arg824Leu,762277,G,T,rpoB,p.Arg824Leu,1,3) Uncertain significance
+rpoB_p.Arg827Cys,762285,C,T,rpoB,p.Arg827Cys,1,3) Uncertain significance
+rpoB_p.Arg827His,762286,G,A,rpoB,p.Arg827His,1,3) Uncertain significance
+rpoB_p.Arg827Leu,762286,G,T,rpoB,p.Arg827Leu,1,3) Uncertain significance
+rpoB_p.Arg827Ser,762285,C,A,rpoB,p.Arg827Ser,1,3) Uncertain significance
+rpoB_p.Arg845Gln,762340,G,A,rpoB,p.Arg845Gln,1,3) Uncertain significance
+rpoB_p.Arg845Trp,762339,C,T,rpoB,p.Arg845Trp,1,3) Uncertain significance
+rpoB_p.Arg871His,762418,G,A,rpoB,p.Arg871His,1,3) Uncertain significance
+rpoB_p.Arg871Leu,762418,G,T,rpoB,p.Arg871Leu,1,3) Uncertain significance
+rpoB_p.Arg952Lys,762661,G,A,rpoB,p.Arg952Lys,1,3) Uncertain significance
+rpoB_p.Asn1155Ser,763270,A,G,rpoB,p.Asn1155Ser,1,3) Uncertain significance
+rpoB_p.Asn135Asp,760209,A,G,rpoB,p.Asn135Asp,1,3) Uncertain significance
+rpoB_p.Asn163Asp,760293,A,G,rpoB,p.Asn163Asp,1,3) Uncertain significance
+rpoB_p.Asn163Lys,760295,C,A,rpoB,p.Asn163Lys,1,3) Uncertain significance
+rpoB_p.Asn24Asp,759876,A,G,rpoB,p.Asn24Asp,1,3) Uncertain significance
+rpoB_p.Asn24Lys,759878,C,A,rpoB,p.Asn24Lys,1,3) Uncertain significance
+rpoB_p.Asn292Ser,760681,A,G,rpoB,p.Asn292Ser,1,3) Uncertain significance
+rpoB_p.Asn369Asp,760911,A,G,rpoB,p.Asn369Asp,1,3) Uncertain significance
+rpoB_p.Asn381His,760947,A,C,rpoB,p.Asn381His,1,5) Not assoc w R
+rpoB_p.Asn437Asp,761115,A,G,rpoB,p.Asn437Asp,1,2) Assoc w R - Interim
+rpoB_p.Asn437His,761115,A,C,rpoB,p.Asn437His,1,2) Assoc w R - Interim
+rpoB_p.Asn437Ile,761116,A,T,rpoB,p.Asn437Ile,1,2) Assoc w R - Interim
+rpoB_p.Asn437Ser,761116,A,G,rpoB,p.Asn437Ser,1,2) Assoc w R - Interim
+rpoB_p.Asn437Tyr,761115,A,T,rpoB,p.Asn437Tyr,1,2) Assoc w R - Interim
+rpoB_p.Asn438del,761117,CAAC,C,rpoB,p.Asn438del,1,2) Assoc w R - Interim
+rpoB_p.Asn487His,761265,A,C,rpoB,p.Asn487His,1,3) Uncertain significance
+rpoB_p.Asn487Ser,761266,A,G,rpoB,p.Asn487Ser,1,3) Uncertain significance
+rpoB_p.Asn501Lys,761309,C,A,rpoB,p.Asn501Lys,1,3) Uncertain significance
+rpoB_p.Asn539Lys,761423,T,A,rpoB,p.Asn539Lys,1,3) Uncertain significance
+rpoB_p.Asn604Ser,761617,A,G,rpoB,p.Asn604Ser,1,3) Uncertain significance
+rpoB_p.Asn673Ser,761824,A,G,rpoB,p.Asn673Ser,1,3) Uncertain significance
+rpoB_p.Asn673Thr,761824,A,C,rpoB,p.Asn673Thr,1,3) Uncertain significance
+rpoB_p.Asn724Ser,761977,A,G,rpoB,p.Asn724Ser,1,3) Uncertain significance
+rpoB_p.Asn75Thr,760030,A,C,rpoB,p.Asn75Thr,1,3) Uncertain significance
+rpoB_p.Asn963Asp,762693,A,G,rpoB,p.Asn963Asp,1,3) Uncertain significance
+rpoB_p.Asn963Ser,762694,A,G,rpoB,p.Asn963Ser,1,3) Uncertain significance
+rpoB_p.Asp1006Gly,762823,A,G,rpoB,p.Asp1006Gly,1,3) Uncertain significance
+rpoB_p.Asp103Glu,760115,C,A,rpoB,p.Asp103Glu,1,3) Uncertain significance
+rpoB_p.Asp107Glu,760127,C,A,rpoB,p.Asp107Glu,1,3) Uncertain significance
+rpoB_p.Asp108Glu,760130,T,A,rpoB,p.Asp108Glu,1,3) Uncertain significance
+rpoB_p.Asp1146Gly,763243,A,G,rpoB,p.Asp1146Gly,1,3) Uncertain significance
+rpoB_p.Asp1148Glu,763250,C,A,rpoB,p.Asp1148Glu,1,3) Uncertain significance
+rpoB_p.Asp120Gly,760165,A,G,rpoB,p.Asp120Gly,1,3) Uncertain significance
+rpoB_p.Asp186Ala,760363,A,C,rpoB,p.Asp186Ala,1,3) Uncertain significance
+rpoB_p.Asp190Ala,760375,A,C,rpoB,p.Asp190Ala,1,3) Uncertain significance
+rpoB_p.Asp209Asn,760431,G,A,rpoB,p.Asp209Asn,1,3) Uncertain significance
+rpoB_p.Asp211Val,760438,A,T,rpoB,p.Asp211Val,1,3) Uncertain significance
+rpoB_p.Asp265Gly,760600,A,G,rpoB,p.Asp265Gly,1,3) Uncertain significance
+rpoB_p.Asp270Glu,760616,C,A,rpoB,p.Asp270Glu,1,3) Uncertain significance
+rpoB_p.Asp301Asn,760707,G,A,rpoB,p.Asp301Asn,1,3) Uncertain significance
+rpoB_p.Asp362His,760890,G,C,rpoB,p.Asp362His,1,3) Uncertain significance
+rpoB_p.Asp363Asn,760893,G,A,rpoB,p.Asp363Asn,1,3) Uncertain significance
+rpoB_p.Asp3Gly,759814,A,G,rpoB,p.Asp3Gly,1,3) Uncertain significance
+rpoB_p.Asp435Ala,761110,A,C,rpoB,p.Asp435Ala,1,2) Assoc w R - Interim
+rpoB_p.Asp435Glu,761111,C,A,rpoB,p.Asp435Glu,1,2) Assoc w R - Interim
+rpoB_p.Asp435Gly,761110,A,G,rpoB,p.Asp435Gly,1,2) Assoc w R - Interim
+rpoB_p.Asp435His,761109,G,C,rpoB,p.Asp435His,1,2) Assoc w R - Interim
+rpoB_p.Asp435Leu,"761109,761110","G,A","C,T",rpoB,p.Asp435Leu,1,2) Assoc w R - Interim
+rpoB_p.Asp435Phe,"761109,761110","G,A","T,T",rpoB,p.Asp435Phe,1,1) Assoc w R
+rpoB_p.Asp435Tyr,761109,G,T,rpoB,p.Asp435Tyr,1,1) Assoc w R
+rpoB_p.Asp435Val,761110,A,T,rpoB,p.Asp435Val,1,1) Assoc w R
+rpoB_p.Asp435_Gln436delinsGlu,761108,GGACCAG,GGAG,rpoB,p.Asp435_Gln436delinsGlu,1,2) Assoc w R - Interim
+rpoB_p.Asp435_Pro439del,761108,GGACCAGAACAACCCG,G,rpoB,p.Asp435_Pro439del,1,2) Assoc w R - Interim
+rpoB_p.Asp435del,761108,GGAC,G,rpoB,p.Asp435del,1,2) Assoc w R - Interim
+rpoB_p.Asp49His,759951,G,C,rpoB,p.Asp49His,1,3) Uncertain significance
+rpoB_p.Asp515Tyr,761349,G,T,rpoB,p.Asp515Tyr,1,3) Uncertain significance
+rpoB_p.Asp520Ala,761365,A,C,rpoB,p.Asp520Ala,1,3) Uncertain significance
+rpoB_p.Asp520Val,761365,A,T,rpoB,p.Asp520Val,1,3) Uncertain significance
+rpoB_p.Asp531Glu,761399,C,A,rpoB,p.Asp531Glu,1,3) Uncertain significance
+rpoB_p.Asp531Tyr,761397,G,T,rpoB,p.Asp531Tyr,1,3) Uncertain significance
+rpoB_p.Asp53Asn,759963,G,A,rpoB,p.Asp53Asn,1,3) Uncertain significance
+rpoB_p.Asp543Gly,761434,A,G,rpoB,p.Asp543Gly,1,3) Uncertain significance
+rpoB_p.Asp545Ala,761440,A,C,rpoB,p.Asp545Ala,1,3) Uncertain significance
+rpoB_p.Asp545Glu,761441,C,A,rpoB,p.Asp545Glu,1,3) Uncertain significance
+rpoB_p.Asp571Ala,761518,A,C,rpoB,p.Asp571Ala,1,3) Uncertain significance
+rpoB_p.Asp571Tyr,761517,G,T,rpoB,p.Asp571Tyr,1,3) Uncertain significance
+rpoB_p.Asp574Glu,761528,C,A,rpoB,p.Asp574Glu,1,3) Uncertain significance
+rpoB_p.Asp594Ala,761587,A,C,rpoB,p.Asp594Ala,1,3) Uncertain significance
+rpoB_p.Asp595Glu,761591,C,A,rpoB,p.Asp595Glu,1,3) Uncertain significance
+rpoB_p.Asp631Gly,761698,A,G,rpoB,p.Asp631Gly,1,3) Uncertain significance
+rpoB_p.Asp634Gly,761707,A,G,rpoB,p.Asp634Gly,1,3) Uncertain significance
+rpoB_p.Asp703Glu,761915,C,A,rpoB,p.Asp703Glu,1,3) Uncertain significance
+rpoB_p.Asp777His,762135,G,C,rpoB,p.Asp777His,1,3) Uncertain significance
+rpoB_p.Asp851Gly,762358,A,G,rpoB,p.Asp851Gly,1,3) Uncertain significance
+rpoB_p.Asp851Pro,"762357,762358","G,A","C,C",rpoB,p.Asp851Pro,1,3) Uncertain significance
+rpoB_p.Asp853_Glu854dup,762368,T,TGACGAG,rpoB,p.Asp853_Glu854dup,1,5) Not assoc w R
+rpoB_p.Asp903Asn,762513,G,A,rpoB,p.Asp903Asn,1,3) Uncertain significance
+rpoB_p.Asp92Gly,760081,A,G,rpoB,p.Asp92Gly,1,3) Uncertain significance
+rpoB_p.Asp955Asn,762669,G,A,rpoB,p.Asp955Asn,1,3) Uncertain significance
+rpoB_p.Asp993Gly,762784,A,G,rpoB,p.Asp993Gly,1,3) Uncertain significance
+rpoB_p.Asp997Glu,762797,C,A,rpoB,p.Asp997Glu,1,3) Uncertain significance
+rpoB_p.Cys1067Gly,763005,T,G,rpoB,p.Cys1067Gly,1,3) Uncertain significance
+rpoB_p.Cys116Phe,760153,G,T,rpoB,p.Cys116Phe,1,3) Uncertain significance
+rpoB_p.Cys681Arg,761847,T,C,rpoB,p.Cys681Arg,1,3) Uncertain significance
+rpoB_p.Cys681Gly,761847,T,G,rpoB,p.Cys681Gly,1,3) Uncertain significance
+rpoB_p.Cys701Trp,761909,T,G,rpoB,p.Cys701Trp,1,3) Uncertain significance
+rpoB_p.Gln1056Arg,762973,A,G,rpoB,p.Gln1056Arg,1,3) Uncertain significance
+rpoB_p.Gln1080Arg,763045,A,G,rpoB,p.Gln1080Arg,1,3) Uncertain significance
+rpoB_p.Gln172Arg,760321,A,G,rpoB,p.Gln172Arg,1,3) Uncertain significance
+rpoB_p.Gln172Lys,760320,C,A,rpoB,p.Gln172Lys,1,3) Uncertain significance
+rpoB_p.Gln19Arg,759862,A,G,rpoB,p.Gln19Arg,1,3) Uncertain significance
+rpoB_p.Gln226Glu,760482,C,G,rpoB,p.Gln226Glu,1,3) Uncertain significance
+rpoB_p.Gln401Arg,761008,A,G,rpoB,p.Gln401Arg,1,3) Uncertain significance
+rpoB_p.Gln409Arg,761032,A,G,rpoB,p.Gln409Arg,1,3) Uncertain significance
+rpoB_p.Gln429His,761093,G,T,rpoB,p.Gln429His,1,2) Assoc w R - Interim
+rpoB_p.Gln429Leu,761092,A,T,rpoB,p.Gln429Leu,1,2) Assoc w R - Interim
+rpoB_p.Gln429Pro,761092,A,C,rpoB,p.Gln429Pro,1,2) Assoc w R - Interim
+rpoB_p.Gln432Asn,"761100,761102","C,A","A,C",rpoB,p.Gln432Asn,1,2) Assoc w R - Interim
+rpoB_p.Gln432Glu,761100,C,G,rpoB,p.Gln432Glu,1,2) Assoc w R - Interim
+rpoB_p.Gln432His,761102,A,T,rpoB,p.Gln432His,1,2) Assoc w R - Interim
+rpoB_p.Gln432Leu,761101,A,T,rpoB,p.Gln432Leu,1,1) Assoc w R
+rpoB_p.Gln432Lys,761100,C,A,rpoB,p.Gln432Lys,1,1) Assoc w R
+rpoB_p.Gln432Pro,761101,A,C,rpoB,p.Gln432Pro,1,1) Assoc w R
+rpoB_p.Gln432_Asp435delinsHis,761099,CCAATTCATGGAC,CCAC,rpoB,p.Gln432_Asp435delinsHis,1,2) Assoc w R - Interim
+rpoB_p.Gln432_Met434del,761099,CCAATTCATG,C,rpoB,p.Gln432_Met434del,1,2) Assoc w R - Interim
+rpoB_p.Gln432_Phe433del,761099,CCAATTC,C,rpoB,p.Gln432_Phe433del,1,2) Assoc w R - Interim
+rpoB_p.Gln432del,761099,CCAA,C,rpoB,p.Gln432del,1,2) Assoc w R - Interim
+rpoB_p.Gln436Asn,"761112,761114","C,G","A,C",rpoB,p.Gln436Asn,1,2) Assoc w R - Interim
+rpoB_p.Gln436Pro,761113,A,C,rpoB,p.Gln436Pro,1,2) Assoc w R - Interim
+rpoB_p.Gln436_Asn437del,761111,CCAGAAC,C,rpoB,p.Gln436_Asn437del,1,2) Assoc w R - Interim
+rpoB_p.Gln436del,761111,CCAG,C,rpoB,p.Gln436del,1,2) Assoc w R - Interim
+rpoB_p.Gln51Pro,759958,A,C,rpoB,p.Gln51Pro,1,3) Uncertain significance
+rpoB_p.Gln975His,762731,G,T,rpoB,p.Gln975His,1,3) Uncertain significance
+rpoB_p.Gln980Arg,762745,A,G,rpoB,p.Gln980Arg,1,3) Uncertain significance
+rpoB_p.Gln980Lys,762744,C,A,rpoB,p.Gln980Lys,1,3) Uncertain significance
+rpoB_p.Glu1011Ala,762838,A,C,rpoB,p.Glu1011Ala,1,3) Uncertain significance
+rpoB_p.Glu1130Val,763195,A,T,rpoB,p.Glu1130Val,1,3) Uncertain significance
+rpoB_p.Glu1140Gln,763224,G,C,rpoB,p.Glu1140Gln,1,3) Uncertain significance
+rpoB_p.Glu1145Gly,763240,A,G,rpoB,p.Glu1145Gly,1,3) Uncertain significance
+rpoB_p.Glu1169Ala,763312,A,C,rpoB,p.Glu1169Ala,1,3) Uncertain significance
+rpoB_p.Glu132Asp,760202,G,T,rpoB,p.Glu132Asp,1,3) Uncertain significance
+rpoB_p.Glu156Asp,760274,G,T,rpoB,p.Glu156Asp,1,3) Uncertain significance
+rpoB_p.Glu156Gly,760273,A,G,rpoB,p.Glu156Gly,1,3) Uncertain significance
+rpoB_p.Glu166Gly,760303,A,G,rpoB,p.Glu166Gly,1,3) Uncertain significance
+rpoB_p.Glu166Lys,760302,G,A,rpoB,p.Glu166Lys,1,3) Uncertain significance
+rpoB_p.Glu207Lys,760425,G,A,rpoB,p.Glu207Lys,1,3) Uncertain significance
+rpoB_p.Glu240Gly,760525,A,G,rpoB,p.Glu240Gly,1,3) Uncertain significance
+rpoB_p.Glu250Gly,760555,A,G,rpoB,p.Glu250Gly,1,5) Not assoc w R
+rpoB_p.Glu284Gly,760657,A,G,rpoB,p.Glu284Gly,1,3) Uncertain significance
+rpoB_p.Glu291Lys,760677,G,A,rpoB,p.Glu291Lys,1,3) Uncertain significance
+rpoB_p.Glu320Asp,760766,G,T,rpoB,p.Glu320Asp,1,3) Uncertain significance
+rpoB_p.Glu320Gly,760765,A,G,rpoB,p.Glu320Gly,1,3) Uncertain significance
+rpoB_p.Glu330Asp,760796,A,T,rpoB,p.Glu330Asp,1,3) Uncertain significance
+rpoB_p.Glu337Lys,760815,G,A,rpoB,p.Glu337Lys,1,3) Uncertain significance
+rpoB_p.Glu344Gln,760836,G,C,rpoB,p.Glu344Gln,1,3) Uncertain significance
+rpoB_p.Glu377Val,760936,A,T,rpoB,p.Glu377Val,1,3) Uncertain significance
+rpoB_p.Glu423Ala,761074,A,C,rpoB,p.Glu423Ala,1,3) Uncertain significance
+rpoB_p.Glu423Gly,761074,A,G,rpoB,p.Glu423Gly,1,3) Uncertain significance
+rpoB_p.Glu460Gly,761185,A,G,rpoB,p.Glu460Gly,1,3) Uncertain significance
+rpoB_p.Glu481Ala,761248,A,C,rpoB,p.Glu481Ala,1,3) Uncertain significance
+rpoB_p.Glu507Lys,761325,G,A,rpoB,p.Glu507Lys,1,3) Uncertain significance
+rpoB_p.Glu550Gly,761455,A,G,rpoB,p.Glu550Gly,1,3) Uncertain significance
+rpoB_p.Glu550Lys,761454,G,A,rpoB,p.Glu550Lys,1,3) Uncertain significance
+rpoB_p.Glu563Ala,761494,A,C,rpoB,p.Glu563Ala,1,3) Uncertain significance
+rpoB_p.Glu563Asp,761495,G,T,rpoB,p.Glu563Asp,1,3) Uncertain significance
+rpoB_p.Glu592Asp,761582,G,T,rpoB,p.Glu592Asp,1,3) Uncertain significance
+rpoB_p.Glu639Ala,761722,A,C,rpoB,p.Glu639Ala,1,3) Uncertain significance
+rpoB_p.Glu639Asp,761723,A,T,rpoB,p.Glu639Asp,1,5) Not assoc w R
+rpoB_p.Glu639Gln,761721,G,C,rpoB,p.Glu639Gln,1,3) Uncertain significance
+rpoB_p.Glu639Gly,761722,A,G,rpoB,p.Glu639Gly,1,3) Uncertain significance
+rpoB_p.Glu645Gly,761740,A,G,rpoB,p.Glu645Gly,1,3) Uncertain significance
+rpoB_p.Glu646Gly,761743,A,G,rpoB,p.Glu646Gly,1,3) Uncertain significance
+rpoB_p.Glu66Lys,760002,G,A,rpoB,p.Glu66Lys,1,3) Uncertain significance
+rpoB_p.Glu721Asp,761969,G,T,rpoB,p.Glu721Asp,1,3) Uncertain significance
+rpoB_p.Glu721Gly,761968,A,G,rpoB,p.Glu721Gly,1,3) Uncertain significance
+rpoB_p.Glu721Lys,761967,G,A,rpoB,p.Glu721Lys,1,3) Uncertain significance
+rpoB_p.Glu737Gly,762016,A,G,rpoB,p.Glu737Gly,1,3) Uncertain significance
+rpoB_p.Glu738Ala,762019,A,C,rpoB,p.Glu738Ala,1,3) Uncertain significance
+rpoB_p.Glu750Gln,762054,G,C,rpoB,p.Glu750Gln,1,3) Uncertain significance
+rpoB_p.Glu761Asp,762089,G,T,rpoB,p.Glu761Asp,1,3) Uncertain significance
+rpoB_p.Glu789Lys,762171,G,A,rpoB,p.Glu789Lys,1,3) Uncertain significance
+rpoB_p.Glu805Ala,762220,A,C,rpoB,p.Glu805Ala,1,3) Uncertain significance
+rpoB_p.Glu807Gln,762225,G,C,rpoB,p.Glu807Gln,1,3) Uncertain significance
+rpoB_p.Glu807Gly,762226,A,G,rpoB,p.Glu807Gly,1,3) Uncertain significance
+rpoB_p.Glu821Val,762268,A,T,rpoB,p.Glu821Val,1,3) Uncertain significance
+rpoB_p.Glu825Gly,762280,A,G,rpoB,p.Glu825Gly,1,3) Uncertain significance
+rpoB_p.Glu82Gly,760051,A,G,rpoB,p.Glu82Gly,1,3) Uncertain significance
+rpoB_p.Glu896Lys,762492,G,A,rpoB,p.Glu896Lys,1,3) Uncertain significance
+rpoB_p.Gly158Ser,760278,G,A,rpoB,p.Gly158Ser,1,3) Uncertain significance
+rpoB_p.Gly203Arg,760413,G,C,rpoB,p.Gly203Arg,1,3) Uncertain significance
+rpoB_p.Gly217Ser,760455,G,A,rpoB,p.Gly217Ser,1,3) Uncertain significance
+rpoB_p.Gly236Asp,760513,G,A,rpoB,p.Gly236Asp,1,3) Uncertain significance
+rpoB_p.Gly28Arg,759888,G,C,rpoB,p.Gly28Arg,1,3) Uncertain significance
+rpoB_p.Gly345Ser,760839,G,A,rpoB,p.Gly345Ser,1,3) Uncertain significance
+rpoB_p.Gly426Ser,761082,G,A,rpoB,p.Gly426Ser,1,2) Assoc w R - Interim
+rpoB_p.Gly426_Thr427del,761081,CGGCACC,C,rpoB,p.Gly426_Thr427del,1,2) Assoc w R - Interim
+rpoB_p.Gly442Glu,761131,G,A,rpoB,p.Gly442Glu,1,2) Assoc w R - Interim
+rpoB_p.Gly453Ala,761164,G,C,rpoB,p.Gly453Ala,1,3) Uncertain significance
+rpoB_p.Gly453Arg,761163,G,C,rpoB,p.Gly453Arg,1,3) Uncertain significance
+rpoB_p.Gly456Ser,761172,G,A,rpoB,p.Gly456Ser,1,3) Uncertain significance
+rpoB_p.Gly46Val,759943,G,T,rpoB,p.Gly46Val,1,3) Uncertain significance
+rpoB_p.Gly492Ser,761280,G,A,rpoB,p.Gly492Ser,1,3) Uncertain significance
+rpoB_p.Gly504dup,761315,C,CGGG,rpoB,p.Gly504dup,1,3) Uncertain significance
+rpoB_p.Gly516Asp,761353,G,A,rpoB,p.Gly516Asp,1,3) Uncertain significance
+rpoB_p.Gly546Ser,761442,G,A,rpoB,p.Gly546Ser,1,3) Uncertain significance
+rpoB_p.Gly560Ala,761485,G,C,rpoB,p.Gly560Ala,1,3) Uncertain significance
+rpoB_p.Gly602Ala,761611,G,C,rpoB,p.Gly602Ala,1,3) Uncertain significance
+rpoB_p.Gly642Ser,761730,G,A,rpoB,p.Gly642Ser,1,3) Uncertain significance
+rpoB_p.Gly659Asp,761782,G,A,rpoB,p.Gly659Asp,1,3) Uncertain significance
+rpoB_p.Gly675Asp,761830,G,A,rpoB,p.Gly675Asp,1,3) Uncertain significance
+rpoB_p.Gly693Val,761884,G,T,rpoB,p.Gly693Val,1,3) Uncertain significance
+rpoB_p.Gly699Ser,761901,G,A,rpoB,p.Gly699Ser,1,3) Uncertain significance
+rpoB_p.Gly79Ser,760041,G,A,rpoB,p.Gly79Ser,1,3) Uncertain significance
+rpoB_p.Gly836Ser,762312,G,A,rpoB,p.Gly836Ser,1,3) Uncertain significance
+rpoB_p.Gly876dup,762431,C,CGGT,rpoB,p.Gly876dup,1,3) Uncertain significance
+rpoB_p.Gly890Asp,762475,G,A,rpoB,p.Gly890Asp,1,3) Uncertain significance
+rpoB_p.Gly890Cys,762474,G,T,rpoB,p.Gly890Cys,1,3) Uncertain significance
+rpoB_p.Gly915Ser,762549,G,A,rpoB,p.Gly915Ser,1,3) Uncertain significance
+rpoB_p.Gly945Arg,762639,G,C,rpoB,p.Gly945Arg,1,3) Uncertain significance
+rpoB_p.Gly945Glu,762640,G,A,rpoB,p.Gly945Glu,1,3) Uncertain significance
+rpoB_p.Gly95Arg,760089,G,C,rpoB,p.Gly95Arg,1,3) Uncertain significance
+rpoB_p.Gly973Asp,762724,G,A,rpoB,p.Gly973Asp,1,3) Uncertain significance
+rpoB_p.Gly981Asp,762748,G,A,rpoB,p.Gly981Asp,1,3) Uncertain significance
+rpoB_p.Gly992Arg,762780,G,C,rpoB,p.Gly992Arg,1,3) Uncertain significance
+rpoB_p.His1028Arg,762889,A,G,rpoB,p.His1028Arg,1,3) Uncertain significance
+rpoB_p.His1028Asp,762888,C,G,rpoB,p.His1028Asp,1,3) Uncertain significance
+rpoB_p.His1028Tyr,762888,C,T,rpoB,p.His1028Tyr,1,3) Uncertain significance
+rpoB_p.His194Tyr,760386,C,T,rpoB,p.His194Tyr,1,3) Uncertain significance
+rpoB_p.His317Tyr,760755,C,T,rpoB,p.His317Tyr,1,3) Uncertain significance
+rpoB_p.His343Gln,760835,C,A,rpoB,p.His343Gln,1,3) Uncertain significance
+rpoB_p.His445Arg,761140,A,G,rpoB,p.His445Arg,1,1) Assoc w R
+rpoB_p.His445Asn,761139,C,A,rpoB,p.His445Asn,1,1) Assoc w R
+rpoB_p.His445Asp,761139,C,G,rpoB,p.His445Asp,1,1) Assoc w R
+rpoB_p.His445Cys,"761139,761140","C,A","T,G",rpoB,p.His445Cys,1,1) Assoc w R
+rpoB_p.His445Gln,761141,C,A,rpoB,p.His445Gln,1,2) Assoc w R - Interim
+rpoB_p.His445Gly,"761139,761140","C,A","G,G",rpoB,p.His445Gly,1,2) Assoc w R - Interim
+rpoB_p.His445Leu,761140,A,T,rpoB,p.His445Leu,1,1) Assoc w R
+rpoB_p.His445Phe,"761139,761140","C,A","T,T",rpoB,p.His445Phe,1,2) Assoc w R - Interim
+rpoB_p.His445Pro,761140,A,C,rpoB,p.His445Pro,1,2) Assoc w R - Interim
+rpoB_p.His445Ser,"761139,761140","C,A","A,G",rpoB,p.His445Ser,1,1) Assoc w R
+rpoB_p.His445Thr,"761139,761140","C,A","A,C",rpoB,p.His445Thr,1,2) Assoc w R - Interim
+rpoB_p.His445Tyr,761139,C,T,rpoB,p.His445Tyr,1,1) Assoc w R
+rpoB_p.His445_Lys446del,761138,CCACAAG,C,rpoB,p.His445_Lys446del,1,2) Assoc w R - Interim
+rpoB_p.His533Arg,761404,A,G,rpoB,p.His533Arg,1,3) Uncertain significance
+rpoB_p.His533Asn,761403,C,A,rpoB,p.His533Asn,1,3) Uncertain significance
+rpoB_p.His656Gln,761774,C,A,rpoB,p.His656Gln,1,3) Uncertain significance
+rpoB_p.His674Arg,761827,A,G,rpoB,p.His674Arg,1,3) Uncertain significance
+rpoB_p.His674Asn,761826,C,A,rpoB,p.His674Asn,1,3) Uncertain significance
+rpoB_p.His674Gln,761828,C,A,rpoB,p.His674Gln,1,3) Uncertain significance
+rpoB_p.His723Asp,761973,C,G,rpoB,p.His723Asp,1,3) Uncertain significance
+rpoB_p.His749Tyr,762051,C,T,rpoB,p.His749Tyr,1,3) Uncertain significance
+rpoB_p.His835Arg,762310,A,G,rpoB,p.His835Arg,1,3) Uncertain significance
+rpoB_p.His835Asp,762309,C,G,rpoB,p.His835Asp,1,3) Uncertain significance
+rpoB_p.His835Pro,762310,A,C,rpoB,p.His835Pro,1,3) Uncertain significance
+rpoB_p.His935Arg,762610,A,G,rpoB,p.His935Arg,1,3) Uncertain significance
+rpoB_p.Ile1035Thr,762910,T,C,rpoB,p.Ile1035Thr,1,3) Uncertain significance
+rpoB_p.Ile1035Val,762909,A,G,rpoB,p.Ile1035Val,1,3) Uncertain significance
+rpoB_p.Ile1046Val,762942,A,G,rpoB,p.Ile1046Val,1,3) Uncertain significance
+rpoB_p.Ile1106Thr,763123,T,C,rpoB,p.Ile1106Thr,1,3) Uncertain significance
+rpoB_p.Ile1111Val,763137,A,G,rpoB,p.Ile1111Val,1,3) Uncertain significance
+rpoB_p.Ile199Thr,760402,T,C,rpoB,p.Ile199Thr,1,3) Uncertain significance
+rpoB_p.Ile480Thr,761245,T,C,rpoB,p.Ile480Thr,1,3) Uncertain significance
+rpoB_p.Ile480Val,761244,A,G,rpoB,p.Ile480Val,1,3) Uncertain significance
+rpoB_p.Ile488Leu,761268,A,C,rpoB,p.Ile488Leu,1,3) Uncertain significance
+rpoB_p.Ile488Met,761270,C,G,rpoB,p.Ile488Met,1,3) Uncertain significance
+rpoB_p.Ile488Val,761268,A,G,rpoB,p.Ile488Val,1,3) Uncertain significance
+rpoB_p.Ile491Leu,761277,A,C,rpoB,p.Ile491Leu,1,3) Uncertain significance
+rpoB_p.Ile491Met,761279,C,G,rpoB,p.Ile491Met,1,3) Uncertain significance
+rpoB_p.Ile491Phe,761277,A,T,rpoB,p.Ile491Phe,1,1) Assoc w R
+rpoB_p.Ile491Ser,761278,T,G,rpoB,p.Ile491Ser,1,3) Uncertain significance
+rpoB_p.Ile491Thr,761278,T,C,rpoB,p.Ile491Thr,1,3) Uncertain significance
+rpoB_p.Ile491Tyr,"761277,761278","A,T","T,A",rpoB,p.Ile491Tyr,1,3) Uncertain significance
+rpoB_p.Ile491Val,761277,A,G,rpoB,p.Ile491Val,1,3) Uncertain significance
+rpoB_p.Ile506Val,761322,A,G,rpoB,p.Ile506Val,1,3) Uncertain significance
+rpoB_p.Ile542Lys,"761431,761432","T,C","A,G",rpoB,p.Ile542Lys,1,3) Uncertain significance
+rpoB_p.Ile588Val,761568,A,G,rpoB,p.Ile588Val,1,3) Uncertain significance
+rpoB_p.Ile751Val,762057,A,G,rpoB,p.Ile751Val,1,3) Uncertain significance
+rpoB_p.Ile783Val,762153,A,G,rpoB,p.Ile783Val,1,3) Uncertain significance
+rpoB_p.Ile873Phe,762423,A,T,rpoB,p.Ile873Phe,1,3) Uncertain significance
+rpoB_p.Ile892Thr,762481,T,C,rpoB,p.Ile892Thr,1,3) Uncertain significance
+rpoB_p.Ile909Val,762531,A,G,rpoB,p.Ile909Val,1,3) Uncertain significance
+rpoB_p.Ile90Leu,760074,A,C,rpoB,p.Ile90Leu,1,3) Uncertain significance
+rpoB_p.Ile910Val,762534,A,G,rpoB,p.Ile910Val,1,3) Uncertain significance
+rpoB_p.Ile925Val,762579,A,G,rpoB,p.Ile925Val,1,5) Not assoc w R
+rpoB_p.Ile965Val,762699,A,G,rpoB,p.Ile965Val,1,3) Uncertain significance
+rpoB_p.Leu1004Ile,762816,C,A,rpoB,p.Leu1004Ile,1,3) Uncertain significance
+rpoB_p.Leu1132Val,763200,C,G,rpoB,p.Leu1132Val,1,3) Uncertain significance
+rpoB_p.Leu173Pro,760324,T,C,rpoB,p.Leu173Pro,1,3) Uncertain significance
+rpoB_p.Leu232Arg,760501,T,G,rpoB,p.Leu232Arg,1,3) Uncertain significance
+rpoB_p.Leu232Val,760500,C,G,rpoB,p.Leu232Val,1,3) Uncertain significance
+rpoB_p.Leu235Arg,760510,T,G,rpoB,p.Leu235Arg,1,3) Uncertain significance
+rpoB_p.Leu290Phe,760676,G,T,rpoB,p.Leu290Phe,1,3) Uncertain significance
+rpoB_p.Leu293Ser,760684,T,C,rpoB,p.Leu293Ser,1,3) Uncertain significance
+rpoB_p.Leu314Val,760746,C,G,rpoB,p.Leu314Val,1,3) Uncertain significance
+rpoB_p.Leu316Val,760752,C,G,rpoB,p.Leu316Val,1,3) Uncertain significance
+rpoB_p.Leu378Arg,760939,T,G,rpoB,p.Leu378Arg,1,3) Uncertain significance
+rpoB_p.Leu42Phe,759930,C,T,rpoB,p.Leu42Phe,1,3) Uncertain significance
+rpoB_p.Leu42Val,759930,C,G,rpoB,p.Leu42Val,1,3) Uncertain significance
+rpoB_p.Leu430Arg,761095,T,G,rpoB,p.Leu430Arg,1,2) Assoc w R - Interim
+rpoB_p.Leu430Pro,761095,T,C,rpoB,p.Leu430Pro,1,1) Assoc w R
+rpoB_p.Leu443Phe,761135,G,T,rpoB,p.Leu443Phe,1,2) Assoc w R - Interim
+rpoB_p.Leu449Met,761151,C,A,rpoB,p.Leu449Met,1,2) Assoc w R - Interim
+rpoB_p.Leu452Gln,761161,T,A,rpoB,p.Leu452Gln,1,2) Assoc w R - Interim
+rpoB_p.Leu452Met,761160,C,A,rpoB,p.Leu452Met,1,2) Assoc w R - Interim
+rpoB_p.Leu452Pro,761161,T,C,rpoB,p.Leu452Pro,1,1) Assoc w R
+rpoB_p.Leu452Val,761160,C,G,rpoB,p.Leu452Val,1,2) Assoc w R - Interim
+rpoB_p.Leu48Phe,759948,C,T,rpoB,p.Leu48Phe,1,3) Uncertain significance
+rpoB_p.Leu490Val,761274,C,G,rpoB,p.Leu490Val,1,3) Uncertain significance
+rpoB_p.Leu525Pro,761380,T,C,rpoB,p.Leu525Pro,1,3) Uncertain significance
+rpoB_p.Leu554Pro,761467,T,C,rpoB,p.Leu554Pro,1,3) Uncertain significance
+rpoB_p.Leu554Val,761466,C,G,rpoB,p.Leu554Val,1,3) Uncertain significance
+rpoB_p.Leu731Pro,761998,T,C,rpoB,p.Leu731Pro,1,3) Uncertain significance
+rpoB_p.Leu775Pro,762130,T,C,rpoB,p.Leu775Pro,1,3) Uncertain significance
+rpoB_p.Leu778Val,762138,C,G,rpoB,p.Leu778Val,1,3) Uncertain significance
+rpoB_p.Leu80Val,760044,C,G,rpoB,p.Leu80Val,1,3) Uncertain significance
+rpoB_p.Leu862Arg,762391,T,G,rpoB,p.Leu862Arg,1,3) Uncertain significance
+rpoB_p.Leu893Arg,762484,T,G,rpoB,p.Leu893Arg,1,3) Uncertain significance
+rpoB_p.Leu893Val,762483,C,G,rpoB,p.Leu893Val,1,3) Uncertain significance
+rpoB_p.Lys1054Arg,762967,A,G,rpoB,p.Lys1054Arg,1,3) Uncertain significance
+rpoB_p.Lys1095Arg,763090,A,G,rpoB,p.Lys1095Arg,1,3) Uncertain significance
+rpoB_p.Lys1102Arg,763111,A,G,rpoB,p.Lys1102Arg,1,3) Uncertain significance
+rpoB_p.Lys1102Thr,763111,A,C,rpoB,p.Lys1102Thr,1,3) Uncertain significance
+rpoB_p.Lys110Arg,760135,A,G,rpoB,p.Lys110Arg,1,3) Uncertain significance
+rpoB_p.Lys274Asn,760628,G,T,rpoB,p.Lys274Asn,1,3) Uncertain significance
+rpoB_p.Lys274Glu,760626,A,G,rpoB,p.Lys274Glu,1,3) Uncertain significance
+rpoB_p.Lys298Arg,760699,A,G,rpoB,p.Lys298Arg,1,3) Uncertain significance
+rpoB_p.Lys309Glu,760731,A,G,rpoB,p.Lys309Glu,1,3) Uncertain significance
+rpoB_p.Lys37Arg,759916,A,G,rpoB,p.Lys37Arg,1,3) Uncertain significance
+rpoB_p.Lys422_Thr427del,761069,CAAGGAGTTCTTCGGCACC,C,rpoB,p.Lys422_Thr427del,1,3) Uncertain significance
+rpoB_p.Lys446Arg,761143,A,G,rpoB,p.Lys446Arg,1,2) Assoc w R - Interim
+rpoB_p.Lys446Gln,761142,A,C,rpoB,p.Lys446Gln,1,2) Assoc w R - Interim
+rpoB_p.Lys446Glu,761142,A,G,rpoB,p.Lys446Glu,1,2) Assoc w R - Interim
+rpoB_p.Lys446Thr,761143,A,C,rpoB,p.Lys446Thr,1,2) Assoc w R - Interim
+rpoB_p.Lys711Arg,761938,A,G,rpoB,p.Lys711Arg,1,3) Uncertain significance
+rpoB_p.Lys799Gln,762201,A,C,rpoB,p.Lys799Gln,1,3) Uncertain significance
+rpoB_p.Lys832Gln,762300,A,C,rpoB,p.Lys832Gln,1,3) Uncertain significance
+rpoB_p.Lys832Glu,762300,A,G,rpoB,p.Lys832Glu,1,3) Uncertain significance
+rpoB_p.Lys891Glu,762477,A,G,rpoB,p.Lys891Glu,1,3) Uncertain significance
+rpoB_p.Lys891Thr,762478,A,C,rpoB,p.Lys891Thr,1,3) Uncertain significance
+rpoB_p.Lys939Gln,762621,A,C,rpoB,p.Lys939Gln,1,3) Uncertain significance
+rpoB_p.Lys944Asn,762638,G,T,rpoB,p.Lys944Asn,1,3) Uncertain significance
+rpoB_p.Lys944Glu,762636,A,G,rpoB,p.Lys944Glu,1,5) Not assoc w R
+rpoB_p.Met1070Ile,763016,G,T,rpoB,p.Met1070Ile,1,3) Uncertain significance
+rpoB_p.Met1070Thr,763015,T,C,rpoB,p.Met1070Thr,1,3) Uncertain significance
+rpoB_p.Met121Ile,760169,G,T,rpoB,p.Met121Ile,1,3) Uncertain significance
+rpoB_p.Met153Thr,760264,T,C,rpoB,p.Met153Thr,1,3) Uncertain significance
+rpoB_p.Met153Val,760263,A,G,rpoB,p.Met153Val,1,3) Uncertain significance
+rpoB_p.Met154Ile,760268,G,T,rpoB,p.Met154Ile,1,3) Uncertain significance
+rpoB_p.Met390Thr,760975,T,C,rpoB,p.Met390Thr,1,3) Uncertain significance
+rpoB_p.Met398Val,760998,A,G,rpoB,p.Met398Val,1,3) Uncertain significance
+rpoB_p.Met434Ile,761108,G,T,rpoB,p.Met434Ile,1,2) Assoc w R - Interim
+rpoB_p.Met434Leu,761106,A,T,rpoB,p.Met434Leu,1,2) Assoc w R - Interim
+rpoB_p.Met434Val,761106,A,G,rpoB,p.Met434Val,1,2) Assoc w R - Interim
+rpoB_p.Met434_Asn437delinsIle,761105,CATGGACCAGAAC,CATA,rpoB,p.Met434_Asn437delinsIle,1,2) Assoc w R - Interim
+rpoB_p.Met434_Asp435del,761105,CATGGAC,C,rpoB,p.Met434_Asp435del,1,2) Assoc w R - Interim
+rpoB_p.Met477Arg,761236,T,G,rpoB,p.Met477Arg,1,3) Uncertain significance
+rpoB_p.Met573Thr,761524,T,C,rpoB,p.Met573Thr,1,3) Uncertain significance
+rpoB_p.Met587Ile,761567,G,T,rpoB,p.Met587Ile,1,3) Uncertain significance
+rpoB_p.Met587Thr,761566,T,C,rpoB,p.Met587Thr,1,3) Uncertain significance
+rpoB_p.Met624Thr,761677,T,C,rpoB,p.Met624Thr,1,3) Uncertain significance
+rpoB_p.Met655Thr,761770,T,C,rpoB,p.Met655Thr,1,3) Uncertain significance
+rpoB_p.Met707Thr,761926,T,C,rpoB,p.Met707Thr,1,3) Uncertain significance
+rpoB_p.Met920Val,762564,A,G,rpoB,p.Met920Val,1,3) Uncertain significance
+rpoB_p.Met97_Ser98dup,760100,T,TATGTCG,rpoB,p.Met97_Ser98dup,1,3) Uncertain significance
+rpoB_p.Phe1005Val,762819,T,G,rpoB,p.Phe1005Val,1,3) Uncertain significance
+rpoB_p.Phe151Leu,760259,C,A,rpoB,p.Phe151Leu,1,3) Uncertain significance
+rpoB_p.Phe208Leu,760428,T,C,rpoB,p.Phe208Leu,1,3) Uncertain significance
+rpoB_p.Phe295Leu,760691,C,A,rpoB,p.Phe295Leu,1,3) Uncertain significance
+rpoB_p.Phe424Cys,761077,T,G,rpoB,p.Phe424Cys,1,3) Uncertain significance
+rpoB_p.Phe424Leu,761076,T,C,rpoB,p.Phe424Leu,1,3) Uncertain significance
+rpoB_p.Phe424Val,761076,T,G,rpoB,p.Phe424Val,1,3) Uncertain significance
+rpoB_p.Phe433_Asp435del,761102,ATTCATGGAC,A,rpoB,p.Phe433_Asp435del,1,2) Assoc w R - Interim
+rpoB_p.Phe433_Gln436del,761102,ATTCATGGACCAG,A,rpoB,p.Phe433_Gln436del,1,2) Assoc w R - Interim
+rpoB_p.Phe433dup,761102,A,ATTC,rpoB,p.Phe433dup,1,1) Assoc w R
+rpoB_p.Phe503Ser,761314,T,C,rpoB,p.Phe503Ser,1,3) Uncertain significance
+rpoB_p.Phe503Val,761313,T,G,rpoB,p.Phe503Val,1,3) Uncertain significance
+rpoB_p.Phe503_Thr508dup,761330,C,CTTCGGGTTCATCGAAACG,rpoB,p.Phe503_Thr508dup,1,3) Uncertain significance
+rpoB_p.Phe548Leu,761448,T,C,rpoB,p.Phe548Leu,1,3) Uncertain significance
+rpoB_p.Phe669Leu,761813,T,A,rpoB,p.Phe669Leu,1,3) Uncertain significance
+rpoB_p.Phe93Leu,760085,C,A,rpoB,p.Phe93Leu,1,3) Uncertain significance
+rpoB_p.Phe971Leu,762717,T,C,rpoB,p.Phe971Leu,1,3) Uncertain significance
+rpoB_p.Pro1014Arg,762847,C,G,rpoB,p.Pro1014Arg,1,3) Uncertain significance
+rpoB_p.Pro1014Ser,762846,C,T,rpoB,p.Pro1014Ser,1,3) Uncertain significance
+rpoB_p.Pro15_Ser16insSerPro,759851,G,GTCACCC,rpoB,p.Pro15_Ser16insSerPro,1,3) Uncertain significance
+rpoB_p.Pro27His,759886,C,A,rpoB,p.Pro27His,1,3) Uncertain significance
+rpoB_p.Pro280Leu,760645,C,T,rpoB,p.Pro280Leu,1,3) Uncertain significance
+rpoB_p.Pro280Ser,760644,C,T,rpoB,p.Pro280Ser,1,3) Uncertain significance
+rpoB_p.Pro30Ala,759894,C,G,rpoB,p.Pro30Ala,1,3) Uncertain significance
+rpoB_p.Pro30Ser,759894,C,T,rpoB,p.Pro30Ser,1,3) Uncertain significance
+rpoB_p.Pro321Ser,760767,C,T,rpoB,p.Pro321Ser,1,3) Uncertain significance
+rpoB_p.Pro358Leu,760879,C,T,rpoB,p.Pro358Leu,1,3) Uncertain significance
+rpoB_p.Pro358Ser,760878,C,T,rpoB,p.Pro358Ser,1,3) Uncertain significance
+rpoB_p.Pro439Leu,761122,C,T,rpoB,p.Pro439Leu,1,2) Assoc w R - Interim
+rpoB_p.Pro439Ser,761121,C,T,rpoB,p.Pro439Ser,1,2) Assoc w R - Interim
+rpoB_p.Pro454Arg,761167,C,G,rpoB,p.Pro454Arg,1,3) Uncertain significance
+rpoB_p.Pro454His,761167,C,A,rpoB,p.Pro454His,1,3) Uncertain significance
+rpoB_p.Pro454Leu,761167,C,T,rpoB,p.Pro454Leu,1,3) Uncertain significance
+rpoB_p.Pro454Ser,761166,C,T,rpoB,p.Pro454Ser,1,3) Uncertain significance
+rpoB_p.Pro45Ala,759939,C,G,rpoB,p.Pro45Ala,1,3) Uncertain significance
+rpoB_p.Pro45Arg,759940,C,G,rpoB,p.Pro45Arg,1,3) Uncertain significance
+rpoB_p.Pro45Gln,759940,C,A,rpoB,p.Pro45Gln,1,3) Uncertain significance
+rpoB_p.Pro45Leu,759940,C,T,rpoB,p.Pro45Leu,1,3) Uncertain significance
+rpoB_p.Pro45Ser,759939,C,T,rpoB,p.Pro45Ser,1,3) Uncertain significance
+rpoB_p.Pro45Thr,759939,C,A,rpoB,p.Pro45Thr,1,3) Uncertain significance
+rpoB_p.Pro483Leu,761254,C,T,rpoB,p.Pro483Leu,1,3) Uncertain significance
+rpoB_p.Pro483Ser,761253,C,T,rpoB,p.Pro483Ser,1,3) Uncertain significance
+rpoB_p.Pro509Ser,761331,C,T,rpoB,p.Pro509Ser,1,3) Uncertain significance
+rpoB_p.Pro541Leu,761428,C,T,rpoB,p.Pro541Leu,1,3) Uncertain significance
+rpoB_p.Pro577Ala,761535,C,G,rpoB,p.Pro577Ala,1,3) Uncertain significance
+rpoB_p.Pro682Ala,761850,C,G,rpoB,p.Pro682Ala,1,3) Uncertain significance
+rpoB_p.Pro682Thr,761850,C,A,rpoB,p.Pro682Thr,1,3) Uncertain significance
+rpoB_p.Pro700Arg,761905,C,G,rpoB,p.Pro700Arg,1,3) Uncertain significance
+rpoB_p.Pro700Leu,761905,C,T,rpoB,p.Pro700Leu,1,3) Uncertain significance
+rpoB_p.Pro719Ser,761961,C,T,rpoB,p.Pro719Ser,1,3) Uncertain significance
+rpoB_p.Pro768Leu,762109,C,T,rpoB,p.Pro768Leu,1,3) Uncertain significance
+rpoB_p.Pro834Leu,762307,C,T,rpoB,p.Pro834Leu,1,3) Uncertain significance
+rpoB_p.Pro834Thr,762306,C,A,rpoB,p.Pro834Thr,1,3) Uncertain significance
+rpoB_p.Pro856Leu,762373,C,T,rpoB,p.Pro856Leu,1,3) Uncertain significance
+rpoB_p.Pro89Ser,760071,C,T,rpoB,p.Pro89Ser,1,3) Uncertain significance
+rpoB_p.Pro906Leu,762523,C,T,rpoB,p.Pro906Leu,1,3) Uncertain significance
+rpoB_p.Pro954Arg,762667,C,G,rpoB,p.Pro954Arg,1,3) Uncertain significance
+rpoB_p.Pro988Ala,762768,C,G,rpoB,p.Pro988Ala,1,3) Uncertain significance
+rpoB_p.Pro988Ser,762768,C,T,rpoB,p.Pro988Ser,1,3) Uncertain significance
+rpoB_p.Ser1009Thr,762832,G,C,rpoB,p.Ser1009Thr,1,3) Uncertain significance
+rpoB_p.Ser1124Ala,763176,T,G,rpoB,p.Ser1124Ala,1,3) Uncertain significance
+rpoB_p.Ser1134Arg,763206,A,C,rpoB,p.Ser1134Arg,1,3) Uncertain significance
+rpoB_p.Ser12Thr,759841,G,C,rpoB,p.Ser12Thr,1,3) Uncertain significance
+rpoB_p.Ser16Cys,759852,A,T,rpoB,p.Ser16Cys,1,3) Uncertain significance
+rpoB_p.Ser195Arg,760389,A,C,rpoB,p.Ser195Arg,1,3) Uncertain significance
+rpoB_p.Ser20Ile,759865,G,T,rpoB,p.Ser20Ile,1,3) Uncertain significance
+rpoB_p.Ser21Phe,759868,C,T,rpoB,p.Ser21Phe,1,3) Uncertain significance
+rpoB_p.Ser239Arg,760521,A,C,rpoB,p.Ser239Arg,1,3) Uncertain significance
+rpoB_p.Ser254Pro,760566,T,C,rpoB,p.Ser254Pro,1,3) Uncertain significance
+rpoB_p.Ser388Leu,760969,C,T,rpoB,p.Ser388Leu,1,5) Not assoc w R
+rpoB_p.Ser428Arg,761088,A,C,rpoB,p.Ser428Arg,1,2) Assoc w R - Interim
+rpoB_p.Ser428Gly,761088,A,G,rpoB,p.Ser428Gly,1,2) Assoc w R - Interim
+rpoB_p.Ser428Ile,761089,G,T,rpoB,p.Ser428Ile,1,2) Assoc w R - Interim
+rpoB_p.Ser428Thr,761089,G,C,rpoB,p.Ser428Thr,1,2) Assoc w R - Interim
+rpoB_p.Ser431Arg,761097,A,C,rpoB,p.Ser431Arg,1,2) Assoc w R - Interim
+rpoB_p.Ser431Gly,761097,A,G,rpoB,p.Ser431Gly,1,2) Assoc w R - Interim
+rpoB_p.Ser431Thr,761098,G,C,rpoB,p.Ser431Thr,1,2) Assoc w R - Interim
+rpoB_p.Ser431_Gln432insArg,761099,C,CCGA,rpoB,p.Ser431_Gln432insArg,1,2) Assoc w R - Interim
+rpoB_p.Ser431_Gln432insHis,761099,C,CCAC,rpoB,p.Ser431_Gln432insHis,1,2) Assoc w R - Interim
+rpoB_p.Ser431_Met434del,761096,GAGCCAATTCATG,G,rpoB,p.Ser431_Met434del,1,2) Assoc w R - Interim
+rpoB_p.Ser431_Phe433del,761096,GAGCCAATTC,G,rpoB,p.Ser431_Phe433del,1,2) Assoc w R - Interim
+rpoB_p.Ser441Ala,761127,T,G,rpoB,p.Ser441Ala,1,2) Assoc w R - Interim
+rpoB_p.Ser441Gln,"761127,761128","T,C","C,A",rpoB,p.Ser441Gln,1,1) Assoc w R
+rpoB_p.Ser441Leu,761128,C,T,rpoB,p.Ser441Leu,1,1) Assoc w R
+rpoB_p.Ser441Met,"761127,761128","T,C","A,T",rpoB,p.Ser441Met,1,2) Assoc w R - Interim
+rpoB_p.Ser441Val,"761127,761128","T,C","G,T",rpoB,p.Ser441Val,1,2) Assoc w R - Interim
+rpoB_p.Ser450Ala,761154,T,G,rpoB,p.Ser450Ala,1,2) Assoc w R - Interim
+rpoB_p.Ser450Cys,"761155,761156","C,G","G,C",rpoB,p.Ser450Cys,1,2) Assoc w R - Interim
+rpoB_p.Ser450Gln,"761154,761155","T,C","C,A",rpoB,p.Ser450Gln,1,2) Assoc w R - Interim
+rpoB_p.Ser450Gly,"761154,761155","T,C","G,G",rpoB,p.Ser450Gly,1,2) Assoc w R - Interim
+rpoB_p.Ser450Leu,"761154,761155","T,C","C,T",rpoB,p.Ser450Leu,1,1) Assoc w R
+rpoB_p.Ser450Met,"761154,761155","T,C","A,T",rpoB,p.Ser450Met,1,2) Assoc w R - Interim
+rpoB_p.Ser450Phe,"761155,761156","C,G","T,C",rpoB,p.Ser450Phe,1,1) Assoc w R
+rpoB_p.Ser450Trp,761155,C,G,rpoB,p.Ser450Trp,1,1) Assoc w R
+rpoB_p.Ser450Tyr,"761155,761156","C,G","A,C",rpoB,p.Ser450Tyr,1,2) Assoc w R - Interim
+rpoB_p.Ser450Val,"761154,761155","T,C","G,T",rpoB,p.Ser450Val,1,2) Assoc w R - Interim
+rpoB_p.Ser450_Leu452del,761153,GTCGGCGCTG,G,rpoB,p.Ser450_Leu452del,1,2) Assoc w R - Interim
+rpoB_p.Ser493Leu,761284,C,T,rpoB,p.Ser493Leu,1,3) Uncertain significance
+rpoB_p.Ser493Trp,761284,C,G,rpoB,p.Ser493Trp,1,3) Uncertain significance
+rpoB_p.Ser540Pro,761424,T,C,rpoB,p.Ser540Pro,1,3) Uncertain significance
+rpoB_p.Ser567Pro,761505,T,C,rpoB,p.Ser567Pro,1,3) Uncertain significance
+rpoB_p.Ser582Ala,761550,T,G,rpoB,p.Ser582Ala,1,3) Uncertain significance
+rpoB_p.Ser582Thr,761550,T,A,rpoB,p.Ser582Thr,1,3) Uncertain significance
+rpoB_p.Ser641Arg,761729,C,A,rpoB,p.Ser641Arg,1,3) Uncertain significance
+rpoB_p.Ser672Phe,761821,C,T,rpoB,p.Ser672Phe,1,3) Uncertain significance
+rpoB_p.Ser67Phe,760006,C,T,rpoB,p.Ser67Phe,1,3) Uncertain significance
+rpoB_p.Ser874Phe,762427,C,T,rpoB,p.Ser874Phe,1,3) Uncertain significance
+rpoB_p.Ser874Tyr,762427,C,A,rpoB,p.Ser874Tyr,1,3) Uncertain significance
+rpoB_p.Ser88Pro,760068,T,C,rpoB,p.Ser88Pro,1,3) Uncertain significance
+rpoB_p.Ser936Arg,762612,A,C,rpoB,p.Ser936Arg,1,3) Uncertain significance
+rpoB_p.Ser984Leu,762757,C,T,rpoB,p.Ser984Leu,1,3) Uncertain significance
+rpoB_p.Ser98Ala,760098,T,G,rpoB,p.Ser98Ala,1,3) Uncertain significance
+rpoB_p.Thr159Pro,760281,A,C,rpoB,p.Thr159Pro,1,3) Uncertain significance
+rpoB_p.Thr215Ala,760449,A,G,rpoB,p.Thr215Ala,1,3) Uncertain significance
+rpoB_p.Thr347Ile,760846,C,T,rpoB,p.Thr347Ile,1,3) Uncertain significance
+rpoB_p.Thr350Ile,760855,C,T,rpoB,p.Thr350Ile,1,3) Uncertain significance
+rpoB_p.Thr399Ala,761001,A,G,rpoB,p.Thr399Ala,1,3) Uncertain significance
+rpoB_p.Thr399Asn,761002,C,A,rpoB,p.Thr399Asn,1,3) Uncertain significance
+rpoB_p.Thr399Ile,761002,C,T,rpoB,p.Thr399Ile,1,3) Uncertain significance
+rpoB_p.Thr399Pro,761001,A,C,rpoB,p.Thr399Pro,1,3) Uncertain significance
+rpoB_p.Thr400Ala,761004,A,G,rpoB,p.Thr400Ala,1,3) Uncertain significance
+rpoB_p.Thr400Asn,761005,C,A,rpoB,p.Thr400Asn,1,3) Uncertain significance
+rpoB_p.Thr400Ser,761005,C,G,rpoB,p.Thr400Ser,1,3) Uncertain significance
+rpoB_p.Thr427Ala,761085,A,G,rpoB,p.Thr427Ala,1,2) Assoc w R - Interim
+rpoB_p.Thr427Asn,761086,C,A,rpoB,p.Thr427Asn,1,2) Assoc w R - Interim
+rpoB_p.Thr427Gly,"761085,761086","A,C","G,G",rpoB,p.Thr427Gly,1,2) Assoc w R - Interim
+rpoB_p.Thr427Ile,761086,C,T,rpoB,p.Thr427Ile,1,2) Assoc w R - Interim
+rpoB_p.Thr427Ser,761086,C,G,rpoB,p.Thr427Ser,1,2) Assoc w R - Interim
+rpoB_p.Thr427_Gln429del,761084,CACCAGCCAG,C,rpoB,p.Thr427_Gln429del,1,2) Assoc w R - Interim
+rpoB_p.Thr427_Gln429delinsLys,761084,CACCAGCCAG,CAAG,rpoB,p.Thr427_Gln429delinsLys,1,2) Assoc w R - Interim
+rpoB_p.Thr427_Leu430del,761084,CACCAGCCAGCTG,C,rpoB,p.Thr427_Leu430del,1,2) Assoc w R - Interim
+rpoB_p.Thr427_Ser428del,761084,CACCAGC,C,rpoB,p.Thr427_Ser428del,1,2) Assoc w R - Interim
+rpoB_p.Thr444Ile,761137,C,T,rpoB,p.Thr444Ile,1,2) Assoc w R - Interim
+rpoB_p.Thr444Ser,761137,C,G,rpoB,p.Thr444Ser,1,2) Assoc w R - Interim
+rpoB_p.Thr444dup,761135,G,GACC,rpoB,p.Thr444dup,1,1) Assoc w R
+rpoB_p.Thr482Ile,761251,C,T,rpoB,p.Thr482Ile,1,3) Uncertain significance
+rpoB_p.Thr508Ala,761328,A,G,rpoB,p.Thr508Ala,1,3) Uncertain significance
+rpoB_p.Thr508Pro,761328,A,C,rpoB,p.Thr508Pro,1,3) Uncertain significance
+rpoB_p.Thr526Ser,761382,A,T,rpoB,p.Thr526Ser,1,3) Uncertain significance
+rpoB_p.Thr52Pro,759960,A,C,rpoB,p.Thr52Pro,1,3) Uncertain significance
+rpoB_p.Thr52Ser,759960,A,T,rpoB,p.Thr52Ser,1,3) Uncertain significance
+rpoB_p.Thr585Ala,761559,A,G,rpoB,p.Thr585Ala,1,3) Uncertain significance
+rpoB_p.Thr653Ala,761763,A,G,rpoB,p.Thr653Ala,1,3) Uncertain significance
+rpoB_p.Thr660Asn,761785,C,A,rpoB,p.Thr660Asn,1,3) Uncertain significance
+rpoB_p.Thr660Ile,761785,C,T,rpoB,p.Thr660Ile,1,3) Uncertain significance
+rpoB_p.Thr676Ala,761832,A,G,rpoB,p.Thr676Ala,1,3) Uncertain significance
+rpoB_p.Thr676Pro,761832,A,C,rpoB,p.Thr676Pro,1,3) Uncertain significance
+rpoB_p.Thr742Ala,762030,A,G,rpoB,p.Thr742Ala,1,3) Uncertain significance
+rpoB_p.Thr756Ala,762072,A,G,rpoB,p.Thr756Ala,1,3) Uncertain significance
+rpoB_p.Thr756Ile,762073,C,T,rpoB,p.Thr756Ile,1,3) Uncertain significance
+rpoB_p.Thr928Asn,762589,C,A,rpoB,p.Thr928Asn,1,3) Uncertain significance
+rpoB_p.Thr9Ile,759832,C,T,rpoB,p.Thr9Ile,1,3) Uncertain significance
+rpoB_p.Tyr1015Cys,762850,A,G,rpoB,p.Tyr1015Cys,1,3) Uncertain significance
+rpoB_p.Tyr308Asp,760728,T,G,rpoB,p.Tyr308Asp,1,3) Uncertain significance
+rpoB_p.Tyr308Cys,760729,A,G,rpoB,p.Tyr308Cys,1,3) Uncertain significance
+rpoB_p.Tyr474His,761226,T,C,rpoB,p.Tyr474His,1,3) Uncertain significance
+rpoB_p.Tyr510His,761334,T,C,rpoB,p.Tyr510His,1,3) Uncertain significance
+rpoB_p.Tyr564Cys,761497,A,G,rpoB,p.Tyr564Cys,1,3) Uncertain significance
+rpoB_p.Tyr564His,761496,T,C,rpoB,p.Tyr564His,1,3) Uncertain significance
+rpoB_p.Tyr572Cys,761521,A,G,rpoB,p.Tyr572Cys,1,3) Uncertain significance
+rpoB_p.Tyr651His,761757,T,C,rpoB,p.Tyr651His,1,3) Uncertain significance
+rpoB_p.Tyr866His,762402,T,C,rpoB,p.Tyr866His,1,3) Uncertain significance
+rpoB_p.Val1117Leu,763155,G,T,rpoB,p.Val1117Leu,1,3) Uncertain significance
+rpoB_p.Val1129Ala,763192,T,C,rpoB,p.Val1129Ala,1,3) Uncertain significance
+rpoB_p.Val113Ile,760143,G,A,rpoB,p.Val113Ile,1,3) Uncertain significance
+rpoB_p.Val1168Phe,763308,G,T,rpoB,p.Val1168Phe,1,3) Uncertain significance
+rpoB_p.Val129Gly,760192,T,G,rpoB,p.Val129Gly,1,3) Uncertain significance
+rpoB_p.Val168Ala,760309,T,C,rpoB,p.Val168Ala,1,3) Uncertain significance
+rpoB_p.Val168Gly,760309,T,G,rpoB,p.Val168Gly,1,3) Uncertain significance
+rpoB_p.Val168Met,760308,G,A,rpoB,p.Val168Met,1,3) Uncertain significance
+rpoB_p.Val170Ala,760315,T,C,rpoB,p.Val170Ala,1,3) Uncertain significance
+rpoB_p.Val170Gly,760315,T,G,rpoB,p.Val170Gly,1,3) Uncertain significance
+rpoB_p.Val170Phe,760314,G,T,rpoB,p.Val170Phe,1,1) Assoc w R
+rpoB_p.Val179Ala,760342,T,C,rpoB,p.Val179Ala,1,3) Uncertain significance
+rpoB_p.Val179Met,760341,G,A,rpoB,p.Val179Met,1,3) Uncertain significance
+rpoB_p.Val198Leu,760398,G,T,rpoB,p.Val198Leu,1,3) Uncertain significance
+rpoB_p.Val198Met,760398,G,A,rpoB,p.Val198Met,1,3) Uncertain significance
+rpoB_p.Val216Ile,760452,G,A,rpoB,p.Val216Ile,1,3) Uncertain significance
+rpoB_p.Val228Ile,760488,G,A,rpoB,p.Val228Ile,1,3) Uncertain significance
+rpoB_p.Val262Ala,760591,T,C,rpoB,p.Val262Ala,1,3) Uncertain significance
+rpoB_p.Val262Phe,760590,G,T,rpoB,p.Val262Phe,1,3) Uncertain significance
+rpoB_p.Val305Ile,760719,G,A,rpoB,p.Val305Ile,1,3) Uncertain significance
+rpoB_p.Val310Gly,760735,T,G,rpoB,p.Val310Gly,1,3) Uncertain significance
+rpoB_p.Val332Ile,760800,G,A,rpoB,p.Val332Ile,1,3) Uncertain significance
+rpoB_p.Val33Leu,759903,G,C,rpoB,p.Val33Leu,1,3) Uncertain significance
+rpoB_p.Val351Ile,760857,G,A,rpoB,p.Val351Ile,1,3) Uncertain significance
+rpoB_p.Val355Ile,760869,G,A,rpoB,p.Val355Ile,1,3) Uncertain significance
+rpoB_p.Val359Ala,760882,T,C,rpoB,p.Val359Ala,1,3) Uncertain significance
+rpoB_p.Val394Leu,760986,G,C,rpoB,p.Val394Leu,1,3) Uncertain significance
+rpoB_p.Val44Ala,759937,T,C,rpoB,p.Val44Ala,1,3) Uncertain significance
+rpoB_p.Val44Gly,759937,T,G,rpoB,p.Val44Gly,1,3) Uncertain significance
+rpoB_p.Val496Ala,761293,T,C,rpoB,p.Val496Ala,1,3) Uncertain significance
+rpoB_p.Val496Gly,761293,T,G,rpoB,p.Val496Gly,1,3) Uncertain significance
+rpoB_p.Val496Leu,761292,G,T,rpoB,p.Val496Leu,1,3) Uncertain significance
+rpoB_p.Val496Met,761292,G,A,rpoB,p.Val496Met,1,3) Uncertain significance
+rpoB_p.Val50Gly,759955,T,G,rpoB,p.Val50Gly,1,3) Uncertain significance
+rpoB_p.Val517Met,761355,G,A,rpoB,p.Val517Met,1,3) Uncertain significance
+rpoB_p.Val523Leu,761373,G,T,rpoB,p.Val523Leu,1,3) Uncertain significance
+rpoB_p.Val534Ala,761407,T,C,rpoB,p.Val534Ala,1,3) Uncertain significance
+rpoB_p.Val534Gly,761407,T,G,rpoB,p.Val534Gly,1,3) Uncertain significance
+rpoB_p.Val534Leu,761406,G,T,rpoB,p.Val534Leu,1,3) Uncertain significance
+rpoB_p.Val534Met,761406,G,A,rpoB,p.Val534Met,1,3) Uncertain significance
+rpoB_p.Val549Gly,"761452,761453","T,C","G,G",rpoB,p.Val549Gly,1,3) Uncertain significance
+rpoB_p.Val549Ile,761451,G,A,rpoB,p.Val549Ile,1,3) Uncertain significance
+rpoB_p.Val562Ala,761491,T,C,rpoB,p.Val562Ala,1,3) Uncertain significance
+rpoB_p.Val562Met,761490,G,A,rpoB,p.Val562Met,1,3) Uncertain significance
+rpoB_p.Val581Met,761547,G,A,rpoB,p.Val581Met,1,3) Uncertain significance
+rpoB_p.Val613Phe,761643,G,T,rpoB,p.Val613Phe,1,3) Uncertain significance
+rpoB_p.Val695Leu,761889,G,T,rpoB,p.Val695Leu,1,5) Not assoc w R
+rpoB_p.Val736Leu,762012,G,C,rpoB,p.Val736Leu,1,3) Uncertain significance
+rpoB_p.Val77Met,760035,G,A,rpoB,p.Val77Met,1,3) Uncertain significance
+rpoB_p.Val797Leu,762195,G,C,rpoB,p.Val797Leu,1,3) Uncertain significance
+rpoB_p.Val800Ala,762205,T,C,rpoB,p.Val800Ala,1,3) Uncertain significance
+rpoB_p.Val833Met,762303,G,A,rpoB,p.Val833Met,1,3) Uncertain significance
+rpoB_p.Val841Leu,762327,G,T,rpoB,p.Val841Leu,1,3) Uncertain significance
+rpoB_p.Val865Met,762399,G,A,rpoB,p.Val865Met,1,3) Uncertain significance
+rpoB_p.Val867Ala,762406,T,C,rpoB,p.Val867Ala,1,3) Uncertain significance
+rpoB_p.Val867Met,762405,G,A,rpoB,p.Val867Met,1,3) Uncertain significance
+rpoB_p.Val895Phe,762489,G,T,rpoB,p.Val895Phe,1,3) Uncertain significance
+rpoB_p.Val946Gly,762643,T,G,rpoB,p.Val946Gly,1,3) Uncertain significance
+rpoB_p.Val970Ala,762715,T,C,rpoB,p.Val970Ala,1,3) Uncertain significance
+rpoB_p.Val970Met,762714,G,A,rpoB,p.Val970Met,1,3) Uncertain significance
+rpoB_p.Val996Ala,762793,T,C,rpoB,p.Val996Ala,1,3) Uncertain significance
+rpoB_p.Val996Gly,762793,T,G,rpoB,p.Val996Gly,1,3) Uncertain significance
+rpoC_c.-15G>A,763355,G,A,rpoC,c.-15G>A,1,3) Uncertain significance
+rpoC_c.-16delG,763353,A,G,rpoC,c.-16delG,1,3) Uncertain significance
+rpoC_c.-17A>G,763353,A,G,rpoC,c.-17A>G,1,3) Uncertain significance
+rpoC_c.-22C>T,763348,C,T,rpoC,c.-22C>T,1,3) Uncertain significance
+rpoC_c.-28C>A,763342,C,A,rpoC,c.-28C>A,1,3) Uncertain significance
+rpoC_c.-38C>T,763332,C,T,rpoC,c.-38C>T,1,3) Uncertain significance
+rpoC_c.-40G>A,763330,G,A,rpoC,c.-40G>A,1,3) Uncertain significance
+rpoC_c.-42_-41insT,763328,C,CT,rpoC,c.-42_-41insT,1,3) Uncertain significance
+rpoC_c.-6A>C,763364,A,C,rpoC,c.-6A>C,1,3) Uncertain significance
+rpoC_p.Ala1037Val,766479,C,T,rpoC,p.Ala1037Val,1,3) Uncertain significance
+rpoC_p.Ala1044Val,766500,C,T,rpoC,p.Ala1044Val,1,3) Uncertain significance
+rpoC_p.Ala1144Thr,766799,G,A,rpoC,p.Ala1144Thr,1,3) Uncertain significance
+rpoC_p.Ala1184Val,766920,C,T,rpoC,p.Ala1184Val,1,3) Uncertain significance
+rpoC_p.Ala1188Ser,766931,G,T,rpoC,p.Ala1188Ser,1,3) Uncertain significance
+rpoC_p.Ala1195Val,766953,C,T,rpoC,p.Ala1195Val,1,3) Uncertain significance
+rpoC_p.Ala1201Ser,766970,G,T,rpoC,p.Ala1201Ser,1,3) Uncertain significance
+rpoC_p.Ala1202Asp,766974,C,A,rpoC,p.Ala1202Asp,1,3) Uncertain significance
+rpoC_p.Ala1236Gly,767076,C,G,rpoC,p.Ala1236Gly,1,3) Uncertain significance
+rpoC_p.Ala1299Val,767265,C,T,rpoC,p.Ala1299Val,1,3) Uncertain significance
+rpoC_p.Ala1304Val,767280,C,T,rpoC,p.Ala1304Val,1,3) Uncertain significance
+rpoC_p.Ala172Gly,763884,C,G,rpoC,p.Ala172Gly,1,3) Uncertain significance
+rpoC_p.Ala172Val,"763884,763885","C,C","T,G",rpoC,p.Ala172Val,1,5) Not assoc w R
+rpoC_p.Ala174Val,763890,C,T,rpoC,p.Ala174Val,1,3) Uncertain significance
+rpoC_p.Ala189Thr,763934,G,A,rpoC,p.Ala189Thr,1,3) Uncertain significance
+rpoC_p.Ala212Thr,764003,G,A,rpoC,p.Ala212Thr,1,3) Uncertain significance
+rpoC_p.Ala230Val,764058,C,T,rpoC,p.Ala230Val,1,3) Uncertain significance
+rpoC_p.Ala316Thr,764315,G,A,rpoC,p.Ala316Thr,1,3) Uncertain significance
+rpoC_p.Ala448Ser,764711,G,T,rpoC,p.Ala448Ser,1,3) Uncertain significance
+rpoC_p.Ala492Pro,764843,G,C,rpoC,p.Ala492Pro,1,3) Uncertain significance
+rpoC_p.Ala521Val,764931,C,T,rpoC,p.Ala521Val,1,3) Uncertain significance
+rpoC_p.Ala553Val,765027,C,T,rpoC,p.Ala553Val,1,3) Uncertain significance
+rpoC_p.Ala618Val,765222,C,T,rpoC,p.Ala618Val,1,3) Uncertain significance
+rpoC_p.Ala621Thr,765230,G,A,rpoC,p.Ala621Thr,1,5) Not assoc w R
+rpoC_p.Ala621Val,765231,C,T,rpoC,p.Ala621Val,1,3) Uncertain significance
+rpoC_p.Ala648Asp,765312,C,A,rpoC,p.Ala648Asp,1,3) Uncertain significance
+rpoC_p.Ala648Thr,765311,G,A,rpoC,p.Ala648Thr,1,3) Uncertain significance
+rpoC_p.Ala661Thr,765350,G,A,rpoC,p.Ala661Thr,1,3) Uncertain significance
+rpoC_p.Ala710Val,765498,C,T,rpoC,p.Ala710Val,1,3) Uncertain significance
+rpoC_p.Ala773Glu,765687,C,A,rpoC,p.Ala773Glu,1,3) Uncertain significance
+rpoC_p.Ala85Thr,763622,G,A,rpoC,p.Ala85Thr,1,3) Uncertain significance
+rpoC_p.Ala902Thr,766073,G,A,rpoC,p.Ala902Thr,1,3) Uncertain significance
+rpoC_p.Ala929Gly,766155,C,G,rpoC,p.Ala929Gly,1,3) Uncertain significance
+rpoC_p.Ala994Thr,766349,G,A,rpoC,p.Ala994Thr,1,3) Uncertain significance
+rpoC_p.Arg1052Gly,766523,C,G,rpoC,p.Arg1052Gly,1,3) Uncertain significance
+rpoC_p.Arg1083Gly,766616,C,G,rpoC,p.Arg1083Gly,1,3) Uncertain significance
+rpoC_p.Arg1163Cys,766856,C,T,rpoC,p.Arg1163Cys,1,3) Uncertain significance
+rpoC_p.Arg1163His,766857,G,A,rpoC,p.Arg1163His,1,3) Uncertain significance
+rpoC_p.Arg1192Gln,766944,G,A,rpoC,p.Arg1192Gln,1,3) Uncertain significance
+rpoC_p.Arg1192Leu,766944,G,T,rpoC,p.Arg1192Leu,1,3) Uncertain significance
+rpoC_p.Arg11His,763401,G,A,rpoC,p.Arg11His,1,3) Uncertain significance
+rpoC_p.Arg1279Ser,767204,C,A,rpoC,p.Arg1279Ser,1,3) Uncertain significance
+rpoC_p.Arg173Gln,763887,G,A,rpoC,p.Arg173Gln,1,3) Uncertain significance
+rpoC_p.Arg203Cys,763976,C,T,rpoC,p.Arg203Cys,1,3) Uncertain significance
+rpoC_p.Arg206Cys,763985,C,T,rpoC,p.Arg206Cys,1,3) Uncertain significance
+rpoC_p.Arg211His,764001,G,A,rpoC,p.Arg211His,1,3) Uncertain significance
+rpoC_p.Arg247Cys,764108,C,T,rpoC,p.Arg247Cys,1,3) Uncertain significance
+rpoC_p.Arg247His,764109,G,A,rpoC,p.Arg247His,1,3) Uncertain significance
+rpoC_p.Arg282Gln,764214,G,A,rpoC,p.Arg282Gln,1,3) Uncertain significance
+rpoC_p.Arg397Leu,764559,G,T,rpoC,p.Arg397Leu,1,3) Uncertain significance
+rpoC_p.Arg478Cys,764801,C,T,rpoC,p.Arg478Cys,1,3) Uncertain significance
+rpoC_p.Arg506Gln,764886,G,A,rpoC,p.Arg506Gln,1,3) Uncertain significance
+rpoC_p.Arg636Leu,765276,G,T,rpoC,p.Arg636Leu,1,3) Uncertain significance
+rpoC_p.Arg641Gln,765291,G,A,rpoC,p.Arg641Gln,1,3) Uncertain significance
+rpoC_p.Arg641Trp,765290,C,T,rpoC,p.Arg641Trp,1,3) Uncertain significance
+rpoC_p.Arg69Pro,763575,G,C,rpoC,p.Arg69Pro,1,5) Not assoc w R
+rpoC_p.Arg741Cys,765590,C,T,rpoC,p.Arg741Cys,1,3) Uncertain significance
+rpoC_p.Arg741His,765591,G,A,rpoC,p.Arg741His,1,3) Uncertain significance
+rpoC_p.Arg741Ser,765590,C,A,rpoC,p.Arg741Ser,1,3) Uncertain significance
+rpoC_p.Arg752His,765624,G,A,rpoC,p.Arg752His,1,3) Uncertain significance
+rpoC_p.Arg912His,766104,G,A,rpoC,p.Arg912His,1,3) Uncertain significance
+rpoC_p.Arg963Cys,766256,C,T,rpoC,p.Arg963Cys,1,3) Uncertain significance
+rpoC_p.Arg981Gly,766310,C,G,rpoC,p.Arg981Gly,1,3) Uncertain significance
+rpoC_p.Asn1239Asp,767084,A,G,rpoC,p.Asn1239Asp,1,3) Uncertain significance
+rpoC_p.Asn1246Asp,767105,A,G,rpoC,p.Asn1246Asp,1,3) Uncertain significance
+rpoC_p.Asn5Asp,763382,A,G,rpoC,p.Asn5Asp,1,3) Uncertain significance
+rpoC_p.Asp1093Glu,766648,C,A,rpoC,p.Asp1093Glu,1,3) Uncertain significance
+rpoC_p.Asp1169Glu,766876,C,A,rpoC,p.Asp1169Glu,1,3) Uncertain significance
+rpoC_p.Asp192Gly,763944,A,G,rpoC,p.Asp192Gly,1,3) Uncertain significance
+rpoC_p.Asp19Ala,763425,A,C,rpoC,p.Asp19Ala,1,3) Uncertain significance
+rpoC_p.Asp221Asn,764030,G,A,rpoC,p.Asp221Asn,1,3) Uncertain significance
+rpoC_p.Asp271Asn,764180,G,A,rpoC,p.Asp271Asn,1,3) Uncertain significance
+rpoC_p.Asp271Gly,764181,A,G,rpoC,p.Asp271Gly,1,5) Not assoc w R
+rpoC_p.Asp279Gly,764205,A,G,rpoC,p.Asp279Gly,1,3) Uncertain significance
+rpoC_p.Asp331Ala,764361,A,C,rpoC,p.Asp331Ala,1,3) Uncertain significance
+rpoC_p.Asp44Glu,763501,C,A,rpoC,p.Asp44Glu,1,3) Uncertain significance
+rpoC_p.Asp462Gly,764754,A,G,rpoC,p.Asp462Gly,1,3) Uncertain significance
+rpoC_p.Asp595Ala,765153,A,C,rpoC,p.Asp595Ala,1,3) Uncertain significance
+rpoC_p.Asp660Asn,765347,G,A,rpoC,p.Asp660Asn,1,3) Uncertain significance
+rpoC_p.Asp754Ala,765630,A,C,rpoC,p.Asp754Ala,1,3) Uncertain significance
+rpoC_p.Asp795Glu,765754,C,A,rpoC,p.Asp795Glu,1,3) Uncertain significance
+rpoC_p.Asp795Gly,765753,A,G,rpoC,p.Asp795Gly,1,3) Uncertain significance
+rpoC_p.Asp795Tyr,765752,G,T,rpoC,p.Asp795Tyr,1,3) Uncertain significance
+rpoC_p.Asp796Gly,765756,A,G,rpoC,p.Asp796Gly,1,3) Uncertain significance
+rpoC_p.Asp890Glu,766039,C,A,rpoC,p.Asp890Glu,1,3) Uncertain significance
+rpoC_p.Asp907Gly,766089,A,G,rpoC,p.Asp907Gly,1,3) Uncertain significance
+rpoC_p.Gln1084_Arg1085dup,766624,C,CCAGCGG,rpoC,p.Gln1084_Arg1085dup,1,3) Uncertain significance
+rpoC_p.Gln1125Arg,766743,A,G,rpoC,p.Gln1125Arg,1,3) Uncertain significance
+rpoC_p.Gln1273Arg,767187,A,G,rpoC,p.Gln1273Arg,1,3) Uncertain significance
+rpoC_p.Gln165Arg,763863,A,G,rpoC,p.Gln165Arg,1,3) Uncertain significance
+rpoC_p.Gln22Arg,763434,A,G,rpoC,p.Gln22Arg,1,3) Uncertain significance
+rpoC_p.Gln262Arg,764154,A,G,rpoC,p.Gln262Arg,1,3) Uncertain significance
+rpoC_p.Gln303Leu,764277,A,T,rpoC,p.Gln303Leu,1,3) Uncertain significance
+rpoC_p.Gln440Arg,764688,A,G,rpoC,p.Gln440Arg,1,3) Uncertain significance
+rpoC_p.Gln479His,764806,G,T,rpoC,p.Gln479His,1,3) Uncertain significance
+rpoC_p.Gln657Arg,765339,A,G,rpoC,p.Gln657Arg,1,3) Uncertain significance
+rpoC_p.Gln711Glu,765500,C,G,rpoC,p.Gln711Glu,1,3) Uncertain significance
+rpoC_p.Gln759Arg,765645,A,G,rpoC,p.Gln759Arg,1,3) Uncertain significance
+rpoC_p.Gln959Arg,766245,A,G,rpoC,p.Gln959Arg,1,3) Uncertain significance
+rpoC_p.Glu1033Ala,766467,A,C,rpoC,p.Glu1033Ala,1,3) Uncertain significance
+rpoC_p.Glu1056Asp,766537,G,T,rpoC,p.Glu1056Asp,1,3) Uncertain significance
+rpoC_p.Glu1073Asp,766588,G,T,rpoC,p.Glu1073Asp,1,3) Uncertain significance
+rpoC_p.Glu1073Gln,766586,G,C,rpoC,p.Glu1073Gln,1,3) Uncertain significance
+rpoC_p.Glu1073Lys,766586,G,A,rpoC,p.Glu1073Lys,1,3) Uncertain significance
+rpoC_p.Glu1092Asp,766645,A,T,rpoC,p.Glu1092Asp,1,5) Not assoc w R
+rpoC_p.Glu1096Asp,766657,A,T,rpoC,p.Glu1096Asp,1,3) Uncertain significance
+rpoC_p.Glu1113Asp,766708,A,T,rpoC,p.Glu1113Asp,1,3) Uncertain significance
+rpoC_p.Glu1140Asp,766789,G,T,rpoC,p.Glu1140Asp,1,3) Uncertain significance
+rpoC_p.Glu1140Gly,766788,A,G,rpoC,p.Glu1140Gly,1,3) Uncertain significance
+rpoC_p.Glu1189Asp,766936,G,T,rpoC,p.Glu1189Asp,1,3) Uncertain significance
+rpoC_p.Glu1196Lys,766955,G,A,rpoC,p.Glu1196Lys,1,3) Uncertain significance
+rpoC_p.Glu126Asp,763747,G,T,rpoC,p.Glu126Asp,1,3) Uncertain significance
+rpoC_p.Glu1277Lys,767198,G,A,rpoC,p.Glu1277Lys,1,3) Uncertain significance
+rpoC_p.Glu1289Ala,767235,A,C,rpoC,p.Glu1289Ala,1,3) Uncertain significance
+rpoC_p.Glu1289Gly,767235,A,G,rpoC,p.Glu1289Gly,1,3) Uncertain significance
+rpoC_p.Glu142Ala,763794,A,C,rpoC,p.Glu142Ala,1,3) Uncertain significance
+rpoC_p.Glu142Gly,763794,A,G,rpoC,p.Glu142Gly,1,3) Uncertain significance
+rpoC_p.Glu171Lys,763880,G,A,rpoC,p.Glu171Lys,1,3) Uncertain significance
+rpoC_p.Glu185Gln,763922,G,C,rpoC,p.Glu185Gln,1,3) Uncertain significance
+rpoC_p.Glu18Asp,763423,G,T,rpoC,p.Glu18Asp,1,3) Uncertain significance
+rpoC_p.Glu18Gln,763421,G,C,rpoC,p.Glu18Gln,1,3) Uncertain significance
+rpoC_p.Glu215Ala,764013,A,C,rpoC,p.Glu215Ala,1,3) Uncertain significance
+rpoC_p.Glu220Lys,764027,G,A,rpoC,p.Glu220Lys,1,3) Uncertain significance
+rpoC_p.Glu259Lys,764144,G,A,rpoC,p.Glu259Lys,1,3) Uncertain significance
+rpoC_p.Glu49Ala,763515,A,C,rpoC,p.Glu49Ala,1,3) Uncertain significance
+rpoC_p.Glu591Gln,765140,G,C,rpoC,p.Glu591Gln,1,3) Uncertain significance
+rpoC_p.Glu645Lys,765302,G,A,rpoC,p.Glu645Lys,1,3) Uncertain significance
+rpoC_p.Glu784Gln,765719,G,C,rpoC,p.Glu784Gln,1,5) Not assoc w R
+rpoC_p.Glu791Ala,765741,A,C,rpoC,p.Glu791Ala,1,3) Uncertain significance
+rpoC_p.Glu791Gln,765740,G,C,rpoC,p.Glu791Gln,1,3) Uncertain significance
+rpoC_p.Glu842Ala,765894,A,C,rpoC,p.Glu842Ala,1,3) Uncertain significance
+rpoC_p.Glu894Gly,766050,A,G,rpoC,p.Glu894Gly,1,3) Uncertain significance
+rpoC_p.Glu932Lys,766163,G,A,rpoC,p.Glu932Lys,1,3) Uncertain significance
+rpoC_p.Glu948Ala,766212,A,C,rpoC,p.Glu948Ala,1,3) Uncertain significance
+rpoC_p.Gly1026Ala,766446,G,C,rpoC,p.Gly1026Ala,1,3) Uncertain significance
+rpoC_p.Gly1072Asp,766584,G,A,rpoC,p.Gly1072Asp,1,3) Uncertain significance
+rpoC_p.Gly1197Arg,766958,G,C,rpoC,p.Gly1197Arg,1,3) Uncertain significance
+rpoC_p.Gly1198Ser,766961,G,A,rpoC,p.Gly1198Ser,1,3) Uncertain significance
+rpoC_p.Gly1311Ser,767300,G,A,rpoC,p.Gly1311Ser,1,3) Uncertain significance
+rpoC_p.Gly13Arg,763406,G,C,rpoC,p.Gly13Arg,1,3) Uncertain significance
+rpoC_p.Gly188Ala,763932,G,C,rpoC,p.Gly188Ala,1,3) Uncertain significance
+rpoC_p.Gly254Ser,764129,G,A,rpoC,p.Gly254Ser,1,3) Uncertain significance
+rpoC_p.Gly286Glu,764226,G,A,rpoC,p.Gly286Glu,1,3) Uncertain significance
+rpoC_p.Gly311Ser,764300,G,A,rpoC,p.Gly311Ser,1,3) Uncertain significance
+rpoC_p.Gly332Arg,764363,G,C,rpoC,p.Gly332Arg,1,3) Uncertain significance
+rpoC_p.Gly411Ser,764600,G,A,rpoC,p.Gly411Ser,1,3) Uncertain significance
+rpoC_p.Gly519Asp,764925,G,A,rpoC,p.Gly519Asp,1,3) Uncertain significance
+rpoC_p.Gly594Arg,765149,G,C,rpoC,p.Gly594Arg,1,3) Uncertain significance
+rpoC_p.Gly594Glu,765150,G,A,rpoC,p.Gly594Glu,1,5) Not assoc w R
+rpoC_p.Gly597Asp,765159,G,A,rpoC,p.Gly597Asp,1,3) Uncertain significance
+rpoC_p.Gly63Ala,763557,G,C,rpoC,p.Gly63Ala,1,3) Uncertain significance
+rpoC_p.Gly652Asp,765324,G,A,rpoC,p.Gly652Asp,1,3) Uncertain significance
+rpoC_p.Gly655Ser,765332,G,A,rpoC,p.Gly655Ser,1,3) Uncertain significance
+rpoC_p.Gly655Val,765333,G,T,rpoC,p.Gly655Val,1,3) Uncertain significance
+rpoC_p.Gly680Arg,765407,G,C,rpoC,p.Gly680Arg,1,3) Uncertain significance
+rpoC_p.Gly680Val,765408,G,T,rpoC,p.Gly680Val,1,3) Uncertain significance
+rpoC_p.Gly980Arg,766307,G,C,rpoC,p.Gly980Arg,1,3) Uncertain significance
+rpoC_p.Gly980Glu,766308,G,A,rpoC,p.Gly980Glu,1,3) Uncertain significance
+rpoC_p.His145Tyr,763802,C,T,rpoC,p.His145Tyr,1,3) Uncertain significance
+rpoC_p.His525Gln,764944,C,A,rpoC,p.His525Gln,1,3) Uncertain significance
+rpoC_p.His525Tyr,764942,C,T,rpoC,p.His525Tyr,1,3) Uncertain significance
+rpoC_p.His606Gln,765187,C,A,rpoC,p.His606Gln,1,3) Uncertain significance
+rpoC_p.His653Gln,765328,C,A,rpoC,p.His653Gln,1,3) Uncertain significance
+rpoC_p.His748Pro,765612,A,C,rpoC,p.His748Pro,1,3) Uncertain significance
+rpoC_p.His767Pro,765669,A,C,rpoC,p.His767Pro,1,3) Uncertain significance
+rpoC_p.His889Arg,766035,A,G,rpoC,p.His889Arg,1,3) Uncertain significance
+rpoC_p.Ile1066Val,766565,A,G,rpoC,p.Ile1066Val,1,3) Uncertain significance
+rpoC_p.Ile1080Thr,766608,T,C,rpoC,p.Ile1080Thr,1,3) Uncertain significance
+rpoC_p.Ile1132Met,766765,A,G,rpoC,p.Ile1132Met,1,3) Uncertain significance
+rpoC_p.Ile1264Thr,767160,T,C,rpoC,p.Ile1264Thr,1,3) Uncertain significance
+rpoC_p.Ile1264Val,767159,A,G,rpoC,p.Ile1264Val,1,3) Uncertain significance
+rpoC_p.Ile1270Ser,767178,T,G,rpoC,p.Ile1270Ser,1,3) Uncertain significance
+rpoC_p.Ile12Leu,763403,A,C,rpoC,p.Ile12Leu,1,3) Uncertain significance
+rpoC_p.Ile12Val,763403,A,G,rpoC,p.Ile12Val,1,3) Uncertain significance
+rpoC_p.Ile270Val,764177,A,G,rpoC,p.Ile270Val,1,3) Uncertain significance
+rpoC_p.Ile348Leu,764411,A,C,rpoC,p.Ile348Leu,1,3) Uncertain significance
+rpoC_p.Ile34Val,763469,A,G,rpoC,p.Ile34Val,1,3) Uncertain significance
+rpoC_p.Ile491Val,764840,A,G,rpoC,p.Ile491Val,1,3) Uncertain significance
+rpoC_p.Ile619Val,765224,A,G,rpoC,p.Ile619Val,1,3) Uncertain significance
+rpoC_p.Ile646Val,765305,A,G,rpoC,p.Ile646Val,1,3) Uncertain significance
+rpoC_p.Ile696Val,765455,A,G,rpoC,p.Ile696Val,1,3) Uncertain significance
+rpoC_p.Ile697Val,765458,A,G,rpoC,p.Ile697Val,1,3) Uncertain significance
+rpoC_p.Ile745Leu,765602,A,C,rpoC,p.Ile745Leu,1,3) Uncertain significance
+rpoC_p.Ile802Val,765773,A,G,rpoC,p.Ile802Val,1,3) Uncertain significance
+rpoC_p.Ile897Thr,766059,T,C,rpoC,p.Ile897Thr,1,3) Uncertain significance
+rpoC_p.Ile957Thr,766239,T,C,rpoC,p.Ile957Thr,1,3) Uncertain significance
+rpoC_p.Leu1099Val,766664,C,G,rpoC,p.Leu1099Val,1,3) Uncertain significance
+rpoC_p.Leu1134Val,766769,C,G,rpoC,p.Leu1134Val,1,3) Uncertain significance
+rpoC_p.Leu14Phe,763409,C,T,rpoC,p.Leu14Phe,1,3) Uncertain significance
+rpoC_p.Leu151Arg,763821,T,G,rpoC,p.Leu151Arg,1,3) Uncertain significance
+rpoC_p.Leu151Phe,763820,C,T,rpoC,p.Leu151Phe,1,3) Uncertain significance
+rpoC_p.Leu381Val,764510,C,G,rpoC,p.Leu381Val,1,3) Uncertain significance
+rpoC_p.Leu627Val,765248,T,G,rpoC,p.Leu627Val,1,3) Uncertain significance
+rpoC_p.Leu627dup,765247,C,CTTG,rpoC,p.Leu627dup,1,3) Uncertain significance
+rpoC_p.Leu650Arg,765318,T,G,rpoC,p.Leu650Arg,1,3) Uncertain significance
+rpoC_p.Leu679Arg,765405,T,G,rpoC,p.Leu679Arg,1,3) Uncertain significance
+rpoC_p.Leu737Arg,765579,T,G,rpoC,p.Leu737Arg,1,3) Uncertain significance
+rpoC_p.Leu789Ala,"765734,765735","T,T","G,C",rpoC,p.Leu789Ala,1,3) Uncertain significance
+rpoC_p.Leu910Val,766097,C,G,rpoC,p.Leu910Val,1,3) Uncertain significance
+rpoC_p.Lys1082Glu,766613,A,G,rpoC,p.Lys1082Glu,1,3) Uncertain significance
+rpoC_p.Lys228Asn,764053,G,T,rpoC,p.Lys228Asn,1,3) Uncertain significance
+rpoC_p.Lys232Thr,764064,A,C,rpoC,p.Lys232Thr,1,3) Uncertain significance
+rpoC_p.Lys743Glu,765596,A,G,rpoC,p.Lys743Glu,1,3) Uncertain significance
+rpoC_p.Lys828Arg,765852,A,G,rpoC,p.Lys828Arg,1,3) Uncertain significance
+rpoC_p.Met1161Ile,766852,G,T,rpoC,p.Met1161Ile,1,3) Uncertain significance
+rpoC_p.Met1208Ile,766993,G,T,rpoC,p.Met1208Ile,1,3) Uncertain significance
+rpoC_p.Met1208Val,766991,A,G,rpoC,p.Met1208Val,1,3) Uncertain significance
+rpoC_p.Met205Arg,763983,T,G,rpoC,p.Met205Arg,1,3) Uncertain significance
+rpoC_p.Met205Val,763982,A,G,rpoC,p.Met205Val,1,3) Uncertain significance
+rpoC_p.Met447Thr,764709,T,C,rpoC,p.Met447Thr,1,3) Uncertain significance
+rpoC_p.Met515Ile,764914,G,T,rpoC,p.Met515Ile,1,3) Uncertain significance
+rpoC_p.Met541Ile,764992,G,T,rpoC,p.Met541Ile,1,3) Uncertain significance
+rpoC_p.Met559Ile,765046,G,T,rpoC,p.Met559Ile,1,3) Uncertain significance
+rpoC_p.Met581Ile,765112,G,T,rpoC,p.Met581Ile,1,3) Uncertain significance
+rpoC_p.Met663Ile,765358,G,T,rpoC,p.Met663Ile,1,3) Uncertain significance
+rpoC_p.Met733Ile,765568,G,T,rpoC,p.Met733Ile,1,3) Uncertain significance
+rpoC_p.Met92Thr,763644,T,C,rpoC,p.Met92Thr,1,3) Uncertain significance
+rpoC_p.Phe1061Leu,766552,C,A,rpoC,p.Phe1061Leu,1,3) Uncertain significance
+rpoC_p.Phe1089Ser,766635,T,C,rpoC,p.Phe1089Ser,1,3) Uncertain significance
+rpoC_p.Phe1175Leu,766892,T,C,rpoC,p.Phe1175Leu,1,3) Uncertain significance
+rpoC_p.Phe831Leu,765860,T,C,rpoC,p.Phe831Leu,1,3) Uncertain significance
+rpoC_p.Pro1040Arg,766488,C,G,rpoC,p.Pro1040Arg,1,3) Uncertain significance
+rpoC_p.Pro1200Leu,766968,C,T,rpoC,p.Pro1200Leu,1,3) Uncertain significance
+rpoC_p.Pro1259Leu,767145,C,T,rpoC,p.Pro1259Leu,1,3) Uncertain significance
+rpoC_p.Pro1259Ser,767144,C,T,rpoC,p.Pro1259Ser,1,3) Uncertain significance
+rpoC_p.Pro322Thr,764333,C,A,rpoC,p.Pro322Thr,1,3) Uncertain significance
+rpoC_p.Pro394Gln,764550,C,A,rpoC,p.Pro394Gln,1,3) Uncertain significance
+rpoC_p.Pro444Ser,764699,C,T,rpoC,p.Pro444Ser,1,3) Uncertain significance
+rpoC_p.Pro481Ser,764810,C,T,rpoC,p.Pro481Ser,1,3) Uncertain significance
+rpoC_p.Pro481Thr,764810,C,A,rpoC,p.Pro481Thr,1,3) Uncertain significance
+rpoC_p.Pro514Leu,764910,C,T,rpoC,p.Pro514Leu,1,3) Uncertain significance
+rpoC_p.Pro601Gln,765171,C,A,rpoC,p.Pro601Gln,1,3) Uncertain significance
+rpoC_p.Pro601Leu,765171,C,T,rpoC,p.Pro601Leu,1,5) Not assoc w R
+rpoC_p.Pro643Ser,765296,C,T,rpoC,p.Pro643Ser,1,3) Uncertain significance
+rpoC_p.Pro658Leu,765342,C,T,rpoC,p.Pro658Leu,1,3) Uncertain significance
+rpoC_p.Pro682Leu,765414,C,T,rpoC,p.Pro682Leu,1,3) Uncertain significance
+rpoC_p.Pro906Ala,766085,C,G,rpoC,p.Pro906Ala,1,5) Not assoc w R
+rpoC_p.Pro906Arg,766086,C,G,rpoC,p.Pro906Arg,1,3) Uncertain significance
+rpoC_p.Ser1095Phe,766653,C,T,rpoC,p.Ser1095Phe,1,3) Uncertain significance
+rpoC_p.Ser1100Ala,766667,T,G,rpoC,p.Ser1100Ala,1,3) Uncertain significance
+rpoC_p.Ser1172Ala,766883,T,G,rpoC,p.Ser1172Ala,1,3) Uncertain significance
+rpoC_p.Ser1242Asn,767094,G,A,rpoC,p.Ser1242Asn,1,3) Uncertain significance
+rpoC_p.Ser1287Gln,"767228,767229","T,C","C,A",rpoC,p.Ser1287Gln,1,3) Uncertain significance
+rpoC_p.Ser1294Asn,767250,G,A,rpoC,p.Ser1294Asn,1,3) Uncertain significance
+rpoC_p.Ser308Phe,"764292,764293","C,G","T,C",rpoC,p.Ser308Phe,1,3) Uncertain significance
+rpoC_p.Ser403Ala,764576,T,G,rpoC,p.Ser403Ala,1,3) Uncertain significance
+rpoC_p.Ser403Cys,764577,C,G,rpoC,p.Ser403Cys,1,3) Uncertain significance
+rpoC_p.Ser614Leu,765210,C,T,rpoC,p.Ser614Leu,1,3) Uncertain significance
+rpoC_p.Thr1262Ala,767153,A,G,rpoC,p.Thr1262Ala,1,3) Uncertain significance
+rpoC_p.Thr1284Ala,767219,A,G,rpoC,p.Thr1284Ala,1,3) Uncertain significance
+rpoC_p.Thr1301Ser,767271,C,G,rpoC,p.Thr1301Ser,1,3) Uncertain significance
+rpoC_p.Thr16Ala,763415,A,G,rpoC,p.Thr16Ala,1,3) Uncertain significance
+rpoC_p.Thr225Asn,764043,C,A,rpoC,p.Thr225Asn,1,3) Uncertain significance
+rpoC_p.Thr227Ile,764049,C,T,rpoC,p.Thr227Ile,1,3) Uncertain significance
+rpoC_p.Thr253Ile,764127,C,T,rpoC,p.Thr253Ile,1,3) Uncertain significance
+rpoC_p.Thr667Met,765369,C,T,rpoC,p.Thr667Met,1,3) Uncertain significance
+rpoC_p.Thr845Pro,765902,A,C,rpoC,p.Thr845Pro,1,3) Uncertain significance
+rpoC_p.Thr893Ile,766047,C,T,rpoC,p.Thr893Ile,1,3) Uncertain significance
+rpoC_p.Thr909Lys,766095,C,A,rpoC,p.Thr909Lys,1,3) Uncertain significance
+rpoC_p.Thr909Met,766095,C,T,rpoC,p.Thr909Met,1,3) Uncertain significance
+rpoC_p.Thr958Asn,766242,C,A,rpoC,p.Thr958Asn,1,3) Uncertain significance
+rpoC_p.Thr958Ile,766242,C,T,rpoC,p.Thr958Ile,1,3) Uncertain significance
+rpoC_p.Trp223Arg,764036,T,C,rpoC,p.Trp223Arg,1,3) Uncertain significance
+rpoC_p.Tyr612Ser,765204,A,C,rpoC,p.Tyr612Ser,1,3) Uncertain significance
+rpoC_p.Tyr61Cys,763551,A,G,rpoC,p.Tyr61Cys,1,3) Uncertain significance
+rpoC_p.Tyr704Cys,765480,A,G,rpoC,p.Tyr704Cys,1,3) Uncertain significance
+rpoC_p.Tyr722Cys,765534,A,G,rpoC,p.Tyr722Cys,1,3) Uncertain significance
+rpoC_p.Tyr749His,765614,T,C,rpoC,p.Tyr749His,1,3) Uncertain significance
+rpoC_p.Val1049Phe,766514,G,T,rpoC,p.Val1049Phe,1,3) Uncertain significance
+rpoC_p.Val1067Ala,766569,T,C,rpoC,p.Val1067Ala,1,3) Uncertain significance
+rpoC_p.Val1098Leu,766661,G,T,rpoC,p.Val1098Leu,1,3) Uncertain significance
+rpoC_p.Val1130Met,766757,G,A,rpoC,p.Val1130Met,1,3) Uncertain significance
+rpoC_p.Val1135Ala,766773,T,C,rpoC,p.Val1135Ala,1,3) Uncertain significance
+rpoC_p.Val1138Gly,766782,T,G,rpoC,p.Val1138Gly,1,3) Uncertain significance
+rpoC_p.Val1272Ala,767184,T,C,rpoC,p.Val1272Ala,1,3) Uncertain significance
+rpoC_p.Val139Gly,763785,T,G,rpoC,p.Val139Gly,1,3) Uncertain significance
+rpoC_p.Val139Ile,763784,G,A,rpoC,p.Val139Ile,1,3) Uncertain significance
+rpoC_p.Val197Ile,763958,G,A,rpoC,p.Val197Ile,1,3) Uncertain significance
+rpoC_p.Val236Ile,764075,G,A,rpoC,p.Val236Ile,1,3) Uncertain significance
+rpoC_p.Val299Ile,764264,G,A,rpoC,p.Val299Ile,1,3) Uncertain significance
+rpoC_p.Val313Ala,764307,T,C,rpoC,p.Val313Ala,1,3) Uncertain significance
+rpoC_p.Val422Ala,764634,T,C,rpoC,p.Val422Ala,1,3) Uncertain significance
+rpoC_p.Val611Phe,765200,G,T,rpoC,p.Val611Phe,1,3) Uncertain significance
+rpoC_p.Val626Ile,765245,G,A,rpoC,p.Val626Ile,1,3) Uncertain significance
+rpoC_p.Val629Met,765254,G,A,rpoC,p.Val629Met,1,3) Uncertain significance
+rpoC_p.Val684Gly,765420,T,G,rpoC,p.Val684Gly,1,3) Uncertain significance
+rpoC_p.Val684Ile,765419,G,A,rpoC,p.Val684Ile,1,3) Uncertain significance
+rpoC_p.Val692Ala,765444,T,C,rpoC,p.Val692Ala,1,3) Uncertain significance
+rpoC_p.Val709Phe,765494,G,T,rpoC,p.Val709Phe,1,3) Uncertain significance
+rpoC_p.Val756Ile,765635,G,A,rpoC,p.Val756Ile,1,3) Uncertain significance
+rpoC_p.Val803Leu,765776,G,C,rpoC,p.Val803Leu,1,3) Uncertain significance
+rpoC_p.Val899Ile,766064,G,A,rpoC,p.Val899Ile,1,3) Uncertain significance
+rpoC_p.Val930Ile,766157,G,A,rpoC,p.Val930Ile,1,3) Uncertain significance
+rpoC_p.Val974Met,766289,G,A,rpoC,p.Val974Met,1,3) Uncertain significance

@@ -24,6 +24,13 @@ def extract_single_drug(data_df, drug, metadata_cols_num=9):
     Extracts data for isolates with quality score of at least MEDIUM. 
     '''
 
+    data_df = data_df.rename(columns={"LEVO": "LEV",
+                                      "LEVO_lower_bound": "LEV_lower_bound",
+                                      "LEVO_midpoint": "LEV_midpoint",
+                                      "LEVO_upper_bound": "LEV_upper_bound",
+                                      "LEVO_quality": "LEV_quality"
+                                     })
+
     drug = drug.upper()
 
     if drug + "_midpoint" not in data_df.columns:

@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 1
-#SBATCH -t 0-01:00
-#SBATCH -p short 
-#SBATCH --mem=25G
+#SBATCH -t 2-23:59
+#SBATCH -p medium 
+#SBATCH --mem=30G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -11,59 +11,52 @@
 
 #################### REQUIRED COMMAND LINE ARGUMENTS (IN THIS ORDER): ####################
 
-# 1. TSV file with 3 columns: 
+# 1. TSV file with 3 columns (AND NO HEADER): 
     # col1: sample ID
     # col2: full path of the FASTQ reads 1 file
     # col3: full path of the FASTQ reads 2 file
 # 2. out_dir: output directory where results should be stored. i.e. /n/data1/hms/dbmi/farhat/rollingDB/genomic_data
-# 3. kraken_filtering: string "true" or "false" denoting if kraken filtering should be performed. Can be any case, it will get converted to all uppercase
 
 set -o errexit # any error will cause the shell script to exit immediately. This is not native bash behavior
+source activate bioinformatics
 
 
 ################################################################################################################################################
 
-# PLEASE NOTE THAT THIS SCRIPT IS NOT INTENDED FOR GENERAL LAB USE. IT WRITES FILES ONLY TO THE SCRATCH DIRECTORY AND DELETES MOST INTERMEDIATE FILES
-# I AM JUST USING THIS TO PROCESS VCF FILES ASAP FOR MY WORK. BUT THE COMMANDS ARE ALL GOOD AND CAN BE USED ELSEWHERE
-
-################################################################################################################################################
-
-
-if ! [ $# -eq 3 ]; then
-    echo "Please pass in 3 command line arguments: input file, output_directory, and the full path to the bbmap repair script"
+if ! [ $# -eq 2 ]; then
+    echo "Please pass in 2 command line arguments: input file, output_directory"
     exit
 fi
 
+# command line arguments
 input_file=$1
-
-# /n/scratch3/users/s/sak0914/MIC_ML
 out_dir=$2
 
-# /home/sak0914/anaconda3/envs/bioinformatics/bin/repair.sh
-repair_script=$3
-
-# extract_kraken_reads=${3^^}
+repair_script="/home/sak0914/anaconda3/envs/bioinformatics/bin/repair.sh"
 ref_genome="/n/data1/hms/dbmi/farhat/mtb_data/h37rv/h37rv.fna"
-min_length=50
+min_length=50 # parameter from Max
 
-# Max previously downloaded the standard Kraken database to /n/data1/hms/dbmi/farhat/mm774/References/Kraken2_DB_Dir/Kraken2_DB
-# kraken_db="/n/data1/hms/dbmi/farhat/mm774/References/Kraken2_DB_Dir/Kraken2_DB"
 
 #################### IF YOU USE THE STANDARD DATABASE, THEN YOU HAVE TO RUN EXTRACT_KRAKEN_READS.PY TO GET ONLY THOSE THAT MAP TO MTBC AND CHILDREN TAXA ####################
-#################### IF YOU USE THE MTBC DATABASE, THEN YOU JUST HAVE TO EXTRACT THE CLASSIFIED READS BECAUSE THEY ARE THE ONLY ONES THAT GET CLASSIFIED TO MTBC ####################
+#################### IF YOU USE THE MTBC DATABASE, THEN YOU JUST HAVE TO EXTRACT THE CLASSIFIED READS BECAUSE THEY ARE THE ONLY ONES THAT GET CLASSIFIED TO MTBC -- DO THIS!!! ####################
 
+# MTBC database (from Shandu)
 kraken_db="/n/data1/hms/dbmi/farhat/mtb_data/kraken/20220922_mtbDB"
-extract_kraken_reads_script="/home/sak0914/MtbQuantCNN/data_processing/extract_kraken_reads.py"
 
-# check that the output directory is in the scratch folder so that nothing in rollingDB is affected by this script (yet)
-if ! grep -q "/n/scratch3" <<< "$out_dir"; then
-    echo "Please specify an output directory in the scratch directory!"
-    exit
-fi
+# Max previously downloaded this standard Kraken database (contains a lot of organisms)
+# kraken_db="/n/data1/hms/dbmi/farhat/mm774/References/Kraken2_DB_Dir/Kraken2_DB"
+# extract_kraken_reads_script="/home/sak0914/MtbQuantCNN/data_processing/extract_kraken_reads.py"
+
+# # check that the output directory is in the scratch folder so that nothing in rollingDB is affected by this script (yet)
+# if ! grep -q "/n/scratch3" <<< "$out_dir"; then
+#     echo "Please specify an output directory in the scratch directory!"
+#     exit
+# fi
 
 # Check if the output directory exists. If not, create it
 if [ ! -d "$out_dir" ]; then
-  mkdir "$out_dir"
+    echo "Creating output directory $out_dir"
+    mkdir "$out_dir"
 fi
 
 # Read the TSV file line by line, skiping the header. IFS sets the field separator. Here, it is tab
@@ -80,17 +73,13 @@ do
     subdirs_lst=($sample_kraken_dir $sample_bam_dir $sample_pilon_dir)
 
     # check if the final gzipped VCF file does not exist. Perform the steps only if it doesn't exist
-    if [ ! -f "$sample_pilon_dir/${sample_ID}_full.vcf.gz" ]; then
+    if [ ! -f "$sample_pilon_dir/${sample_ID}.vcf" ]; then
     
         # Check if the directory exists
         if [ ! -d "$sample_out_dir" ]; then
           # Create the directory if it does not exist
           mkdir "$sample_out_dir"
         fi
-        # # raise an error here once you switch to writing output files to rollingDB. Don't want to overwrite anything that's already there
-        # # else
-        #   # exit
-        # fi
         
         # Iterate through the array of subdirectories and create each one if it doesn't exist
         for i in ${!subdirs_lst[@]}; do
@@ -177,32 +166,27 @@ do
 
 
         # the fasta file that pilon creates is the polished version. The goal of pilon is to clean the genome by removing inconsistencies, gaps, etc.
+        # But it can also call variants
         # documentation: https://github.com/broadinstitute/pilon/wiki
+        # --variant flag will create a VCF file. Otherwise, only a FASTA file is created
         # If you specify the --outdir flag, it will create output FASTA and VCF files with the sample_id prefix in the directory specified after outdir
         if [ ! -f "$sample_pilon_dir/$sample_ID.fasta" ]; then
             pilon -Xmx18g --genome "$ref_genome" --bam "$sample_bam_dir/$sample_ID.dedup.bam" --output "$sample_ID" --outdir "$sample_pilon_dir" --variant
         fi
         
-        # create a VCF file using freebayes
-        freebayes -f "$sample_pilon_dir/$sample_ID.fasta" "$sample_bam_dir/$sample_ID.dedup.bam" > "$sample_pilon_dir/$sample_ID.freebayes.vcf"
-        
-        # gzip the file. -c flag directs the output to stdout. Then delete the unzipped version
-        gzip -c < "$sample_pilon_dir/$sample_ID.vcf" > "$sample_pilon_dir/${sample_ID}_full.vcf.gz"
-        #rm "$sample_pilon_dir/$sample_ID.vcf"
-        # rm "$sample_pilon_dir/$sample_ID.fasta"
-        
-        # keep all variants in the rpoBC and gyrBA regions used for the models and write to new files
-        # bcftools view --types snps,indels,mnps,other "$sample_pilon_dir/${sample_ID}_full.vcf.gz" | bcftools filter -i "(POS >= 4998 & POS <= 9818) | (POS >= 759611 & POS <= 767320)" > "/n/scratch3/users/s/sak0914/RIF_MXF_validation_data/$sample_ID.vcf"
-
         # keep all non-reference calls in another VCF file
-        bcftools view --types snps,indels,mnps,other "$sample_pilon_dir/${sample_ID}_full.vcf.gz" > "$sample_pilon_dir/${sample_ID}.vcf"
+        bcftools view --types snps,indels,mnps,other "$sample_pilon_dir/$sample_ID.vcf" > "$sample_pilon_dir/${sample_ID}_small.vcf"
+
+        # then delete the full VCF file and the FASTA file to save space and change the name of the small one
+        rm "$sample_pilon_dir/$sample_ID.vcf"
+        rm "$sample_pilon_dir/$sample_ID.fasta"
+        mv "$sample_pilon_dir/${sample_ID}_small.vcf" "$sample_pilon_dir/$sample_ID.vcf"
 
     else
-        echo "$sample_pilon_dir/${sample_ID}_full.vcf.gz exists"
+        echo "$sample_pilon_dir/${sample_ID}.vcf already exists"
     fi
 
-    # everything that's needed is in the bam or pilon directories, so everything in sample_out_dir can be deleted for space in this version
-    # IF/WHEN THIS IS ADAPTED FOR GENERAL LAB USE, WANT TO KEEP SOME FILES
+    # everything that's needed is in the bam, kraken, or pilon directories, so everything in sample_out_dir can be deleted for space in this version
     # set maxdepth to 1 so that only files in this directory will be deleted, it will not search in subdirectories
     # -type f means only files
     find $sample_out_dir -maxdepth 1 -type f -delete

@@ -10,6 +10,7 @@ tf.config.run_functions_eagerly(True)
 # utils files are in the utils_files directory
 sys.path.append("utils")
 from data_utils import *
+from analysis_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
@@ -197,8 +198,11 @@ for rep in range(num_reps):
 
             # train the model for the specified number of epochs
             else:
-                if epoch % 10 == 0:
+                if N_epochs < 10:
                     print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
+                else:
+                    if epoch % 10 == 0:
+                        print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
 
         if patience_epochs is None:
             model.save(os.path.join(saliency_dir, f"permutation_{rep+1}.h5"))

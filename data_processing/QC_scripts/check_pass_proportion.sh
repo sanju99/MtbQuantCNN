@@ -8,21 +8,21 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=skulkarni@g.harvard.edu
 
+source activate bioinformatics
 
 # Set the input file name
 input_file=$1
 output_file=$2
-vcf_dir=$3
-START=$4
-END=$5
+START=$3
+END=$4
 
 thresh=0.75
-search_string="scratch3"
+# search_string="scratch3"
 
-# vcf_dir="/n/scratch3/users/s/sak0914/annotated_VCF"
+vcf_dir="/n/scratch3/users/s/sak0914/annotated_VCF"
 
-if ! [ $# -eq 5 ]; then
-    echo "Please pass in 5 command line arguments: input file, output file, directory where VCF files are stored, and the start and end coordinates (inclusive)"
+if ! [ $# -eq 4 ]; then
+    echo "Please pass in 4 command line arguments: input file, output file, directory where VCF files are stored, and the start and end coordinates (inclusive)"
     exit
 fi
 
@@ -43,13 +43,13 @@ while IFS=",", read -r line; do
     # ignore header, which is ROLLINGDB_ID
     if [ "$sample_ID" != "ROLLINGDB_ID" ]; then
         
-        if echo "$vcf_dir" | grep -q "$search_string"; then
-            num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb')" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)        
-            num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
-        else
-            num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb')" $vcf_dir/$sample_ID.eff.vcf | awk '$1 !~ /^#/' | wc -l)        
-            num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID.eff.vcf | awk '$1 !~ /^#/' | wc -l)
-        fi
+        # if echo "$vcf_dir" | grep -q "$search_string"; then
+            # num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb')" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)        
+            # num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
+        # else
+        num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb')" $vcf_dir/$sample_ID.eff.vcf | awk '$1 !~ /^#/' | wc -l)        
+        num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID.eff.vcf | awk '$1 !~ /^#/' | wc -l)
+        # fi
 
         prop_pass=$(echo "scale=4; $num_pass / $num_var" | bc)
         

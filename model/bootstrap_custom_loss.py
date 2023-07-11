@@ -11,6 +11,7 @@ import scipy.stats as st
 # utils files are in the utils_files directory
 sys.path.append("utils")
 from data_utils import *
+from analysis_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
@@ -29,12 +30,8 @@ drug = kwargs["drug"]
 locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
-patience_epochs = kwargs["patience_epochs"]
-
-if patience_epochs is not None:
-    N_epochs = 500
-else:
-    raise ValueError("patience_epochs must not be None!")
+N_epochs = kwargs["N_epochs"]
+patience_epochs = None
 
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
@@ -96,6 +93,23 @@ num_reps = 10
 results = []
 history_df = []
 
+
+def get_stratified_bootstrap_sample(df, drug, col="Binary"):
+
+    df_pos = df.query(f"{col} == 1")
+    df_neg = df.query(f"{col} == 0")
+
+    df_pos_sampled = df.sample(n=len(df_pos), replace=True)
+    df_neg_sampled = df.sample(n=len(df_neg), replace=True)
+
+    df_bootstrap = pd.concat([df_pos_sampled, df_neg_sampled], axis=0)
+
+    # check that the MICs could have come from the same distribution
+    assert st.kstest(df[f"{drug}_midpoint"], df_bootstrap[f"{drug}_midpoint"])[1] > 0.05
+    print(df[col].mean(), df_bootstrap[col].mean())
+    return df_bootstrap
+
+
 for rep in range(num_reps):
     
     # reset the patience counter and min_loss for each replicate
@@ -103,11 +117,15 @@ for rep in range(num_reps):
     min_loss = 1e3
     val_loss = []
 
-    print(f"\nTraining replicate {rep+1}/{num_reps} with an {loss_type} and a delay of {patience_epochs} epochs")
+    if patience_epochs is not None:
+        print(f"\nTraining replicate {rep+1}/{num_reps} with an {loss_type} loss and a delay of {patience_epochs} epochs")
+    else:
+        print(f"\nTraining replicate {rep+1}/{num_reps} with an {loss_type} loss for {N_epochs} epochs")
     
     # sample indices with replacement
     train_idx = np.random.choice(np.arange(0, len(df_train)), size=len(df_train), replace=True)
-
+    # df_bootstrap = get_stratified_bootstrap_sample(df_train, drug, col="Binary")
+    
     bs_train_generator = MtbGeneDataset(
                                     os.path.join(output_path, 'pkl_sparse_train.npz'),
                                     phenotype_file,
@@ -119,6 +137,7 @@ for rep in range(num_reps):
                                     include_lineage=include_lineage,
                                     bounded_loss=bounded_loss,
                                     data_idx=train_idx,
+                                    #data_idx=df_bootstrap.index.values, # because the index was not reset, the indices from df_train are preserved
                                     batch_size=BATCH_SIZE,
                                     shuffle=True
     )
@@ -205,14 +224,17 @@ for rep in range(num_reps):
     
         # train the model for the specified number of epochs
         else:
-            print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
-            continue
+            if (epoch % 10 == 0) or (epoch == (N_epochs-1)):
+                print(f"Epoch {epoch+1} validation loss: {val_loss[-1]}")
           
     if patience_epochs is None:
         model.save(os.path.join(bootstrap_output_path, f"model_{rep}.h5"))
-        
+
+    model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+    model.load_weights(os.path.join(bootstrap_output_path, f"model_{rep}.h5"))
+
     # add validation loss for this replicate to the history dataframe
-    history_df.append(pd.DataFrame({f"rep_{rep+1}": val_loss}))
+    history_df.append(pd.DataFrame({f"rep_{rep}": val_loss}))
     
     # get model predictions
     y_pred = model.predict(x=val_generator,
@@ -229,13 +251,16 @@ for rep in range(num_reps):
                                    binarize=True, 
                                    save_fName=None
                                   )
-        
+
+    summary_df["CV"] = rep + 1
+         
     results.append(summary_df)
     del model
     del optimizer
     del patience_counter
     del min_loss
     del val_loss
+    #del df_bootstrap
     del train_idx
     del bs_train_generator
     

@@ -1,0 +1,24 @@
+MXF_lower_bound,MXF_upper_bound,Count,Databases
+0.0,0.03,752,CRyPTIC
+0.0,0.125,578,farhat_internal
+0.0,0.25,2,farhat_internal
+0.0,0.5,1,farhat_internal
+0.03,0.06,1405,CRyPTIC
+0.06,0.12,2021,"CRyPTIC, PATRIC_20191206"
+0.12,0.25,841,"CRyPTIC, PATRIC_20191206"
+0.125,0.25,197,farhat_internal
+0.125,0.5,1,farhat_internal
+0.25,0.5,293,"CRyPTIC, farhat_internal, PATRIC_20191206"
+0.5,1.0,314,"CRyPTIC, farhat_internal, PATRIC_20191206"
+0.5,2.0,1,farhat_internal
+1.0,2.0,301,"CRyPTIC, farhat_internal, PATRIC_20191206"
+1.0,4.0,8,farhat_internal
+2.0,4.0,23,"farhat_internal, PATRIC_20191206"
+2.0,10000.0,408,"CRyPTIC, farhat_internal"
+4.0,6.0,29,farhat_internal
+4.0,8.0,14,PATRIC_20191206
+4.0,10000.0,3,farhat_internal
+6.0,8.0,9,farhat_internal
+8.0,10.0,6,farhat_internal
+8.0,10000.0,23,"farhat_internal, PATRIC_20191206"
+10.0,10000.0,39,farhat_internal
