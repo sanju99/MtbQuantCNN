@@ -12,9 +12,9 @@ Please see <code>data_processing/README.md</code> for instructions.
 ```bash
 module load gcc/6.2.0
 module load cuda/11.2
-conda create --name MtbQuantCNN --file /home/sak0914/MtbQuantCNN/environment_reqs.txt
+conda create --file environment.yaml
 
-conda activate MtbQuantCNN
+conda activate tf2_models
 pip install tensorflow
 pip install evcouplings
 ```
@@ -23,10 +23,9 @@ pip install evcouplings
 
 ```bash
 module load gcc/6.2.0
-source activate MtbQuantCNN
 module load cuda/11.2
 export XLA_FLAGS=--xla_gpu_cuda_data_dir=/n/app/cuda/11.2/
 
-cd MtbQuantCNN/model
+source activate tf2_models
 python3 -u <script_name.py>
 ```
