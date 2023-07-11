@@ -9,10 +9,10 @@ __pycache__/
 *_seqdf.csv
 
 # additional files for testing
-temp.py
 *_paths.txt
 config_*.yaml
 *insertion_sites_dict.csv
+*temp*
 
 # sensitive analysis info
 *.png
