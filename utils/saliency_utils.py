@@ -7,13 +7,20 @@ import matplotlib.pyplot as plt
 import glob, os, yaml, sparse, itertools, sys
 from Bio import SeqIO
 from Bio.Seq import Seq
-
-sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
 import scipy.stats as st
 
+from inSilicoMut_utils import *
+# sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
 
 # import reference files
-who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
+h37Rv_path = "/n/data1/hms/dbmi/farhat/Sanjana/H37Rv"
+h37Rv_seq = SeqIO.read(os.path.join(h37Rv_path, "GCF_000195955.2_ASM19595v2_genomic.gbff"), "genbank")
+h37Rv_genes = pd.read_csv(os.path.join(h37Rv_path, "mycobrowser_h37rv_genes_v4.csv"))
+h37Rv_coords = pd.read_csv(os.path.join(h37Rv_path, "h37Rv_coords_to_gene.csv"))
+h37Rv_coords_dict = dict(zip(h37Rv_coords["pos"].values, h37Rv_coords["region"].values))
+BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
+
+who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
 
 coll_2014 = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
 freschi_2020 = pd.read_csv("/home/sak0914/who-analysis/data/freschi2020_SNP_scheme.tsv", sep="\t")
@@ -232,7 +239,9 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
         # compute p-values for the max and min scores for every position
         if significance:
             max_sig, min_sig = compute_saliency_score_significance(locus_idx, locus, combined_max, combined_min, permute_max_lst, permute_min_lst, sig_thresh)
-        
+
+            # print(locus, locus_idx, len(X_matrix_H37Rv_coords[:, locus_idx]), len(combined_max[:, locus_idx]), len(max_sig))
+            
             max_significant_df = pd.DataFrame({"Pos": X_matrix_H37Rv_coords[:, locus_idx], 
                                            "max_score": combined_max[:, locus_idx],
                                            "max_significant": max_sig,
@@ -392,3 +401,92 @@ def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/d
     seq_mat_all_loci = create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos)
     
     return saliency_df, seq_mat_all_loci
+
+
+
+
+
+def extract_saliency_score_variant_types(saliency_df, seqDict, scores_matrix, max_scores=True, genes_lst=None):
+    '''
+    This function extracts each position with a nonzero saliency score and associated metadata. If there are multiple alleles at a site, it populates them as separate rows
+    and adds individidual saliency scores for each allele.
+
+    This makes it easier to search for the features responsible for different saliency peaks. 
+    '''
+    
+    variants_df = pd.DataFrame(columns=["Gene", "POS", "REF", "ALT", "REF_AA", "ALT_AA", "Type", "Score"])
+
+    if genes_lst is None:
+        genes_lst = list(seqDict.keys())
+    
+    for gene in genes_lst:
+
+        print(f"Extracting saliency score variants for {gene}")
+
+        start, end, sense = h37Rv_genes.query("Symbol==@gene")[["Start", "End", "Strand"]].values[0]
+        start_idx = np.min([list(seqDict[gene].columns).index(start), list(seqDict[gene].columns).index(end)])
+        end_idx = np.max([list(seqDict[gene].columns).index(start), list(seqDict[gene].columns).index(end)])
+        coding_region_df = seqDict[gene].iloc[:, start_idx:end_idx + 1]
+
+        # check both with OR logic because depending on the sense, the start could be smaller or later than the end
+        assert coding_region_df.columns[0] == start or coding_region_df.columns[0] == end
+        assert coding_region_df.columns[-1] == start or coding_region_df.columns[-1] == end
+
+        for pos in coding_region_df.columns:
+
+            pos_idx = list(seqDict[gene].columns).index(pos)
+            gene_idx = list(seqDict.keys()).index(gene)
+            ref_nuc = seqDict[gene].loc['MT_H37Rv', pos]
+            
+            if max_scores:
+                scores_df = pd.DataFrame({"Nuc": BASE_TO_COLUMN.keys(), "Score": np.max(scores_matrix[:, :, pos_idx, gene_idx], axis=0)})
+            else:
+                scores_df = pd.DataFrame({"Nuc": BASE_TO_COLUMN.keys(), "Score": np.max(scores_matrix[:, :, pos_idx, gene_idx], axis=0)})
+
+            # check if there are any alternative alleles with nonzero scores
+            nonzero_score_df = scores_df.query("Nuc != @ref_nuc & Score != 0").reset_index(drop=True)
+
+            if len(nonzero_score_df) > 0:
+
+                if type(pos) == float:
+            
+                    # get the codon for the given nucleotide. Only search among non-indels otherwise the legnth is too long
+                    codon_num = int(np.floor(list(coding_region_df.columns[~coding_region_df.columns.astype(str).str.contains("_")]).index(pos) / 3)) + 1
+                    codon, codon_pos = get_codon_from_seq(h37Rv_seq.seq, codon_num, start, end, sense)
+                    
+                    # check that we got the correct codon and positions
+                    assert pos in codon_pos
+                    codon_nuc_dict = dict(zip(codon_pos, codon))
+            
+                    for i, row in nonzero_score_df.iterrows():
+
+                        # these are deletions because the alternative allele is -, not the reference
+                        if row["Nuc"] == '-':
+                            variants_df = pd.concat([variants_df, pd.DataFrame({"Gene": gene, "POS": str(int(pos)), "REF": ref_nuc, "ALT": row["Nuc"],
+                                                                               "REF_AA": "", "ALT_AA": "", "Type": "del", "Score": row["Score"]}, 
+                                                                               index=[0])])
+                        else:
+                            codon_nuc_dict[pos] = row["Nuc"]
+                            new_codon = "".join(codon_nuc_dict.values())
+                
+                            # see if there is a synonymous mutation among the nucleotides that have nonzero scores
+                            if Seq(codon).translate() == Seq(new_codon).translate():
+                                mut_type = "syn"
+                            else:
+                                mut_type = "mis"
+                                
+                            variants_df = pd.concat([variants_df, pd.DataFrame({"Gene": gene, "POS": str(int(pos)), "REF": ref_nuc, "ALT": codon_nuc_dict[pos], 
+                                                                                "REF_AA": Seq(codon).translate(), "ALT_AA": Seq(new_codon).translate(), "Type": mut_type, "Score": row["Score"]}, 
+                                                                               index=[0])])
+
+                else:
+
+                    # these are insertions because the reference allele is -, not the alternative
+                    for i, row in nonzero_score_df.iterrows():
+                        
+                        variants_df = pd.concat([variants_df, pd.DataFrame({"Gene": gene, "POS": pos, "REF": ref_nuc, "ALT": row["Nuc"], 
+                                                                            "REF_AA": "", "ALT_AA": "", "Type": "ins", "Score": row["Score"]}, 
+                                                                           index=[0])])
+
+    variants_df = variants_df.reset_index(drop=True)
+    return variants_df

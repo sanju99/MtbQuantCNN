@@ -40,19 +40,12 @@ def clean_fast_lineage_caller_output(in_fName):
     print(f"Saving cleaned lineage file to {out_fName}")
     lineages.to_csv(out_fName, index=False)
     
-    
-lineages_fName = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.csv"
-
-if not os.path.isfile(lineages_fName):
-    print("Cleaning lineages.tsv to create lineages.csv")
-    clean_fast_lineage_caller_output(lineages_fName.replace(".csv", ".tsv"))
-
 
 ################## STEP 1: REMOVE ISOLATES WITH MULTIPLE RECORDED LINEAGES -- LOTS OF AMBIGUOUS CALLS DUE TO POLYCLONAL INFECTIONS OR SEQUENCING ERROR ##################
 
 
 # lineages file should already be cleaned
-lineages = pd.read_csv(lineages_fName)
+lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineages.csv")
 df_phenos = pd.read_csv(f"{out_dir}/data_with_paths.csv")#.query("DB_OF_ORIGIN=='CRyPTIC'")
 
 # use Coll 2014 scheme
@@ -60,7 +53,7 @@ df_combined = df_phenos.merge(lineages[["ROLLINGDB_ID", "Coll2014"]], on="ROLLIN
 assert len(df_combined) == len(df_phenos)
 
 # create binary phenotype column
-df_combined["Binary"] = (df_combined[f"{drug}_midpoint"] > cc).astype(int)
+df_combined["Binary"] = (df_combined[f"{drug}_midpoint"] >= cc).astype(int)
 print(df_combined.shape)
 
 # remove isolates that have mixed lineages

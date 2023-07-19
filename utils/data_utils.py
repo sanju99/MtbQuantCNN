@@ -263,8 +263,8 @@ def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
         
     # binarize using the critical concentration
     if binarize:
-        y_val_binary = (y_val > np.log2(binary_thresh)).astype(int)
-        y_pred_binary = (y_pred > np.log2(binary_thresh)).astype(int)
+        y_val_binary = (y_val >= np.log2(binary_thresh)).astype(int)
+        y_pred_binary = (y_pred >= np.log2(binary_thresh)).astype(int)
     else:
         y_val_binary = np.copy(y_val)
         y_pred_binary = np.copy(y_pred)

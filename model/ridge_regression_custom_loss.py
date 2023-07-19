@@ -5,7 +5,6 @@ import sys, glob, os, yaml, sparse, warnings, tracemalloc, pickle
 from evcouplings.align import Alignment
 import scipy.stats as st
 from sklearn.metrics import roc_auc_score, roc_curve, auc, accuracy_score, average_precision_score
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, StratifiedKFold
 import scipy.optimize
 
@@ -190,9 +189,6 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
     # need the train dataframe indices for slicing it. Reset index so that it's the index within the values, not in the overall dataframe
     df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
     df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
-    
-    # Perform baseline model with all data
-    scaler = StandardScaler()
         
     if include_lineage:
         print(f"Fitting model with lineages")
@@ -205,12 +201,17 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
     
         X_train = np.concatenate([X[df_phenos.query("category=='original_train_set'").index, :], lineages.loc[df_train.ROLLINGDB_ID.values, :].values], axis=1)
         X_test = np.concatenate([X[df_phenos.query("category=='original_test_set'").index, :], lineages.loc[df_test.ROLLINGDB_ID.values, :].values], axis=1)
-    
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.fit_transform(X_test)
+
     else:     
-        X_train = scaler.fit_transform(X[df_phenos.query("category=='original_train_set'").index, :])   
-        X_test = scaler.fit_transform(X[df_phenos.query("category=='original_test_set'").index, :])
+        X_train = X[df_phenos.query("category=='original_train_set'").index, :]
+        X_test = X[df_phenos.query("category=='original_test_set'").index, :]
+    
+    # scale inputs using the mean and SD of the training set
+    train_mean = X_train.mean()
+    train_sd = X_train.sd()
+    
+    X_train = (X_train - train_mean) / train_sd
+    X_test = (X_test - train_mean) / train_sd
         
     y_train = np.log2(df_train[f"{drug}_midpoint"].values)
     lower_bounds_train, upper_bounds_train = df_train[f"{drug}_lower_bound"].values, df_train[f"{drug}_upper_bound"].values

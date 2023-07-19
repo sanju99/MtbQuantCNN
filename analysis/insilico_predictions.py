@@ -168,53 +168,56 @@ def get_lineage_MIC_predictions(drug,
     assert np.min(lineages.sum(axis=1).values) == 1
     assert np.max(lineages.sum(axis=1).values) == 1
     
-    # add reference lineage, which is all 0s
-    lineages = pd.concat([lineages, pd.DataFrame(np.zeros((1, lineages.shape[1])), columns=lineages.columns, index=["MT_H37Rv"])])
-
-    # get longest locus from the pickle file
-    X_h37rv_CNN = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz')).todense()
+    # # add reference lineage, which is all 0s
+    # lineages = pd.concat([lineages, pd.DataFrame(np.zeros((1, lineages.shape[1])), columns=lineages.columns, index=["MT_H37Rv"])])
+                                   
+    # get longest locus from the pickle file and the number of inputs for regression from the .npy file
+    X_h37Rv_CNN = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz')).todense()
+    X_Reg = np.load(os.path.join(output_path, "ridge/combined_X.npy"))
     
     # copy so that there is one reference sequence for each lineage
-    X_CNN = np.repeat(X_h37rv_CNN, lineages.shape[0], axis=0)
+    X_CNN = np.repeat(X_h37Rv_CNN, lineages.shape[0], axis=0)
 
     # shape = 1 x 5 x longest_locus x num_loci
-    longest_locus = X_h37rv_CNN.shape[2]
-    num_loci = X_h37rv_CNN.shape[-1]
+    longest_locus = X_h37Rv_CNN.shape[2]
+    num_loci = X_h37Rv_CNN.shape[-1]
 
     CNN_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
     CNN_model.load_weights(os.path.join(output_path, "best_model.h5"))
+    # reg_model = pickle.load(open(os.path.join(output_path, "ridge", "model.sav"), "rb"))
 
     # no lineage SNPs for H37Rv, so put in vectors of 0 for lineage SNPs (and also lower and upper bounds, but those don't matter)
-    h37Rv_pred_CNN = CNN_model.predict([X_h37rv_CNN, np.zeros(len(lineages.values)), np.zeros(X_h37rv_CNN.shape[0]), np.zeros(X_h37rv_CNN.shape[0])])
+    h37Rv_pred_CNN = CNN_model.predict([X_h37Rv_CNN, np.zeros(len(lineages.values)).reshape(1, -1), np.zeros(X_h37Rv_CNN.shape[0]), np.zeros(X_h37Rv_CNN.shape[0])])
+    # h37Rv_pred_Reg = reg_model.predict()
 
-    X_Reg = get_new_aln_for_regression(keep_strains,
-                                       locus_list,
-                                       output_path,
-                                       inSilico_dir
-                                      )
-
-    reg_model = pickle.load(open(os.path.join(output_path, "ridge", "model.sav"), "rb"))
+    # X_Reg = np.zeros((len(lineages.values, X_Reg.shape[1])))
 
     # # X and df_genos are in the same order because df_genos is passed in as an argument to the function to make X
     # predicted_mics = best_model.predict([X, lineages.values, np.zeros(X.shape[0]), np.zeros(X.shape[0])], batch_size=BATCH_SIZE).flatten()
     
     df_results = pd.DataFrame({"Lineage": lineages.index.values,
                                "CNN_log_MIC": CNN_model.predict([X_CNN, lineages.values, np.zeros(X_CNN.shape[0]), np.zeros(X_CNN.shape[0])], batch_size=BATCH_SIZE).flatten(),
-                               "Reg_log_MIC": reg_model.predict(scaler.fit_transform(X_Reg))
+                               # "Reg_log_MIC": reg_model.predict(scaler.fit_transform(X_Reg))
                               })
     # ref_pred = df_results.query("Lineage=='MT_H37Rv'")["pred_log2_MIC"].values[0]    
     # add H37Rv prediction to df_genos
-    df_results.loc[-1, ["mutation", "CNN_log_MIC"]] = ["MT_H37Rv", np.squeeze(h37Rv_pred_CNN)]
+    df_results.loc[-1, ["Lineage", "CNN_log_MIC"]] = ["MT_H37Rv", np.squeeze(h37Rv_pred_CNN)]
     return df_results.reset_index(drop=True)
 
 
 
 
-# Moxifloxacin MXF config_files/config_mxf.yaml gyrBA_WHO_mutations.txt gyrBA_WHO_predictions.csv
-_, drug, drug_abbr, config_file, WHO_mutations_file, out_file = sys.argv
+# Moxifloxacin config_files/config_mxf.yaml gyrBA_WHO_mutations.txt gyrBA_WHO_predictions.csv
+_, drug, config_file, WHO_mutations_file, out_file = sys.argv
 
-df_pred = get_insilico_mutation_predictions(config_file,
-                                            WHO_mutations_file,
-                                           )
+if not os.path.isdir(f"analysis/{drug}/insilico_mutagenesis"):
+    os.makedirs(f"analysis/{drug}/insilico_mutagenesis")
 
-df_pred.to_csv(f"analysis/{drug}/insilico_mutagenesis/{out_file}", index=False)
+if os.path.isfile(WHO_mutations_file):
+    df_pred = get_insilico_mutation_predictions(config_file,
+                                                WHO_mutations_file,
+                                               )
+    df_pred.to_csv(f"analysis/{drug}/insilico_mutagenesis/{out_file}", index=False)
+
+df_lineage_pred = get_lineage_MIC_predictions(drug, config_file)
+df_lineage_pred.to_csv(f"analysis/{drug}/insilico_mutagenesis/lineage_predictions.csv", index=False)

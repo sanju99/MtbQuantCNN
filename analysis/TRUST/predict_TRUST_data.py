@@ -54,7 +54,7 @@ def get_TRUST_predictions(config_file,
     include_lineage = kwargs["include_lineage"]
 
     # insilico validation doesn't make much sense to include lineages, unless you want to see how each lineage is predicted
-    trust_dir = os.path.join(data_path, drug, "TRUST")
+    trust_dir = os.path.join(data_path, drug, "TRUST/fastas")
     df_genos = make_genotype_df(locus_list, trust_dir)
     df_genos = df_genos.loc[isolates_lst]
 
@@ -106,17 +106,19 @@ def get_TRUST_predictions(config_file,
     else:
         X_cnn = [X_cnn, np.zeros(len(X_cnn)), np.zeros(len(X_cnn))]
         X_reg = scaler.fit_transform(X_reg)
+    
+    print(X_reg.shape)
                              
     # X and df_genos are in the same order because df_genos is passed in as an argument to the function to make X
-    df_genos[f"log_MIC_CNN"] = cnn_model.predict(X_cnn, batch_size=BATCH_SIZE).flatten()
-    df_genos[f"log_MIC_Reg"] = np.squeeze(reg_model.predict(X_reg))
+    df_genos[f"log2_MIC_CNN"] = cnn_model.predict(X_cnn, batch_size=BATCH_SIZE).flatten()
+    df_genos[f"log2_MIC_Reg"] = np.squeeze(reg_model.predict(X_reg))
     
     for locus in locus_list:
         del df_genos[locus]
         del df_genos[f"{locus}_one_hot"]
         
-    df_genos[f"MIC_CNN"] = np.exp2(df_genos[f"log_MIC_CNN"])
-    df_genos[f"MIC_Reg"] = np.exp2(df_genos[f"log_MIC_Reg"])
+    df_genos[f"MIC_CNN"] = np.exp2(df_genos[f"log2_MIC_CNN"])
+    df_genos[f"MIC_Reg"] = np.exp2(df_genos[f"log2_MIC_Reg"])
     return drug, df_genos.reset_index().rename(columns={"index":"SampleID"})
 
 

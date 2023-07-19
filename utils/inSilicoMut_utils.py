@@ -612,7 +612,6 @@ def get_new_aln_for_regression(isolate_order,
             # Keep track of how many sites in X we have filled in
             current_index = current_index + major_minor.shape[1]
 
-    print(X.shape)
     return X
 
 

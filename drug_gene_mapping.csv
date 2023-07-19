@@ -1,0 +1,13 @@
+Drug,Locus Name,Contiguous Genes,Start,End,Length,Sense
+Rifampicin,rpoBC,"rpoB,rpoC",759611,767320,7710,+
+Moxifloxacin,gyrBA,"gyrB,gyrA",4998,9818,4821,+
+Isoniazid,ahpC,"oxyR',ahpC",2725478,2726780,1303,+
+Isoniazid,katG,"Rv1907c,katG,furA,Rv1910c",2153235,2157381,4147,-
+Isoniazid,inhA,"fabG1,inhA",1673300,1675011,1712,+
+Isoniazid,kasA,"fabD,acpM,kasA,kasB",2516549,2520712,4164,+
+Ethambutol,embCAB,"embC,embA,embB",4239863,4249810,9948,+
+Ethambutol,aftB_ubiA,"aftB,ubiA,Rv3807c,glfT2,glf",4266953,4273738,6786,-
+Pyrazinamide,pncA,"Rv2042c,pncA,Rv2044c,lipT",2287884,2291268,3385,-
+Pyrazinamide,panD,"Rv3600c,panD,panC,Rv3603c",4043041,4046302,3262,-
+Pyrazinamide,rpsA,"rpsA,coaE",1833380,1836236,2857,+
+Pyrazinamide,clpC1,clpC1,4038051,4040980,2930,-

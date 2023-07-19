@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 1
-#SBATCH -t 3-00:00
+#SBATCH -t 1-00:00
 #SBATCH -p medium
-#SBATCH --mem=10G 
+#SBATCH --mem=5G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -11,13 +11,14 @@
 source activate bioinformatics
 
 vcf_dir="/n/scratch3/users/s/sak0914/annotated_VCF"
-isolates_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/fNames.txt"
+# isolates_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/fNames.txt"
+isolates_file="/home/sak0914/missing_fNames.txt"
 
-ls $vcf_dir > $isolates_file
+# ls $vcf_dir > $isolates_file
 
 fNames=($(cat "${isolates_file}"))
-echo "Getting variants for ${#fNames[@]} isolates\n"
-output_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/isolate_variants.tsv"
+echo "Getting variants for ${#fNames[@]} isolates"
+output_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/isolate_variants_2.tsv"
 
 # check if the output file exists. If not, create it.
 if [ ! -f "$output_file" ]; then
@@ -49,5 +50,3 @@ for fName in "${fNames[@]}"; do
     fi
     
 done
-
-conda deactivate

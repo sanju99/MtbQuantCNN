@@ -217,9 +217,7 @@ for epoch in range(N_epochs):
             print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
             
             # save the model because it is better than the previous iteration
-            # also save the history dataframe to monitor progress
             model.save(os.path.join(output_path, "best_model.h5"))
-            history.to_csv(os.path.join(output_path, "history.csv"), index=False)
 
             # update min loss, then zero out the patience counter
             min_loss = val_loss[-1]
@@ -237,7 +235,7 @@ for epoch in range(N_epochs):
         continue
         
     
-# save the history dataframe to see the additional 25 epochs. DON'T SAVE THE MODEL because we want the model at the early stop point
+# save the history dataframe to see the additional epochs during the patience period. DON'T SAVE THE MODEL because we want the model at the early stop point
 history.to_csv(os.path.join(output_path, "history.csv"), index=False)
 
 # only save the model if not using early stopping because it doesn't get saved as you go in the above loop

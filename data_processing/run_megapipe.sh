@@ -13,12 +13,12 @@
 
 # 1. TSV file with 3 columns (AND NO HEADER): 
     # col1: sample ID
-    # col2: full path of the FASTQ reads 1 file
-    # col3: full path of the FASTQ reads 2 file
+    # col2: full path of the FASTQ reads 1 file ZIPPED FILES
+    # col3: full path of the FASTQ reads 2 file ZIPPED FILES
 # 2. out_dir: output directory where results should be stored. i.e. /n/data1/hms/dbmi/farhat/rollingDB/genomic_data
 
 set -o errexit # any error will cause the shell script to exit immediately. This is not native bash behavior
-source activate bioinformatics
+source activate bioinformatics # CHANGE TO YOUR OWN ENVIRONMENT OR REMOVE IF RUNNING IN THE BASE ENV
 
 
 ################################################################################################################################################
@@ -32,7 +32,7 @@ fi
 input_file=$1
 out_dir=$2
 
-repair_script="/home/sak0914/anaconda3/envs/bioinformatics/bin/repair.sh"
+repair_script="/home/sak0914/anaconda3/envs/bioinformatics/bin/repair.sh" # CHANGE TO WHATEVER FILE PATH IS IN YOUR ENVIRONMENT
 ref_genome="/n/data1/hms/dbmi/farhat/mtb_data/h37rv/h37rv.fna"
 min_length=50 # parameter from Max
 

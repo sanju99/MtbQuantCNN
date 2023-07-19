@@ -19,6 +19,7 @@ for locus in locus_list:
         raise ValueError(f"{locus} not found in drug_gene_mapping.csv")
 
 out_dir = f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}"
+training_vcf_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF"
 validation_vcf_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML/VCF"
 
 if not os.path.isdir(f"{out_dir}/VCF_QC_files"):
@@ -34,6 +35,8 @@ if os.path.isfile(os.path.join(out_dir, "validation_data.csv")):
 else:
     df_val = pd.DataFrame(columns=[])
     val_present = False
+
+val_present = False
 
 print(f"Original: {df_train.shape[0]} samples in the training data")
 print(f"Original: {df_val.shape[0]} samples in the validation data\n")
@@ -93,7 +96,7 @@ for locus in locus_list:
         print(f"Found {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
         found_loci += 1
     else:
-        print(f"Please create {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'data_intermediate_clean.csv')} {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt {START} {END}\n")
+        print(f"Please create {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'data_intermediate_clean.csv')} {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt {training_vcf_dir} {START} {END}\n")
 
 # if all are not found, then don't keep running the script because it will cause errors
 if found_loci < len(locus_list):
@@ -112,7 +115,7 @@ if val_present:
         if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt"):
             found_loci += 1
         else:
-            print(f"Please create {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'validation_data.csv')} {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt {START} {END}\n")
+            print(f"Please create {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'validation_data.csv')} {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt {validation_vcf_dir} {START} {END}\n")
     
     # if all are not found, then don't keep running the script because it will cause errors
     if found_loci < len(locus_list):
@@ -160,8 +163,12 @@ if val_present:
     df_val = df_val.query("ROLLINGDB_ID not in @drop_val_samples")
     
     df_val = df_val.merge(lineages[["ROLLINGDB_ID", "Coll2014", "Lineage"]], on="ROLLINGDB_ID", how="left")
-    assert len(df_val.loc[pd.isnull(df_val["Lineage"])]) == 0
+    # assert len(df_val.loc[pd.isnull(df_val["Lineage"])]) == 0
+    print(df_val.loc[pd.isnull(df_val["Lineage"])])
 
+    if len(df_val.loc[pd.isnull(df_val["Lineage"])]) != 0:
+        raise ValueError()
+    
     prev_len = len(df_val)
     df_val = df_val.query("~Coll2014.str.contains(',')")
     print(f"Dropped {prev_len - len(df_val)} validation isolates with multiple lineages")
@@ -174,19 +181,23 @@ if val_present:
 # need to do this because 1) confounding and 2) when stratifying the groups by primary lineage and binary phenotype, there needs to be at least 1 in each group
 
 df_train["Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_train["Coll2014"]]
-stratify_vals = df_train["Lineage"] + "-" + df_train["Binary"].astype(str)
 
-summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
-summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-", expand=True)
-
-for lineage in summary_counts["Lineage"].unique():
-    if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
-        print(f"Removed {len(df_train.query('Lineage == @lineage'))} isolates in lineage {lineage} from the train/test set")
-        df_train = df_train.query("Lineage not in @lineage")
+if drug != "PZA":
+    stratify_vals = df_train["Lineage"] + "-" + df_train["Binary"].astype(str)
+    
+    summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
+    summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-", expand=True)
+    
+    for lineage in summary_counts["Lineage"].unique():
+        if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
+            print(f"Removed {len(df_train.query('Lineage == @lineage'))} isolates in lineage {lineage} from the train/test set")
+            df_train = df_train.query("Lineage not in @lineage")
         
     
 #################################### STEP 5: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY BINARY PHENOTYPE AND PRIMARY LINEAGE ####################################
 
+
+# first ensure that there are at least 2 isolates from each primary lineage and binary phenotype
 
 # get new stratify vals after removing some lineages
 df_train["Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_train["Lineage"]]
@@ -226,7 +237,7 @@ with open(os.path.join(out_dir, "combined_paths_for_aln.txt"), "w+") as file:
     for sample_id in df_train["ROLLINGDB_ID"].values:
         
         # this file contains all non-REF calls for each sample. It is also annotated with snpEff, hence the file extension
-        fName = f"/n/scratch3/users/s/sak0914/annotated_VCF/{sample_id}.eff.vcf"
+        fName = os.path.join(training_vcf_dir, f"{sample_id}/pilon/{sample_id}.vcf")
         assert os.path.isfile(fName)
         file.write(fName + "\n")
 
