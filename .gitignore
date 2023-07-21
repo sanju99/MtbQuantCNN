@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 __pycache__/
+archive/
 
 # too big or too many files. also could be sensitive data
 *.fasta
