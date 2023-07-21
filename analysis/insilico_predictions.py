@@ -15,8 +15,6 @@ import scipy.stats as st
 import warnings
 warnings.filterwarnings("ignore")
 
-from sklearn.preprocessing import StandardScaler
-
 # load all utils functions
 # sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "utils"))
 sys.path.append("utils")
@@ -33,9 +31,6 @@ who_variants["gene"] = [mut.split("_")[0] for mut in who_variants["mutation"].va
 coll_2014 = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
 coll_2014["lineage"] = coll_2014["#lineage"].str.replace("lineage", "")
 del coll_2014["#lineage"]
-
-scaler = StandardScaler()
-
 
 
 def get_insilico_mutation_predictions(config_file,
@@ -104,30 +99,39 @@ def get_insilico_mutation_predictions(config_file,
 
     CNN_model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
     CNN_model.load_weights(os.path.join(output_path, "best_model.h5"))
-    
+
+    # load the phenotypes dataframe to subset the input dataframe to get the training data mean and SD for standard scaling
+    df_train = pd.read_csv(kwargs["phenotype_file"]).query("category=='original_train_set'")        
+    X = np.load(os.path.join(results_dir, "ridge", "combined_X.npy"))
+    X_train = X[df_train.index.values, :]
+
+    train_mean = X_train.mean()
+    train_sd = X_train.std()
+    del X_train
+                                         
     X_Reg = get_new_aln_for_regression(keep_strains,
                                        locus_list,
                                        output_path,
                                        inSilico_dir
                                       )
 
-    reg_model = pickle.load(open(os.path.join(output_path, "ridge", "model.sav"), "rb"))
-
-    # get prediction for H37Rv
     if include_lineage:
-        h37Rv_pred_CNN = CNN_model.predict([X_h37rv_CNN, np.zeros((X_h37rv_CNN.shape[0], num_lineages)), np.zeros(X_h37rv_CNN.shape[0]), np.zeros(X_h37rv_CNN.shape[0])])
-    else:
-        h37Rv_pred_CNN = CNN_model.predict([X_h37rv_CNN, np.zeros(X_h37rv_CNN.shape[0]), np.zeros(X_h37rv_CNN.shape[0])])
-    # h37Rv_pred_Reg = reg_model.predict()
-    
+        X_reg = np.concatenate([X_Reg, np.zeros((X_Reg.shape[0], num_lineages))], axis=1)
+        
+    X_Reg = (X_Reg - train_mean) / train_sd
+
+    reg_model = pickle.load(open(os.path.join(output_path, "ridge", "model.sav"), "rb"))
+    df_genos["Reg_log_MIC"] = reg_model.predict(X_Reg)
+
+    # get prediction for H37Rv, then the insilico mutation data
     # X and df_genos are in the same order because df_genos is passed in as an argument to the function to make X
     if include_lineage:
+        h37Rv_pred_CNN = CNN_model.predict([X_h37rv_CNN, np.zeros((X_h37rv_CNN.shape[0], num_lineages)), np.zeros(X_h37rv_CNN.shape[0]), np.zeros(X_h37rv_CNN.shape[0])])
         df_genos["CNN_log_MIC"] = CNN_model.predict([X_CNN, np.zeros((X_CNN.shape[0], num_lineages)), np.zeros(X_CNN.shape[0]), np.zeros(X_CNN.shape[0])], batch_size=BATCH_SIZE).flatten()
-        df_genos["Reg_log_MIC"] = reg_model.predict(scaler.fit_transform(np.concatenate([X_Reg, np.zeros((X_Reg.shape[0], num_lineages))], axis=1)))
     else:
+        h37Rv_pred_CNN = CNN_model.predict([X_h37rv_CNN, np.zeros(X_h37rv_CNN.shape[0]), np.zeros(X_h37rv_CNN.shape[0])])
         df_genos["CNN_log_MIC"] = CNN_model.predict([X_CNN, np.zeros(X_CNN.shape[0]), np.zeros(X_CNN.shape[0])], batch_size=BATCH_SIZE).flatten()
-        df_genos["Reg_log_MIC"] = reg_model.predict(scaler.fit_transform(X_Reg))
-    
+        
     # return dataframe with predictions
     prev_len = len(df_genos)
     df_genos = df_genos.merge(who_variants.query("drug==@drug")[["mutation", "confidence", "genome_index"]], left_index=True, right_on="mutation")
@@ -173,7 +177,10 @@ def get_lineage_MIC_predictions(drug,
                                    
     # get longest locus from the pickle file and the number of inputs for regression from the .npy file
     X_h37Rv_CNN = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz')).todense()
-    X_Reg = np.load(os.path.join(output_path, "ridge/combined_X.npy"))
+
+    ######## TO GET THESE PREDICTIONS, NEED TO GET THE REGRESSION MATRIX FOR H37RV, WHICH *MAY* NOT BE ALL ZEROES BECAUSE THE ONES REPRESENT THE MINOR ALLELE ########
+    ######## IT'S LIKELY THAT H37RV IS THE MAJOR ALLELE EVERYWHERE, BUT NEED TO VERIFY THAT SOMEHOW ########
+    # X_Reg = np.load(os.path.join(output_path, "ridge/combined_X.npy"))
     
     # copy so that there is one reference sequence for each lineage
     X_CNN = np.repeat(X_h37Rv_CNN, lineages.shape[0], axis=0)
@@ -190,14 +197,12 @@ def get_lineage_MIC_predictions(drug,
     h37Rv_pred_CNN = CNN_model.predict([X_h37Rv_CNN, np.zeros(len(lineages.values)).reshape(1, -1), np.zeros(X_h37Rv_CNN.shape[0]), np.zeros(X_h37Rv_CNN.shape[0])])
     # h37Rv_pred_Reg = reg_model.predict()
 
-    # X_Reg = np.zeros((len(lineages.values, X_Reg.shape[1])))
-
     # # X and df_genos are in the same order because df_genos is passed in as an argument to the function to make X
     # predicted_mics = best_model.predict([X, lineages.values, np.zeros(X.shape[0]), np.zeros(X.shape[0])], batch_size=BATCH_SIZE).flatten()
     
     df_results = pd.DataFrame({"Lineage": lineages.index.values,
                                "CNN_log_MIC": CNN_model.predict([X_CNN, lineages.values, np.zeros(X_CNN.shape[0]), np.zeros(X_CNN.shape[0])], batch_size=BATCH_SIZE).flatten(),
-                               # "Reg_log_MIC": reg_model.predict(scaler.fit_transform(X_Reg))
+                               # "Reg_log_MIC": reg_model.predict(X_Reg)
                               })
     # ref_pred = df_results.query("Lineage=='MT_H37Rv'")["pred_log2_MIC"].values[0]    
     # add H37Rv prediction to df_genos

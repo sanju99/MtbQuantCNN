@@ -32,9 +32,11 @@ cat "$1" | while read vcf_file; do
     
     # check if the filtered VCF file does not exist. If it doesn't, filter and create it
     if [ ! -f "$2/$isolate.eff.vcf" ]; then
-    
+
+        mkdir "$2/$isolate/pilon"
+        
         # filter the VCF file: keep all variants and all FILTER tags. This step just removes reference calls
-        bcftools view --types snps,indels,mnps,other "$vcf_file" > "$2/$isolate.vcf"
+        bcftools view --types snps,indels,mnps,other "$vcf_file" > "$2/$isolate/pilon/$isolate.vcf"
         echo "Created VCF file for $isolate"
     fi
 done

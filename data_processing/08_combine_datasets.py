@@ -9,6 +9,7 @@ _, config_file = sys.argv
 kwargs = yaml.safe_load(open(config_file, "r"))
 drug = kwargs["drug"]
 locus_list = kwargs["locus_list"]
+binary_thresh = kwargs["binary_thresh"]
 
 # dataframe of start and end coordinates and sense of various genes. START and END are 1-indexed and inclusive (natural numbers)
 drug_gene_mapping = pd.read_csv("drug_gene_mapping.csv")
@@ -25,6 +26,9 @@ validation_vcf_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML/VCF"
 if not os.path.isdir(f"{out_dir}/VCF_QC_files"):
     os.makedirs(f"{out_dir}/VCF_QC_files")
 
+if not os.path.isdir(f"{out_dir}/fastas"):
+    os.makedirs(f"{out_dir}/fastas")
+
 # validation data for a single drug
 df_train = pd.read_csv(os.path.join(out_dir, "data_intermediate_clean.csv"))
 
@@ -35,8 +39,6 @@ if os.path.isfile(os.path.join(out_dir, "validation_data.csv")):
 else:
     df_val = pd.DataFrame(columns=[])
     val_present = False
-
-val_present = False
 
 print(f"Original: {df_train.shape[0]} samples in the training data")
 print(f"Original: {df_val.shape[0]} samples in the validation data\n")
@@ -84,45 +86,8 @@ if val_present:
 
 
 ################## STEP 3: REMOVE ISOLATES WITH A LARGE PROPORTION OF NON-PASS, NON-AMB VARIANTS IN THE REGION OF INTEREST ##################
-        
 
-found_loci = 0
 
-for locus in locus_list:
-
-    START, END = drug_gene_mapping.loc[drug_gene_mapping["Locus Name"]==locus][["Start", "End"]].values[0]
-    
-    if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt"):
-        print(f"Found {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
-        found_loci += 1
-    else:
-        print(f"Please create {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'data_intermediate_clean.csv')} {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt {training_vcf_dir} {START} {END}\n")
-
-# if all are not found, then don't keep running the script because it will cause errors
-if found_loci < len(locus_list):
-    print(f"Only found {found_loci}/{len(locus_list)} training_PASS_prop.txt files")
-    exit()
-    
-
-if val_present:
-
-    found_loci = 0
-
-    for locus in locus_list:
-
-        START, END = drug_gene_mapping.loc[drug_gene_mapping["Locus Name"]==locus][["Start", "End"]].values[0]
-        
-        if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt"):
-            found_loci += 1
-        else:
-            print(f"Please create {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'validation_data.csv')} {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt {validation_vcf_dir} {START} {END}\n")
-    
-    # if all are not found, then don't keep running the script because it will cause errors
-    if found_loci < len(locus_list):
-        print(f"Only found {found_loci}/{len(locus_list)} validation_PASS_prop.txt files")
-        exit()
-
-    
 def get_samples_PASS_prop(fName):
     
     with open(fName, "r+") as file:
@@ -144,34 +109,85 @@ def get_samples_PASS_prop(fName):
     return PASS_prop
 
 
-# get the dataframe of proportions of PASS/Amb calls in the alignment region
-training_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
-drop_train_samples = list(set(df_train["ROLLINGDB_ID"].values).intersection(training_PASS_prop_df.query("PASS_prop < 0.75")["ROLLINGDB_ID"].values))
+found_loci = 0
 
-print(f"Removed {len(drop_train_samples)}/{len(df_train)} training isolates with less than 75% PASS or Amb calls in the alignment region")
-print(drop_train_samples)
-df_train = df_train.query("ROLLINGDB_ID not in @drop_train_samples")
+for locus in locus_list:
+
+    START, END = drug_gene_mapping.loc[drug_gene_mapping["Locus Name"]==locus][["Start", "End"]].values[0]
+    
+    if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt"):
+        print(f"Found {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
+        found_loci += 1
+    else:
+        print(f"Please create {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'data_intermediate_clean.csv')} {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt {training_vcf_dir} {START} {END}\n")
+
+# if all are not found, then don't keep running the script because it will cause errors
+if found_loci < len(locus_list):
+    print(f"Only found {found_loci}/{len(locus_list)} training_PASS_prop.txt files")
+    exit()
+
+    
+
+for locus in locus_list:
+    
+    # get the dataframe of proportions of PASS/Amb calls in the alignment region
+    training_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
+    
+    if len(set(df_train.ROLLINGDB_ID) - set(training_PASS_prop_df.ROLLINGDB_ID)) > 0:
+        raise ValueError(f"Incorrect sample numbers in the {locus} training PASS prop file")
+        
+    drop_train_samples = list(set(df_train["ROLLINGDB_ID"].values).intersection(training_PASS_prop_df.query("PASS_prop < 0.75")["ROLLINGDB_ID"].values))
+    
+    print(f"Removed {len(drop_train_samples)}/{len(df_train)} training isolates with less than 75% PASS or Amb calls in {locus}")
+    df_train = df_train.query("ROLLINGDB_ID not in @drop_train_samples")
+
+    
 
 if val_present:
-    validation_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt")
 
-    drop_val_samples = validation_PASS_prop_df.loc[validation_PASS_prop_df["ROLLINGDB_ID"].isin(df_val.ROLLINGDB_ID.values)].query("PASS_prop < 0.75")["ROLLINGDB_ID"].values
-    drop_val_samples = list(set(drop_val_samples).intersection(df_val["ROLLINGDB_ID"].values))
+    found_loci = 0
+
+    for locus in locus_list:
+
+        START, END = drug_gene_mapping.loc[drug_gene_mapping["Locus Name"]==locus][["Start", "End"]].values[0]
+        
+        if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt"):
+            print(f"Found {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt")
+            found_loci += 1
+        else:
+            print(f"Please create {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'validation_data.csv')} {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt {validation_vcf_dir} {START} {END}\n")
     
-    print(f"Removed {len(drop_val_samples)}/{len(df_val)} validation isolates with less than 75% PASS or Amb calls in the alignment region\n")
-    print(drop_val_samples)
-    df_val = df_val.query("ROLLINGDB_ID not in @drop_val_samples")
+# if all are not found, then don't keep running the script because it will cause errors
+if found_loci < len(locus_list):
+    print(f"Only found {found_loci}/{len(locus_list)} validation_PASS_prop.txt files")
+    exit()
+
+
+if val_present:
+
+    for locus in locus_list:
+        
+        validation_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt")
     
-    df_val = df_val.merge(lineages[["ROLLINGDB_ID", "Coll2014", "Lineage"]], on="ROLLINGDB_ID", how="left")
-    # assert len(df_val.loc[pd.isnull(df_val["Lineage"])]) == 0
-    print(df_val.loc[pd.isnull(df_val["Lineage"])])
+        if len(set(df_val.ROLLINGDB_ID) - set(validation_PASS_prop_df.ROLLINGDB_ID)) > 0:
+            raise ValueError(f"Incorrect sample numbers in the {locus} validation PASS prop file")
+    
+        drop_val_samples = validation_PASS_prop_df.loc[validation_PASS_prop_df["ROLLINGDB_ID"].isin(df_val.ROLLINGDB_ID.values)].query("PASS_prop < 0.75")["ROLLINGDB_ID"].values
+        drop_val_samples = list(set(drop_val_samples).intersection(df_val["ROLLINGDB_ID"].values))
+        
+        print(f"Removed {len(drop_val_samples)}/{len(df_val)} validation isolates with less than 75% PASS or Amb calls in {locus}")
+            
+        df_val = df_val.query("ROLLINGDB_ID not in @drop_val_samples")
+        df_val["ROLLINGDB_ID"] = df_val["ROLLINGDB_ID"].astype(str)
+        
+    df_val = df_val.merge(lineages[["ROLLINGDB_ID", "Coll2014", "Lineage"]], on="ROLLINGDB_ID", how="left").drop_duplicates()
 
     if len(df_val.loc[pd.isnull(df_val["Lineage"])]) != 0:
-        raise ValueError()
+        raise ValueError(f"Fast-lineage-caller has not been run on all the lineages")
     
     prev_len = len(df_val)
     df_val = df_val.query("~Coll2014.str.contains(',')")
-    print(f"Dropped {prev_len - len(df_val)} validation isolates with multiple lineages")
+    print(f"Removed {prev_len - len(df_val)} validation isolates with multiple lineages")
     df_val.to_csv(os.path.join(out_dir, "validation_data_for_model.csv"), index=False)
 
 
@@ -180,40 +196,44 @@ if val_present:
 
 # need to do this because 1) confounding and 2) when stratifying the groups by primary lineage and binary phenotype, there needs to be at least 1 in each group
 
+df_train["Binary"] = (df_train[f"{drug}_midpoint"] >= binary_thresh).astype(int)
 df_train["Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_train["Coll2014"]]
+stratify_vals = df_train["Lineage"] + "-" + df_train["Binary"].astype(str)
 
-if drug != "PZA":
-    stratify_vals = df_train["Lineage"] + "-" + df_train["Binary"].astype(str)
+# if drug != "PZA":
+
+#     summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
+#     summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-", expand=True)
     
-    summary_counts = pd.DataFrame(pd.Series(stratify_vals).value_counts()).rename(columns={0:"Count"}).reset_index()
-    summary_counts[["Lineage", "Resistance"]] = summary_counts["index"].str.split("-", expand=True)
-    
-    for lineage in summary_counts["Lineage"].unique():
-        if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
-            print(f"Removed {len(df_train.query('Lineage == @lineage'))} isolates in lineage {lineage} from the train/test set")
-            df_train = df_train.query("Lineage not in @lineage")
+#     for lineage in summary_counts["Lineage"].unique():
+#         if len(summary_counts.query("Lineage == @lineage").Resistance.unique()) < 2:
+#             print(f"Removed {len(df_train.query('Lineage == @lineage'))} isolates in lineage {lineage} from the train/test set")
+#             df_train = df_train.query("Lineage not in @lineage")
+
+#     # get new stratify vals after removing some lineages
+#     df_train["Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_train["Lineage"]]
+#     stratify_vals = df_train["Lineage"] + "-" + df_train["Binary"].astype(str)
+
+# remove lineage-phenotype groups that don't have at least 2 isolates (i.e. 2 L3 isolates that are R, and 2 L3 isolates that are S)
+# this is because the train-test splitting will fail due to the least populated class in y having only 1 member
+stratify_df = pd.Series(stratify_vals).value_counts().reset_index()
+stratify_df.columns = ["stratify", "count"]
+remove_groups = stratify_df.query("count < 2").stratify.values
+
+# at the end, reset index so that index can be used for train/test splitting
+if len(remove_groups) > 0:
+    print(f"Removed {len(remove_groups)} isolates in the {remove_groups} lineages with fewer than 2 isolates")
+    keep_idx = [idx for idx, group in enumerate(stratify_vals) if group not in remove_groups]
+    stratify_vals = [val for val in stratify_vals if val not in remove_groups]
+    df_train = df_train.reset_index(drop=True).iloc[keep_idx, :].reset_index(drop=True)
+else:
+    df_train = df_train.reset_index(drop=True)
         
     
 #################################### STEP 5: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY BINARY PHENOTYPE AND PRIMARY LINEAGE ####################################
 
 
-# first ensure that there are at least 2 isolates from each primary lineage and binary phenotype
-
-# get new stratify vals after removing some lineages
-df_train["Lineage"] = [val[0] if "." in val else val.replace("_", "") for val in df_train["Lineage"]]
-stratify_vals = df_train["Lineage"] + "-" + df_train["Binary"].astype(str)
-
-stratify_df = pd.Series(stratify_vals).value_counts().reset_index()
-stratify_df.columns = ["stratify", "count"]
-remove_groups = stratify_df.query("count < 2").stratify.values
-print(f"Removed {len(remove_groups)} isolates in the {remove_groups} lineages")
-
-keep_idx = [idx for idx, group in enumerate(stratify_vals) if group not in remove_groups]
-stratify_vals = [val for val in stratify_vals if val not in remove_groups]
-
-# reset index so that index can be used for train/test splitting
-df_train = df_train.reset_index(drop=True).iloc[keep_idx, :].reset_index(drop=True)
-train_index, test_index = train_test_split(df_train.index, test_size=0.2, stratify=stratify_vals)
+train_index, test_index = train_test_split(df_train.index.values, test_size=0.2, stratify=stratify_vals)
 
 df_train.loc[train_index, "category"] = "original_train_set" 
 df_train.loc[test_index, "category"] = "original_test_set"

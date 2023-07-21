@@ -17,14 +17,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # load all utils functions
-sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "utils"))
+sys.path.append("utils")
 from model_utils import *
 from data_utils import *
+from analysis_utils import *
 from dataloader import MtbGeneDataset
 from inSilicoMut_utils import *
 
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
 
 results_path = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
 data_path = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
@@ -32,14 +32,15 @@ vcf_dir = "/n/scratch3/users/s/sak0914/annotated_VCF"
 
 who_variants_clean = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
 
-scaler = StandardScaler()
-
 tracemalloc.start()
 
 
 
 
 def get_results_single_model(X, drug, df, dataset, model_type, config_file, bootstrap=True):
+    '''
+    X matrices have already been standard scaled using the mean and SD of the training data
+    '''
     
     kwargs = yaml.safe_load(open(config_file, "r"))
     drug_abbr = kwargs["drug"]
@@ -79,7 +80,7 @@ def get_results_single_model(X, drug, df, dataset, model_type, config_file, boot
         y_pred = model.predict(X, batch_size=BATCH_SIZE).flatten()        
     else:
         model = pickle.load(open(os.path.join(results_dir, "ridge", f"{model_prefix}model.sav"), "rb"))
-        y_pred = np.squeeze(model.predict(scaler.fit_transform(X)))
+        y_pred = np.squeeze(model.predict(X))
 
 
     # save the predictions for the validation dataset to use later
@@ -88,7 +89,7 @@ def get_results_single_model(X, drug, df, dataset, model_type, config_file, boot
                                 "y_pred": y_pred,
                                 "y_test": np.log2(df[f"{drug_abbr}_midpoint"].values)
                                })
-        df_pred.to_csv(f"{drug}/validation/{model_type}_predictions.csv", index=False)
+        df_pred.to_csv(f"analysis/{drug}/validation/{model_type}_predictions.csv", index=False)
     
     summary_df = create_summary_df(df, y_pred, drug_abbr, binary_thresh, num_loci, model_type, binarize=binarize, save_fName=None)
     summary_df[["Dataset", "CV"]] = [dataset, 0]
@@ -104,7 +105,7 @@ def get_results_single_model(X, drug, df, dataset, model_type, config_file, boot
                 y_pred = model.predict(X, batch_size=BATCH_SIZE).flatten()
             else:
                 model = pickle.load(open(os.path.join(results_dir, "ridge", "bootstrapping", f"{model_prefix}model_{i}.sav"), "rb")) 
-                y_pred = np.squeeze(model.predict(scaler.fit_transform(X)))
+                y_pred = np.squeeze(model.predict(X))
 
             bs_summary_df = create_summary_df(df, y_pred, drug_abbr, binary_thresh, num_loci, model_type, binarize=True, save_fName=None)
             bs_summary_df[["Dataset", "CV"]] = [dataset, i + 1]
@@ -135,6 +136,14 @@ def get_results_all_datasets(drug, drug_abbr, config_file, model_type, bootstrap
     else:
         print(X_train[0].shape, X_test[0].shape, X_val[0].shape)
 
+    # standard scale using the mean and SD of the training data
+    train_mean = X_train.mean()
+    train_sd = X_train.std()
+
+    X_train = (X_train - train_mean) / train_sd
+    X_test = (X_test - train_mean) / train_sd
+    X_val = (X_val - train_mean) / train_sd
+    
     train_summary = get_results_single_model(X_train, drug, df_train, "Train", model_type, config_file, bootstrap)
     test_summary = get_results_single_model(X_test, drug, df_test, "Test", model_type, config_file, bootstrap)
     val_summary = get_results_single_model(X_val, drug, df_val, "Validation", model_type, config_file, bootstrap)
@@ -153,36 +162,36 @@ def get_results_all_datasets(drug, drug_abbr, config_file, model_type, bootstrap
 
 
 
-# python3 validation_stats.py Rifampicin RIF ../config_rif.yaml rpoBC_variants_10543isolates.csv
-# python3 validation_stats.py Moxifloxacin MXF ../config_mxf_lineage.yaml gyrBA_variants_8569isolates.csv
+# python3 analysis/validation_stats.py Rifampicin RIF config_files/config_rif.yaml rpoBC_variants_10543isolates.csv
+# python3 analysis/validation_stats.py Moxifloxacin MXF config_files/config_mxf_lineage.yaml gyrBA_variants_8569isolates.csv
 _, drug, drug_abbr, config_file, isolate_variants_file = sys.argv
 
-if ".csv" in isolate_variants_file:
-    isolate_variants = pd.read_csv(os.path.join(data_path, drug_abbr, isolate_variants_file))
-else:
-    isolate_variants = pd.read_csv(os.path.join(data_path, drug_abbr, isolate_variants_file), sep="\t")
+# if ".csv" in isolate_variants_file:
+#     isolate_variants = pd.read_csv(os.path.join(data_path, drug_abbr, isolate_variants_file))
+# else:
+#     isolate_variants = pd.read_csv(os.path.join(data_path, drug_abbr, isolate_variants_file), sep="\t")
 
 binary_thresh = yaml.safe_load(open(config_file, "r"))["binary_thresh"]
 
-if not os.path.isfile(f"{drug}/validation/catalog_stats.csv"):
+if not os.path.isfile(f"analysis/{drug}/validation/catalog_stats.csv"):
     catalog_stats = classify_using_mutation_catalog(drug_abbr, data_path, who_variants_clean, isolate_variants, binary_thresh, return_stats=["Sensitivity", "Specificity", "AUC", "AUC_PR", "Accuracy", "Balanced_Acc"])
-    catalog_stats.to_csv(f"{drug}/validation/catalog_stats.csv", index=False)
+    catalog_stats.to_csv(f"analysis/{drug}/validation/catalog_stats.csv", index=False)
 else:
-    catalog_stats = pd.read_csv(f"{drug}/validation/catalog_stats.csv")
+    catalog_stats = pd.read_csv(f"analysis/{drug}/validation/catalog_stats.csv")
     
 # linear regression
 if not os.path.isfile(f"{drug}/validation/Reg_stats.csv"):
-    Reg_stats = get_results_all_datasets(drug, drug_abbr, config_file, "Reg", bootstrap=False)
-    Reg_stats.to_csv(f"{drug}/validation/Reg_stats.csv", index=False)
+    Reg_stats = get_results_all_datasets(drug, drug_abbr, config_file, "Reg", bootstrap=True)
+    Reg_stats.to_csv(f"analysis/{drug}/validation/Reg_stats.csv", index=False)
 else:
     Reg_stats = pd.read_csv(f"{drug}/validation/Reg_stats.csv")
 
 # quantitative CNN
-if not os.path.isfile(f"{drug}/validation/CNN_stats.csv"):
-    CNN_stats = get_results_all_datasets(drug, drug_abbr, config_file, "CNN", bootstrap=False)
-    CNN_stats.to_csv(f"{drug}/validation/CNN_stats.csv", index=False)
+if not os.path.isfile(f"analysis/{drug}/validation/CNN_stats.csv"):
+    CNN_stats = get_results_all_datasets(drug, drug_abbr, config_file, "CNN", bootstrap=True)
+    CNN_stats.to_csv(f"analysis/{drug}/validation/CNN_stats.csv", index=False)
 else:
-    CNN_stats = pd.read_csv(f"{drug}/validation/CNN_stats.csv")
+    CNN_stats = pd.read_csv(f"analysis/{drug}/validation/CNN_stats.csv")
     
 print(catalog_stats.shape, Reg_stats.shape, CNN_stats.shape)
 

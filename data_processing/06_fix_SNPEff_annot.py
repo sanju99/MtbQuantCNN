@@ -12,22 +12,23 @@ from inSilicoMut_utils import *
 # add stop codon to dictionary
 Bio.SeqUtils.IUPACData.protein_letters_1to3["*"] = "*"
 
+data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
+
+_, drug = sys.argv
+
 # BOTH ARE INCLUSIVE!!!
 START = 1
 END = 4411532
 
-isolate_variants_df = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/isolate_variants.tsv", sep="\t")
-output_file = f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/isolate_variants_fixed_annot.csv"
-
-vcf_dir = "/n/scratch3/users/s/sak0914/annotated_VCF"
+isolate_variants_df = pd.read_csv(os.path.join(data_dir, drug, "isolate_variants_high_conf.csv"))
+output_file = os.path.join(data_dir, drug, "isolate_variants_fixed_annot.csv")
 
 h37Rv_seq = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
-
 h37Rv_coords = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/h37Rv_coords_to_gene.csv")
 h37Rv_coords.columns = ["POS", "Region"]
 protein_coding_regions = h37Rv_coords.query("~Region.str.contains('NC_')").reset_index(drop=True)
-
 h37Rv_genes_annot = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+
 
 def get_variants_each_gene(sample_id, isolate_variants_file):
     
@@ -62,10 +63,8 @@ def fix_mutations_single_sample(sample_id, isolate_variants_df):
     
     single_sample_variants = isolate_variants_df.query("Isolate == @sample_id").reset_index(drop=True)
 
-    no_AA_change = ['synonymous_variant', 'intergenic_region', 'intragenic_variant', 'upstream_gene_variant', 'downstream_gene_variant']
-
     for i, row in single_sample_variants.iterrows():
-        if row["EFFECT"] in no_AA_change:
+        if row["EFFECT"] in ["synonymous_variant", ""]:
             single_sample_variants.loc[i, "mutation"] = row["GENE"] + "_" + row["NUC"]
         else:
             single_sample_variants.loc[i, "mutation"] = row["GENE"] + "_" + row["PROT"]

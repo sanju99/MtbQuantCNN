@@ -48,9 +48,11 @@ def sequence_dictionary(filename):
 	pd.DataFrame with one column, indexed by strain name
 		column name will be the beginning string of the file name
 	"""
+
+    # remove any file extensions so that isolates are indexed by their names only WITHOUT any extensions
     seq_dict = SeqIO.to_dict(
         SeqIO.parse(filename, "fasta"),
-        key_function=lambda x: x.id.replace(".vcf", "").replace("_freebayes", "").split("/")[-1].split(".cut")[0])
+        key_function=lambda x: x.id.replace(".eff", "").replace(".vcf", "").replace("_freebayes", "").split("/")[-1].split(".cut")[0])
 
     # create a dictionary of identifier: sequence
     for identifier, sequence in seq_dict.items():

@@ -586,18 +586,20 @@ def get_new_aln_for_regression(isolate_order,
             keep_idx = [i for i, name in enumerate(aln.ids) if os.path.basename(name).replace(".eff", "").replace(".vcf", "") in isolate_order]
             assert len(keep_idx) == len(isolate_order)
 
-            subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_idx)        
+            subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_idx) 
+            subset_alignment.ids = [os.path.basename(x).replace(".eff", "").replace(".vcf", "") for x in subset_alignment.ids]
             subset_alignment.id_to_index = {x:idx for idx,x in enumerate(subset_alignment.ids)}
-        
+            
             # Get the indices that would correctly reorder the alignment to match isolate_order
-            reorder_index = [
-                subset_alignment.id_to_index[x] if x in list(subset_alignment.id_to_index.keys()) else print(x) for x in isolate_order
-            ]
+            reorder_index = [subset_alignment.id_to_index[x] for x in isolate_order if x in list(subset_alignment.id_to_index.keys())]
+
+            if len(reorder_index) != len(list(subset_alignment.id_to_index.keys())):
+                raise ValueError()
         
             # Reorder based on reorder_index
             subset_alignment.ids = np.array(subset_alignment.ids)[reorder_index]
             assert sum(isolate_order != subset_alignment.ids) == 0
-        
+
             subset_alignment.matrix = subset_alignment.matrix[reorder_index, :]
 
             # Tells you which character is the most frequent in each site
@@ -654,7 +656,7 @@ def get_inputs_for_regression(drug,
     data_dir = os.path.dirname(kwargs["phenotype_file"])
     locus_list = kwargs["locus_list"]
     results_dir = kwargs["output_path"]
-    fasta_dir = os.path.join(os.path.dirname(results_dir), "fastas")
+    fasta_dir = kwargs["genotype_input_directory"]
     include_lineage = kwargs["include_lineage"]
     
     df_train = pd.read_csv(kwargs["phenotype_file"]).query("category=='original_train_set'")    
@@ -693,7 +695,7 @@ def get_inputs_for_CNN(drug,
     data_dir = os.path.dirname(kwargs["phenotype_file"])
     locus_list = kwargs["locus_list"]
     results_dir = kwargs["output_path"]
-    fasta_dir = os.path.join(os.path.dirname(results_dir), "fastas")
+    fasta_dir = kwargs["genotype_input_directory"]
     include_lineage = kwargs["include_lineage"]
 
     binary_thresh = kwargs["binary_thresh"]

@@ -10,15 +10,15 @@
 
 source activate bioinformatics
 
-vcf_dir="/n/scratch3/users/s/sak0914/annotated_VCF"
-# isolates_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/fNames.txt"
-isolates_file="/home/sak0914/missing_fNames.txt"
+vcf_dir="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF"
+isolates_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/fNames.txt"
+# isolates_file="/home/sak0914/missing_fNames.txt"
 
-# ls $vcf_dir > $isolates_file
+ls $vcf_dir > $isolates_file
 
 fNames=($(cat "${isolates_file}"))
 echo "Getting variants for ${#fNames[@]} isolates"
-output_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/isolate_variants_2.tsv"
+output_file="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/isolate_variants.tsv"
 
 # check if the output file exists. If not, create it.
 if [ ! -f "$output_file" ]; then
@@ -43,7 +43,7 @@ for fName in "${fNames[@]}"; do
         # If it is empty, then get the variants and append them to the output file
         echo "Getting variants for $isolate"
 
-        isolate_variants=$(SnpSift extractFields "$vcf_dir/$isolate.eff.vcf" POS REF ALT FILTER AF "ANN[0].GENE" "ANN[0].EFFECT" "ANN[0].HGVS_C" "ANN[0].HGVS_P" -e "." | tail -n +2 | awk -v sample="$isolate" 'BEGIN { OFS="\t" } { print $0, sample }')
+        isolate_variants=$(SnpSift extractFields "$vcf_dir/$isolate/pilon/$isolate.vcf" POS REF ALT FILTER AF "ANN[0].GENE" "ANN[0].EFFECT" "ANN[0].HGVS_C" "ANN[0].HGVS_P" -e "." | tail -n +2 | awk -v sample="$isolate" 'BEGIN { OFS="\t" } { print $0, sample }')
             
         echo "$isolate_variants" >> "$output_file"
     

@@ -190,7 +190,7 @@ if not os.path.isdir(output_dir):
     os.mkdir(output_dir)
     
 df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_rollingdb_cryptic.csv")
-print(f"Full data shape: {df.shape}")
+print(f"\nFull data shape: {df.shape}")
 
 # get the dataframe of MICs for a single drug
 single_drug_df = extract_single_drug(df, drug)

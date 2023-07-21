@@ -244,11 +244,13 @@ class CustomRidgeCV(RidgeCV):
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
         
-        def boundedLoss_Reg(y_pred, y_true):
+        def boundedLoss_Reg_L2penalty(y_pred, y_true):
 
             '''
             y_test and y_pred are log2-transformed. lower_bounds and upper_bounds are NOT
-            loss_type is L1 or L2, specifying whether to return the MAE or MSE
+            
+            loss_type is L1 or L2, specifying whether to return the MAE or MSE, NOT THE TYPE OF REGULARIZATION. THIS FUNCTION ONLY USES L2 REGULARIZATION
+            
             reg_param is the strength of regularization to apply -- multiply the sum of the squares of sample_weights by this term
             '''
 
@@ -268,8 +270,33 @@ class CustomRidgeCV(RidgeCV):
             return binned_error + self.alpha * np.sum(np.square(self.coef_))
         
         y_pred = self.predict(X)
-        return -boundedLoss_Reg(y_pred, y)
+        return -boundedLoss_Reg_L2penalty(y_pred, y)
+
     
+
+def boundedLoss_Reg(y_pred, y_true, lower_bounds, upper_bounds, loss_type="L2"):
+
+    '''
+    y_test and y_pred are log2-transformed. lower_bounds and upper_bounds are NOT
+    loss_type is L1 or L2, specifying whether to return the MAE or MSE
+    reg_param is the strength of regularization to apply -- multiply the sum of the squares of sample_weights by this term
+    '''
+
+    # get predictions, then exponentiate to get actual MICs
+    y_pred_MIC = np.exp2(y_pred)
+
+    # compute the errors first using the log-MICs, based on the desired loss type
+    if loss_type == "L1":
+        errors = np.abs(y_true - y_pred)
+    elif loss_type == "L2":
+        errors = (y_true - y_pred)**2
+    else:
+        raise RuntimeError(f"{loss_type} is not a valid loss function type")
+
+    # compute error using only the points that are predicted outside of their bin. Sum the errors, then divide by the number of points
+    return np.sum(errors[((y_pred_MIC < lower_bounds) | (y_pred_MIC > upper_bounds))]) / len(y_pred_MIC)
+
+
     
     
 class CustomRidge(Ridge):

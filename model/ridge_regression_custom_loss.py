@@ -203,31 +203,55 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
         X_test = np.concatenate([X[df_phenos.query("category=='original_test_set'").index, :], lineages.loc[df_test.ROLLINGDB_ID.values, :].values], axis=1)
 
     else:     
-        X_train = X[df_phenos.query("category=='original_train_set'").index, :]
+        X_train = X[df_phenos.query("category=='original_train_set'").index, :]  
         X_test = X[df_phenos.query("category=='original_test_set'").index, :]
-    
-    # scale inputs using the mean and SD of the training set
+        
+    # perform mean / SD scaling using the training set
     train_mean = X_train.mean()
-    train_sd = X_train.sd()
-    
+    train_sd = X_train.std()
+        
     X_train = (X_train - train_mean) / train_sd
     X_test = (X_test - train_mean) / train_sd
-        
     y_train = np.log2(df_train[f"{drug}_midpoint"].values)
+    y_test = np.log2(df_test[f"{drug}_midpoint"].values)
+    
     lower_bounds_train, upper_bounds_train = df_train[f"{drug}_lower_bound"].values, df_train[f"{drug}_upper_bound"].values
+    lower_bounds_test, upper_bounds_test = df_test[f"{drug}_lower_bound"].values, df_test[f"{drug}_upper_bound"].values
 
-    print(X_train.shape, X_test.shape)
     print(f"Minimizing {loss_type} loss")
     
     reg_param_lst = np.logspace(-6, 6, 13)
-    custom_Ridge_model = CustomRidgeCV(alphas=reg_param_lst, cv=5)
-    custom_Ridge_model.fit(X_train, y_train, loss_type=loss_type, lower_bounds=lower_bounds_train, upper_bounds=upper_bounds_train)
+    # custom_Ridge_model = CustomRidgeCV(alphas=reg_param_lst, cv=5)
+    # custom_Ridge_model.fit(X_train, y_train, loss_type=loss_type, lower_bounds=lower_bounds_train, upper_bounds=upper_bounds_train)
+
+    losses_df = pd.DataFrame(columns=["alpha", "val_loss"])
     
-    print(f"Regularization parameter: {custom_Ridge_model.alpha_}")
-    pickle.dump(custom_Ridge_model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
-    custom_Ridge_model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
+    for i, alpha in enumerate(reg_param_lst):
+
+        # fit a model on the training data using the given regularization parameter
+        cv_model = CustomRidge(alpha=alpha)
+        cv_model.fit(X_train, y_train, loss_type=loss_type, lower_bounds=lower_bounds_train, upper_bounds=upper_bounds_train)
+
+        # get predictions on the test set, then compute binned mean squared error
+        y_hat_cv = cv_model.predict(X_test)
+        losses_df.loc[i, :] = [alpha, boundedLoss_Reg(y_hat_cv, y_test, lower_bounds_test, upper_bounds_test, loss_type=loss_type)]
+
+    select_alpha = losses_df.sort_values("val_loss", ascending=True)["alpha"].values[0]
     
-    y_pred = custom_Ridge_model.predict(X_test)
+    # print(f"Regularization parameter: {custom_Ridge_model.alpha_}")
+    print(f"Regularization parameter: {select_alpha}, minimum validation loss: {losses_df.sort_values('val_loss', ascending=True)['val_loss'].values[0]}")
+
+    # fit a new model with the selected alpha parameter
+    model = CustomRidge(alpha=select_alpha)
+    model.fit(X_train, y_train, loss_type=loss_type, lower_bounds=lower_bounds_train, upper_bounds=upper_bounds_train)
+    pickle.dump(model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
+
+    # pickle.dump(custom_Ridge_model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
+    # custom_Ridge_model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
+    model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
+    y_pred = model.predict(X_test)
+    
+    # y_pred = custom_Ridge_model.predict(X_test)
     summary_df = create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name="LinReg", binarize=True, save_fName=os.path.join(ridge_dir, "test_predictions.csv"))
     summary_df["CV"] = 0
     
@@ -244,7 +268,8 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
         upper_bounds_bs = upper_bounds_train[train_idx]
         
         # use regularization parameter determined above
-        bs_model = CustomRidge(alpha=custom_Ridge_model.alpha_)
+        # bs_model = CustomRidge(alpha=custom_Ridge_model.alpha_)
+        bs_model = CustomRidge(alpha=select_alpha)
         bs_model.fit(X_bs, y_bs, loss_type=loss_type, lower_bounds=lower_bounds_bs, upper_bounds=upper_bounds_bs)
         
         pickle.dump(bs_model, open(os.path.join(bootstrap_dir, f"model_{i}.sav"), "wb"))

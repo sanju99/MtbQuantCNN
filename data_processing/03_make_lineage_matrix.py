@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import vcf, glob, os, sys
 
-_, scheme, vcf_dir = sys.argv
+_, scheme = sys.argv
 
 
 # for i in `ls |grep ".vcf"`; do
@@ -34,13 +34,25 @@ elif scheme.upper() == "COLL":
     lineage_SNPs = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
     suffix = "Coll2014"
 
-vcf_files = glob.glob(f"{vcf_dir}/*.vcf")
+
+vcf_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF"
+mic_ml_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/MIC_ML/VCF"
 
 # skip isolates for which the SNP vectors were already constructed, otherwise this is very inefficient
 old_lineages_mat = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_{suffix}.csv", index_col=[0])
 old_lineages_mat.columns = old_lineages_mat.columns.astype(int)
 isolates_already_finished = old_lineages_mat.index.values
-vcf_files = [fName for fName in vcf_files if os.path.basename(fName).split(".")[0] not in isolates_already_finished]
+vcf_files = []
+
+for isolate in os.listdir(vcf_dir):
+    if isolate not in isolates_already_finished:
+        assert os.path.isfile(os.path.join(vcf_dir, isolate, "pilon", f"{isolate}.vcf"))
+        vcf_files.append(os.path.join(vcf_dir, isolate, "pilon", f"{isolate}.vcf"))
+
+for isolate in os.listdir(mic_ml_dir):
+    if isolate not in isolates_already_finished:
+        assert os.path.isfile(os.path.join(mic_ml_dir, isolate, "pilon", f"{isolate}.vcf"))
+        vcf_files.append(os.path.join(mic_ml_dir, isolate, "pilon", f"{isolate}.vcf"))
     
 print(f"Getting {scheme} SNPs for {len(vcf_files)} files")
 
@@ -49,7 +61,6 @@ ref, alt = list(zip(*lineage_SNPs["allele_change"].str.split("/")))
 lineage_SNPs["REF"] = ref
 lineage_SNPs["ALT"] = alt
 
-# for i, fName in enumerate(vcf_files_list):
 lineages_df = pd.DataFrame(columns=["ROLLINGDB_ID", "POS"])
 samples_lst = []
 

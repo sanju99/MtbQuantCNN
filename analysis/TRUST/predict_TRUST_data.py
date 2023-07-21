@@ -24,15 +24,12 @@ from data_utils import *
 from inSilicoMut_utils import *
 
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
 
 results_path = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
 data_path = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
-vcf_dir = "/n/scratch3/users/s/sak0914/annotated_VCF"
 
 who_variants_clean = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
 
-scaler = StandardScaler()
 
 def get_TRUST_predictions(config_file,
                           isolates_lst,
@@ -94,20 +91,28 @@ def get_TRUST_predictions(config_file,
     cnn_model.load_weights(os.path.join(output_path, "best_model.h5"))
     reg_model = pickle.load(open(os.path.join(output_path, "ridge", "model.sav"), "rb"))
 
+    # load the phenotypes dataframe to subset the input dataframe to get the training data mean and SD for standard scaling
+    df_train = pd.read_csv(kwargs["phenotype_file"]).query("category=='original_train_set'")        
+    X = np.load(os.path.join(output_path, "ridge", "combined_X.npy"))
+    X_train = X[df_train.index.values, :]
+
+    train_mean = X_train.mean()
+    train_sd = X_train.std()
+    del X_train
+                             
     X_reg = get_new_aln_for_regression(isolates_lst, 
                                        locus_list,
                                        output_path,
                                        trust_dir
                                       )
-                                                     
+                             
     if include_lineage:
         X_cnn = [X_cnn, lineages_matrix, np.zeros(len(X_cnn)), np.zeros(len(X_cnn))]
-        X_reg = scaler.fit_transform(np.concatenate([X_reg, lineages_matrix.values], axis=1))
+        X_reg = np.concatenate([X_reg, lineages_matrix.values], axis=1)
     else:
         X_cnn = [X_cnn, np.zeros(len(X_cnn)), np.zeros(len(X_cnn))]
-        X_reg = scaler.fit_transform(X_reg)
-    
-    print(X_reg.shape)
+        
+    X_reg = (X_reg - train_mean) / train_sd
                              
     # X and df_genos are in the same order because df_genos is passed in as an argument to the function to make X
     df_genos[f"log2_MIC_CNN"] = cnn_model.predict(X_cnn, batch_size=BATCH_SIZE).flatten()
