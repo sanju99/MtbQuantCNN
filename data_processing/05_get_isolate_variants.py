@@ -56,7 +56,7 @@ if len(high_conf_genes) > 0:
     awk_command_2 = "awk 'FNR==NR {indices[$1]; next} FNR in indices || FNR==1' " + f"{data_dir}/{drug}/high_conf_variant_idx.txt {data_dir}/{drug}/isolate_variants.csv > {data_dir}/{drug}/isolate_variants_high_conf.csv"
     
     subprocess.run(awk_command_2, shell=True)
-    subprocess.run(f"gzip {data_dir}/{drug}/isolate_variants.csv", shell=True)
+    subprocess.run(f"gzip -f {data_dir}/{drug}/isolate_variants.csv", shell=True)
 
     # remove extra files to clean up the directories (not because they take up space)
     os.remove(os.path.join(data_dir, drug, "high_conf_variant_idx.txt"))

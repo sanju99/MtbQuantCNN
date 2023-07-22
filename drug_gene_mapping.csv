@@ -1,13 +1,15 @@
 Drug,Locus Name,Contiguous Genes,Start,End,Length,Sense
-Rifampicin,rpoBC,"rpoB,rpoC",759611,767320,7710,+
-Moxifloxacin,gyrBA,"gyrB,gyrA",4998,9818,4821,+
-Isoniazid,ahpC,"oxyR',ahpC",2725478,2726780,1303,+
-Isoniazid,katG,"Rv1907c,katG,furA,Rv1910c",2153235,2157381,4147,-
-Isoniazid,inhA,"fabG1,inhA",1673300,1675011,1712,+
-Isoniazid,kasA,"fabD,acpM,kasA,kasB",2516549,2520712,4164,+
-Ethambutol,embCAB,"embC,embA,embB",4239863,4249810,9948,+
-Ethambutol,aftB_ubiA,"aftB,ubiA,Rv3807c,glfT2,glf",4266953,4273738,6786,-
-Pyrazinamide,pncA,"Rv2042c,pncA,Rv2044c,lipT",2287884,2291268,3385,-
-Pyrazinamide,panD,"Rv3600c,panD,panC,Rv3603c",4043041,4046302,3262,-
-Pyrazinamide,rpsA,"rpsA,coaE",1833380,1836236,2857,+
+Rifampicin,rpoBC,"rpoB,rpoC",759310,767683,8374,+
+Rifampicin,rpoA,rpoA,3877433,3879272,1839,-
+Moxifloxacin,gyrBA,"gyrB,gyrA",4998,9913,4916,+
+Levofloxacin,gyrBA,"gyrB,gyrA",4998,9913,4916,+
+Isoniazid,ahpC,"oxyR',ahpC",2725478,2726805,1328,+
+Isoniazid,katG,"Rv1907c,katG,furA,Rv1910c",2152896,2157381,4486,-
+Isoniazid,inhA,"fabG1,inhA",1673300,1675016,1717,+
+Isoniazid,kasA,"fabD,acpM,kasA,kasB",2516549,2520742,4194,+
+Ethambutol,embCAB,"embC,embA,embB",4239863,4249877,10015,+
+Ethambutol,aftB_ubiA,"aftB,ubiA,Rv3807c,glfT2,glf",4266659,4273738,7080,-
+Pyrazinamide,pncA,"Rv2042c,pncA,Rv2044c,lipT",2286527,2291268,4742,-
+Pyrazinamide,panD,"Rv3600c,panD,panC,Rv3603c",4042941,4046302,3362,-
+Pyrazinamide,rpsA,"rpsA,coaE",1833380,1836386,3007,+
 Pyrazinamide,clpC1,clpC1,4038051,4040980,2930,-

@@ -8,7 +8,7 @@ from sklearn.metrics import roc_auc_score, average_precision_score, confusion_ma
 from tensorflow.keras import backend as K
 tf.config.run_functions_eagerly(True)
 
-# utils files are in the utils_files directory
+# utils files are in the utils directory
 sys.path.append("utils")
 from data_utils import *
 from analysis_utils import *
@@ -33,7 +33,7 @@ BATCH_SIZE = kwargs["batch_size"]
 patience_epochs = kwargs["patience_epochs"]
 
 if patience_epochs is not None:
-    N_epochs = 250
+    N_epochs = 1000
 else:
     N_epochs = kwargs["N_epochs"]
 

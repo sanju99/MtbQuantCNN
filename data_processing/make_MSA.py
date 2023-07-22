@@ -80,9 +80,12 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
     
         1. FILTER == Del, LowCov
         2. FILTER == Amb and 0.1 < AF < 0.9
-        3. IMPRECISE variant (in the INFO field)
-        4. SNP quality < 10
-        
+        3. SNP quality < 10
+
+    Criteria for not confident in a variant or can not be reliably inserted, so leave it as reference:
+
+        1. IMPRECISE variant (in the INFO field)
+        2. Indels longer than 15 bp where neither the REF nor the ALT are of length 1 (this case is handled in the next function)
         
     If FILTER contains Amb and the alternative allele fraction > 0.9, then it is a pure alternative call. 
     If FILTER contains Amb and the alternative allele fraction < 0.1, the it is a pure reference call. 
@@ -104,9 +107,12 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
         qual = 11
     else:
         qual = record.QUAL
-        
+
+    # don't include IMPRECISE variants because they are difficult to reliably impute and often aren't reliable calls anyway
+    # unreliability can be due to ambiguous alignments, complex genomic regions, low sequencing coverage, assembly gaps, or segmental duplications
+    # basically these are breakpoints that the variant caller is not confiden
     if "IMPRECISE" in record.INFO.keys():
-        return "missing"
+        return "ref"
     
     # the filter field is an empty list of it is PASS, else the list is non-empty
     # only consider the non-Amb cases here. Amb cases will be later, check the AF too for that
@@ -114,6 +120,7 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
         return "missing"
     
     # ambiguous reference or alternative alleles. I think these are very rare though
+    # because IMPRECISE is taken care of above, this should only return missing for cases where REF = N or ALT = N
     if "N" in record.REF or "N" in "".join(np.array(record.ALT).astype(str)):
         return "missing"
     
@@ -156,107 +163,117 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 
             # get the allele type: ref, alt, or missing
             single_allele_type = allele_category(record) 
+
+            # only change the sequence if the type is not reference
+            if single_allele_type != "ref":
             
-            # convert alternative allele from list to string
-            alt_allele = "".join(np.array(record.ALT).astype(str))
-            ref_allele = str(record.REF)
-
-            # the index to replace -- this is 0-indexed, consistent with Python
-            idx = record.POS - (START + 1)
-
-            # no length change -- SNP or MNP. Python will replace all elements if the original and new are the same length
-            if len(ref_allele) == len(alt_allele):
-
-                if single_allele_type == "alt":
-                    new_seq[idx:idx+len(ref_allele)] = alt_allele
-                elif single_allele_type == "missing":
-                    new_seq[idx:idx+len(ref_allele)] = ["N"]*len(alt_allele)
-                # the only other option is reference, so don't do anything
-                else:
-                    continue
-
-            # indels
-            else:
-                
-                # insertion
-                if len(alt_allele) > len(ref_allele):
-
-                    # replace the nucleotide at the reference index with the alternative nucleotides
-                    # also add the number of gap characters needed (len(ALT) - len(REF) to insertion_dict at the appropriate index                        
-                    # only input short insertions and also if they pass the QC filters. Leave the others as reference
-                    if (len(alt_allele) - len(ref_allele) <= 15):
-
-                        if single_allele_type != "alt":
-                            alt_allele = "N"*len(alt_allele)
-
-                        # if REF > 1, then the entire REF allele must be removed (across all positions) and replaced with the ALT allele
-                        # do this with a dummy character, X, which will be later removed. 
-                        # This is generalizable to even the case where REF == 1 because it will just replace the first index
-
-                        # replace everything with X first
-                        new_seq[idx:idx+len(ref_allele)] = ["X"] * len(ref_allele)
-
-                        # then make the first position the alternative allele
-                        new_seq[idx] = alt_allele
-
-                        insertion_dict[idx] = np.max([insertion_dict[idx], len(alt_allele) - len(ref_allele)])
-
-                    # don't do anything if indels are very long
+                # convert alternative allele from list to string
+                alt_allele = "".join(np.array(record.ALT).astype(str))
+                ref_allele = str(record.REF)
+    
+                # the index to replace -- this is 0-indexed, consistent with Python
+                idx = record.POS - (START + 1)
+    
+                # no length change -- SNP or MNP. Python will replace all elements if the original and new are the same length
+                if len(ref_allele) == len(alt_allele):
+    
+                    if single_allele_type == "alt":
+                        new_seq[idx:idx+len(ref_allele)] = alt_allele
+                    elif single_allele_type == "missing":
+                        new_seq[idx:idx+len(ref_allele)] = ["N"]*len(alt_allele)
+                    # the only other option is reference, so don't do anything
                     else:
                         continue
-
-                # deletion
+    
+                # indels
                 else:
-
-                    if len(alt_allele) == 1:
-
-                        new_allele = []
-                        assert alt_allele in ref_allele
-
-                        # iterate through the reference to find where the alternative allele comes up first, then make everything else the gap character
-                        # boolean to check if we have found the alt_allele (assume that it would be the first instance of that nucleotide in the ref_allele)
-                        found_alt_allele = False
-
-                        for i, nuc in enumerate(ref_allele):
-                            if nuc == alt_allele:
-                                if not found_alt_allele:
-                                    new_allele.append(alt_allele)
-                                    found_alt_allele = True
+                    
+                    # insertion -- insert both alternative and missing insertions
+                    if len(alt_allele) > len(ref_allele):
+    
+                        # replace the nucleotide at the reference index with the alternative nucleotides
+                        # also add the number of gap characters needed (len(ALT) - len(REF) to insertion_dict at the appropriate index                        
+                        # only input short insertions and also if they pass the QC filters. Leave the others as reference
+                        if (len(alt_allele) - len(ref_allele) <= 15):
+    
+                            if single_allele_type == "missing":
+                                alt_allele = "N"*len(alt_allele)
+    
+                            # if REF > 1, then the entire REF allele must be removed (across all positions) and replaced with the ALT allele
+                            # do this with a dummy character, X, which will be later removed. 
+                            # This is generalizable to even the case where REF == 1 because it will just replace the first index
+    
+                            # replace everything with X first
+                            new_seq[idx:idx+len(ref_allele)] = ["X"] * len(ref_allele)
+    
+                            # then make the first position the alternative allele
+                            new_seq[idx] = alt_allele
+    
+                            insertion_dict[idx] = np.max([insertion_dict[idx], len(alt_allele) - len(ref_allele)])
+    
+                        # don't do anything if indels are very long
+                        else:
+                            continue
+    
+                    # deletion -- insert both alternative and missing deletions IF ALT IS OF LENGTH 1
+                    # insert only alternative deletions if they are <= 15 bp. Missing deletions can't be reliably inserted because you don't know where to start
+                    # for the alternative case, you can match up the starts of the REF and ALT to figure out where to add gap characters
+                    else:
+    
+                        if len(alt_allele) == 1:
+    
+                            new_allele = []
+                            assert alt_allele in ref_allele
+    
+                            # iterate through the reference to find where the alternative allele comes up first, then make everything else the gap character
+                            # boolean to check if we have found the alt_allele (assume that it would be the first instance of that nucleotide in the ref_allele)
+                            found_alt_allele = False
+    
+                            for i, nuc in enumerate(ref_allele):
+                                if nuc == alt_allele:
+                                    if not found_alt_allele:
+                                        new_allele.append(alt_allele)
+                                        found_alt_allele = True
+                                    else:
+                                        new_allele.append("-")
                                 else:
                                     new_allele.append("-")
-                            else:
-                                new_allele.append("-")
-
-                        assert len(new_allele) == len(ref_allele)
-
-                        # Python will replace all elements if the original and replace string are the same length
-                        # add this step so that if the allele extends more than the region of interest, it is truncated
-                        old_len = len(new_seq)
-                        new_seq[idx:idx+len(ref_allele)] = new_allele
-                        new_seq = new_seq[:old_len]
-
-                    else:                        
-                        # only input short insertions and also if they pass the QC filters and if the first nucleotide of the REF and ALT are the same. 
-                        # In that case, replace the remaining characters of the REF list with the ALT nucleotides
-                        # the point of this is mainly for the insilico mutations. Some of them have differing lengths, but the net change is a deletion
-                        if alt_allele[0] == ref_allele[0] and (len(ref_allele) - len(alt_allele) <= 15):
-
-                            # the replacement is the alternative allele padded with gap characters. # of gap characters = the length difference between them 
-                            new_allele = list(alt_allele) + ['-'] * (len(ref_allele) - len(alt_allele))
-                            assert len(new_allele) == len(ref_allele)
-
+    
+                            if len(new_allele) != len(ref_allele):
+                                print(fName)
+                                # exit()
+    
                             # Python will replace all elements if the original and replace string are the same length
                             # add this step so that if the allele extends more than the region of interest, it is truncated
                             old_len = len(new_seq)
                             new_seq[idx:idx+len(ref_allele)] = new_allele
                             new_seq = new_seq[:old_len]
-
-                        # don't put in the deletion if it is long, or the first nucleotides of REF and ALT don't match because it can not be reliably inserted
-                        else:
-                            continue
+    
+                        else:                        
+                            # only input short deletions and also if they pass the QC filters and if the first nucleotide of the REF and ALT are the same. 
+                            # In that case, replace the remaining characters of the REF list with the ALT nucleotides
+                            # the point of this is mainly for the insilico mutations. Some of them have differing lengths, but the net change is a deletion
+                            if single_allele_type == "alt" and alt_allele[0] == ref_allele[0] and (len(ref_allele) - len(alt_allele) <= 15):
+    
+                                # the replacement is the alternative allele padded with gap characters. # of gap characters = the length difference between them 
+                                new_allele = list(alt_allele) + ['-'] * (len(ref_allele) - len(alt_allele))
+                                assert len(new_allele) == len(ref_allele)
+    
+                                # Python will replace all elements if the original and replace string are the same length
+                                # add this step so that if the allele extends more than the region of interest, it is truncated
+                                old_len = len(new_seq)
+                                new_seq[idx:idx+len(ref_allele)] = new_allele
+                                new_seq = new_seq[:old_len]
+    
+                            # don't put in the deletion if it is long, or the first nucleotides of REF and ALT don't match because it can not be reliably inserted
+                            else:
+                                continue
                         
     # check lengths because both of them are lists right now 
-    assert len(new_seq) == len(h37Rv_region)
+    if len(new_seq) != len(h37Rv_region):
+        print(fName)
+        # exit()
+        
     return new_seq
 
 
@@ -339,11 +356,12 @@ with open(OUT_FILE, "w+") as file:
             # assert len(seq[row["idx"]]) == pos_length
             if len(seq[row["idx"]]) != pos_length:
                 print(os.path.basename(OUT_FILE).split(".")[0], isolate, len(seq[row["idx"]]), pos_length)
+                # exit()
 
         # remove X characters, which are used for some insertions
         # check that the new length matches with the reference sequence, which has already had gap characters inserted
         seq = "".join(seq).replace("X", "")
-        # assert len(seq) == len(new_ref_seq)
+
         if len(seq) != len(new_ref_seq):
             print(os.path.basename(OUT_FILE).split(".")[0], isolate, len(seq), len(new_ref_seq))
 

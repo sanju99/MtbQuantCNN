@@ -12,11 +12,11 @@ locus_list = kwargs["locus_list"]
 binary_thresh = kwargs["binary_thresh"]
 
 # dataframe of start and end coordinates and sense of various genes. START and END are 1-indexed and inclusive (natural numbers)
-drug_gene_mapping = pd.read_csv("drug_gene_mapping.csv")
+known_genes = pd.read_csv("drug_gene_mapping.csv")
 
 # first check that all loci are there
 for locus in locus_list:
-    if locus not in drug_gene_mapping["Locus Name"].values:
+    if locus not in known_genes["Locus Name"].values:
         raise ValueError(f"{locus} not found in drug_gene_mapping.csv")
 
 out_dir = f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}"
@@ -113,7 +113,7 @@ found_loci = 0
 
 for locus in locus_list:
 
-    START, END = drug_gene_mapping.loc[drug_gene_mapping["Locus Name"]==locus][["Start", "End"]].values[0]
+    START, END = known_genes.loc[known_genes["Locus Name"]==locus][["Start", "End"]].values[0]
     
     if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt"):
         print(f"Found {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
@@ -149,7 +149,7 @@ if val_present:
 
     for locus in locus_list:
 
-        START, END = drug_gene_mapping.loc[drug_gene_mapping["Locus Name"]==locus][["Start", "End"]].values[0]
+        START, END = known_genes.loc[known_genes["Locus Name"]==locus][["Start", "End"]].values[0]
         
         if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt"):
             print(f"Found {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt")
@@ -224,8 +224,8 @@ remove_groups = stratify_df.query("count < 2").stratify.values
 if len(remove_groups) > 0:
     print(f"Removed {len(remove_groups)} isolates in the {remove_groups} lineages with fewer than 2 isolates")
     keep_idx = [idx for idx, group in enumerate(stratify_vals) if group not in remove_groups]
-    stratify_vals = [val for val in stratify_vals if val not in remove_groups]
     df_train = df_train.reset_index(drop=True).iloc[keep_idx, :].reset_index(drop=True)
+    stratify_vals = [val for val in stratify_vals if val not in remove_groups]
 else:
     df_train = df_train.reset_index(drop=True)
         
@@ -258,7 +258,8 @@ with open(os.path.join(out_dir, "combined_paths_for_aln.txt"), "w+") as file:
         
         # this file contains all non-REF calls for each sample. It is also annotated with snpEff, hence the file extension
         fName = os.path.join(training_vcf_dir, f"{sample_id}/pilon/{sample_id}.vcf")
-        assert os.path.isfile(fName)
+        if not os.path.isfile(fName):
+            raise ValueError(f"{fName} not found!")
         file.write(fName + "\n")
 
     if val_present:
@@ -268,5 +269,6 @@ with open(os.path.join(out_dir, "combined_paths_for_aln.txt"), "w+") as file:
     
             # this file contains all non-REF calls for each sample.
             fName = os.path.join(validation_vcf_dir, f"{sample_id}/pilon/{sample_id}.vcf")
-            assert os.path.isfile(fName)
+            if not os.path.isfile(fName):
+                raise ValueError(f"{fName} not found!")
             file.write(fName + "\n")

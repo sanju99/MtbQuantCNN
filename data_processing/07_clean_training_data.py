@@ -51,6 +51,8 @@ cc = get_critical_concentration(drug)
 
 # who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
+who_variants["gene"] = [val.split("_")[0] for val in who_variants.mutation.values]
+who_variants["variant"] = ["_".join(val.split("_")[1:]) for val in who_variants.mutation.values]
 
 out_dir = f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}"
 model_df = f"{out_dir}/data_intermediate_clean.csv"

@@ -1,7 +1,7 @@
 #!/bin/bash 
 #SBATCH -c 1
-#SBATCH -t 2-23:59
-#SBATCH -p medium 
+#SBATCH -t 0-11:59
+#SBATCH -p short 
 #SBATCH --mem=30G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 

@@ -5,7 +5,7 @@
 #SBATCH --mem=1G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
-#SBATCH --mail-type=ALL
+#SBATCH --mail-type=END
 #SBATCH --mail-user=skulkarni@g.harvard.edu
 
 source activate bioinformatics
@@ -47,8 +47,10 @@ while IFS=",", read -r line; do
             # num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb')" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)        
             # num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
         # else
-        
-        num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb')" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)        
+
+        # exclude IMPRECISE variants because they are not reliably called by the pilon variant caller
+        # include Amb variants, but only if they are Amb only. Exclude Amb,LowCov by excluding LowCov variants
+        num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb') & FILTER != 'LowCov' & INFO/IMPRECISE = 0" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)        
         num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
         # fi
 
