@@ -45,7 +45,7 @@ num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
     
 # get longest locus from the pickle file
-X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz')).todense()
+X_h37rv = sparse.load_npz(os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_ref.npz')).todense()
 
 # shape = 1 x 5 x longest_locus x num_loci
 longest_locus = X_h37rv.shape[2]
@@ -54,7 +54,7 @@ print(f"Longest locus: {longest_locus}")
 # for all models, set bounded_loss = False so that the bounds are not returned
 # the bounds are not necessary for this script, so it's easier to just omit them instead of putting dummy variables into ref_data
 train_generator = MtbGeneDataset(
-    os.path.join(output_path, 'pkl_sparse_train.npz'),
+    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_train.npz'),
     phenotype_file,
     drug,
     locus_list,

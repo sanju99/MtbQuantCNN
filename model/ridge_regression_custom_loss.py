@@ -1,210 +1,191 @@
-import pandas as pd
 import numpy as np
-import sys, glob, os, yaml, sparse, warnings, tracemalloc, pickle
-
-from evcouplings.align import Alignment
+import pandas as pd
+import glob, os, subprocess, vcf, shutil, sparse, yaml, sys, pickle, warnings, tracemalloc
 import scipy.stats as st
-from sklearn.metrics import roc_auc_score, roc_curve, auc, accuracy_score, average_precision_score
-from sklearn.model_selection import KFold, StratifiedKFold
-import scipy.optimize
-
-from Bio import SeqIO
-from sklearn.metrics import confusion_matrix
-from sklearn.utils import class_weight
-import warnings
 warnings.filterwarnings("ignore")
 
-# utils files are in the utils_file folder
+# utils files are in a separate folder
 sys.path.append("utils")
 from data_utils import *
 from model_utils import *
 from analysis_utils import *
 
+from sklearn.linear_model import Ridge, RidgeCV
+
+tracemalloc.start()
+
+BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
+data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
+h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+
 
 _, config_file = sys.argv
 
-kwargs = yaml.safe_load(open(config_file, "r"))
-
-binary = False
-binary_thresh = kwargs["binary_thresh"]
-
+kwargs = yaml.safe_load((open(config_file)))
 drug = kwargs["drug"]
-locus_list = kwargs["locus_list"]
-output_path = kwargs["output_path"]
-phenotype_file = kwargs["phenotype_file"]
-genotype_input_directory = kwargs["genotype_input_directory"]
-num_loci = len(locus_list)
 include_lineage = kwargs["include_lineage"]
+binary_thresh = kwargs["binary_thresh"]
+locus_list = kwargs["locus_list"]
+num_loci = len(locus_list)
 loss_type = kwargs["loss_type"]
+fasta_dir = kwargs["genotype_input_directory"]
 
-fastas = [os.path.join(genotype_input_directory, locus + ".fasta") for locus in locus_list]
-print(f"{len(fastas)} loci")
-df_phenos = pd.read_csv(phenotype_file)
-isolate_order = df_phenos["ROLLINGDB_ID"].values
+df_phenos = pd.read_csv(kwargs['phenotype_file'])
 
-# make a directory for the small fasta files
-ridge_dir = os.path.join(output_path, "ridge")
-bootstrap_dir = os.path.join(output_path, "ridge", "bootstrapping")
-
+out_dir = kwargs["output_path"]
+ridge_dir = os.path.join(out_dir, "ridge")
+bootstrap_dir = os.path.join(out_dir, "ridge", "bootstrapping")
+    
 if not os.path.isdir(bootstrap_dir):
     os.makedirs(bootstrap_dir)
 
-def subset_fasta_files():
-    '''
-        Iterate through each fasta file, select only the positions that are not identical in the dataset. Keep only the isolates with phenotype data, reorder the alignment to match isolate_order, save a reduced fasta file
-    '''
+
+gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
+h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
+
+# read in matrices of input sequences
+train_matrix = sparse.load_npz(f"{out_dir.replace('_lineage', '')}/pkl_sparse_train.npz").todense()
+test_matrix = sparse.load_npz(f"{out_dir.replace('_lineage', '')}/pkl_sparse_test.npz").todense()
+ref_matrix = sparse.load_npz(f"{out_dir.replace('_lineage', '')}/pkl_sparse_ref.npz").todense()
+
+# make dataframes of coordinates
+gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
+h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
+
+def get_single_locus_Reg_input(locus, locus_list, train_matrix, test_matrix, ref_matrix):
+
+    locus_idx = locus_list.index(locus)
+
+    train_samples = train_matrix.shape[0]
+    test_samples = test_matrix.shape[0]
     
-    for file in fastas:
-       
-        print(file)
-        aln = Alignment.from_file(open(file))
-        
-        # the fasta files contain sequences for all isolates. Keep only the isolates in the phenotypes file
-        # need indices for splitting alignment in evcouplings
-        keep_idx = [i for i, fName in enumerate(aln.ids) if os.path.basename(fName).replace(".eff", "").replace(".vcf", "") in isolate_order]
-        assert len(keep_idx) == len(isolate_order)
-        
-        # if len(keep_idx) != len(isolate_order):
-        #     raise ValueError(len(keep_idx), len(isolate_order))
-        
-        # this keeps only sites where the major allele frequency is less than 1. Major allele frequence = 1 means that all isolates are the same at the site
-        # drop sites that are identical in all isolates because they have no impact on the regression
-        indices_to_keep = np.where(aln.frequencies.max(axis=1) < 1)[0]
-        subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_idx)        
-       
-        print("original alignment shape", aln.matrix.shape)
-        print("reduced alignment shape", subset_alignment.matrix.shape)
+    one_hot_encodings = train_matrix.shape[1]
+    longest_locus = train_matrix.shape[2]
+    num_loci = train_matrix.shape[3]
+    assert one_hot_encodings == 5
 
-        # Cleanup giant variables
-        del aln
+    # turn the matrices into dataframes for easy manipulation
+    df_train = pd.DataFrame(np.reshape(train_matrix[:, :, :, locus_idx], (train_samples, one_hot_encodings * longest_locus), order='F'))
+    df_test = pd.DataFrame(np.reshape(test_matrix[:, :, :, locus_idx], (test_samples, one_hot_encodings * longest_locus), order='F'))
+    df_ref = pd.DataFrame(np.reshape(ref_matrix[:, :, :, locus_idx], (1, one_hot_encodings * longest_locus), order='F'))
 
-        # First, correct the ids in the alignment so that they match the ROLLINGDB_IDs in the dataframe of phenotypes
-        subset_alignment.ids = [os.path.basename(fName).replace(".eff", "").replace(".vcf", "") for fName in subset_alignment.ids]
-
-        subset_alignment.id_to_index = {x:idx for idx,x in enumerate(subset_alignment.ids)}
+    # need to get all the nucleotide positions to name the columns. This makes manipulation easier and is also useful to keep track of which positions went into the model (interpretability)
+    # k is an iterator to keep track of indels
+    seq_coords = []
+    k = 0
     
-        # Get the indices that would correctly reorder the alignment to match isolate_order
-        reorder_index = [
-            subset_alignment.id_to_index[x] if x in list(subset_alignment.id_to_index.keys()) else print(x) for x in isolate_order
-        ]
+    for coord in h37Rv_coords[:, locus_idx]:
+
+        # indels -- position is NaN, so give unique names that are a concatenation of the locus and an index
+        if pd.isnull(coord):
+            coord = f"{locus}_{k}"
+            k += 1
+        else:
+            coord = str(int(coord))
+            
+        seq_coords += [f"{coord}_{nuc}" for nuc in BASE_TO_COLUMN.keys()]
+    
+    assert len(seq_coords) == len(df_train.columns)
+    df_train.columns = seq_coords
+    df_test.columns = seq_coords
+
+    # this is a dataframe of length 1
+    df_ref.columns = seq_coords
+    h37Rv_ref_seq = df_ref[df_ref.columns[(df_ref.loc[0] == 1)]]
+
+    # keep only variables that are not the same everywhere because there is no signal
+    df_train_keep = df_train.loc[:, df_train.nunique() > 1]    
+    keep_pos = ['_'.join(val.split("_")[:-1]) for val in df_train_keep.columns]
+    
+    # when value_counts = 1, it's for indels, where the only options are indel or not. The four nucleotides are 0 for all samples and get dropped in the previous step
+    single_allele_pos =  pd.Series(keep_pos).value_counts()[pd.Series(keep_pos).value_counts() == 2].index.values
+    multi_allele_pos = pd.Series(keep_pos).value_counts()[pd.Series(keep_pos).value_counts() > 2].index.values
+    
+    # for positions with only two alleles (REF and ALT, essentially), only need to keep one because they are redundant information and perfectly correlated
+    single_allele_pos_keep_cols = []
+    
+    # preferentially keep the alternative allele because it makes interpretability easier
+    for pos in single_allele_pos:
+
+        single_pos_cols = [col for col in df_train_keep.columns if "_".join(col.split("_")[:-1]) == pos]
+        df_keep_single_pos = df_train_keep[single_pos_cols]
         
-        # Reorder based on reorder_index
-        subset_alignment.ids = np.array(subset_alignment.ids)[reorder_index]
-        assert sum(isolate_order != subset_alignment.ids) == 0
+        alt_col = set(df_keep_single_pos.columns) - set(h37Rv_ref_seq[h37Rv_ref_seq.columns[h37Rv_ref_seq.columns.str.contains(pos)]].columns)
+        assert len(alt_col) == 1
+        single_allele_pos_keep_cols += list(alt_col)
+    
+    assert len(single_allele_pos_keep_cols) == len(single_allele_pos)
 
-        subset_alignment.matrix = subset_alignment.matrix[reorder_index, :]
+    # create training and testing dataframes from the columns to keep (which is based on df_train only)
+    df_train_final = pd.concat([df_train_keep[single_allele_pos_keep_cols], df_train_keep[df_train_keep.columns[df_train_keep.columns.str.contains('|'.join(multi_allele_pos))]]], axis=1)
 
-        # Get the name of the fasta file for saving
-        name = os.path.basename(file).split(".")[0]
+    # for the test dataframe, keep only the columns determined from the train dataframe
+    return df_train_final, df_test[df_train_final.columns], seq_coords, df_train_final.columns
 
-        # save the reduced file sequences and gene indices to new files
-        subset_alignment.write(open(os.path.join(ridge_dir, f"{name}_reduced.fasta"), "w"))
-        np.save(os.path.join(ridge_dir, f"{name}_indices.npy"), indices_to_keep)
-        
-        
 
-# get the reduced files made in the previous function
-reduced_fastas = glob.glob(os.path.join(ridge_dir, "*_reduced.fasta"))
+    
+# same input file for models with and without lineages because these are just sequences
+train_mat_file = os.path.join(ridge_dir.replace("_lineage", ""), "train_seq_matrix.pkl")
+test_mat_file = os.path.join(ridge_dir.replace("_lineage", ""), "test_seq_matrix.pkl")
+feat_names_file = os.path.join(ridge_dir.replace("_lineage", ""), "all_feature_names.txt")
+model_feat_names_file = os.path.join(ridge_dir.replace("_lineage", ""), "model_feature_names.txt")
 
-if len(reduced_fastas) == len(fastas):
-    print("Found reduced fasta files. Proceeding with modeling...")
+if os.path.isfile(feat_names_file) and os.path.isfile(model_feat_names_file):#os.path.isfile(train_mat_file) and os.path.isfile(test_mat_file):
+
+    print(f"Found existing input sequence matrices")
+    X_train = pd.read_pickle(train_mat_file)
+    X_test = pd.read_pickle(test_mat_file)
+
 else:
-    subset_fasta_files()
+    print(f"Creating input sequence matrices")
+    X_train = []
+    X_test = []
 
-# get the reduced files made in the previous function. Re-acquire the list of reduced fasta files since they've now been made
-reduced_fastas = glob.glob(os.path.join(ridge_dir, "*_reduced.fasta"))
-
-assert len(reduced_fastas) == len(fastas)
-
-# Compute the total number of sites in our model by summing the length of all the alignment
-total_sites = 0
-
-for file in reduced_fastas:
-    aln = Alignment.from_file(open(file))    
-    total_sites += aln.L
-
-print("total sites", total_sites)
-total_seqs = aln.N
-
-# Matrix to store the data for learning
-X = np.zeros((total_seqs, total_sites), dtype=np.int8)
-
-current_index = 0
-
-for file in reduced_fastas:
-    aln = Alignment.from_file(open(file), alphabet='-ACGT')
+    features_lst = []
+    model_features_lst = []
     
-    # only use sequence alignments with sites for the model. Otherwise get a vectorize error
-    if aln.L != 0:
-        
-        # Tells you which character is the most frequent in each site
-        who_is_max = np.argmax(aln.frequencies, axis=1)
-
-        # Major allele is encoded as 0, minor allele(s) as 1
-        major_minor = aln.matrix_mapped != who_is_max
-
-        # Add the encoding to the X matrix
-        X[:, current_index:(current_index + major_minor.shape[1])] = major_minor
-
-        # Keep track of how many sites in X we have filled in
-        current_index = current_index + major_minor.shape[1]
+    for locus in locus_list:
+        single_locus_train, single_locus_test, single_locus_features, single_locus_model_features = get_single_locus_Reg_input(locus, locus_list, train_matrix, test_matrix, ref_matrix)
     
-# matrix for learning
-np.save(os.path.join(ridge_dir, "combined_X.npy"), X)
-
-# Make a table of all of the sites in the model for later mapping
-# Note that the sites listed here are indexed within each fasta file - NOT the MTB genome
-total_sites = []
-genes = []
-
-
-for file in reduced_fastas:
+        X_train.append(single_locus_train)
+        X_test.append(single_locus_test)
+        features_lst += list(single_locus_features)
+        model_features_lst += list(single_locus_model_features)
     
-    gene_name = os.path.basename(file).split("_")[0]
+    X_train = pd.concat(X_train, axis=1)
+    X_test = pd.concat(X_test, axis=1)
     
-    numpy_file = file.split("reduced.fasta")[0] + "indices.npy"
-
-    sites = np.load(numpy_file)
-    sites = sorted(list(sites))
+    # no changes were made to sample ordering, so use the exact indexes of the isolates from df_phenos
+    X_train.index = df_phenos.query("category=='original_train_set'")["ROLLINGDB_ID"]
+    X_test.index = df_phenos.query("category=='original_test_set'")["ROLLINGDB_ID"]
     
-    total_sites += list(sites)
-    genes += [gene_name] * len(list(sites))
+    X_train.to_pickle(train_mat_file)
+    X_test.to_pickle(test_mat_file)
 
-assert len(genes) == len(total_sites)
-    
-gene_sites = pd.DataFrame({
-    "locus": genes,
-    "sites": total_sites,
-})
-
-gene_sites.to_csv(os.path.join(ridge_dir, "site_indices.csv"))
-
-
-##################### CROSS-VALIDATE AND RUN MODEL WITH CUSTOM LOSS FUNCTION #####################
+    # save the feature names (both the full list and the list used to fit the model) for the validation data later
+    pd.Series(features_lst).to_csv(feat_names_file, sep="\t", index=False, header=None)
+    pd.Series(model_features_lst).to_csv(model_feat_names_file, sep="\t", index=False, header=None)
 
 
 
-def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10):
+def ridge_mic(X_train, X_test, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10):
 
-    # need the train dataframe indices for slicing it. Reset index so that it's the index within the values, not in the overall dataframe
     df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
     df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
-        
+    
     if include_lineage:
         print(f"Fitting model with lineages")
-        # lineages = pd.get_dummies(df_phenos["Lineage"])
-        # lineages.index = df_phenos["ROLLINGDB_ID"]
-        
+
         lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
         assert len(np.unique(lineages.values)) == 2
         lineages = lineages.loc[df_phenos["ROLLINGDB_ID"]]
-    
-        X_train = np.concatenate([X[df_phenos.query("category=='original_train_set'").index, :], lineages.loc[df_train.ROLLINGDB_ID.values, :].values], axis=1)
-        X_test = np.concatenate([X[df_phenos.query("category=='original_test_set'").index, :], lineages.loc[df_test.ROLLINGDB_ID.values, :].values], axis=1)
 
-    else:     
-        X_train = X[df_phenos.query("category=='original_train_set'").index, :]  
-        X_test = X[df_phenos.query("category=='original_test_set'").index, :]
+        X_train = X_train.merge(lineages, left_index=True, right_index=True, how="left")
+        X_test = X_test.merge(lineages, left_index=True, right_index=True, how="left")
+        
+    X_train = X_train.values
+    X_test = X_test.values
+    print(f"Train: {X_train.shape}, Test: {X_test.shape}")
         
     # perform mean / SD scaling using the training set
     train_mean = X_train.mean()
@@ -221,9 +202,6 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
     print(f"Minimizing {loss_type} loss")
     
     reg_param_lst = np.logspace(-6, 6, 13)
-    # custom_Ridge_model = CustomRidgeCV(alphas=reg_param_lst, cv=5)
-    # custom_Ridge_model.fit(X_train, y_train, loss_type=loss_type, lower_bounds=lower_bounds_train, upper_bounds=upper_bounds_train)
-
     losses_df = pd.DataFrame(columns=["alpha", "val_loss"])
     
     for i, alpha in enumerate(reg_param_lst):
@@ -238,20 +216,16 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
 
     select_alpha = losses_df.sort_values("val_loss", ascending=True)["alpha"].values[0]
     
-    # print(f"Regularization parameter: {custom_Ridge_model.alpha_}")
-    print(f"Regularization parameter: {select_alpha}, minimum validation loss: {losses_df.sort_values('val_loss', ascending=True)['val_loss'].values[0]}")
+    print(f"Regularization parameter: {select_alpha}, minimum CV validation loss: {losses_df.sort_values('val_loss', ascending=True)['val_loss'].values[0]}")
 
     # fit a new model with the selected alpha parameter
     model = CustomRidge(alpha=select_alpha)
     model.fit(X_train, y_train, loss_type=loss_type, lower_bounds=lower_bounds_train, upper_bounds=upper_bounds_train)
     pickle.dump(model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
 
-    # pickle.dump(custom_Ridge_model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
-    # custom_Ridge_model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
     model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
     y_pred = model.predict(X_test)
     
-    # y_pred = custom_Ridge_model.predict(X_test)
     summary_df = create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name="LinReg", binarize=True, save_fName=os.path.join(ridge_dir, "test_predictions.csv"))
     summary_df["CV"] = 0
     
@@ -268,7 +242,6 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
         upper_bounds_bs = upper_bounds_train[train_idx]
         
         # use regularization parameter determined above
-        # bs_model = CustomRidge(alpha=custom_Ridge_model.alpha_)
         bs_model = CustomRidge(alpha=select_alpha)
         bs_model.fit(X_bs, y_bs, loss_type=loss_type, lower_bounds=lower_bounds_bs, upper_bounds=upper_bounds_bs)
         
@@ -287,14 +260,10 @@ def ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_
     return final_df
 
 
-X = np.load(os.path.join(ridge_dir, "combined_X.npy"))
-
-results_df = ridge_mic(X, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10)
+results_df = ridge_mic(X_train, X_test, df_phenos, drug, include_lineage, binary_thresh, num_loci, num_bootstrap=10)
 results_df.to_csv(os.path.join(ridge_dir, "ridge_results.csv"), index=False)
-    
-# # delete all large files to save space (this script is very fast, so time is not an issue)
-# for fName in reduced_fastas:
-#     os.remove(fName)
-    
-# for fName in glob.glob(os.path.join(ridge_dir, "*.npy")):
-#     os.remove(fName)
+
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+print(f"    {script_memory} GB\n")

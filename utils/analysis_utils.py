@@ -147,10 +147,10 @@ def quant_model_analysis(path, drug, lineage=0, cv=True, plot=True, patience=25,
     pred_df = pd.read_csv(os.path.join(path, "test_predictions.csv"))
     history = pd.read_csv(os.path.join(path, "history.csv"))
     
-    # if patience != 0:
-    #     last_epoch = len(history) - patience
-    # else:
-    #     last_epoch = len(history)
+    if patience != 0:
+        last_epoch = len(history) - patience
+    else:
+        last_epoch = len(history)
     
     # print(f"{len(pred_df)} points in validation set")
     # print(f"Trained CNN for {last_epoch} epochs")
@@ -219,7 +219,7 @@ def quant_model_analysis(path, drug, lineage=0, cv=True, plot=True, patience=25,
     summary_df["Lineage"] = lineage
     
     if cv:
-        cv_results = pd.read_csv(os.path.join(path, "bootstrapping/bs_results.csv"))
+        cv_results = pd.read_csv(os.path.join(path, "bootstrapping/replicates_results.csv"))
         cv_results["Lineage"] = lineage
         summary_df = pd.concat([summary_df, cv_results])
 

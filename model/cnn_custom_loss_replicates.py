@@ -30,8 +30,13 @@ drug = kwargs["drug"]
 locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
-N_epochs = kwargs["N_epochs"]
-patience_epochs = None
+patience_epochs = kwargs["patience_epochs"]
+
+# put in a very large number of epochs so that the model doesn't stop running until it meets the stopping criteria 
+if patience_epochs is not None:
+    N_epochs = 10000
+else:
+    N_epochs = kwargs["N_epochs"]
 
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
@@ -50,21 +55,21 @@ bootstrap_output_path = os.path.join(output_path, "bootstrapping")
 if not os.path.isdir(bootstrap_output_path):
     os.makedirs(bootstrap_output_path)
 
-if os.path.isfile(os.path.join(output_path, "pkl_sparse_train.npz")): 
+if os.path.isfile(os.path.join(output_path.replace("_lineage", ""), "pkl_sparse_train.npz")): 
     print("Input one-hot encodings file exists. Proceeding with modeling \n")    
 else:
     print("Making input one-hot encodings file...\n")
     make_geno_pheno_files(**kwargs)
     
 # get longest locus from the pickle file
-X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
+X_h37rv = sparse.load_npz(os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_ref.npz'))
 
 # shape = 1 x 5 x longest_locus x num_loci
 longest_locus = X_h37rv.shape[2]
 del X_h37rv
 
 train_generator = MtbGeneDataset(
-    os.path.join(output_path, 'pkl_sparse_train.npz'),
+    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_train.npz'),
     phenotype_file,
     drug,
     locus_list,
@@ -80,7 +85,7 @@ train_generator = MtbGeneDataset(
 )
     
 val_generator = MtbGeneDataset(
-    os.path.join(output_path, 'pkl_sparse_test.npz'),
+    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_test.npz'),
     phenotype_file,
     drug,
     locus_list,
@@ -110,9 +115,16 @@ results = []
 history_df = []
 
 for rep in range(num_reps):
-    
+
+    if patience_epochs is None:
+        print(f"\nTraining replicate {rep+1}/{num_reps} with an {loss_type} loss for {N_epochs} epochs")
+    else:
+        print(f"\nUsing early stopping for replicate {rep+1}/{num_reps} with an {loss_type} loss and a delay of {patience_epochs} epochs")
+
+    # manual implementation of model callbacks
     val_loss = []
-    print(f"\nTraining replicate {rep+1}/{num_reps} with an {loss_type} loss for {N_epochs} epochs")
+    patience_counter = 0
+    min_loss = 1e3
 
     # initialize the model using the function from cnn_utils and the optimizer
     model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
@@ -176,8 +188,31 @@ for rep in range(num_reps):
 
         val_loss.append(np.sum(val_epoch_loss) / len(df_test))
 
-        if (epoch % 10 == 0) or (epoch == (N_epochs-1)):
-            print(f"Epoch {epoch+1} validation loss: {val_loss[-1]}")
+        if patience_epochs is not None:
+            #if val_loss[-1] < min_loss:
+    
+            # if loss decreases by at least 1%
+            if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
+            
+                print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
+                
+                # save the model because it is better than the previous iteration
+                model.save(os.path.join(output_path, "best_model.h5"))
+    
+                # update min loss, then zero out the patience counter
+                min_loss = val_loss[-1]
+                patience_counter = 0
+                
+            else:
+                patience_counter += 1
+    
+            if patience_counter == patience_epochs:
+                break
+        
+        # train the model for the specified number of epochs
+        else:
+            if (epoch % 10 == 0) or (epoch == (N_epochs-1)):
+                print(f"Epoch {epoch+1} validation loss: {val_loss[-1]}")
           
     model.save(os.path.join(bootstrap_output_path, f"model_{rep}.h5"))
     model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
@@ -207,12 +242,14 @@ for rep in range(num_reps):
     del model
     del optimizer
     del val_loss
+    del min_loss
+    del patience_counter
+    K.clear_session()
     
             
 # save summary statistics from cross-validation
 pd.concat(results, axis=0).to_csv(os.path.join(bootstrap_output_path, "replicates_results.csv"), index=False)
 pd.concat(history_df, axis=1).to_csv(os.path.join(bootstrap_output_path, "history_replicates.csv"), index=False)
-K.clear_session()
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

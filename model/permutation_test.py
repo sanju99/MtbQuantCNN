@@ -25,8 +25,8 @@ drug = kwargs["drug"]
 locus_list = kwargs["locus_list"]
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
-N_epochs = kwargs["N_epochs"]
-patience_epochs = None
+patience_epochs = kwargs["patience_epochs"]
+N_epochs = 1000
 
 output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
@@ -49,12 +49,12 @@ else:
     save_prefix = "quant"
     
 # get longest locus from the pickle file
-X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
+X_h37rv = sparse.load_npz(os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_ref.npz'))
 longest_locus = X_h37rv.shape[2]
 del X_h37rv
 
 val_generator = MtbGeneDataset(
-    os.path.join(output_path, 'pkl_sparse_test.npz'),
+    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_test.npz'),
     phenotype_file,
     drug,
     locus_list,
@@ -90,11 +90,11 @@ for rep in range(num_reps):
     if patience_epochs is None:
         print(f"\nTraining replicate {rep+1}/{num_reps} with {loss_type} loss for {N_epochs} epochs")
     else:
-        print(f"\nTraining replicate {rep+1}/{num_reps} with {loss_type} loss and a delay of {patience_epochs}")
+        print(f"\nTraining replicate {rep+1}/{num_reps} with {loss_type} loss and a delay of {patience_epochs} epochs")
     
     # for each replicate, randomly shuffle the MICs, so get new training data each time. Use entire training set
     train_generator = MtbGeneDataset(
-        os.path.join(output_path, 'pkl_sparse_train.npz'),
+        os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_train.npz'),
         phenotype_file,
         drug,
         locus_list,

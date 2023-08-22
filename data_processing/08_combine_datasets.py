@@ -8,16 +8,10 @@ _, config_file = sys.argv
 
 kwargs = yaml.safe_load(open(config_file, "r"))
 drug = kwargs["drug"]
-locus_list = kwargs["locus_list"]
+genes_list = kwargs["genes_list"]
 binary_thresh = kwargs["binary_thresh"]
 
-# dataframe of start and end coordinates and sense of various genes. START and END are 1-indexed and inclusive (natural numbers)
-known_genes = pd.read_csv("drug_gene_mapping.csv")
-
-# first check that all loci are there
-for locus in locus_list:
-    if locus not in known_genes["Locus Name"].values:
-        raise ValueError(f"{locus} not found in drug_gene_mapping.csv")
+h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
 
 out_dir = f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}"
 training_vcf_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF"
@@ -111,34 +105,34 @@ def get_samples_PASS_prop(fName):
 
 found_loci = 0
 
-for locus in locus_list:
+for gene in genes_list:
 
-    START, END = known_genes.loc[known_genes["Locus Name"]==locus][["Start", "End"]].values[0]
+    START, END = h37Rv_genes.query("Symbol==@gene")[["Start", "End"]].values[0]
     
-    if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt"):
-        print(f"Found {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
+    if os.path.isfile(f"{out_dir}/VCF_QC_files/{gene}_training_PASS_prop.txt"):
+        print(f"Found {out_dir}/VCF_QC_files/{gene}_training_PASS_prop.txt")
         found_loci += 1
     else:
-        print(f"Please create {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'data_intermediate_clean.csv')} {out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt {training_vcf_dir} {START} {END}\n")
+        print(f"bash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'data_intermediate_clean.csv')} {out_dir}/VCF_QC_files/{gene}_training_PASS_prop.txt {training_vcf_dir} {START} {END}\n")
 
 # if all are not found, then don't keep running the script because it will cause errors
-if found_loci < len(locus_list):
-    print(f"Only found {found_loci}/{len(locus_list)} training_PASS_prop.txt files")
+if found_loci < len(genes_list):
+    print(f"Only found {found_loci}/{len(genes_list)} training_PASS_prop.txt files")
     exit()
 
     
 
-for locus in locus_list:
+for gene in genes_list:
     
     # get the dataframe of proportions of PASS/Amb calls in the alignment region
-    training_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{locus}_training_PASS_prop.txt")
+    training_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{gene}_training_PASS_prop.txt")
     
     if len(set(df_train.ROLLINGDB_ID) - set(training_PASS_prop_df.ROLLINGDB_ID)) > 0:
-        raise ValueError(f"Incorrect sample numbers in the {locus} training PASS prop file")
+        raise ValueError(f"Incorrect sample numbers in the {gene} training PASS prop file")
         
     drop_train_samples = list(set(df_train["ROLLINGDB_ID"].values).intersection(training_PASS_prop_df.query("PASS_prop < 0.75")["ROLLINGDB_ID"].values))
     
-    print(f"Removed {len(drop_train_samples)}/{len(df_train)} training isolates with less than 75% PASS or Amb calls in {locus}")
+    print(f"Removed {len(drop_train_samples)}/{len(df_train)} training isolates with less than 75% PASS or Amb calls in {gene}")
     df_train = df_train.query("ROLLINGDB_ID not in @drop_train_samples")
 
     
@@ -147,35 +141,35 @@ if val_present:
 
     found_loci = 0
 
-    for locus in locus_list:
+    for gene in genes_list:
 
-        START, END = known_genes.loc[known_genes["Locus Name"]==locus][["Start", "End"]].values[0]
+        START, END = h37Rv_genes.query("Symbol==@gene")[["Start", "End"]].values[0]
         
-        if os.path.isfile(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt"):
-            print(f"Found {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt")
+        if os.path.isfile(f"{out_dir}/VCF_QC_files/{gene}_validation_PASS_prop.txt"):
+            print(f"Found {out_dir}/VCF_QC_files/{gene}_validation_PASS_prop.txt")
             found_loci += 1
         else:
-            print(f"Please create {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt before running this script! Command:\nbash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'validation_data.csv')} {out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt {validation_vcf_dir} {START} {END}\n")
+            print(f"bash data_processing/QC_scripts/check_pass_proportion.sh {os.path.join(out_dir, 'validation_data.csv')} {out_dir}/VCF_QC_files/{gene}_validation_PASS_prop.txt {validation_vcf_dir} {START} {END}\n")
     
 # if all are not found, then don't keep running the script because it will cause errors
-if found_loci < len(locus_list):
-    print(f"Only found {found_loci}/{len(locus_list)} validation_PASS_prop.txt files")
+if found_loci < len(genes_list):
+    print(f"Only found {found_loci}/{len(genes_list)} validation_PASS_prop.txt files")
     exit()
 
 
 if val_present:
 
-    for locus in locus_list:
+    for gene in genes_list:
         
-        validation_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{locus}_validation_PASS_prop.txt")
+        validation_PASS_prop_df = get_samples_PASS_prop(f"{out_dir}/VCF_QC_files/{gene}_validation_PASS_prop.txt")
     
         if len(set(df_val.ROLLINGDB_ID) - set(validation_PASS_prop_df.ROLLINGDB_ID)) > 0:
-            raise ValueError(f"Incorrect sample numbers in the {locus} validation PASS prop file")
+            raise ValueError(f"Incorrect sample numbers in the {gene} validation PASS prop file")
     
         drop_val_samples = validation_PASS_prop_df.loc[validation_PASS_prop_df["ROLLINGDB_ID"].isin(df_val.ROLLINGDB_ID.values)].query("PASS_prop < 0.75")["ROLLINGDB_ID"].values
         drop_val_samples = list(set(drop_val_samples).intersection(df_val["ROLLINGDB_ID"].values))
         
-        print(f"Removed {len(drop_val_samples)}/{len(df_val)} validation isolates with less than 75% PASS or Amb calls in {locus}")
+        print(f"Removed {len(drop_val_samples)}/{len(df_val)} validation isolates with less than 75% PASS or Amb calls in {gene}")
             
         df_val = df_val.query("ROLLINGDB_ID not in @drop_val_samples")
         df_val["ROLLINGDB_ID"] = df_val["ROLLINGDB_ID"].astype(str)

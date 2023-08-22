@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
-import sys, subprocess, os
+import sys, subprocess, os, tracemalloc
 from Bio import Seq, SeqIO
+
+tracemalloc.start()
 
 data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
 
@@ -34,30 +36,45 @@ with open(os.path.join(data_dir, drug, "isolates.txt"), "w") as file:
 
 print(f"Extracting variants for {len(df_train) + len(df_val)} isolates")
 
-awk_command = "awk -F '\t' 'FNR==NR {values[$1]; next} FNR==1 || $NF in values' " + f"{data_dir}/{drug}/isolates.txt " + f"{data_dir}/isolate_variants.tsv " + f"| sed 's/\t/,/g' > {data_dir}/{drug}/isolate_variants.csv"
+train_isolate_variants = pd.read_csv(f"{data_dir}/trainVal_isolateVariants_AllDrugs.tsv", sep="\t", usecols=["Isolate"])
+missing_isolates = set(df_train.ROLLINGDB_ID) - set(train_isolate_variants.Isolate)
+
+if len(missing_isolates) > 0:
+    print(f"{len(missing_isolates)} isolates are not in {data_dir}/isolate_variants.tsv")
+    print(missing_isolates)
+    exit()
+
+get_isolate_variants_cmd = "awk -F '\t' 'FNR==NR {values[$1]; next} FNR==1 || $NF in values' " + f"{data_dir}/{drug}/isolates.txt " + f"{data_dir}/trainVal_isolateVariants_AllDrugs.tsv " + f"| sed 's/\t/,/g' > {data_dir}/{drug}/isolate_variants.csv"
 
 # create isolate_variants.csv
-subprocess.run(awk_command, shell=True)
+subprocess.run(get_isolate_variants_cmd, shell=True)
 
 # get a list of genes with category 1 mutations in the WHO catalog and save them to another text file
 high_conf_genes = who_variants.query("drug==@drug & confidence=='1) Assoc w R'").gene.unique()
 assert len(h37Rv_genes.query("Start > End")) == 0
 assert len(high_conf_genes) == len(h37Rv_genes.query("Symbol in @high_conf_genes"))
-print(f"Keeping variants in {len(high_conf_genes)} genes with Category 1 R-associated mutations for {drug}")
+print(f"Keeping variants in {high_conf_genes} with Category 1 R-associated mutations for {drug}")
 
 if len(high_conf_genes) > 0:
-    
+
+    # this dataframe contains all variants in any Category 1 gene. The variants themselves may not be 100% accurate because SNPEff does not accurately annotated
+    # multiple SNPs on the same codon that result in a different MNP. This will be fixed in the next script
     isolate_variants = pd.read_csv(f"{data_dir}/{drug}/isolate_variants.csv", usecols=["GENE"])
     keep_idx = isolate_variants.query("GENE.str.contains('|'.join(@high_conf_genes))").index.values
 
     # add 1 to the indices because bash uses 1-indexing, and Python uses 0-indexing, AND the header is included in the index
     pd.Series(keep_idx + 2).to_csv(os.path.join(data_dir, drug, "high_conf_variant_idx.txt"), sep="\t", index=False, header=None)
 
-    awk_command_2 = "awk 'FNR==NR {indices[$1]; next} FNR in indices || FNR==1' " + f"{data_dir}/{drug}/high_conf_variant_idx.txt {data_dir}/{drug}/isolate_variants.csv > {data_dir}/{drug}/isolate_variants_high_conf.csv"
+    get_high_conf_isolate_variants_cmd = "awk 'FNR==NR {indices[$1]; next} FNR in indices || FNR==1' " + f"{data_dir}/{drug}/high_conf_variant_idx.txt {data_dir}/{drug}/isolate_variants.csv > {data_dir}/{drug}/isolate_variants_high_conf.csv"
     
-    subprocess.run(awk_command_2, shell=True)
+    subprocess.run(get_high_conf_isolate_variants_cmd, shell=True)
     subprocess.run(f"gzip -f {data_dir}/{drug}/isolate_variants.csv", shell=True)
 
     # remove extra files to clean up the directories (not because they take up space)
     os.remove(os.path.join(data_dir, drug, "high_conf_variant_idx.txt"))
     os.remove(os.path.join(data_dir, drug, "isolates.txt"))
+
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+print(f"    {script_memory} GB\n")

@@ -42,17 +42,11 @@ while IFS=",", read -r line; do
     
     # ignore header, which is ROLLINGDB_ID
     if [ "$sample_ID" != "ROLLINGDB_ID" ]; then
-        
-        # if echo "$vcf_dir" | grep -q "$search_string"; then
-            # num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb')" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)        
-            # num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
-        # else
 
         # exclude IMPRECISE variants because they are not reliably called by the pilon variant caller
         # include Amb variants, but only if they are Amb only. Exclude Amb,LowCov by excluding LowCov variants
-        num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb') & FILTER != 'LowCov' & INFO/IMPRECISE = 0" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)        
+        num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb') & FILTER != 'LowCov' & INFO/IMPRECISE = 0" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
         num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
-        # fi
 
         prop_pass=$(echo "scale=4; $num_pass / $num_var" | bc)
         

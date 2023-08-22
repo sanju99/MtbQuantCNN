@@ -4,7 +4,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import glob, os, yaml, itertools, sys, vcf, sparse
 from evcouplings.align import Alignment
-from sklearn.preprocessing import StandardScaler
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -12,7 +11,7 @@ import Bio.SeqUtils
 import Bio.Data
 import warnings
 warnings.filterwarnings("ignore")
-
+from data_utils import *
 
 h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
 h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
@@ -460,7 +459,9 @@ def get_train_test_val_lineages(df_train, df_test, df_val, lineage_fName="/n/dat
     return train_lineages, test_lineages, val_lineages
 
 
-def get_combined_model_inputs(X, lineages_matrix, model_type, include_lineage):
+
+
+def combine_seqs_with_lineages(X, lineages_matrix, model_type, include_lineage):
     
     if model_type == "CNN":
         
@@ -470,13 +471,11 @@ def get_combined_model_inputs(X, lineages_matrix, model_type, include_lineage):
             model_inputs = [X, np.zeros(len(X)), np.zeros(len(X))]
         
     elif model_type == "Regression":
-        
-        scaler = StandardScaler()
-        
+                
         if include_lineage:
-            model_inputs = scaler.fit_transform(np.concatenate([X, lineages_matrix.values], axis=1))
+            model_inputs = np.concatenate([X, lineages_matrix.values], axis=1)
         else:
-            model_inputs = scaler.fit_transform(X)
+            model_inputs = X.copy()
         
     else:
         raise ValueError(f"{model_type} is not a valid model type!")
@@ -485,7 +484,9 @@ def get_combined_model_inputs(X, lineages_matrix, model_type, include_lineage):
 
 
 
+    
 ###################### CATALOG BASED CLASSIFICATION ######################
+
 
 
 def mutation_catalog_with_bootstrapping(df, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats=["Sensitivity", "Specificity", "AUC", "Accuracy", "Balanced_Acc"]):
@@ -523,8 +524,10 @@ def mutation_catalog_with_bootstrapping(df, drug, who_variants_df, isolate_varia
 
 
 
-def classify_using_mutation_catalog(drug, data_path, who_variants_df, isolate_variants_df, binary_thresh, return_stats=["Sensitivity", "Specificity", "AUC", "Accuracy", "Balanced_Acc"]):
+def classify_using_mutation_catalog(drug, data_path, who_variants_df, binary_thresh, return_stats=["Sensitivity", "Specificity", "AUC", "Accuracy", "Balanced_Acc"]):
 
+    isolate_variants_df = pd.read_csv(os.path.join(data_path, drug, "isolate_variants_fixed_annot.csv"))
+    
     df_train = pd.read_csv(os.path.join(data_path, drug, "data_for_model.csv")).query("category=='original_train_set'")
     df_test = pd.read_csv(os.path.join(data_path, drug, "data_for_model.csv")).query("category=='original_test_set'")
     df_val = pd.read_csv(os.path.join(data_path, drug, "validation_data_for_model.csv"))
@@ -544,77 +547,77 @@ def classify_using_mutation_catalog(drug, data_path, who_variants_df, isolate_va
 
 
 
-def get_new_aln_for_regression(isolate_order,
-                               locus_list,
-                               results_dir,
-                               fasta_dir
-                              ):
+# def get_new_aln_for_regression(isolate_order,
+#                                locus_list,
+#                                results_dir,
+#                                fasta_dir
+#                               ):
                                   
-    # just need these to get the full alignment length
-    reduced_fastas = glob.glob(os.path.join(results_dir, "ridge", "*_reduced.fasta"))
+#     # just need these to get the full alignment length
+#     reduced_fastas = glob.glob(os.path.join(results_dir, "ridge", "*_reduced.fasta"))
     
-    # Compute the total number of sites in our model by summing the length of all the alignment
-    total_sites = 0
+#     # Compute the total number of sites in our model by summing the length of all the alignment
+#     total_sites = 0
     
-    for file in reduced_fastas:
-        aln = Alignment.from_file(open(file))    
-        total_sites += aln.L
-        del aln
+#     for file in reduced_fastas:
+#         aln = Alignment.from_file(open(file))    
+#         total_sites += aln.L
+#         del aln
     
-    total_seqs = len(isolate_order)
-    print(f"Concatenation of {total_sites} nucleotides across {total_seqs} sequences")
+#     total_seqs = len(isolate_order)
+#     print(f"Concatenation of {total_sites} nucleotides across {total_seqs} sequences")
 
-    # Matrix to store the data for learning
-    X = np.zeros((total_seqs, total_sites), dtype=np.int8)
+#     # Matrix to store the data for learning
+#     X = np.zeros((total_seqs, total_sites), dtype=np.int8)
     
-    current_index = 0
+#     current_index = 0
     
-    for locus in locus_list:
+#     for locus in locus_list:
 
-        if not os.path.isfile(os.path.join(fasta_dir, f"{locus}.fasta")):
-            raise ValueError(f"{os.path.join(fasta_dir, f'{locus}.fasta')} does not exist!")
+#         if not os.path.isfile(os.path.join(fasta_dir, f"{locus}.fasta")):
+#             raise ValueError(f"{os.path.join(fasta_dir, f'{locus}.fasta')} does not exist!")
         
-        aln = Alignment.from_file(open(os.path.join(fasta_dir, f"{locus}.fasta")), alphabet='-ACGT')
-        indices_to_keep = np.load(os.path.join(results_dir, f"ridge/{locus}_indices.npy"))
+#         aln = Alignment.from_file(open(os.path.join(fasta_dir, f"{locus}.fasta")), alphabet='-ACGT')
+#         indices_to_keep = np.load(os.path.join(results_dir, f"ridge/{locus}_indices.npy"))
         
-        # only use sequence alignments with sites for the model. Otherwise get a vectorize error
-        if aln.L != 0:
+#         # only use sequence alignments with sites for the model. Otherwise get a vectorize error
+#         if aln.L != 0:
 
-            # the fasta files contain sequences for all isolates. Keep only the isolates in the phenotypes file
-            # need indices for splitting alignment in evcouplings
-            # remove all possible file extensions
-            keep_idx = [i for i, name in enumerate(aln.ids) if os.path.basename(name).replace(".eff", "").replace(".vcf", "") in isolate_order]
-            assert len(keep_idx) == len(isolate_order)
+#             # the fasta files contain sequences for all isolates. Keep only the isolates in the phenotypes file
+#             # need indices for splitting alignment in evcouplings
+#             # remove all possible file extensions
+#             keep_idx = [i for i, name in enumerate(aln.ids) if os.path.basename(name).replace(".eff", "").replace(".vcf", "") in isolate_order]
+#             assert len(keep_idx) == len(isolate_order)
 
-            subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_idx) 
-            subset_alignment.ids = [os.path.basename(x).replace(".eff", "").replace(".vcf", "") for x in subset_alignment.ids]
-            subset_alignment.id_to_index = {x:idx for idx,x in enumerate(subset_alignment.ids)}
+#             subset_alignment = aln.select(columns=indices_to_keep, sequences=keep_idx) 
+#             subset_alignment.ids = [os.path.basename(x).replace(".eff", "").replace(".vcf", "") for x in subset_alignment.ids]
+#             subset_alignment.id_to_index = {x:idx for idx,x in enumerate(subset_alignment.ids)}
             
-            # Get the indices that would correctly reorder the alignment to match isolate_order
-            reorder_index = [subset_alignment.id_to_index[x] for x in isolate_order if x in list(subset_alignment.id_to_index.keys())]
+#             # Get the indices that would correctly reorder the alignment to match isolate_order
+#             reorder_index = [subset_alignment.id_to_index[x] for x in isolate_order if x in list(subset_alignment.id_to_index.keys())]
 
-            if len(reorder_index) != len(list(subset_alignment.id_to_index.keys())):
-                raise ValueError()
+#             if len(reorder_index) != len(list(subset_alignment.id_to_index.keys())):
+#                 raise ValueError()
         
-            # Reorder based on reorder_index
-            subset_alignment.ids = np.array(subset_alignment.ids)[reorder_index]
-            assert sum(isolate_order != subset_alignment.ids) == 0
+#             # Reorder based on reorder_index
+#             subset_alignment.ids = np.array(subset_alignment.ids)[reorder_index]
+#             assert sum(isolate_order != subset_alignment.ids) == 0
 
-            subset_alignment.matrix = subset_alignment.matrix[reorder_index, :]
+#             subset_alignment.matrix = subset_alignment.matrix[reorder_index, :]
 
-            # Tells you which character is the most frequent in each site
-            who_is_max = np.argmax(subset_alignment.frequencies, axis=1)
+#             # Tells you which character is the most frequent in each site
+#             who_is_max = np.argmax(subset_alignment.frequencies, axis=1)
     
-            # Major allele is encoded as 0, minor allele(s) as 1
-            major_minor = subset_alignment.matrix_mapped != who_is_max
+#             # Major allele is encoded as 0, minor allele(s) as 1
+#             major_minor = subset_alignment.matrix_mapped != who_is_max
     
-            # Add the encoding to the X matrix
-            X[:, current_index:(current_index + major_minor.shape[1])] = major_minor
+#             # Add the encoding to the X matrix
+#             X[:, current_index:(current_index + major_minor.shape[1])] = major_minor
     
-            # Keep track of how many sites in X we have filled in
-            current_index = current_index + major_minor.shape[1]
+#             # Keep track of how many sites in X we have filled in
+#             current_index = current_index + major_minor.shape[1]
 
-    return X
+#     return X
 
 
 
@@ -647,52 +650,109 @@ def get_new_aln_for_CNN(df,
 
 
 
-def get_inputs_for_regression(drug,
-                              config_file,
-                             ):
+# def get_inputs_for_regression(drug,
+#                               config_file,
+#                              ):
+
+#     kwargs = yaml.safe_load(open(config_file, "r"))
+    
+#     data_dir = os.path.dirname(kwargs["phenotype_file"])
+#     locus_list = kwargs["locus_list"]
+#     results_dir = kwargs["output_path"]
+#     fasta_dir = kwargs["genotype_input_directory"]
+#     include_lineage = kwargs["include_lineage"]
+    
+#     df_train = pd.read_csv(kwargs["phenotype_file"]).query("category=='original_train_set'")    
+#     df_test = pd.read_csv(kwargs["phenotype_file"]).query("category=='original_test_set'")    
+#     df_val = pd.read_csv(os.path.join(data_dir, "validation_data_for_model.csv"))
+    
+#     X = np.load(os.path.join(results_dir, "ridge", "combined_X.npy"))
+#     X_train = X[df_train.index.values, :]
+#     X_test = X[df_test.index.values, :]
+    
+#     X_val = get_new_aln_for_regression(df_val["ROLLINGDB_ID"].values,
+#                                        locus_list,
+#                                        results_dir,
+#                                        fasta_dir
+#                                       )
+                
+#     train_lineages, test_lineages, val_lineages = get_train_test_val_lineages(df_train, df_test, df_val)
+    
+#     X_train = combine_seqs_with_lineages(X_train, train_lineages, "Regression", include_lineage)
+#     X_test = combine_seqs_with_lineages(X_test, test_lineages, "Regression", include_lineage)
+#     X_val = combine_seqs_with_lineages(X_val, val_lineages, "Regression", include_lineage)
+        
+#     return X_train, X_test, X_val, df_train.reset_index(drop=True), df_test.reset_index(drop=True), df_val.reset_index(drop=True)
+
+
+def get_inputs_for_regression(config_file):
 
     kwargs = yaml.safe_load(open(config_file, "r"))
     
     data_dir = os.path.dirname(kwargs["phenotype_file"])
     locus_list = kwargs["locus_list"]
+    drug = kwargs["drug"]
     results_dir = kwargs["output_path"]
+    ridge_dir = os.path.join(results_dir, "ridge")
     fasta_dir = kwargs["genotype_input_directory"]
     include_lineage = kwargs["include_lineage"]
+
+    # get the pickle file made for the CNN input
+    val_matrix = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")).todense()
+    val_samples = val_matrix.shape[0]    
+    one_hot_encodings = val_matrix.shape[1]
+    longest_locus = val_matrix.shape[2]
+    num_loci = val_matrix.shape[3]
+    assert one_hot_encodings == 5
+
+    if os.path.isfile(os.path.join(ridge_dir, "val_seq_matrix.pkl")):
+
+        X_val = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "val_seq_matrix.pkl"))
+
+    else:
+        # features determined from the train dataset of the ridge regression. Use these exact features for the validation data inputs
+        all_features = pd.read_csv(os.path.join(ridge_dir.replace("_lineage", ""), "all_feature_names.txt"), sep="\t", header=None)[0].values
+        model_features = pd.read_csv(os.path.join(ridge_dir.replace("_lineage", ""), "model_feature_names.txt"), sep="\t", header=None)[0].values
     
-    df_train = pd.read_csv(kwargs["phenotype_file"]).query("category=='original_train_set'")    
-    df_test = pd.read_csv(kwargs["phenotype_file"]).query("category=='original_test_set'")    
+        X_val = []
+        
+        for locus_idx, locus in enumerate(locus_list):
+                                     
+            # convert to a dataframe so that we get the correct columns determined from the train matrix
+            X_val.append(pd.DataFrame(np.reshape(val_matrix[:, :, :, locus_idx], (val_samples, one_hot_encodings * longest_locus), order='F')))
+    
+        # combine the data for all the loci along the columns axis
+        X_val = pd.concat(X_val, axis=1)
+    
+        # keep only columns used to train the original model
+        X_val.columns = all_features
+        X_val = X_val[model_features]
+        X_val.to_pickle(os.path.join(ridge_dir, "val_seq_matrix.pkl"))
+
+    X_val = X_val.values
+    X_train = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "train_seq_matrix.pkl")).values
+    X_test = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "test_seq_matrix.pkl")).values
+
+    df_train = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_train_set'").reset_index(drop=True)    
+    df_test = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_test_set'").reset_index(drop=True)    
     df_val = pd.read_csv(os.path.join(data_dir, "validation_data_for_model.csv"))
-    
-    X = np.load(os.path.join(results_dir, "ridge", "combined_X.npy"))
-    X_train = X[df_train.index.values, :]
-    X_test = X[df_test.index.values, :]
-    
-    X_val = get_new_aln_for_regression(df_val["ROLLINGDB_ID"].values,
-                                       locus_list,
-                                       results_dir,
-                                       fasta_dir
-                                      )
-        
-    scaler = StandardScaler()
-        
+
     train_lineages, test_lineages, val_lineages = get_train_test_val_lineages(df_train, df_test, df_val)
     
-    X_train = get_combined_model_inputs(X_train, train_lineages, "Regression", include_lineage)
-    X_test = get_combined_model_inputs(X_test, test_lineages, "Regression", include_lineage)
-    X_val = get_combined_model_inputs(X_val, val_lineages, "Regression", include_lineage)
-        
+    X_train = combine_seqs_with_lineages(X_train, train_lineages, "Regression", include_lineage)
+    X_test = combine_seqs_with_lineages(X_test, test_lineages, "Regression", include_lineage)
+    X_val = combine_seqs_with_lineages(X_val, val_lineages, "Regression", include_lineage)
+                                  
     return X_train, X_test, X_val, df_train.reset_index(drop=True), df_test.reset_index(drop=True), df_val.reset_index(drop=True)
 
 
 
-
-def get_inputs_for_CNN(drug,
-                       config_file,
-                      ):
+def get_inputs_for_CNN(config_file):
     
     kwargs = yaml.safe_load(open(config_file, "r"))
     
     data_dir = os.path.dirname(kwargs["phenotype_file"])
+    drug = kwargs["drug"]
     locus_list = kwargs["locus_list"]
     results_dir = kwargs["output_path"]
     fasta_dir = kwargs["genotype_input_directory"]
@@ -707,24 +767,24 @@ def get_inputs_for_CNN(drug,
     df_test = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_test_set'").reset_index(drop=True)    
     df_val = pd.read_csv(os.path.join(data_dir, "validation_data_for_model.csv"))
 
-    X_train = sparse.load_npz(os.path.join(results_dir, "pkl_sparse_train.npz")).todense()
-    X_test = sparse.load_npz(os.path.join(results_dir, "pkl_sparse_test.npz")).todense()
+    X_train = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_train.npz")).todense()
+    X_test = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_test.npz")).todense()
     
-    if not os.path.isfile(os.path.join(results_dir, "pkl_sparse_val.npz")):
+    if not os.path.isfile(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")):
         
         X_val = get_new_aln_for_CNN(df_val,
                                     locus_list,
                                     fasta_dir
                                    )
-        sparse.save_npz(os.path.join(results_dir, "pkl_sparse_val.npz"), sparse.COO(X_val))
+        sparse.save_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz"), sparse.COO(X_val))
         
     else:
-        X_val = sparse.load_npz(os.path.join(results_dir, "pkl_sparse_val.npz")).todense()
+        X_val = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")).todense()
 
     train_lineages, test_lineages, val_lineages = get_train_test_val_lineages(df_train, df_test, df_val)
     
-    X_train = get_combined_model_inputs(X_train, train_lineages, "CNN", include_lineage)
-    X_test = get_combined_model_inputs(X_test, test_lineages, "CNN", include_lineage)
-    X_val = get_combined_model_inputs(X_val, val_lineages, "CNN", include_lineage)
+    X_train = combine_seqs_with_lineages(X_train, train_lineages, "CNN", include_lineage)
+    X_test = combine_seqs_with_lineages(X_test, test_lineages, "CNN", include_lineage)
+    X_val = combine_seqs_with_lineages(X_val, val_lineages, "CNN", include_lineage)
         
     return X_train, X_test, X_val, df_train.reset_index(drop=True), df_test.reset_index(drop=True), df_val.reset_index(drop=True)

@@ -302,10 +302,10 @@ insertion_sites = insertion_sites.query("len_insertion > 0").reset_index(drop=Tr
 insertion_sites[insertion_sites.columns] = insertion_sites[insertion_sites.columns].astype(int)
 print(insertion_sites)
 
-insertion_sites.to_csv("/home/sak0914/MtbQuantCNN/insertion_sites_dict.csv")
+# insertion_sites.to_csv("/home/sak0914/MtbQuantCNN/insertion_sites_dict.csv")
 
-with open("/n/data1/hms/dbmi/farhat/Sanjana/temp_seq", 'wb') as pickle_file:
-    pickle.dump(seq_dict, pickle_file)
+# with open("/n/data1/hms/dbmi/farhat/Sanjana/temp_seq", 'wb') as pickle_file:
+#     pickle.dump(seq_dict, pickle_file)
 
 # insertion_sites = pd.read_csv("/home/sak0914/MtbQuantCNN/insertion_sites_dict.csv")
 

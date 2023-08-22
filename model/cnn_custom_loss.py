@@ -32,8 +32,9 @@ filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
 patience_epochs = kwargs["patience_epochs"]
 
+# put in a very large number of epochs so that the model doesn't stop running until it meets the stopping criteria 
 if patience_epochs is not None:
-    N_epochs = 1000
+    N_epochs = 10000
 else:
     N_epochs = kwargs["N_epochs"]
 
@@ -52,14 +53,14 @@ df_phenos = pd.read_csv(phenotype_file)
 if not os.path.isdir(output_path):
     os.mkdir(output_path)
 
-if os.path.isfile(os.path.join(output_path, "pkl_sparse_train.npz")): 
+if os.path.isfile(os.path.join(output_path.replace("_lineage", ""), "pkl_sparse_train.npz")): 
     print("Input one-hot encodings file exists. Proceeding with modeling \n")    
 else:
     print("Making input one-hot encodings file...\n")
     make_geno_pheno_files(**kwargs)
     
 # get longest locus from the pickle file
-X_h37rv = sparse.load_npz(os.path.join(output_path, 'pkl_sparse_ref.npz'))
+X_h37rv = sparse.load_npz(os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_ref.npz'))
 
 # shape = 1 x 5 x longest_locus x num_loci
 longest_locus = X_h37rv.shape[2]
@@ -67,7 +68,7 @@ del X_h37rv
 
 
 train_generator = MtbGeneDataset(
-    os.path.join(output_path, 'pkl_sparse_train.npz'),
+    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_train.npz'),
     phenotype_file,
     drug,
     locus_list,
@@ -83,7 +84,7 @@ train_generator = MtbGeneDataset(
 )
     
 val_generator = MtbGeneDataset(
-    os.path.join(output_path, 'pkl_sparse_test.npz'),
+    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_test.npz'),
     phenotype_file,
     drug,
     locus_list,
@@ -171,7 +172,6 @@ if patience_epochs is None:
 else:
     print(f"Using early stopping with an {loss_type} loss and a delay of {patience_epochs} epochs")
 
-
 for epoch in range(N_epochs):
                
     # list to keep track of the losses for each batch
@@ -232,7 +232,6 @@ for epoch in range(N_epochs):
     # train the model for the specified number of epochs
     else:
         print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
-        continue
         
     
 # save the history dataframe to see the additional epochs during the patience period. DON'T SAVE THE MODEL because we want the model at the early stop point

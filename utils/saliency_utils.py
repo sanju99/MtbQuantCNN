@@ -9,8 +9,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 import scipy.stats as st
 
+from data_utils import *
 from inSilicoMut_utils import *
-# sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "model"))
 
 # import reference files
 h37Rv_path = "/n/data1/hms/dbmi/farhat/Sanjana/H37Rv"
@@ -67,105 +67,8 @@ print(len(record.seq))
 
 graphic_record = MyCustomTranslator().translate_record(record)
 
+
 ############ CUSTOM FUNCTIONS TO GENERATE SALIENCY PLOTS ##################
-
-def get_gene_coords(locus_list, fasta_dir):
-    '''
-    Use this function to get a dataframe of coordinates from the bash scripts used to generate the alignment FASTA files for every locus.
-    
-    coords_lst is a list of tuples of the start and end coordinates of the genes
-    '''
-    coords = []
-    sense_lst = []
-    
-    for i, locus in enumerate(locus_list):
-        
-        # read the coordinates from the file
-        with open(os.path.join(fasta_dir, locus + ".sh"), "r") as file:
-            
-            for line in file:
-                if line[0] not in ["#", "\n"] and "make_MSA" in line:
-
-                    # the 2nd, 3rd, and 4th to last strings are start, end, and sense
-                    split_line = line.split(" ")[-4:-1]
-                    coords.append([int(split_line[0]), 
-                                   int(split_line[1])
-                                  ])
-
-                    # sense comes after the coordinates. Also remove any quotes that might be in the string
-                    sense_lst.append(split_line[2].lower().replace('"', '').replace("'", ""))
-
-    gene_coords = pd.DataFrame(coords)
-    gene_coords.columns = ["Start", "End"]
-    gene_coords["Locus"] = locus_list    
-                    
-    gene_coords["Length"] = gene_coords["End"] - gene_coords["Start"]
-    gene_coords["Sense"] = sense_lst
-    gene_coords = gene_coords.set_index("Locus")
-
-    # during this iteration, convert everything to 1-indexing because using np.arange on inverted coordinates is going to get messy
-    # so add 1 to the start position, and then both coordinates should be inclusive
-    for i, row in gene_coords.iterrows():
-        if row["Sense"] == "neg":
-            new_start = row["End"]
-            new_end = row["Start"] + 1
-            gene_coords.loc[i, "Start"] = new_start
-            gene_coords.loc[i, "End"] = new_end
-        else:
-            gene_coords.loc[i, "Start"] = row["Start"] + 1
-            gene_coords.loc[i, "End"] = row["End"]
-            
-    assert sum(gene_coords.query("Sense=='neg'").End > gene_coords.query("Sense=='neg'").Start) == 0
-    assert sum(gene_coords.query("Sense=='pos'").End < gene_coords.query("Sense=='pos'").Start) == 0
-
-    return gene_coords, dict(zip(locus_list, sense_lst))
-
-
-
-def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
-    '''
-    gene_coords is 1-indexed, and for negative sense genes, start position is downstream of end position.
-    '''
-    dfs_list = []
-    
-    for locus in locus_list:
-                
-        # read in the sequences for the fasta file
-        seqs = [(seq.id, seq.seq) for seq in SeqIO.parse(os.path.join(fasta_dir, f"{locus}.fasta"), "fasta")]
-                
-        # H37Rv is the last one
-        H37Rv = list(seqs[-1][1])
-        H37Rv_coords = pd.DataFrame(H37Rv).rename(columns={0:locus})
-
-        # replace deletion characters with nan
-        coords_count = []
-        pos = gene_coords.loc[locus, "Start"]
-        sense = gene_coords.loc[locus, "Sense"]
-        length = gene_coords.loc[locus, "Length"]
-        assert len(H37Rv) >= length
-
-        for _, row in H37Rv_coords.iterrows():
-
-            if row[locus] == "-":
-                coords_count.append(np.nan)
-            else:
-                coords_count.append(pos)
-                if sense == "pos":
-                    pos += 1
-                else:
-                    pos -= 1
-                    
-        # check that the last number is the same as the end position
-        assert pd.Series(coords_count).dropna()[:length].values[-1] == gene_coords.loc[locus, "End"]
-
-        # combine the locus name with the coordinates and remove the sequence
-        H37Rv_coords[locus + "_coord"] = coords_count
-        del H37Rv_coords[locus]
-        dfs_list.append(H37Rv_coords)
-        
-    # this is 1-indexed now and in reverse order for negative sense genes
-    return pd.concat(dfs_list, axis=1).values
-
 
 
 def compute_saliency_score_significance(locus_idx, locus, scores_max, scores_min, permute_max_lst, permute_min_lst, sig_thresh):
