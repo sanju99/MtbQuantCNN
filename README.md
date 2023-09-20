@@ -16,7 +16,6 @@ conda create --file environment.yaml
 
 conda activate tf2_models
 pip install tensorflow
-pip install evcouplings
 ```
 
 ## Instructions for Running on GPU Nodes on O2 Cluster
