@@ -77,11 +77,9 @@ def standardize_MICs(df, drug):
     drug = drug.upper()
     new_midpoints = []
     
-    cryptic_unique = df.loc[df.Path.str.contains('cryptic')][drug].unique()
+    cryptic_unique = df.loc[df.DB_OF_ORIGIN == 'CRyPTIC'][drug].unique()
     cryptic_unique = list(np.sort(np.unique([float(num.strip(">").strip("<=")) for num in cryptic_unique])))
-    
-    # get a gigantic value (impossible to get any MIC at that value for the upper bounds of MICs listed as > N)
-    max_val = np.max(df_new[f"{drug}_midpoint"])*1000
+    print(f"CRyPTIC breakpoints: {cryptic_unique}")
 
     for i, row in df_new.iterrows():
         if "<" in row[drug]:
@@ -93,7 +91,7 @@ def standardize_MICs(df, drug):
         elif ">" in row[drug]:
             val = float(row[drug].strip(">"))
             df_new.loc[i, f"{drug}_lower_bound"] = val
-            df_new.loc[i, f"{drug}_upper_bound"] = max_val
+            df_new.loc[i, f"{drug}_upper_bound"] = np.inf
             df_new.loc[i, f"{drug}_midpoint"] = val
         elif "-" in row[drug]:
             lower = float(row[drug].split("-")[0])
@@ -103,7 +101,7 @@ def standardize_MICs(df, drug):
             df_new.loc[i, f"{drug}_midpoint"] = np.mean([lower, upper])
         else:
             upper = float(row[drug])
-            if "cryptic" in row["Path"]:
+            if row["DB_OF_ORIGIN"] == 'CRyPTIC':
 
                 if cryptic_unique.index(upper) > 0:
                     lower = cryptic_unique[cryptic_unique.index(upper)-1]
@@ -113,7 +111,7 @@ def standardize_MICs(df, drug):
                 df_new.loc[i, f"{drug}_lower_bound"] = lower
 
                 if ">" in row[drug]:
-                    df_new.loc[i, f"{drug}_upper_bound"] = max_val
+                    df_new.loc[i, f"{drug}_upper_bound"] = np.inf
                 else:
                     df_new.loc[i, f"{drug}_upper_bound"] = upper
 
@@ -137,9 +135,7 @@ def get_isolate_paths_and_process(df, output_dir, drug, cryptic_genomic_path, ro
     
     It also separates the data into training and testing subsets.
     '''
-    
-    print(f"Looking for VCF paths...")
-        
+            
     df = df.reset_index(drop=True)
 
     for i, row in df.iterrows():
@@ -153,12 +149,13 @@ def get_isolate_paths_and_process(df, output_dir, drug, cryptic_genomic_path, ro
         # but do it anyway to be complete, it doesn't take much longer to run this
         all_names = list(itertools.product([rollingDB, ID, accession], [rollingDB, ID, accession]))
 
-        # sometimes RollingDB ID and Bioaccession number are the same, so take the unique ones to speed up the code
-        if row["DB_OF_ORIGIN"].lower() == "cryptic":
-            possible_paths = np.unique([os.path.join(cryptic_genomic_path, name[0], "pilon", name[1] + "_full.vcf.gz") for name in all_names])
-        else:
-            possible_paths = np.unique([os.path.join(rollingdb_genomic_path, name[0], "pilon", name[1] + "_full.vcf.gz") for name in all_names])
-
+        # # sometimes RollingDB ID and Bioaccession number are the same, so take the unique ones to speed up the code
+        # if row["DB_OF_ORIGIN"].lower() == "cryptic":
+        #     possible_paths = np.unique([os.path.join(cryptic_genomic_path, name[0], "pilon", name[1] + "_full.vcf.gz") for name in all_names])
+        # else:
+        #     possible_paths = np.unique([os.path.join(rollingdb_genomic_path, name[0], "pilon", name[1] + "_full.vcf.gz") for name in all_names])
+        possible_paths = np.unique([os.path.join("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF", name[0], "pilon", name[1] + ".eff.vcf") for name in all_names])
+        
         # if the expected file exists, add it to the dataframe and break out of the loop because the path was found
         for path_name in possible_paths:
             if os.path.isfile(path_name):             

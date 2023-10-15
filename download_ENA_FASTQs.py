@@ -11,10 +11,14 @@ fastq_dir = "/n/data1/hms/dbmi/farhat/rollingDB/fastq_db"
 
 for sample_id in sample_ids:
 
-    for file in glob.glob(os.path.join(fastq_dir, f"{sample_id}/*.fastq.gz")):
-        print(f"Removed existing file {file}")
-        os.remove(file)
-    
+    if os.path.isdir(os.path.join(fastq_dir, sample_id)):
+        for file in glob.glob(os.path.join(fastq_dir, f"{sample_id}/*.fastq.gz")):
+            print(f"Removed existing file {file}")
+            os.remove(file)
+    else:
+        print(f"Creating output directory {os.path.join(fastq_dir, sample_id)}")
+        os.mkdir(os.path.join(fastq_dir, sample_id))
+        
     proc = subprocess.Popen(f"(wget -q -O - ftp://ftp.sra.ebi.ac.uk/vol1/fastq/{sample_id[:6]}/ | grep -o '00[0-9]' | sort -u)", shell=True, encoding='utf8', stdout=subprocess.PIPE)
     
     # remove trailing newline character. newline separates directories

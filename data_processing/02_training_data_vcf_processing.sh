@@ -31,7 +31,7 @@ cat "$1" | while read vcf_file; do
     isolate=${fName%_*}
     
     # check if the filtered VCF file does not exist. If it doesn't, filter and create it
-    if [ ! -f "$2/$isolate.eff.vcf" ]; then
+    if [ ! -f "$2/$isolate.vcf" ]; then
 
         mkdir "$2/$isolate/pilon"
         

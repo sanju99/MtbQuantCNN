@@ -45,10 +45,16 @@ while IFS=",", read -r line; do
 
         # exclude IMPRECISE variants because they are not reliably called by the pilon variant caller
         # include Amb variants, but only if they are Amb only. Exclude Amb,LowCov by excluding LowCov variants
-        num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb') & FILTER != 'LowCov' & INFO/IMPRECISE = 0" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
-        num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.vcf | awk '$1 !~ /^#/' | wc -l)
+        num_pass=$(bcftools filter -i "POS >= $START & POS <= $END & (FILTER='PASS' || FILTER='Amb') & FILTER != 'LowCov' & INFO/IMPRECISE = 0" $vcf_dir/$sample_ID/pilon/$sample_ID.eff.vcf | awk '$1 !~ /^#/' | wc -l)
+        num_var=$(bcftools filter -i "POS >= $START & POS <= $END" $vcf_dir/$sample_ID/pilon/$sample_ID.eff.vcf | awk '$1 !~ /^#/' | wc -l)
 
-        prop_pass=$(echo "scale=4; $num_pass / $num_var" | bc)
+        # no variants in the region of interest, so insert NaN
+        if [ $num_var -eq 0 ]; then
+            prop_pass="NaN"
+        # if there are variants, compute the proportion that pass
+        else
+            prop_pass=$(echo "scale=6; $num_pass / $num_var" | bc)
+        fi
         
         # write the proportion that are PASS or Amb ONLY (don't include things like LowCov,Amb in the count)
         # if there are no variants in the region of interest, then an empty string is written

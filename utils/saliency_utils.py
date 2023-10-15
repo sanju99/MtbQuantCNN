@@ -174,6 +174,7 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
         cropped_record.plot(ax=ax_coords, with_ruler=False)
 
         ax_coords.set_xlim(start, end)
+        ax_saliency.set_xlim(start, end)
 
         new_coord_df = pd.DataFrame({"Gene": locus, 
                                      "Pos": X_matrix_H37Rv_coords[:, locus_idx], 
@@ -185,17 +186,37 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
         # the line plot should only include significant scores
         if significance:
 
-            ax_saliency.plot(max_significant_df["Pos"], max_significant_df["max_score"], linewidth=0.7, color="black")
-            ax_saliency.plot(min_significant_df["Pos"], min_significant_df["min_score"], linewidth=0.7, color="black")
+            for k in range(len(max_significant_df)):
+
+                # only plot non-zero scores, and plot them as vertical lines to make it cleaner than a continuous line plot, where all the points are connected
+                if max_significant_df["max_score"][k] > 0:
+                    ax_saliency.vlines(x=max_significant_df["Pos"][k], ymin=0, ymax=max_significant_df["max_score"][k], color="black", linewidth=0.7)
+                
+                if min_significant_df["min_score"][k] < 0:
+                    ax_saliency.vlines(x=min_significant_df["Pos"][k], ymin=min_significant_df["min_score"][k], ymax=0, color="black", linewidth=0.7)
+
+            # ax_saliency.plot(max_significant_df["Pos"], max_significant_df["max_score"], linewidth=0.7, color="black")
+            # ax_saliency.plot(min_significant_df["Pos"], min_significant_df["min_score"], linewidth=0.7, color="black")
 
             new_coord_df["Max_Sig"] = max_sig
             new_coord_df["Min_Sig"] = min_sig
 
         # if not significance, plot all scores
         else:
-            ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_max[:, locus_idx], linewidth=0.7, color="black")
-            ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_min[:, locus_idx], linewidth=0.7, color="black")
+            # ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_max[:, locus_idx], linewidth=0.7, color="black")
+            # ax_saliency.plot(X_matrix_H37Rv_coords[:, locus_idx], combined_min[:, locus_idx], linewidth=0.7, color="black")
 
+            for k in range(len(combined_max[:, locus_idx])):
+                
+                # only plot non-zero scores, and plot them as vertical lines to make it cleaner than a continuous line plot, where all the points are connected
+                if combined_max[:, locus_idx][k] > 0:
+                    ax_saliency.vlines(x=X_matrix_H37Rv_coords[:, locus_idx][k], ymin=0, ymax=combined_max[:, locus_idx][k], color="black", linewidth=0.7)
+                
+                if combined_min[:, locus_idx][k] < 0:
+                    ax_saliency.vlines(x=X_matrix_H37Rv_coords[:, locus_idx][k], ymin=combined_min[:, locus_idx][k], ymax=0, color="black", linewidth=0.7)
+
+        # plot a black line for the x-axis at y = 0
+        ax_saliency.hlines(y=0, xmin=start, xmax=end, linewidth=0.7, color='black')
         sns.despine(ax=ax_saliency, top=True, right=True, left=True, bottom=True)
         ax_coords.set_ylabel("saliency")
         
@@ -270,7 +291,7 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
         seq_df = pd.DataFrame(seq_lst)
         seq_df.columns = ["Isolate", "Seq"]
         
-        # fasta files contain the full VCF file name, without the .vcf extension. So use the Path column in df_phenos. 
+        # fasta files contain the full VCF file name, without the .vcf extension
         # The ROLLINGDB_ID column is just the isolate name, not the full file path
         seq_df["Isolate"] = [isolate.split(".")[0] for isolate in seq_df["Isolate"].values]
         seq_df = seq_df.set_index("Isolate")
@@ -286,10 +307,12 @@ def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
     
     return seq_mat_all_loci
 
-            
-            
-def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/fastas", cat_to_check=["1", "2"], binary=False, save=False, significance=True, sig_thresh=0.05, suffix=""):
-                    
+
+
+
+def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs", cat_to_check=["1", "2"], binary=False, save=False, significance=True, sig_thresh=0.05, suffix=""):
+
+    fasta_dir = os.path.join(fasta_dir, drug, "fastas")
     fastas = [os.path.join(fasta_dir, gene + ".fasta") for gene in locus_list]
     print(f"{len(fastas)} loci!")
     

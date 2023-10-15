@@ -16,7 +16,7 @@ h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/mycobrowser_h37rv_ge
 _, drug = sys.argv
 
 
-df = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/isolate_variants_FULL.tsv", sep="\t")
+df = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/isolate_variants.csv.gz", compression="gzip")
 print(df.shape)
 
 ref_isolates = df.loc[pd.isnull(df["POS"])].Isolate.unique()

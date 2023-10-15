@@ -15,13 +15,20 @@ tracemalloc.start()
 ######## IMPORTANT: START is 0-indexed, END is 1-indexed to be consistent with the previous SNP concatenator in Perl ########
         
 
-if len(sys.argv) == 6:
-    _, PATHS_FILE, START, END, SENSE, OUT_FILE = sys.argv
+if len(sys.argv) == 7:
+    _, PATHS_FILE, START, END, SENSE, OUT_FILE, SAVE_FASTA = sys.argv
     ADDITIONAL_ISOLATES_FILE = None
-elif len(sys.argv) == 7:
-    _, PATHS_FILE, ADDITIONAL_ISOLATES_FILE, START, END, SENSE, OUT_FILE  = sys.argv
+    INSILICO_MUTS_FILE = None
+    
+elif len(sys.argv) == 8:
+    _, PATHS_FILE, ADDITIONAL_ISOLATES_FILE, START, END, SENSE, OUT_FILE, SAVE_FASTA  = sys.argv
+    INSILICO_MUTS_FILE = None
+    
+elif len(sys.argv) == 9:
+    _, PATHS_FILE, ADDITIONAL_ISOLATES_FILE, INSILICO_MUTS_FILE, START, END, SENSE, OUT_FILE, SAVE_FASTA  = sys.argv
+    
 else:
-    raise ValueError(f"Must pass in 6 or 7 command line arguments. You passed in {len(sys.argv)-1}")
+    raise ValueError(f"Must pass in 7-9 command line arguments. You passed in {len(sys.argv)-1}")
 
 START = int(START)
 END = int(END)
@@ -29,13 +36,18 @@ END = int(END)
 SENSE = SENSE.upper()
 assert SENSE in ["POS", "NEG"]
 
+SAVE_FASTA = SAVE_FASTA.upper()
+assert SAVE_FASTA in ["TRUE", "FALSE"]
+
 if not os.path.isfile(PATHS_FILE):
     raise ValueError(f"{PATHS_FILE} is not a file!")
     
 # PATHS_FILE should be a text file of paths
 if PATHS_FILE[-4:] != ".txt":
     raise ValueError(f"{PATHS_FILE} must be a text file!")
-    
+
+add_paths = []
+
 if ADDITIONAL_ISOLATES_FILE is not None:
     
     if not os.path.isfile(ADDITIONAL_ISOLATES_FILE):
@@ -45,14 +57,22 @@ if ADDITIONAL_ISOLATES_FILE is not None:
     if ADDITIONAL_ISOLATES_FILE[-4:] != ".txt":
         raise ValueError(f"{ADDITIONAL_ISOLATES_FILE} must be a text file!")
     
-    add_paths = pd.read_csv(ADDITIONAL_ISOLATES_FILE, sep="\t", header=None)[0].values
+    add_paths += list(pd.read_csv(ADDITIONAL_ISOLATES_FILE, sep="\t", header=None)[0].values)
+
+if INSILICO_MUTS_FILE is not None:
+
+    if not os.path.isfile(INSILICO_MUTS_FILE):
+        raise ValueError(f"{INSILICO_MUTS_FILE} is not a file!")
     
-else:
-    add_paths = []
+    # PATHS_FILE should be a text file of paths
+    if INSILICO_MUTS_FILE[-4:] != ".txt":
+        raise ValueError(f"{INSILICO_MUTS_FILE} must be a text file!")
+    
+    add_paths += list(pd.read_csv(INSILICO_MUTS_FILE, sep="\t", header=None)[0].values)
 
 paths = pd.read_csv(PATHS_FILE, sep="\t", header=None)[0].values
 print(f"Making multiple sequence alignment for {len(paths)} sequences and {len(add_paths)} additional sequences")
-paths = np.concatenate([paths, add_paths], axis=0)
+paths = np.concatenate([paths, np.array(add_paths)], axis=0)
 
 if ".fasta" not in OUT_FILE:
     OUT_FILE = OUT_FILE.split(".")[0] + ".fasta"
@@ -102,7 +122,8 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
             return "missing"
         else:
             af = float(af_lst[0])
-        
+
+    # QUAL field considers read depth, base quality, mapping quality. But it is also on the Phred scale
     if record.QUAL is None:
         qual = 11
     else:
@@ -110,8 +131,12 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
 
     # don't include IMPRECISE variants because they are difficult to reliably impute and often aren't reliable calls anyway
     # unreliability can be due to ambiguous alignments, complex genomic regions, low sequencing coverage, assembly gaps, or segmental duplications
-    # basically these are breakpoints that the variant caller is not confiden
-    if "IMPRECISE" in record.INFO.keys():
+    # basically these are breakpoints that the variant caller is not confident in. If we put Ns, often we get huge runs of Ns, which causes too much noise for the model.
+
+    # pilon was not able to resolve the variants (usually due to large deletions), so leave as reference
+    # Del tag is for deletions, meaning the variant is in a region that is covered by a deletion in another variant
+    # so don't change that variant. It will get changed to - for the deletion, then don't make any further updates
+    if "IMPRECISE" in record.INFO.keys() or "Del" in record.FILTER:
         return "ref"
     
     # the filter field is an empty list of it is PASS, else the list is non-empty
@@ -119,7 +144,6 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
     if len(record.FILTER) > 0 and "Amb" not in record.FILTER:
         return "missing"
     
-    # ambiguous reference or alternative alleles. I think these are very rare though
     # because IMPRECISE is taken care of above, this should only return missing for cases where REF = N or ALT = N
     if "N" in record.REF or "N" in "".join(np.array(record.ALT).astype(str)):
         return "missing"
@@ -138,10 +162,24 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
             return "ref"
         elif af > (1-heteroThresh):
             return "alt"
-        
-    # low SNP quality or multiple bad FILTER tags. i.e. if the field is Del;Amb, it will be ['Del', 'Amb'] in pyVCF. The length of this will be >= 2
-    if qual < qualThresh or len(record.FILTER) > 1:
+
+    # low SNP quality
+    if qual < qualThresh:
         return "missing"
+
+    # base quality, mapping quality, and read depth (measures of certainty about a variant)
+    if 'DP' in record.INFO.keys():
+        if record.INFO['DP'] < 5:
+            return 'missing'
+
+    if 'MQ' in record.INFO.keys():
+        if record.INFO['MQ'] == 0:
+            return 'missing'
+
+    # base quality is 0 for indels, so include this step for only SNPs and MNPs (lengths are the same for REF and ALT)
+    if len(record.REF) == len("".join(np.array(record.ALT).astype(str))) and 'BQ' in record.INFO.keys():
+        if record.INFO['BQ'] < 20:
+            return 'missing'
         
     # if nothing has been returned, then the variant is high quality (there are no REF = ALT records in the input VCF files, so return the alternative variant)
     # the reference variant only gets returned above if FILTER == Amb and AF < 0.25
@@ -239,9 +277,7 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
                                 else:
                                     new_allele.append("-")
     
-                            if len(new_allele) != len(ref_allele):
-                                print(fName)
-                                # exit()
+                            assert len(new_allele) == len(ref_allele)
     
                             # Python will replace all elements if the original and replace string are the same length
                             # add this step so that if the allele extends more than the region of interest, it is truncated
@@ -270,10 +306,7 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
                                 continue
                         
     # check lengths because both of them are lists right now 
-    if len(new_seq) != len(h37Rv_region):
-        print(fName)
-        # exit()
-        
+    assert len(new_seq) == len(h37Rv_region)
     return new_seq
 
 
@@ -289,7 +322,7 @@ seq_dict = {}
 
 for i, fName in enumerate(paths):
     
-    seq_dict[os.path.basename(fName).replace(".vcf", "")] = introduce_snps_indels_single_seq(fName, h37Rv_region, START, END)
+    seq_dict[os.path.basename(fName).replace(".eff", "").replace(".vcf", "")] = introduce_snps_indels_single_seq(fName, h37Rv_region, START, END)
 
     if i % 1000 == 0:
         print(i)
@@ -297,25 +330,18 @@ for i, fName in enumerate(paths):
 print(f"Finished reading {len(seq_dict)} sequences!")
 
 # convert to dataframe for easy querying. Convert everything to integers and keep only indices where gap characters need to be inserted (num_insertion > 0)
-insertion_sites = pd.DataFrame(insertion_dict, index=[0]).T.reset_index().rename(columns={"index": "idx", 0:"len_insertion"})
+insertion_sites = pd.DataFrame(insertion_dict, index=[0]).T.reset_index().rename(columns={"index": "aln_idx", 0:"len_insertion"})
 insertion_sites = insertion_sites.query("len_insertion > 0").reset_index(drop=True)
 insertion_sites[insertion_sites.columns] = insertion_sites[insertion_sites.columns].astype(int)
-print(insertion_sites)
 
-# insertion_sites.to_csv("/home/sak0914/MtbQuantCNN/insertion_sites_dict.csv")
-
-# with open("/n/data1/hms/dbmi/farhat/Sanjana/temp_seq", 'wb') as pickle_file:
-#     pickle.dump(seq_dict, pickle_file)
-
-# insertion_sites = pd.read_csv("/home/sak0914/MtbQuantCNN/insertion_sites_dict.csv")
-
-# with open("/n/data1/hms/dbmi/farhat/Sanjana/temp_seq", 'rb') as pickle_file:
-#     seq_dict = pickle.load(pickle_file)
+insertion_sites_fName = os.path.join(os.path.dirname(OUT_FILE), f"{os.path.basename(OUT_FILE).split('.')[0]}_insertion_sites.csv")
+print(f"Saving dataframe of sites with insertions to {insertion_sites_fName}")
+insertion_sites.to_csv(insertion_sites_fName, index=False)
     
 
 #################################### STEP 2: FILL IN GAP CHARACTERS IN THE REFERENCE SEQUENCE ####################################
 
-
+    
 new_ref_seq = h37Rv_region.copy()
 
 for _, row in insertion_sites.iterrows():
@@ -323,7 +349,7 @@ for _, row in insertion_sites.iterrows():
     # number of gap characters to add
     add_gap = row["len_insertion"]
 
-    new_ref_seq[row["idx"]] = new_ref_seq[row["idx"]] + "-" * add_gap
+    new_ref_seq[row["aln_idx"]] = new_ref_seq[row["aln_idx"]] + "-" * add_gap
         
 # get the reverse complement if negative sense. This function returns the joined sequence. If not, 
 if SENSE == "NEG":
@@ -332,52 +358,48 @@ else:
     new_ref_seq = "".join(new_ref_seq)
 
 print(f"Aligned region size: {len(new_ref_seq)}")
-
-
+    
+    
 #################################### STEP 3: FILL IN GAP CHARACTERS IN ALL SEQUENCES AND WRITE TO THE OUTPUT FILE ####################################
 
 
-with open(OUT_FILE, "w+") as file:
-
-    for isolate, seq in seq_dict.items():
-
-        assert len(seq) == (END - START)
-
-        for _, row in insertion_sites.iterrows():
-
-            # the numbers in insertion_sites have 1 subtracted from them, so they are the number of nucleotides to insert
-            # this is the length that that position should be
-            pos_length = row["len_insertion"] + 1
-
-            # compare the lengths of the nucleotides at the given index and the pos_length (with gap characters)
-            if len(seq[row["idx"]]) < pos_length:
-                seq[row["idx"]] = seq[row["idx"]] + "-" * int(pos_length - len(seq[row["idx"]]))
-
-            # assert len(seq[row["idx"]]) == pos_length
-            if len(seq[row["idx"]]) != pos_length:
-                print(os.path.basename(OUT_FILE).split(".")[0], isolate, len(seq[row["idx"]]), pos_length)
-                # exit()
-
-        # remove X characters, which are used for some insertions
-        # check that the new length matches with the reference sequence, which has already had gap characters inserted
-        seq = "".join(seq).replace("X", "")
-
-        if len(seq) != len(new_ref_seq):
-            print(os.path.basename(OUT_FILE).split(".")[0], isolate, len(seq), len(new_ref_seq))
-
-        # get the reverse complement if negative sense
-        if SENSE == "NEG":
-            seq = reverse_complement(seq)
+if SAVE_FASTA == "TRUE":
+    
+    with open(OUT_FILE, "w+") as file:
+    
+        for isolate, seq in seq_dict.items():
+    
+            assert len(seq) == (END - START)
+    
+            for _, row in insertion_sites.iterrows():
+    
+                # the numbers in insertion_sites have 1 subtracted from them, so they are the number of nucleotides to insert
+                # this is the length that that position should be
+                pos_length = row["len_insertion"] + 1
+    
+                # compare the lengths of the nucleotides at the given index and the pos_length (with gap characters)
+                if len(seq[row["aln_idx"]]) < pos_length:
+                    seq[row["aln_idx"]] = seq[row["aln_idx"]] + "-" * int(pos_length - len(seq[row["aln_idx"]]))
+    
+                assert len(seq[row["aln_idx"]]) == pos_length
+    
+            # remove X characters, which are used for some insertions
+            # check that the new length matches with the reference sequence, which has already had gap characters inserted
+            seq = "".join(seq).replace("X", "")
+            assert len(seq) == len(new_ref_seq)
+    
+            # get the reverse complement if negative sense
+            if SENSE == "NEG":
+                seq = reverse_complement(seq)
+            
+            # write the new sequence to the alignment file
+            file.write(">" + isolate + "\n")
+            file.write(seq + "\n")
         
-        # write the new sequence to the alignment file
-        file.write(">" + isolate + "\n")
-        file.write(seq + "\n")
-    
-
-    # write the reference sequence 
-    file.write(">MT_H37Rv\n")
-    file.write(new_ref_seq + "\n")
-    
+        # write the reference sequence 
+        file.write(">MT_H37Rv\n")
+        file.write(new_ref_seq + "\n")
+        
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

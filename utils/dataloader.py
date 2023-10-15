@@ -14,89 +14,82 @@ from data_utils import *
 
 class MtbGeneDataset(Sequence):
 
-    def __init__(self, sparse_file, phenotype_file, drug, locus_list, train_or_test, binary, cc, shuffle_phenos=False, include_lineage=False, bounded_loss=False, data_idx=None, batch_size=128, shuffle=True):
+    def __init__(self, sparse_file, phenotype_file, drug, locus_list, fasta_dir, binary, cc, train_or_test=None, shuffle_phenos=False, include_lineage=False, include_peptide_length=False, bounded_loss=False, data_idx=None, batch_size=128, shuffle=True):
         '''
         Sparse files for both the training and testing sets are available, so read those. 
-        Use data_idx only when performing cross-validation, where data_idx is train_idx or test_idx
+
+        There is a single pickle file for the sequence matrix input. 
+
+        If train_or_test is specified, then the data will be subsetted to get ONLY the train or test set
+
+        If data_idx is specified, then within the pickle file (after train_or_test has been applied), get the specified indices of the data (actual indices, not sample names)
         '''
         
         # read in the one-hot encoded files and convert from sparse to dense format. read in the phenotypes file
         X = sparse.load_npz(sparse_file)
         df_phenos = pd.read_csv(phenotype_file)
+        
+        # get only the training or testing set
+        if train_or_test is not None:
 
-        # make lineage matrix. Do this before getting only the train or test set so that all lineages are there
-        #lineages = get_lineages_matrix(df_phenos)
-        lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
-        assert len(np.unique(lineages.values)) == 2
-        
-        # get only the training or testing set and subset the lineage matrix too
-        df_phenos = df_phenos.query("category==@train_or_test").reset_index(drop=True)
-        lineages = lineages.loc[df_phenos["ROLLINGDB_ID"]]
-        
-        # include lineage if this argument is True. If not, return NaNs that will get dropped later if the model should not include lineage
-        if include_lineage:
-            # check ordering
-            assert sum(lineages.index.values != df_phenos["ROLLINGDB_ID"].values) == 0
-            lineages = lineages.values
-        else:
-            lineages = np.ones(lineages.shape)*np.nan
+            # get indices to subset the pickle file, then reset the index
+            keep_idx = df_phenos.query("category==@train_or_test").index.values
+            X = X[keep_idx, :]
             
-        assert X.shape[0] == lineages.shape[0]
+            df_phenos = df_phenos.query("category==@train_or_test").reset_index(drop=True)
+
         ids = df_phenos["ROLLINGDB_ID"].values
-        
+
         if binary:
             if f"{drug}_midpoint" in df_phenos.columns:
-                y = (df_phenos[f"{drug}_midpoint"].values > cc).astype(int)
+                y = (df_phenos[f"{drug}_midpoint"].values >= cc).astype(int)
             else:
-                y = df_phenos["phenotype"].values.astype(int)
+                y = df_phenos["Binary"].values.astype(int)
             assert len(np.unique(y)) == 2
         else:
             y = np.log2(df_phenos[f"{drug}_midpoint"]).values
-            
-#             y = []
-            
-#             for _, row in df_phenos.iterrows():
-    
-#                 # the upper bounds for the highest MICs have been changed to be a very large number, so doesn't make sense to 
-#                 # take the midpoint of the lower and upper bounds. So log-transform the lower bound
-#                 if ">" in row[drug]:
-#                     y.append(np.log2(row[f"{drug}_lower_bound"]))
-#                 # can't log-transform the lower bound of the lowest MICs (which is 0), so log-transform the upper bound
-#                 elif "<=" in row[drug] or "<" in row[drug]:
-#                     y.append(np.log2(row[f"{drug}_upper_bound"]))
-#                 else:
-#                     y.append(np.mean([np.log2(row[f"{drug}_lower_bound"]), np.log2(row[f"{drug}_upper_bound"])]))
-                
-#                 # the loss functions will not penalize predictions below the lowest MICs (unless the predicted MIC is negative) or above the highest MICs
 
-#             y = np.array(y)
-#             assert np.inf not in y
-#             assert -np.inf not in y
-
-        # shuffle -- use this for performing the permutation test for saliency scores
-        if shuffle_phenos:
-            np.random.shuffle(y)
-            
-        if bounded_loss:
-            if df_phenos[[f"{drug}_lower_bound", f"{drug}_upper_bound"]].values.min() < 0:
-                raise ValueError("Some MIC bounds are < 0")
-            
-            # some lower bounds are 0, and can't take the logarithm, so exponentiate the prediction later in the bounded loss function
-            lower_bounds = df_phenos[f"{drug}_lower_bound"].values
-            upper_bounds = df_phenos[f"{drug}_upper_bound"].values
-        else:
-            lower_bounds = np.ones(len(df_phenos))*np.nan
-            upper_bounds = np.ones(len(df_phenos))*np.nan        
-        
-        # use this for bootstrapping. If data_idx is passed, then it must be for training data
+        # use this for cross-validation. If data_idx is passed, then it must be for training data
         if data_idx is not None:
             X = X[data_idx, :]
             y = y[data_idx]
-            lineages = lineages[data_idx, :]
-            assert len(X) == len(y) == len(lineages)
             ids = ids[data_idx]
-            lower_bounds = lower_bounds[data_idx]
-            upper_bounds = upper_bounds[data_idx]                
+        
+        if include_lineage:
+            lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
+            assert len(np.unique(lineages.values)) == 2
+
+            # order lineages in the same order as the phenotypes dataframe (which is in the same order as the sparse file)
+            lineages = lineages.loc[df_phenos["ROLLINGDB_ID"]].values
+
+            if data_idx is not None:
+                lineages = lineages[data_idx, :]
+
+        if include_peptide_length:
+
+            locus_peptide_lengths = pd.read_csv(os.path.join(os.path.dirname(sparse_file).replace('_lineage', '').replace('_peptide', ''), "locus_peptide_lengths.csv"), index_col=[0])
+
+            # reorder the isolates to match the rest of the data, then get the values to make it a matrix
+            locus_peptide_lengths = locus_peptide_lengths.loc[df_phenos["ROLLINGDB_ID"]].values
+
+            if data_idx is not None:
+                locus_peptide_lengths = locus_peptide_lengths[data_idx, :]
+                    
+        if bounded_loss:
+            lower_bounds = df_phenos[f"{drug}_lower_bound"].values
+            upper_bounds = df_phenos[f"{drug}_upper_bound"].values
+
+            if data_idx is not None:
+                lower_bounds = lower_bounds[data_idx]
+                upper_bounds = upper_bounds[data_idx]   
+            
+        # shuffle -- use this for performing the permutation test for saliency scores. WORKS IN PLACE
+        # need to shuffle all 3 arrays because the custom loss function for ordinal regression relies on lower_bounds and upper_bounds NOT y actually
+        # though technically don't need y at all, but keep in case we switch back to an older loss function where it is used
+        if shuffle_phenos:
+            np.random.shuffle(y)
+            np.random.shuffle(lower_bounds)
+            np.random.shuffle(upper_bounds)        
 
         # save one-hot encodings in sparse format
         self.one_hot_encodings = X
@@ -104,20 +97,32 @@ class MtbGeneDataset(Sequence):
         self.ID = ids
         self.locus_list = locus_list
         self.longest_locus = X.shape[2]
-        self.lineages = lineages
-        self.lower_bounds = lower_bounds
-        self.upper_bounds = upper_bounds
         
+        self.bounded_loss = bounded_loss        
+        self.include_lineage = include_lineage
+        self.include_peptide_length = include_peptide_length
+
+        if bounded_loss:
+            self.lower_bounds = lower_bounds
+            self.upper_bounds = upper_bounds
+            
         if include_lineage:
             self.num_snps = lineages.shape[1]
+            self.lineages = lineages
         else:
             self.num_snps = 0
+
+        if include_peptide_length:
+            self.num_peptides = locus_peptide_lengths.shape[1]
+            self.peptide_lengths = locus_peptide_lengths
+        else:
+            self.num_peptides = 0
             
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.on_epoch_end()
         
-        print(f"{len(locus_list)} loci, longest locus: {X.shape[2]}, {len(self.pheno)} isolates, {self.num_snps} lineages")
+        print(f"{len(locus_list)} loci, longest locus: {X.shape[2]}, {len(self.pheno)} isolates, {self.num_snps} lineages, {self.num_peptides} summed peptide lengths")
         
     def on_epoch_end(self):
         '''
@@ -138,35 +143,26 @@ class MtbGeneDataset(Sequence):
         '''
         isolate_idx is an array of indices corresponding to indices of isolates in the sparse file
         '''
-        X_batch = self.one_hot_encodings[isolate_idx, :]
-        lineage_batch = self.lineages[isolate_idx, :]
-        lower_batch = self.lower_bounds[isolate_idx]
-        upper_batch = self.upper_bounds[isolate_idx]
+        X_batch = self.one_hot_encodings[isolate_idx, :]     
+
+        inputs_lst = [X_batch.todense()]
         
         # return values for the batch
-        if pd.isnull(lineage_batch).all():
-            if pd.isnull(lower_batch).all():
-                return X_batch.todense(), self.pheno[isolate_idx]
+        if self.include_lineage:
+            if self.include_peptide_length:
+                inputs_lst += [np.concatenate([self.lineages[isolate_idx, :], self.peptide_lengths[isolate_idx, :]], axis=1)]
             else:
-                return [X_batch.todense(), 
-                        lower_batch,
-                        upper_batch
-                       ], self.pheno[isolate_idx]
+                inputs_lst += [self.lineages[isolate_idx, :]]
         else:
-            if pd.isnull(lower_batch).all():
-                return [X_batch.todense(), lineage_batch], self.pheno[isolate_idx]
-            else:
-                return [X_batch.todense(), 
-                        lineage_batch, 
-                        lower_batch, 
-                        upper_batch
-                       ], self.pheno[isolate_idx]
+            if self.include_peptide_length:
+                inputs_lst += [self.peptide_lengths[isolate_idx, :]]
             
-        # return values for the batch
-        if pd.isnull(lineage_batch).all():
-            return X_batch.todense(), self.pheno[isolate_idx]
-        else:
-            return [X_batch.todense(), lineage_batch], self.pheno[isolate_idx]
+        if self.bounded_loss:
+            inputs_lst += [self.lower_bounds[isolate_idx]]
+            inputs_lst += [self.upper_bounds[isolate_idx]]
+
+        return inputs_lst, self.pheno[isolate_idx]
+
 
     def __getitem__(self, batch_idx):
         '''

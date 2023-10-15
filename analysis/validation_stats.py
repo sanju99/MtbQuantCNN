@@ -31,10 +31,9 @@ tracemalloc.start()
 
 
 
-
-def get_results_single_model(X, df, dataset, model_type, config_file, bootstrap=True):
+def get_CNN_results(config_file, keep_idx=None):
     '''
-    X matrices have already been standard scaled using the mean and SD of the training data
+    Only need to used the base model to get predictions for the validation dataset
     '''
     
     kwargs = yaml.safe_load(open(config_file, "r"))
@@ -45,146 +44,211 @@ def get_results_single_model(X, df, dataset, model_type, config_file, bootstrap=
     bounded_loss = kwargs["bounded_loss"]
     filter_size = kwargs["filter_size"]
     include_lineage = kwargs["include_lineage"]
+    BATCH_SIZE = kwargs["batch_size"]
+    binary = kwargs["binary"]
+
+    _, X_test, X_val, _, df_test, df_val = get_inputs_for_CNN(config_file, keep_idx=keep_idx)
+
+    longest_locus = X_test[0].shape[2]
+
+    # at this point, X is a list of length 3 or 4. The first element is the input matrix, the second is the lineages matrix, and the last 2 are the lower and upper bounds
+    # if there are no lineages in the model, there is no second element, and the 3rd and 4th are shifted up        
+    if include_lineage:
+        num_lineages = X_test[1].shape[1]
+    else:
+        num_lineages = 0
+            
+    model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
+    model.load_weights(os.path.join(results_dir, "best_model.h5"))
+
+    if X_val is None:
+        print(X_test[0].shape)
+    else:
+        print(X_test[0].shape, X_val[0].shape)        
+
+        # get and save predictions for the validation data on the base model (not bootstrapped). Also print to see
+        # don't save predictions if working on the subset, just print them to see
+        if keep_idx is None:
+            print(create_summary_df(df_val, model.predict(X_val, batch_size=BATCH_SIZE).flatten(), drug, binary_thresh, num_loci, "CNN", binarize=True, save_fName=os.path.join(results_dir, "validation", "CNN_predictions.csv")))
+        else:
+            print(create_summary_df(df_val, model.predict(X_val, batch_size=BATCH_SIZE).flatten(), drug, binary_thresh, num_loci, "CNN", binarize=True, save_fName=None))
+            
+    # iterate through the bootstrap models
+    results = []
+    
+    for i in range(10):
+
+        # load the weights of the bootstrapped model
+        model.load_weights(os.path.join(results_dir, "bootstrapping", f"model_{i}.h5"))
+
+        # get predictions for the test set (redundant, but it's easy to put them in the same dataframe as the validation set this way)
+        bs_summary_df = create_summary_df(df_test, model.predict(X_test, batch_size=BATCH_SIZE).flatten(), drug, binary_thresh, num_loci, "CNN", binarize=True, save_fName=None)
+        bs_summary_df[["Dataset", "CV"]] = ["Test", i + 1]
+        results.append(bs_summary_df)
+
+        # get predictions for the validation set
+        if X_val is not None:
+            bs_summary_df = create_summary_df(df_val, model.predict(X_val, batch_size=BATCH_SIZE).flatten(), drug, binary_thresh, num_loci, "CNN", binarize=True, save_fName=None)
+            bs_summary_df[["Dataset", "CV"]] = ["Validation", i + 1]
+            results.append(bs_summary_df)
+
+    return pd.concat(results, axis=0)
+
+    
+
+def get_Reg_results(config_file, keep_idx=None):
+    
+    kwargs = yaml.safe_load(open(config_file, "r"))
+    drug = kwargs["drug"]
+    ridge_dir = os.path.join(kwargs["output_path"], "ridge")
+    bootstrap_dir = os.path.join(ridge_dir, "bootstrapping")
+    binary_thresh = kwargs["binary_thresh"]
+    locus_list = kwargs["locus_list"]
+    num_loci = len(locus_list)
+    bounded_loss = kwargs["bounded_loss"]
+    filter_size = kwargs["filter_size"]
+    include_lineage = kwargs["include_lineage"]
     binary = kwargs["binary"]
     BATCH_SIZE = kwargs["batch_size"]
-    
-    # whether to binarize predictions later
-    if binary:
-        binarize = False
-        model_prefix = "binary_"
+    fasta_dir = kwargs["genotype_input_directory"]
+
+    # make dataframes of coordinates
+    gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
+    h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)    
+
+    Reg_train, Reg_test, Reg_val, df_train, df_test, df_val = get_inputs_for_regression(config_file)
+
+    if keep_idx is not None:
+        if df_val is not None:
+            df_val = df_val.iloc[keep_idx]
+            Reg_val = Reg_val.iloc[keep_idx, :]
+
+    if include_lineage:
+        train_lineages, test_lineages, val_lineages = get_train_test_val_lineages(df_train, df_test, df_val)
     else:
-        binarize = True
-        model_prefix = ""
+        train_lineages = None
+        test_lineages = None
+        val_lineages = None
+
+    model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
+
+    # read in the feature names to train the base model
+    feature_names = pd.read_csv(os.path.join(ridge_dir, "model_features.txt"), sep="\t", header=None)[0].values
     
-    if dataset not in ["Train", "Test", "Validation"]:
-        raise ValueError(f"{dataset} is not a valid dataset name")
+    X_train = prepare_model_inputs(Reg_train, "Regression", include_lineage, feature_names, lineages_matrix=train_lineages)  
 
-    if model_type not in ["CNN", "Reg"]:
-        raise ValueError(f"{model_type} is not a valid model type")
-    
-    # at this point, X is a list of length 3 or 4. The first element is the input matrix, the second is the lineages matrix, and the last 2 are the lower and upper bounds
-    # if there are no lineages in the model, there is no second element, and the 3rd and 4th are shifted up
-    if model_type == "CNN":
-        
-        if include_lineage:
-            num_lineages = X[1].shape[1]
-        else:
-            num_lineages = 0
-        
-        longest_locus = X[0].shape[2]
-        
-        model = conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size)
-        model.load_weights(os.path.join(results_dir, f"{model_prefix}best_model.h5"))
-        y_pred = model.predict(X, batch_size=BATCH_SIZE).flatten()        
-    else:
-        model = pickle.load(open(os.path.join(results_dir, "ridge", f"{model_prefix}model.sav"), "rb"))
-        y_pred = np.squeeze(model.predict(X))
+    # standard scale using the mean and SD of the training data
+    train_mean = X_train.mean()
+    train_sd = X_train.std()
 
+    X_test = prepare_model_inputs(Reg_test, "Regression", include_lineage, feature_names, lineages_matrix=test_lineages)
+    X_test = (X_test - train_mean) / train_sd
 
-    # save the predictions for the validation dataset to use later
-    if dataset == "Validation":
-        df_pred = pd.DataFrame({"Isolate": df["ROLLINGDB_ID"].values,
-                                "y_pred": y_pred,
-                                "y_test": np.log2(df[f"{drug}_midpoint"].values)
-                               })
-        df_pred.to_csv(os.path.join(output_path, "validation", f"{model_type}_predictions.csv"), index=False)
-    
-    summary_df = create_summary_df(df, y_pred, drug, binary_thresh, num_loci, model_type, binarize=binarize, save_fName=None)
-    summary_df[["Dataset", "CV"]] = [dataset, 0]
-    summary_df = [summary_df]
-    
-    # perform bootstrapping of all 3 datasets
-    if bootstrap:
-        print(f"Predicting bootstrapped {model_type} models for the {dataset} dataset...")
-        for i in range(10):
-
-            if model_type == "CNN":
-                model.load_weights(os.path.join(results_dir, "bootstrapping", f"model_{i}.h5"))
-                y_pred = model.predict(X, batch_size=BATCH_SIZE).flatten()
-            else:
-                model = pickle.load(open(os.path.join(results_dir, "ridge", "bootstrapping", f"{model_prefix}model_{i}.sav"), "rb")) 
-                y_pred = np.squeeze(model.predict(X))
-
-            bs_summary_df = create_summary_df(df, y_pred, drug, binary_thresh, num_loci, model_type, binarize=True, save_fName=None)
-            bs_summary_df[["Dataset", "CV"]] = [dataset, i + 1]
-            summary_df.append(bs_summary_df)
-
-    return pd.concat(summary_df, axis=0)
-
-
-
-
-
-def get_results_all_datasets(config_file, model_type, bootstrap=True):
-    
-    if model_type not in ["CNN", "Reg"]:
-        raise ValueError(f"{model_type} is not a valid model type")
-
-    # get input matrices for the training, testing, and validation sets
-    if model_type == "Reg":
-        data_func = get_inputs_for_regression
-    else:
-        data_func = get_inputs_for_CNN
-        
-    # inputs are lists with 
-    X_train, X_test, X_val, df_train, df_test, df_val = data_func(config_file)
-    
-    if model_type == "Reg":
-        
-        print(X_train.shape, X_test.shape, X_val.shape)
-
-        # standard scale using the mean and SD of the training data
-        train_mean = X_train.mean()
-        train_sd = X_train.std()
-    
-        X_train = (X_train - train_mean) / train_sd
-        X_test = (X_test - train_mean) / train_sd
+    # combine model inputs with lineages (if so), keep only features used to train the original model, and scale using the mean and SD of the train matrix
+    if Reg_val is not None:
+        X_val = prepare_model_inputs(Reg_val, "Regression", include_lineage, feature_names, lineages_matrix=val_lineages)
         X_val = (X_val - train_mean) / train_sd
-        
+        print(X_test.shape, X_val.shape)
+
+        # get and save predictions for the validation data on the base model (not bootstrapped). Also print to see
+        # don't save predictions if working on the subset, just print them to see
+        if keep_idx is None:
+            print(create_summary_df(df_val, np.squeeze(model.predict(X_val)), drug, binary_thresh, num_loci, "Regression", binarize=True, save_fName=os.path.join(os.path.dirname(ridge_dir), "validation", "Reg_predictions.csv")))
+        else:
+            print(create_summary_df(df_val, np.squeeze(model.predict(X_val)), drug, binary_thresh, num_loci, "Regression", binarize=True, save_fName=None))
     else:
-        print(X_train[0].shape, X_test[0].shape, X_val[0].shape)
+        print(X_test.shape)
+        
+    del X_train
+    del train_mean
+    del train_sd
+        
+    # dataframe of the mean and SD of each bootstrapped sample. Use these for scaling the validation data
+    bs_train_mean_sd = pd.read_csv(os.path.join(bootstrap_dir, "train_mean_sd.csv"))
     
-    train_summary = get_results_single_model(X_train, df_train, "Train", model_type, config_file, bootstrap)
-    test_summary = get_results_single_model(X_test, df_test, "Test", model_type, config_file, bootstrap)
-    val_summary = get_results_single_model(X_val, df_val, "Validation", model_type, config_file, bootstrap)
+    # iterate through the bootstrap models
+    results = []
     
-    df_combined = pd.concat([train_summary, test_summary, val_summary], axis=0).reset_index(drop=True)
+    for i in range(10):
+
+        # load the bootstrapped model
+        bs_model = pickle.load(open(os.path.join(bootstrap_dir, f"model_{i}.sav"), "rb"))
+        bs_feature_names = pd.read_csv(os.path.join(bootstrap_dir, f"model_features_{i}.txt"), sep="\t", header=None)[0].values
+
+        # get the mean and SD of the exact bootstrap training data used to train each model
+        train_mean, train_sd = bs_train_mean_sd.iloc[i, :].values
+
+        # combine model inputs with lineages (if so), keep only features used to train the original model, and scale using the mean and SD of the train matrix
+        X_test = prepare_model_inputs(Reg_test, "Regression", include_lineage, bs_feature_names, lineages_matrix=test_lineages)
+        X_test = (X_test - train_mean) / train_sd
+
+        # get predictions for the test set (redundant, but it's easy to put them in the same dataframe as the validation set this way)
+        bs_summary_df = create_summary_df(df_test, np.squeeze(bs_model.predict(X_test)), drug, binary_thresh, num_loci, "Regression", binarize=True, save_fName=None)
+        bs_summary_df[["Dataset", "CV"]] = ["Test", i + 1]
+        results.append(bs_summary_df)
+
+        if Reg_val is not None:
+            X_val = prepare_model_inputs(Reg_val, "Regression", include_lineage, bs_feature_names, lineages_matrix=val_lineages)
+            X_val = (X_val - train_mean) / train_sd
+            print(X_test.shape, X_val.shape)
+
+            # get predictions for the validation set
+            bs_summary_df = create_summary_df(df_val, np.squeeze(bs_model.predict(X_val)), drug, binary_thresh, num_loci, "Regression", binarize=True, save_fName=None)
+            bs_summary_df[["Dataset", "CV"]] = ["Validation", i + 1]
+            results.append(bs_summary_df)
+        else:
+            print(X_test.shape)
+
+    return pd.concat(results, axis=0)
+
     
-    del_cols = ["Drug", "Num_Loci"]
-    
-    for col in del_cols:
-        if col in df_combined.columns:
-            del df_combined[col]
-            
-    return df_combined
 
 
 
-
-
-# python3 analysis/validation_stats.py Rifampicin config_files/config_rif.yaml
-# python3 analysis/validation_stats.py Moxifloxacin config_files/config_mxf_lineage.yaml
-_, config_file = sys.argv
+_, config_file, val_subset = sys.argv
 
 kwargs = yaml.safe_load(open(config_file, "r"))
+drug = kwargs["drug"]
 output_path = kwargs["output_path"]
 binary_thresh = kwargs["binary_thresh"]
+include_lineage = kwargs["include_lineage"]
 
 if not os.path.isdir(os.path.join(output_path, "validation")):
     os.makedirs(os.path.join(output_path, "validation"))
 
-# catalog_stats = classify_using_mutation_catalog(drug_abbr, data_dir, who_variants_clean, binary_thresh, return_stats=["Sensitivity", "Specificity", "Accuracy", "Balanced_Acc"])
-# catalog_stats.to_csv(os.path.join(output_path, "validation/catalog_stats.csv"), index=False)
+print(f"Saving results to {os.path.join(output_path, 'validation')}")
 
-# quantitative CNN -- do first to create the validation data pickle file
-CNN_stats = get_results_all_datasets(config_file, "CNN", bootstrap=True)
-CNN_stats.to_csv(os.path.join(output_path, "validation/CNN_stats.csv"), index=False)
+if val_subset == "True":
 
-# linear regression
-Reg_stats = get_results_all_datasets(config_file, "Reg", bootstrap=True)
-Reg_stats.to_csv(os.path.join(output_path, "validation/Reg_stats.csv"), index=False)
+    if not os.path.isfile(os.path.join(data_dir, drug, "validation_data_for_model.csv")):
+        print(f"There is no validation data for {drug}. Quitting...")
+        exit()
+    
+    df_val = pd.read_csv(os.path.join(data_dir, drug, "validation_data_for_model.csv"))
+    keep_idx = df_val.query(f"~(WHO_Cat1_mutation == 1 & {drug}_midpoint < @binary_thresh)").index.values
+    print(f"Removing {len(df_val) - len(keep_idx)}/{len(df_val)} isolates with Category 1 mutations and MIC midpoints less than the CC of {binary_thresh}")
+    save_suffix = "_noCat1LowMIC"
+    
+    if len(keep_idx) == 0:
+        print("There are no susceptible validation samples with Category 1 mutations. Exiting...")
+        exit()
+else:
+    keep_idx = None
+    save_suffix = ""
+    
 
-print(Reg_stats.shape, CNN_stats.shape)
+# same classifier with and without lineage, so don't run it for lineage models
+# get catalog results for all three datasets -- train, test, and validation because they were not previously computed, but the quant model metrics were already computed for train and test
+# therefore, the CNN and Regression stats will only be computed on the validation data
+if not include_lineage:
+    catalog_stats = classify_using_mutation_catalog(drug, data_dir, who_variants_clean, binary_thresh, valOnlykeepidx=keep_idx, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"])
+    catalog_stats.to_csv(os.path.join(output_path, f"validation/catalog_stats{save_suffix}.csv"), index=False)
+
+# CNN_stats = get_CNN_results(config_file, keep_idx=keep_idx)
+# CNN_stats.to_csv(os.path.join(output_path, f"validation/CNN_stats{save_suffix}.csv"), index=False)
+
+# Reg_stats = get_Reg_results(config_file, keep_idx=keep_idx)
+# Reg_stats.to_csv(os.path.join(output_path, f"validation/Reg_stats{save_suffix}.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

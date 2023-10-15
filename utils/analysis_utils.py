@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import os, glob, sparse
+import os, glob, sparse, yaml
 from Bio import SeqIO
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 import matplotlib.pyplot as plt
@@ -12,6 +12,78 @@ import scipy.stats as st
 from data_utils import *
 
 
+
+
+def mutation_catalog_with_bootstrapping(df, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats):
+    
+    df = df.rename(columns={"ROLLINGDB_ID": "Isolate"}).reset_index(drop=True)
+    cat1_mutations = who_variants_df.query("drug == @drug & confidence=='1) Assoc w R'").mutation.values
+    isolates_R = isolate_variants_df.query("mutation in @cat1_mutations & FILTER == 'PASS' & Isolate in @df.Isolate.values").Isolate.values
+        
+    df_pred_catalog = df[["Isolate", f"{drug}_midpoint"]]
+    df_pred_catalog["y_test"] = (df[f"{drug}_midpoint"] > binary_thresh).astype(int)
+    df_pred_catalog["y_pred"] = df_pred_catalog["Isolate"].map(dict(zip(isolates_R, np.ones(len(isolates_R))))).fillna(0).astype(int)
+    
+    df_stats = compute_binary_metrics(df_pred_catalog["y_test"], df_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
+    df_stats["CV"] = 0
+    bs_lst = []
+    
+    # perform bootstrapping with 10 replicates
+    for i in range(10):
+        
+        bs_sample_idx = np.random.choice(df.index.values, size=len(df), replace=True)
+        bs_df = df.iloc[bs_sample_idx, :]
+        bs_isolates_R = isolate_variants_df.query("mutation in @cat1_mutations & FILTER == 'PASS' & Isolate in @bs_df.Isolate.values").Isolate.values
+        
+        bs_pred_catalog = bs_df[["Isolate", f"{drug}_midpoint"]]
+        bs_pred_catalog["y_test"] = (bs_df[f"{drug}_midpoint"] > binary_thresh).astype(int)
+        bs_pred_catalog["y_pred"] = bs_pred_catalog["Isolate"].map(dict(zip(bs_isolates_R, np.ones(len(bs_isolates_R))))).fillna(0).astype(int)
+        
+        bs_df_stats = compute_binary_metrics(bs_pred_catalog["y_test"], bs_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
+        bs_df_stats["CV"] = i + 1
+        bs_lst.append(bs_df_stats)
+
+    df_return = pd.concat([df_stats, pd.concat(bs_lst, axis=0)], axis=0).reset_index(drop=True)
+    df_return["Model"] = "Catalog"
+    return df_return
+
+
+
+def classify_using_mutation_catalog(drug, data_path, who_variants_df, binary_thresh, valOnlykeepidx=None, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"]):
+
+    isolate_variants_df = pd.read_csv(os.path.join(data_path, drug, "isolate_variants_fixed_annot.csv"))
+    
+    df_train = pd.read_csv(os.path.join(data_path, drug, "data_for_model.csv")).query("category=='original_train_set'")
+    df_test = pd.read_csv(os.path.join(data_path, drug, "data_for_model.csv")).query("category=='original_test_set'")
+
+    if os.path.isfile(os.path.join(data_path, drug, "validation_data_for_model.csv")):
+        include_val = True
+        df_val = pd.read_csv(os.path.join(data_path, drug, "validation_data_for_model.csv"))
+    else:
+        include_val = False
+
+    if valOnlykeepidx is None:
+        df_train = mutation_catalog_with_bootstrapping(df_train, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+        df_train["Dataset"] = "Train"
+        
+        df_test = mutation_catalog_with_bootstrapping(df_test, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+        df_test["Dataset"] = "Test"
+
+        if include_val:
+            df_val = mutation_catalog_with_bootstrapping(df_val, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+            df_val["Dataset"] = "Validation"
+            
+            return pd.concat([df_train, df_test, df_val], axis=0).reset_index(drop=True)
+        else:
+            return pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
+            
+    else:
+        # only return results for the validation set
+        df_val = mutation_catalog_with_bootstrapping(df_val.iloc[valOnlykeepidx], drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+        df_val["Dataset"] = "Validation"
+        return df_val
+
+    
 
 def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name, binarize=True, save_fName=None):
     
@@ -31,7 +103,7 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
     pred_df["y_pred"] = np.squeeze(y_pred)
     pred_df["y_test"] = np.log2(pred_df["y_test"])
 
-    binned_mae, binned_mse, within_1bin, within_doubling = boundedLoss_predict(pred_df, binary_thresh)
+    binned_mae, binned_mse, within_doubling = boundedLoss_predict(pred_df, binary_thresh)
     
     if save_fName is not None:
         pred_df.to_csv(save_fName, index=False)
@@ -43,7 +115,7 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
                                "Binned_MSE": binned_mse,
                                "MAE": np.mean(np.abs(pred_df["y_pred"]-pred_df["y_test"])),
                                "MSE": np.mean(np.square(pred_df["y_pred"]-pred_df["y_test"])),
-                               "Within_1Bin": within_1bin,
+                               #"Within_1Bin": within_1bin,
                                "Within_doubling": within_doubling,
                                "Spearman": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[0],
                                "Pearson": st.pearsonr(pred_df["y_pred"], pred_df["y_test"])[0],
@@ -57,36 +129,35 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
 
 
 
-def plot_histories(path, rep_CV=False, binary=False, patience_epochs=25, saveName=None):
+def plot_histories(path, binary=False, patience_epochs=25, replicates=True, saveName=None):
         
     if binary:
         prefix = "binary_"
     else:
         prefix = ""
-        
-    if rep_CV:
-        middle_part = "cv"
-    else:
-        middle_part = "bs"
-        
-    histories = pd.read_csv(os.path.join(path, f"bootstrapping/{prefix}history_{middle_part}_replicates.csv"))
+
+    if replicates:
+        histories = pd.read_csv(os.path.join(path, f"bootstrapping/{prefix}histories.csv"))
+    
     history = pd.read_csv(os.path.join(path, f"{prefix}history.csv"))
     history = history.iloc[:-patience_epochs, :]
     
     fig, ax = plt.subplots(figsize=(10, 4))
 
-    for col in histories.columns:
-        single_rep = histories[[col]]
-        single_rep = single_rep.loc[~pd.isnull(single_rep[col])].reset_index(drop=True)
-        #single_rep = single_rep.iloc[:-patience_epochs, :]
-        
-        plt.plot(single_rep.index.values + 1, single_rep[col], color="lightgray")
+    if replicates:
+        for col in histories.columns:
+            single_rep = histories[[col]]
+            single_rep = single_rep.loc[~pd.isnull(single_rep[col])].reset_index(drop=True)
+            single_rep = single_rep.iloc[:-patience_epochs, :]
+            print(f"Trained replicate {col} for {len(single_rep)} epochs (excluding patience period)")
+            
+            plt.plot(single_rep.index.values + 1, single_rep[col], color="lightgray")
 
     # plt.plot(histories.index + 1, histories.mean(axis=1), color="red", linewidth=1.5)
     plt.plot(history.index + 1, history["val_loss"], color="red", linewidth=1.5)
 
     plt.xlabel("Epoch", fontsize=12)
-    plot_title = "Validation Loss" + " for " + os.path.basename(path) + " Model"
+    plot_title = "Tuning Loss" + " for " + os.path.basename(path) + " Model"
     plt.title(plot_title, fontsize=14)
     sns.despine()
     
@@ -142,7 +213,7 @@ def binary_model_analysis(path, drug, cc, lineage=0, cv=True, plot=True, patienc
         return summary_df
     
 
-def quant_model_analysis(path, drug, lineage=0, cv=True, plot=True, patience=25, saveName=None):
+def quant_model_analysis(path, drug, lineage=0, bs=True, plot=True, patience=25, saveName=None):
     
     pred_df = pd.read_csv(os.path.join(path, "test_predictions.csv"))
     history = pd.read_csv(os.path.join(path, "history.csv"))
@@ -215,13 +286,13 @@ def quant_model_analysis(path, drug, lineage=0, cv=True, plot=True, patience=25,
                 os.makedirs(os.path.dirname(saveName))
             plt.savefig(saveName, dpi=300)
             
-    summary_df = pd.read_csv(os.path.join(path, "cnn_results.csv"))
+    summary_df = pd.read_csv(os.path.join(path, "results.csv"))
     summary_df["Lineage"] = lineage
     
-    if cv:
-        cv_results = pd.read_csv(os.path.join(path, "bootstrapping/replicates_results.csv"))
-        cv_results["Lineage"] = lineage
-        summary_df = pd.concat([summary_df, cv_results])
+    if bs:
+        bs_results = pd.read_csv(os.path.join(path, "bootstrapping/results.csv"))
+        bs_results["Lineage"] = lineage
+        summary_df = pd.concat([summary_df, bs_results])
 
     del_cols = ["AUC", "AUC_PR"]
 
@@ -231,6 +302,237 @@ def quant_model_analysis(path, drug, lineage=0, cv=True, plot=True, patience=25,
 
     return summary_df
 
+
+
+
+def get_train_test_val_lineages(df_train, df_test, df_val=None, lineage_fName="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv"):
+    
+    lineages = pd.read_csv(lineage_fName, index_col=[0])
+    lineages.columns = [f"lineageSNP_{col}" for col in lineages.columns]
+    assert len(np.unique(lineages.values)) == 2
+
+    train_lineages = lineages.loc[df_train["ROLLINGDB_ID"].values]
+    assert sum(train_lineages.index.values != df_train["ROLLINGDB_ID"].values) == 0
+
+    test_lineages = lineages.loc[df_test["ROLLINGDB_ID"].values]
+    assert sum(test_lineages.index.values != df_test["ROLLINGDB_ID"].values) == 0
+
+    # include support for no validation data (i.e. Pyrazinamide)
+    if df_val is not None:
+        val_lineages = lineages.loc[df_val["ROLLINGDB_ID"].values]
+        assert sum(val_lineages.index.values != df_val["ROLLINGDB_ID"].values) == 0
+    else:
+        val_lineages = None
+        
+    return train_lineages, test_lineages, val_lineages
+    
+
+
+
+def prepare_model_inputs(X, model_type, include_lineage, feature_names=None, lineages_matrix=None):
+    
+    if model_type == "CNN":
+        
+        if include_lineage:
+            model_inputs = [X, lineages_matrix.values, np.zeros(len(X)), np.zeros(len(X))]
+        else:
+            model_inputs = [X, np.zeros(len(X)), np.zeros(len(X))]
+        
+    elif model_type == "Regression":
+  
+        if include_lineage:
+            
+            # first combine the dataframes to preserve the features, then get only the features specified in the argument
+            assert sum(X.index.values != lineages_matrix.index.values) == 0
+            model_inputs = X.merge(lineages_matrix, left_index=True, right_index=True, how="inner")
+            model_inputs = model_inputs[feature_names].values
+        else:
+            # keep only the features specified in the argument
+            model_inputs = X[feature_names].values
+        
+    else:
+        raise ValueError(f"{model_type} is not a valid model type!")
+        
+    return model_inputs
+
+    
+
+
+def get_inputs_for_regression(config_file):
+
+    kwargs = yaml.safe_load(open(config_file, "r"))
+
+    df_phenos = pd.read_csv(kwargs["phenotype_file"])
+    data_dir = os.path.dirname(kwargs["phenotype_file"])
+    locus_list = kwargs["locus_list"]
+    drug = kwargs["drug"]
+    results_dir = kwargs["output_path"]
+    ridge_dir = os.path.join(results_dir, "ridge")
+    fasta_dir = kwargs["genotype_input_directory"]
+    include_lineage = kwargs["include_lineage"]
+
+    # make dataframes of coordinates
+    gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
+    h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)    
+
+    # this is for samples that don't have data from the MIC-ML consortium, so there is no validation dataset
+    if os.path.isfile(os.path.join(data_dir, "validation_data_for_model.csv")):
+        val_data_present = True
+    else:
+        val_data_present = False
+
+    if val_data_present:
+
+        df_val = pd.read_csv(os.path.join(data_dir, "validation_data_for_model.csv"))
+
+        # get the pickle file made for the CNN input
+        if not os.path.isfile(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")):
+            
+            val_matrix = get_new_aln_for_CNN(df_val,
+                                            locus_list,
+                                            fasta_dir
+                                           )
+            sparse.save_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz"), sparse.COO(val_matrix))
+        else:
+            val_matrix = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")).todense()
+        
+        val_samples = val_matrix.shape[0]  
+        one_hot_encodings = val_matrix.shape[1]
+        longest_locus = val_matrix.shape[2]
+        num_loci = val_matrix.shape[3]
+        assert one_hot_encodings == 5
+
+        ref_matrix = sparse.load_npz(f"{results_dir.replace('_lineage', '')}/pkl_sparse_ref.npz").todense()
+        
+        if os.path.isfile(os.path.join(ridge_dir.replace("_lineage", ""), "val_seq_matrix.pkl")):
+            X_val = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "val_seq_matrix.pkl"))
+    
+        else:
+            print(f"Creating validation data pickle file")
+            
+            X_val = []
+            
+            for locus in locus_list:
+
+                # don't need the reference matrix here
+                single_locus_matrix, _ = get_single_locus_Reg_input(locus, locus_list, df_phenos, val_matrix, ref_matrix, h37Rv_coords)
+                X_val.append(single_locus_matrix)
+        
+            X_val = pd.concat(X_val, axis=1)
+            X_val.index = df_val["ROLLINGDB_ID"].values
+            X_val.to_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "val_seq_matrix.pkl"))
+
+    else:
+        df_val = None
+        X_val = None
+
+    # read in the pickle file of all the sequence features. This should be of length 5 x ALL nucleotides across all loci
+    # this is before anything has been dropped due to redundancy or not being present in the samples
+    X_train_test = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "full_seq_matrix.pkl"))
+
+    df_train = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_train_set'").reset_index(drop=True)    
+    df_test = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_test_set'").reset_index(drop=True)    
+
+    X_train = X_train_test.loc[df_train.ROLLINGDB_ID.values]
+    X_test = X_train_test.loc[df_test.ROLLINGDB_ID.values]
+
+    # X_train, X_test, and X_val should all be dataframes read in from pickle files, so the indices are ROLLLINGDB_ID and the columns are features
+    return X_train, X_test, X_val, df_train, df_test, df_val
+
+
+
+def get_new_aln_for_CNN(df,
+                        locus_list,
+                        fasta_dir
+                       ):
+    
+    # argument = directory that contains the fasta file
+    df_genos = make_genotype_df(locus_list, fasta_dir)
+    df_genos.index = [name.split(".")[0] for name in df_genos.index.values]
+        
+    # the additional new strains to predict MICs for
+    df_genos = df_genos.loc[df["ROLLINGDB_ID"].values]
+    
+    assert len(df_genos) == len(df)
+
+    # Apply one-hot encoding function to get each isolate sequence
+    print('making one hot encoding for...')
+    for locus in locus_list:
+        print("...", locus)
+        lengths = [len(seq) for seq in df_genos[locus]]
+        assert len(np.unique(lengths)) == 1
+        df_genos[locus + "_one_hot"] = df_genos[locus].apply(np.vectorize(get_one_hot))
+        
+    return create_X(df_genos)
+
+
+                           
+
+def get_inputs_for_CNN(config_file, keep_idx=None):
+    
+    kwargs = yaml.safe_load(open(config_file, "r"))
+    
+    data_dir = os.path.dirname(kwargs["phenotype_file"])
+    drug = kwargs["drug"]
+    locus_list = kwargs["locus_list"]
+    results_dir = kwargs["output_path"]
+    fasta_dir = kwargs["genotype_input_directory"]
+    include_lineage = kwargs["include_lineage"]
+
+    binary_thresh = kwargs["binary_thresh"]
+    loss_type = kwargs["loss_type"]
+    binary = kwargs["binary"]
+    bounded_loss = kwargs["bounded_loss"]
+
+    # this is for samples that don't have data from the MIC-ML consortium, so there is no validation dataset
+    if os.path.isfile(os.path.join(data_dir, "validation_data_for_model.csv")):
+        val_data_present = True
+
+        df_val = pd.read_csv(os.path.join(data_dir, "validation_data_for_model.csv"))
+
+        if not os.path.isfile(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")):
+            
+            X_val = get_new_aln_for_CNN(df_val,
+                                        locus_list,
+                                        fasta_dir
+                                       )
+            sparse.save_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz"), sparse.COO(X_val))
+            
+        else:
+            X_val = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")).todense()
+
+    else:
+        val_data_present = False
+        df_val = None
+        X_val = None
+        
+    df_train = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_train_set'")
+    df_test = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_test_set'")    
+
+    X_train_test = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_full.npz")).todense()
+    X_train = X_train_test[df_train.index.values]
+    X_test = X_train_test[df_test.index.values]
+
+    # these are in the same order as df_train, df_test, and df_val, which are in the same order as X_train, X_test, and X_val
+    train_lineages, test_lineages, val_lineages = get_train_test_val_lineages(df_train, df_test, df_val)
+
+    X_train = prepare_model_inputs(X_train, "CNN", include_lineage, feature_names=None, lineages_matrix=train_lineages)
+    X_test = prepare_model_inputs(X_test, "CNN", include_lineage, feature_names=None, lineages_matrix=test_lineages)
+    
+    if val_data_present:
+        if keep_idx is not None:
+            X_val = X_val[keep_idx, :]
+
+            # lineages matrices have samples as the index for merging
+            if include_lineage:
+                val_lineages = val_lineages.iloc[keep_idx, :]
+
+            df_val = df_val.iloc[keep_idx, :]
+            
+        X_val = prepare_model_inputs(X_val, "CNN", include_lineage, feature_names=None, lineages_matrix=val_lineages)
+
+    # X_train, X_test, and X_val should all be numpy arrays (so no indices or columns)
+    return X_train, X_test, X_val, df_train.reset_index(drop=True), df_test.reset_index(drop=True), df_val
 
 # def get_all_higher_lineages(lineage):
 

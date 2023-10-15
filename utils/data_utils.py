@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
-import os, glob, sparse
-from Bio import SeqIO
+import os, glob, sparse, pickle
+from Bio import SeqIO, Seq
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 import sklearn.metrics
 import sklearn.utils
 import scipy.stats as st
+from saliency_utils import *
 
 
 def get_one_hot(sequence):
@@ -99,7 +100,135 @@ def make_genotype_df(locus_list, genotype_input_directory):
         return df_genos
     else:
         return dfs_list[0]
+
+
+
+def create_all_loci_matrices(config_file):
+    '''
+    Creates a dictionary of matrices with every nucleotide for every isolate in the given loci. This is so that we can get the CDS in the next function and compute the lengths of the translated proteins for each sample.
+    '''
+
+    kwargs = yaml.safe_load(open(config_file, "r"))
+    locus_list = kwargs["locus_list"]
+    fasta_dir = kwargs["genotype_input_directory"]
+    df_phenos = pd.read_csv(kwargs["phenotype_file"])
+
+    gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
+    X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
+
+    seq_all_loci = {}
     
+    for locus in locus_list:
+    
+        locus_idx = locus_list.index(locus)
+        locus_pos_lst = []
+    
+        seq_lst = [(seq.id, str(seq.seq)) for seq in SeqIO.parse(os.path.join(fasta_dir, f"{locus}.fasta"), "fasta")]        
+        aln_len = len(seq_lst[0][1])
+        seq_df = pd.DataFrame(seq_lst)
+        seq_df.columns = ["Isolate", "Seq"]
+        
+        # fasta files contain the full VCF file name, without the .vcf extension
+        # The ROLLINGDB_ID column is just the isolate name, not the full file path
+        seq_df["Isolate"] = [isolate.split(".")[0] for isolate in seq_df["Isolate"].values]
+        seq_df = seq_df.set_index("Isolate")
+        seq_df = seq_df.loc[np.concatenate([df_phenos["ROLLINGDB_ID"].values, np.array(["MT_H37Rv"])])]
+        
+        nuc_matrix = seq_df["Seq"].str.split("", expand=True)
+        nuc_matrix = nuc_matrix.iloc[:, 1:-1]
+        
+        pos_including_indels = X_matrix_H37Rv_coords[:nuc_matrix.shape[1], locus_idx]
+        k = 0
+        
+        for pos in pos_including_indels:
+            if pd.isnull(pos):
+                locus_pos_lst.append(f"{locus}_{k}")
+                k += 1
+            else:
+                locus_pos_lst.append(pos)
+    
+        assert sum(pd.isnull(locus_pos_lst)) == 0
+        nuc_matrix.columns = locus_pos_lst
+        seq_all_loci[locus] = nuc_matrix
+
+    return seq_all_loci
+
+
+
+def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
+    '''
+    IMPORTANT: Saliency functions must be run before using this function to make seqDict_fName
+
+    Returns: dataframe with shape N_samples x N_loci. Each value is the length of the corresponding CDS
+    '''
+
+    # get the dataframe of start and end coordinates from mycobrowser
+    h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+
+    # read in dictionary, where each key is a locus and each value is a dataframe of all samples and positions in the alignment with nucleotides
+    seqDict = pickle.load(open(seqDict_fName, "rb"))
+
+    # check that all the same loci are there in both
+    assert len(set(seqDict.keys()).symmetric_difference(locus_list)) == 0
+    
+    locus_peptide_lengths_df = pd.DataFrame(columns=[f"{locus}_length" for locus in locus_list])
+
+    for locus in locus_list:
+
+        with open(os.path.join(fasta_dir, f"{locus}.sh"), "r") as file:
+            for line in file.readlines():
+                if ".py" in line and ".fasta" in line:
+                    lines = line.split(" ")
+        
+        start_end_lst = []
+        
+        for arg in lines:
+            if arg.isdigit():
+                start_end_lst.append(int(arg))
+        
+        assert len(start_end_lst) == 2
+        locus_start, locus_end = start_end_lst[0] + 1, start_end_lst[-1]
+
+        # all the genes in a single locus
+        genes_lst = h37Rv_genes.query("Start >= @locus_start & End <= @locus_end").Symbol.values
+
+        # sum the lengths of all the genes within the locus
+        gene_peptide_lengths_df = pd.DataFrame(columns=[f"{gene}_length" for gene in genes_lst])
+
+        for gene in genes_lst:
+
+            sense = h37Rv_genes.query("Symbol==@gene")['Strand'].values[0]
+
+            # reverse start and end for negative sense genes because the seqDict dataframes are in translated order (which is easy for translating the nucleotide sequences to AAs)
+            if sense == "+":
+                start, end = h37Rv_genes.query("Symbol==@gene")[['Start', 'End']].values[0]
+            else:
+                start, end = h37Rv_genes.query("Symbol==@gene")[['End', 'Start']].values[0]
+
+            # add 1 to the 
+            gene_CDS_df = seqDict[locus].loc[:, start:end+1]
+    
+            # subtract 1 because of the stop character
+            WT_protein_length = int((np.abs(end - start) + 1) / 3) - 1
+    
+            for i, row in gene_CDS_df.iterrows():
+            
+                # remove gap characters because those represent insertions in other samples
+                protein_seq = str(Seq.Seq(''.join(gene_CDS_df.loc[i].values).replace('-', '')).translate())
+            
+                # replace the stop character and everything after it with gap characters
+                if '*' in protein_seq:
+                    stop_idx = list(protein_seq).index('*') # by default gets the first index
+                    protein_seq = protein_seq[:stop_idx] + "*"*(WT_protein_length - stop_idx)
+            
+                protein_seq = protein_seq.replace("*", "")
+                gene_peptide_lengths_df.loc[i, f"{gene}_length"] = len(protein_seq)
+
+        # sum across the genes in the locus
+        locus_peptide_lengths_df[f"{locus}_length"] = gene_peptide_lengths_df.sum(axis=1)
+            
+    return locus_peptide_lengths_df
+
     
     
 def create_X(df_geno_pheno):
@@ -132,7 +261,6 @@ def create_X(df_geno_pheno):
     # Length of longest gene locus
     n_genes = len(shapes)
     L_longest = max(list(shapes.values()))
-    print(f"found {n_genes} genes and longest gene {L_longest}")
 
     # Number of strains in model
     n_strains = df_geno_pheno.shape[0]
@@ -157,28 +285,22 @@ def make_geno_pheno_files(**kwargs):
 
     # get table for phenotypes and add the reference strain to match the format of the FASTA files
     df_phenos = pd.read_csv(kwargs['phenotype_file'])
+    print(f"Found phenotypes for {len(df_phenos)} strains")
     df_phenos.loc[-1, ['ROLLINGDB_ID', 'category']] = np.array(["MT_H37Rv", "reference"], dtype=object)
 
-    # Swap na's for -1's as before 
-    df_phenos.fillna(-1, inplace = True)
-    
     # make table of all genotypes. Index is the identifier
     df_genos = make_genotype_df(kwargs["locus_list"], kwargs['genotype_input_directory'])
     
-    # Some IDs had '-' switched to '_', fix that here
-    df_genos.index = [name.replace("-", "_").split(".")[0] for name in df_genos.index]
-    df_phenos["ROLLINGDB_ID"] = [name.replace("-", "_") for name in df_phenos["ROLLINGDB_ID"]]
-    
-    print(f"found phenotypes for {len(df_phenos)-1} strains")
-
+    df_genos.index = [name.split(".")[0] for name in df_genos.index]
+    df_phenos["ROLLINGDB_ID"] = [name for name in df_phenos["ROLLINGDB_ID"]]
     df_genos.index.rename('ROLLINGDB_ID', inplace=True)
 
     # this makes life easier later. Keep H37Rv in this      
-    df_genos = df_genos.merge(df_phenos[["category", "ROLLINGDB_ID"]], on="ROLLINGDB_ID", how="inner")
+    df_genos = df_phenos[["category", "ROLLINGDB_ID"]].merge(df_genos, on="ROLLINGDB_ID", how="inner")
     df_genos.to_csv(os.path.join(output_path, "df_genos.csv"), index=False)
 
     # Apply one-hot encoding function to get each isolate sequence
-    print('making one hot encoding for...')
+    print('Making one hot encoding for...')
     for locus in kwargs["locus_list"]:
         print("...", locus)
         lengths = [len(seq) for seq in df_genos[locus]]
@@ -199,25 +321,31 @@ def make_geno_pheno_files(**kwargs):
     X_all = create_X(df_geno_pheno)
     X_sparse = sparse.COO(X_all)
 
-    # Works because index was reset to default
-    train_indices = df_geno_pheno.query("category=='original_train_set'").index
-    test_indices = df_geno_pheno.query("category=='original_test_set'").index
-    ref_idx = df_geno_pheno.query("category=='reference'").index
-
-    print("splitting X pkl")
-    X_sparse_train = X_sparse[train_indices, :]
-    X_sparse_test = X_sparse[test_indices, :]
-    X_H37Rv = X_sparse[ref_idx, :]
-
-    print("training set shape", X_sparse_train.shape)
-    print("test set shape", X_sparse_test.shape)
-    print("reference shape", X_H37Rv.shape)
-
-    # Save
-    sparse.save_npz(os.path.join(output_path, "pkl_sparse_train.npz"), X_sparse_train, compressed=False)
-    sparse.save_npz(os.path.join(output_path, "pkl_sparse_test.npz"), X_sparse_test, compressed=False)
+    # last row is H37Rv
+    X_H37Rv = X_sparse[[-1], :]
+    print(f"Reference shape: {X_H37Rv.shape}")
     sparse.save_npz(os.path.join(output_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=False)
+
+    # if split_train_test:
+
+    #     # Works because index was reset to default
+    #     train_indices = df_geno_pheno.query("category=='original_train_set'").index
+    #     test_indices = df_geno_pheno.query("category=='original_test_set'").index
     
+    #     X_sparse_train = X_sparse[train_indices, :]
+    #     X_sparse_test = X_sparse[test_indices, :]
+    #     print(f"Training set shape: {X_sparse_train.shape}")
+    #     print(f"Test set shape: {X_sparse_test.shape}")
+        
+    #     sparse.save_npz(os.path.join(output_path, "pkl_sparse_train.npz"), X_sparse_train, compressed=False)
+    #     sparse.save_npz(os.path.join(output_path, "pkl_sparse_test.npz"), X_sparse_test, compressed=False)
+
+        
+    # H37Rv is the last row, so remove it before saving to avoid redundancy 
+    X_data = X_sparse[:-1, :]
+    print(f"Full data set shape: {X_data.shape}")
+    sparse.save_npz(os.path.join(output_path, "pkl_sparse_full.npz"), X_data, compressed=False)
+
     
     
     
@@ -304,8 +432,11 @@ def compute_proportion_within_1bin(df, y_pred_col, y_true_col, lower_bounds_col,
         pred_MIC, actual_MIC = np.exp2(row[y_pred_col]), np.round(np.exp2(row[y_true_col]), 2)
         lower, upper = row[lower_bounds_col], row[upper_bounds_col]
 
-        assert lower <= actual_MIC
-        assert actual_MIC <= upper
+        if not lower <= actual_MIC:
+            print("lower problem", lower, actual_MIC)
+            
+        if not actual_MIC <= upper:
+            print("upper problem", actual_MIC, upper)
 
         lower_idx = MIC_vals.index(lower)
         upper_idx = MIC_vals.index(upper)
@@ -341,11 +472,7 @@ def compute_proportion_within_1bin(df, y_pred_col, y_true_col, lower_bounds_col,
 
     assert np.nan not in df["within_1bin"].unique()
     df["within_1bin"] = df["within_1bin"].astype(int)
-    
-    # log_binary_thresh = np.log2(binary_thresh)
-    # df.loc[((df[y_pred_col] < log_binary_thresh) & (df[y_true_col] < log_binary_thresh)) | ((df[y_pred_col] > log_binary_thresh) & (df[y_true_col] > log_binary_thresh)), "binary"] = 1
-    # df["binary"] = df["binary"].fillna(0).astype(int)
-    
+
     return df
 
 
@@ -376,27 +503,23 @@ def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col=
     pred_df["within_doubling"] = pred_df["within_doubling"].fillna(0).astype(int)
         
     # make copies to avoid changing the original dataframe
-    lower_bounds = np.copy(pred_df[lower_bounds_col].values)
-    upper_bounds = np.copy(pred_df[upper_bounds_col].values)
+    lower_bounds = np.copy(pred_df[lower_bounds_col].values) #pred_df[lower_bounds_col].values / 2
+    upper_bounds = np.copy(pred_df[upper_bounds_col].values) #pred_df[upper_bounds_col].values * 2
     
     lower_bounds[lower_bounds==0] += 1e-6
     lower_bounds = np.log2(lower_bounds)
     upper_bounds = np.log2(upper_bounds)
-    
-    pred_df["compute_error"] = ((pred_df[y_pred_col] < lower_bounds) | (pred_df[y_pred_col] > upper_bounds)).astype(int)
 
-    # compute error relative to the bounds, NOT RELATIVE TO THE MIDPOINT (y_test) of each isolate
+    # use less than or equal to because the true MIC is in the range (lower, upper], so it is not equal to lower.
+    pred_df["compute_error"] = ((pred_df[y_pred_col] <= lower_bounds) | (pred_df[y_pred_col] > upper_bounds)).astype(int)
+
+    # compute the error relative to the bounds, NOT RELATIVE TO THE MIDPOINT (y_test) of each isolate
     # np.clip returns one of the values from lower_bounds or upper_bounds, whichever is closest to the prediction, if the value is outside the bounds
-    # if the value is within the bounds, the value is returned. In this case, it doesn't matter because compute_error = 0 and y_pred - bound_to_compute_error = 0
     bound_to_compute_error = np.clip(pred_df[y_pred_col].values, lower_bounds, upper_bounds)
+    mae = np.mean((np.abs(bound_to_compute_error - pred_df[y_pred_col])))
+    mse = np.mean((np.square(bound_to_compute_error - pred_df[y_pred_col])))
 
-    mae = np.mean(pred_df["compute_error"] * (np.abs(bound_to_compute_error - pred_df[y_pred_col])))
-    mse = np.mean(pred_df["compute_error"] * (np.square(bound_to_compute_error - pred_df[y_pred_col])))
-    
-    pred_df = compute_proportion_within_1bin(pred_df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col, binary_thresh)
-
-    # return error and proportion within 1 doubline of the measured MIC
-    return mae, mse, pred_df["within_1bin"].mean(), pred_df["within_doubling"].mean() 
+    return mae, mse, pred_df["within_doubling"].mean()
 
 
 
@@ -414,18 +537,26 @@ def get_gene_coords(locus_list, fasta_dir):
         
         # read the coordinates from the file
         with open(os.path.join(fasta_dir, locus + ".sh"), "r") as file:
-            
-            for line in file:
-                if line[0] not in ["#", "\n"] and "make_MSA" in line:
 
-                    # the 2nd, 3rd, and 4th to last strings are start, end, and sense
-                    split_line = line.split(" ")[-4:-1]
-                    coords.append([int(split_line[0]), 
-                                   int(split_line[1])
-                                  ])
+            for line in file.readlines():
+                if ".py" in line and ".fasta" in line:
+                    lines = line.split(" ")
 
-                    # sense comes after the coordinates. Also remove any quotes that might be in the string
-                    sense_lst.append(split_line[2].lower().replace('"', '').replace("'", ""))
+        start_end_lst = []
+    
+        for arg in lines:
+            if arg.isdigit():
+                start_end_lst.append(int(arg))
+        
+        assert len(start_end_lst) == 2
+        coords.append([start_end_lst[0], start_end_lst[-1]])
+
+        if "NEG" in lines or '"NEG"' in lines:
+            sense_lst.append('NEG')
+        elif "POS" in lines or '"POS"' in lines:
+            sense_lst.append('POS')
+        else:
+            raise ValueError("Did not find locus sense!")
 
     gene_coords = pd.DataFrame(coords)
     gene_coords.columns = ["Start", "End"]
@@ -438,17 +569,19 @@ def get_gene_coords(locus_list, fasta_dir):
     # during this iteration, convert everything to 1-indexing because using np.arange on inverted coordinates is going to get messy
     # so add 1 to the start position, and then both coordinates should be inclusive
     for i, row in gene_coords.iterrows():
-        if row["Sense"] == "neg":
+        if row["Sense"].upper() == "NEG":
             new_start = row["End"]
             new_end = row["Start"] + 1
             gene_coords.loc[i, "Start"] = new_start
             gene_coords.loc[i, "End"] = new_end
-        else:
+        elif row["Sense"].upper() == "POS":
             gene_coords.loc[i, "Start"] = row["Start"] + 1
             gene_coords.loc[i, "End"] = row["End"]
+        else:
+            raise ValueError(f"{row['Sense']} is not a valid gene sense!")
             
-    assert sum(gene_coords.query("Sense=='neg'").End > gene_coords.query("Sense=='neg'").Start) == 0
-    assert sum(gene_coords.query("Sense=='pos'").End < gene_coords.query("Sense=='pos'").Start) == 0
+    assert sum(gene_coords.query("Sense=='NEG'").End > gene_coords.query("Sense=='NEG'").Start) == 0
+    assert sum(gene_coords.query("Sense=='POS'").End < gene_coords.query("Sense=='POS'").Start) == 0
 
     return gene_coords, dict(zip(locus_list, sense_lst))
 
@@ -482,14 +615,16 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
                 coords_count.append(np.nan)
             else:
                 coords_count.append(pos)
-                if sense == "pos":
+                if sense.upper() == "POS":
                     pos += 1
-                else:
+                elif sense.upper() == "NEG":
                     pos -= 1
+                else:
+                    raise ValueError(f"{sense} is not a valid gene sense!")
                     
         # check that the last number is the same as the end position
         assert pd.Series(coords_count).dropna()[:length].values[-1] == gene_coords.loc[locus, "End"]
-
+        
         # combine the locus name with the coordinates and remove the sequence
         H37Rv_coords[locus + "_coord"] = coords_count
         del H37Rv_coords[locus]
@@ -497,3 +632,152 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
         
     # this is 1-indexed now and in reverse order for negative sense genes
     return pd.concat(dfs_list, axis=1).values
+
+
+
+
+def remove_redundant_sites_for_Reg(df_seq, df_ref, h37Rv_coords):
+
+    # lineage and peptide length inputs
+    df_non_seq = df_seq[df_seq.columns[df_seq.columns.str.contains("|".join(["lineage", "length"]))]]
+    df_seq = df_seq[df_seq.columns[~df_seq.columns.str.contains("|".join(["lineage", "length"]))]]
+    
+    # this is a dataframe of length 1
+    h37Rv_ref_seq = df_ref[df_ref.columns[(df_ref.loc[0] == 1)]]
+
+    # keep only variables that are not the same everywhere because there is no signal
+    df_keep = df_seq.loc[:, df_seq.nunique() > 1]    
+    keep_pos = ['_'.join(val.split("_")[:-1]) for val in df_keep.columns]
+    
+    # when value_counts = 1, it's for indels, where the only options are indel or not. The four nucleotides are 0 for all samples and get dropped in the previous step
+    single_allele_pos =  pd.Series(keep_pos).value_counts()[pd.Series(keep_pos).value_counts() == 2].index.values
+    multi_allele_pos = pd.Series(keep_pos).value_counts()[pd.Series(keep_pos).value_counts() > 2].index.values
+    
+    # for positions with only two alleles (REF and ALT, essentially), only need to keep one because they are redundant information and perfectly correlated
+    single_allele_pos_keep_cols = []
+    
+    # preferentially keep the alternative allele because it makes interpretability easier
+    for pos in single_allele_pos:
+
+        single_pos_cols = [col for col in df_keep.columns if "_".join(col.split("_")[:-1]) == pos]
+        df_keep_single_pos = df_keep[single_pos_cols]
+        
+        alt_col = list(set(df_keep_single_pos.columns) - set(h37Rv_ref_seq[h37Rv_ref_seq.columns[h37Rv_ref_seq.columns.str.contains(pos)]].columns))
+
+        # this means that the site is biallelic, but NEITHER of the alleles are H37Rv. Randomly select one to keep since they are perfect opposites of each other
+        if len(alt_col) == 2:
+            print(pos, ','.join(alt_col))
+            alt_col = [np.random.choice(alt_col)] # randomly choose one and place it in a list so that it can be added to single_allele_pos_keep_cols, which is a lsit
+        elif len(alt_col) == 0:
+            raise ValueError("Possible problem: no alleles left!")
+        elif len(alt_col) > 2:
+            raise ValueError("Possible problem: multiallelic sites in the single_allele_pos vector")
+
+        if len(alt_col) != 1:
+            print(alt_col)
+            
+        single_allele_pos_keep_cols += list(alt_col)
+    
+    assert len(single_allele_pos_keep_cols) == len(single_allele_pos)
+
+    # concatenate the lineage and peptide length features if they are in this model
+    return pd.concat([df_keep[single_allele_pos_keep_cols], df_keep[df_keep.columns[df_keep.columns.str.contains('|'.join(multi_allele_pos))]], df_non_seq], axis=1)
+
+    
+
+
+def get_single_locus_Reg_input(locus, locus_list, df_phenos, full_matrix, ref_matrix, h37Rv_coords):
+
+    # matrix shape: samples x 5 x locus_length x number of loci
+    locus_idx = locus_list.index(locus)
+    one_hot_encodings = full_matrix.shape[1]
+    longest_locus = full_matrix.shape[2]
+    num_loci = full_matrix.shape[3]
+    assert one_hot_encodings == 5
+
+    # turn the matrices into dataframes for easy manipulation
+    df_train_test = pd.DataFrame(np.reshape(full_matrix[:, :, :, locus_idx], (full_matrix.shape[0], one_hot_encodings * longest_locus), order='F'))
+    df_ref = pd.DataFrame(np.reshape(ref_matrix[:, :, :, locus_idx], (1, one_hot_encodings * longest_locus), order='F'))
+
+    # need to get all the nucleotide positions to name the columns. This makes manipulation easier and is also useful to keep track of which positions went into the model (interpretability)
+    # k is an iterator to keep track of indels
+    seq_coords = []
+    k = 0
+    
+    for coord in h37Rv_coords[:, locus_idx]:
+
+        # indels -- position is NaN, so give unique names that are a concatenation of the locus and an index
+        if pd.isnull(coord):
+            coord = f"indel{k}"
+            k += 1
+        else:
+            coord = str(int(coord))
+            
+        seq_coords += [f"{locus}_{coord}_{nuc}" for nuc in BASE_TO_COLUMN.keys()]
+    
+    assert len(seq_coords) == len(df_train_test.columns)
+    df_train_test.columns = seq_coords
+
+    # this is a dataframe of length 1
+    df_ref.columns = seq_coords
+
+    return df_train_test, df_ref
+
+
+
+
+def make_H37Rv_CDS_length_df(locus_list, fasta_dir):
+    '''
+    IMPORTANT: Saliency functions must be run before using this function to make seqDict_fName
+
+    Two indices: Locus and Gene because there are multiple genes in a single locus.
+
+    The goal of this function is to make a dataframe of the H37Rv protein lengths of all genes in all loci in a model. 
+    Then for insilico mutagenesis, you can get the position of the early stop codon and update the peptide length by subtracting the number of AAs that would be truncated from the H37Rv length
+
+    NOTE: This is not supported for WHO catalog frameshift mutations that cause early stop codons. HOWEVER, in the PZA models that this is being used for, there are no such frameshift mutations
+    because they increase the size of the alignment so they were removed from this analysis step. 
+    '''
+
+    # get the dataframe of start and end coordinates from mycobrowser
+    h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+
+    gene_peptide_lengths_df = pd.DataFrame(columns=["Locus", "Gene", "Length"]).set_index(["Locus", "Gene"])
+
+    for locus in locus_list:
+
+        with open(os.path.join(fasta_dir, f"{locus}.sh"), "r") as file:
+            for line in file.readlines():
+                if ".py" in line and ".fasta" in line:
+                    lines = line.split(" ")
+        
+        start_end_lst = []
+        
+        for arg in lines:
+            if arg.isdigit():
+                start_end_lst.append(int(arg))
+        
+        assert len(start_end_lst) == 2
+        locus_start, locus_end = start_end_lst[0] + 1, start_end_lst[-1]
+
+        # all the genes in a single locus
+        genes_lst = h37Rv_genes.query("Start >= @locus_start & End <= @locus_end").Symbol.values
+        single_locus_peptide_lengths_df = pd.DataFrame(columns=[f"{gene}_length" for gene in genes_lst])
+
+        # sum the lengths of all the genes within the locus
+        WT_protein_length = 0
+
+        for gene in genes_lst:
+
+            sense = h37Rv_genes.query("Symbol==@gene")['Strand'].values[0]
+
+            # reverse start and end for negative sense genes because the seqDict dataframes are in translated order (which is easy for translating the nucleotide sequences to AAs)
+            if sense == "+":
+                start, end = h37Rv_genes.query("Symbol==@gene")[['Start', 'End']].values[0]
+            else:
+                start, end = h37Rv_genes.query("Symbol==@gene")[['End', 'Start']].values[0]
+
+            # subtract 1 because of the stop character
+            gene_peptide_lengths_df.loc[(locus, gene), :] =  int((np.abs(end - start) + 1) / 3) - 1
+
+    return gene_peptide_lengths_df.reset_index()

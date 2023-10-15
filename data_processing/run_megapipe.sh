@@ -1,8 +1,8 @@
 #!/bin/bash 
-#SBATCH -c 1
-#SBATCH -t 4-23:59
-#SBATCH -p medium 
-#SBATCH --mem=50G
+#SBATCH -c 6
+#SBATCH -t 0-03:00
+#SBATCH -p short 
+#SBATCH --mem=30G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -31,6 +31,7 @@ fi
 # command line arguments
 input_file=$1
 out_dir=$2
+redo_samples="/home/sak0914/MtbQuantCNN/megapipe_rerun.tsv"
 
 repair_script="/home/sak0914/anaconda3/envs/bioinformatics/bin/repair.sh" # CHANGE TO WHATEVER FILE PATH IS IN YOUR ENVIRONMENT
 ref_genome="/n/data1/hms/dbmi/farhat/mtb_data/h37rv/h37rv.fna"
@@ -61,9 +62,7 @@ fi
 
 # Read the TSV file line by line, skiping the header. IFS sets the field separator. Here, it is tab
 while IFS=$'\t', read -r sample_ID fastq1_file fastq2_file
-do    
-    # Initialize an error flag of false for each sample
-    error_occurred=false
+do
     
     # create a directory for each sample to be processed. The sample_ID is the name of the directory 
     # in rollingDB/genomic_data or rollingDB/cryptic_output, each sample has a folder named with the sample name
@@ -77,15 +76,19 @@ do
     # sample_log_dir="$sample_out_dir/logs"
     # subdirs_lst=($sample_kraken_dir $sample_bam_dir $sample_pilon_dir $sample_log_dir)
     
-    # check if the final VCF file does not exist. Perform the steps only if it doesn't exist
+    # QC for the numbers of reads (lines / 4) in the FASTQ files
     if [ ! -f "$sample_pilon_dir/${sample_ID}.vcf" ]; then
 
         # check that the original FASTQ files have the same numbers of lines
         FQ1_line_count=$(gunzip -c $fastq1_file | wc -l)
         FQ2_line_count=$(gunzip -c $fastq2_file | wc -l)
         
-        # Compare the counts and raise an error if they are not equal
-        if [ "$FQ1_line_count" -ne "$FQ2_line_count" ]; then
+        # check that neither FASTQ file has no reads
+        if [ $FQ1_line_count -eq 0 ] || [ $FQ2_line_count -eq 0 ]; then
+            echo "Error: $fastq1_file or $fastq2_file has no reads"
+            exit 1
+        # Compare the counts and raise an error if they are not equal 
+        elif [ "$FQ1_line_count" -ne "$FQ2_line_count" ]; then
             echo "Error: $fastq1_file and $fastq2_file have different line counts"
             exit 1
         else
@@ -127,7 +130,7 @@ do
         # also perform deduplication, as a precaution. Duplicate reads can cause issues with bwa alignment later
         
         if [ ! -f "$sample_out_dir/$sample_ID.R2.fastq" ]; then
-            fastp -i "$sample_out_dir/$sample_ID.R1.fixed.fastq" -I "$sample_out_dir/$sample_ID.R2.fixed.fastq" -o "$sample_out_dir/$sample_ID.R1.fastq" -O "$sample_out_dir/$sample_ID.R2.fastq" -h "$sample_out_dir/fastp.html" -j "$sample_out_dir/fastp.json" --length_required $min_length --dedup || { echo error_occurred=true; }
+            fastp -i "$sample_out_dir/$sample_ID.R1.fixed.fastq" -I "$sample_out_dir/$sample_ID.R2.fixed.fastq" -o "$sample_out_dir/$sample_ID.R1.fastq" -O "$sample_out_dir/$sample_ID.R2.fastq" -h "$sample_out_dir/fastp.html" -j "$sample_out_dir/fastp.json" --length_required $min_length --dedup --thread 8 || { echo error_occurred=true; }
         fi
         
         #################################################### STEP 3: ASSIGN READS TO NCBI TAXONOMIC IDS ####################################################
@@ -137,7 +140,7 @@ do
         # also pipe the read classification information (which, by default, is printed to stdout) to an output file
 
         if [ ! -f "$sample_out_dir/${sample_ID}.R_2.kraken.filtered.fastq" ]; then
-            kraken2 --db $kraken_db --threads 4 --paired "$sample_out_dir/$sample_ID.R1.fastq" "$sample_out_dir/$sample_ID.R2.fastq" --report "$sample_kraken_dir/kraken_report" --classified-out "$sample_out_dir/${sample_ID}.R#.kraken.filtered.fastq" > "$sample_kraken_dir/kraken_classifications" || { echo error_occurred=true; }
+            kraken2 --db $kraken_db --threads 8 --paired "$sample_out_dir/$sample_ID.R1.fastq" "$sample_out_dir/$sample_ID.R2.fastq" --report "$sample_kraken_dir/kraken_report" --classified-out "$sample_out_dir/${sample_ID}.R#.kraken.filtered.fastq" > "$sample_kraken_dir/kraken_classifications" || { echo error_occurred=true; }
         fi
         
         
@@ -157,7 +160,7 @@ do
         
         # sort alignment and convert to bam file
         if [ ! -f "$sample_out_dir/$sample_ID.bam" ]; then
-            samtools view -bS "$sample_out_dir/$sample_ID.sam" -m 4G | samtools sort -m 4G > "$sample_out_dir/$sample_ID.bam" || { echo error_occurred=true; }
+            samtools view -b "$sample_out_dir/$sample_ID.sam" -m 4G | samtools sort -m 4G > "$sample_out_dir/$sample_ID.bam" || { echo error_occurred=true; }
         fi
         
         # index alignment, which creates a .bai index file
@@ -171,10 +174,10 @@ do
 
         # remove duplicates using picard. Save deduplicated bam and bam.bai files in the bam directory!
         if [ ! -f "$sample_bam_dir/$sample_ID.dedup.bam" ]; then
-            picard -Xmx6g MarkDuplicates I="$sample_out_dir/$sample_ID.bam" O="$sample_bam_dir/$sample_ID.dedup.bam" REMOVE_DUPLICATES=true M="$sample_bam_dir/$sample_ID.dedup.bam.metrics" ASSUME_SORT_ORDER=coordinate || { echo error_occurred=true; }
+            picard -Xmx6g MarkDuplicates I="$sample_out_dir/$sample_ID.bam" O="$sample_bam_dir/$sample_ID.dedup.bam" REMOVE_DUPLICATES=true M="$sample_bam_dir/$sample_ID.dedup.bam.metrics" ASSUME_SORT_ORDER=coordinate READ_NAME_REGEX='(?:.*.)?([0-9]+)[^.]*.([0-9]+)[^.]*.([0-9]+)[^.]*$' || { echo error_occurred=true; }
         fi
             # for use with post-transition syntax: https://github.com/broadinstitute/picard/wiki/Command-Line-Syntax-Transition-For-Users-(Pre-Transition) 
-            # picard -Xmx6g MarkDuplicates -I "$sample_out_dir/$sample_ID.bam" -O "$sample_bam_dir/$sample_ID.dedup.bam" -REMOVE_DUPLICATES true -M "$sample_bam_dir/$sample_ID.dedup.bam.metrics" -ASSUME_SORT_ORDER coordinate
+            # picard -Xmx6g MarkDuplicates -I "$sample_out_dir/$sample_ID.bam" -O "$sample_bam_dir/$sample_ID.dedup.bam" -REMOVE_DUPLICATES true -M "$sample_bam_dir/$sample_ID.dedup.bam.metrics" -ASSUME_SORT_ORDER coordinate -READ_NAME_REGEX '(?:.*.)?([0-9]+)[^.]*.([0-9]+)[^.]*.([0-9]+)[^.]*$'
         
         # index the deduplicated alignment with samtools, which will create a dedup_bam_file.bai file
         if [ ! -f "$sample_bam_dir/$sample_ID.dedup.bam.bai" ]; then
@@ -190,6 +193,7 @@ do
         # documentation: https://github.com/broadinstitute/pilon/wiki
         # --variant flag will create a VCF file. Otherwise, only a FASTA file is created
         # If you specify the --outdir flag, it will create output FASTA and VCF files with the sample_id prefix in the directory specified after outdir
+        #  --minmq 1 --minqual 20 --mindepth 5
         if [ ! -f "$sample_pilon_dir/$sample_ID.fasta" ]; then
             pilon -Xmx18g --genome "$ref_genome" --bam "$sample_bam_dir/$sample_ID.dedup.bam" --output "$sample_ID" --outdir "$sample_pilon_dir" --variant || { echo error_occurred=true; }
         fi
@@ -198,26 +202,28 @@ do
         bcftools view --types snps,indels,mnps,other "$sample_pilon_dir/$sample_ID.vcf" > "$sample_pilon_dir/${sample_ID}_small.vcf" || { echo error_occurred=true; }
 
         # then delete the full VCF file and the FASTA file to save space and change the name of the small one
-        mv "$sample_pilon_dir/$sample_ID.vcf" "$sample_pilon_dir/${sample_ID}_full.vcf"
+        gzip -c "$sample_pilon_dir/$sample_ID.vcf" > "$sample_pilon_dir/${sample_ID}_full.vcf.gz"
+        rm "$sample_pilon_dir/$sample_ID.vcf"
         rm "$sample_pilon_dir/$sample_ID.fasta"
         mv "$sample_pilon_dir/${sample_ID}_small.vcf" "$sample_pilon_dir/$sample_ID.vcf"
 
         # if any of the steps failed, print an error message and delete the entire directory so that it can be rerun
         # this prevents from the entire job from failing and moves on to the next sample if the current one fails
-        if [ "$error_occurred" = true ]; then
+        #if [ "$error_occurred" = true ]; then
+        if [ ! -z "$error_occurred" ]; then
     
-            # Log an error message
-            echo "Error occurred while processing $sample. Please rerun it."
+            # Add the sample to the redo file so that it can be rerun
+            echo "$sample" >> $redo_samples
     
             # then delete the entire directory so that it can be rerun
-            rm -r $sample_out_dir
+            # rm -r $sample_out_dir
     
-        # if there were no errors, remove the unnecessary files for space
-        else
-            # everything that's needed is in the bam, kraken, or pilon directories, so everything in sample_out_dir can be deleted for space in this version
-            # set maxdepth to 1 so that only files in this directory will be deleted, it will not search in subdirectories
-            # -type f means only files
-            find $sample_out_dir -maxdepth 1 -type f -delete
+        # # if there were no errors, remove the unnecessary files for space
+        # else
+        #     # everything that's needed is in the bam, kraken, or pilon directories, so everything in sample_out_dir can be deleted for space in this version
+        #     # set maxdepth to 1 so that only files in this directory will be deleted, it will not search in subdirectories
+        #     # -type f means only files
+        #     find $sample_out_dir -maxdepth 1 -type f -delete
         fi
         
     else

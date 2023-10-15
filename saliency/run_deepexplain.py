@@ -10,9 +10,10 @@ from deepexplain.tensorflow import DeepExplain
 # utils files are in the model folder
 sys.path.append("utils")
 from model_utils import *
+from data_utils import *
 from dataloader import MtbGeneDataset
 
-# disable v2 stuff to make this compatible with TF v2 models. This was suggested in a pull request in DeepExplain
+# This was suggested in a pull request in the DeepExplain repo to make this compatible with TF v2 models.
 tf.compat.v1.disable_v2_behavior()
 tf.compat.v1.disable_eager_execution()
 
@@ -40,6 +41,7 @@ genotype_input_directory = kwargs["genotype_input_directory"]
 binary = kwargs["binary"]
 binary_thresh = kwargs["binary_thresh"]
 include_lineage = kwargs["include_lineage"]
+include_peptide_length = kwargs["include_peptide_length"]
 
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
@@ -53,30 +55,54 @@ print(f"Longest locus: {longest_locus}")
 
 # for all models, set bounded_loss = False so that the bounds are not returned
 # the bounds are not necessary for this script, so it's easier to just omit them instead of putting dummy variables into ref_data
-train_generator = MtbGeneDataset(
-    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_train.npz'),
+# use all the data (train + test) for computing saliency scores. Test data won't be reflected in the trained model, but an allele different from reference may have an influence
+data_generator = MtbGeneDataset(
+    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_full.npz'),
     phenotype_file,
     drug,
     locus_list,
-    train_or_test="original_train_set",
+    fasta_dir=genotype_input_directory,
     binary=binary,
     cc=binary_thresh,
+    train_or_test=None,
+    shuffle_phenos=False,
     include_lineage=include_lineage,
+    include_peptide_length=include_peptide_length,
     bounded_loss=False,
     data_idx=None,
     batch_size=BATCH_SIZE,
     shuffle=False
 )
-            
-if include_lineage:
-    num_lineages = train_generator[0][0][1].shape[1]
-    
-    # the lineage SNP schemes all use H37Rv as the reference, so it's easy because the H37Rv SNPs are all 0
-    ref_lineages = np.zeros((1, num_lineages))
-    ref_data = [X_h37rv, ref_lineages]
+
+lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
+num_lineages = lineages.shape[1]
+del lineages
+
+if include_peptide_length:
+    peptide_lengths_df = make_H37Rv_CDS_length_df(locus_list, genotype_input_directory)
+
+    # ensure same order as locus_list because those are the lengths that the model was trained on
+    H37Rv_peptide_lengths = pd.DataFrame(peptide_lengths_df.groupby("Locus")["Length"].sum()).loc[locus_list].T.reset_index(drop=True)
+
+    if include_lineage:
+        # the lineage SNP schemes all use H37Rv as the reference, so it's easy because the H37Rv SNPs are all 0
+        ref_mlp_data = np.concatenate([np.zeros((1, num_lineages)), H37Rv_peptide_lengths.values], axis=1)
+    else:
+        ref_mlp_data = H37Rv_peptide_lengths.values
 else:
-    num_lineages = 0
+    if include_lineage:
+        ref_mlp_data = np.zeros((1, num_lineages))
+    else:
+        ref_mlp_data = None
+
+# both features are combined into the same vector, so if at least one of them is True, there is a vector
+if include_lineage or include_peptide_length:
+    additional_data_len = data_generator[0][0][1].shape[1]
+    ref_data = [X_h37rv, ref_mlp_data]
+else:
+    additional_data_len = 0
     ref_data = X_h37rv
+
 
 # creat output directories
 if binary:
@@ -87,15 +113,25 @@ else:
     save_prefix = "quant"
 
 
-def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=""):
+losses_df = pd.read_csv(os.path.join(output_path, "reg_param_losses.csv"))
+
+# get average loss across the 5 splits for a given regularization parameter, then get the param with the smallest average loss across the split
+losses_df_grouped_alpha = pd.DataFrame(losses_df.groupby("alpha")["val_loss"].mean()).reset_index().rename(columns={"index": "alpha"})
+select_alpha = losses_df_grouped_alpha.sort_values("val_loss", ascending=True)["alpha"].values[0]
+print(f"    Regularization parameter: {select_alpha}, minimum average validation loss across CV splits: {losses_df_grouped_alpha.sort_values('val_loss', ascending=True)['val_loss'].values[0]}")
+
+
+def get_saliency_scores(weights_path, data_generator, ref_data, saliency_dir, file_suffix=""):
     
     genetic_attr_by_nuc = []
     genetic_attr = []
-    lineage_attr = []
-    
+    mlp_attr = []
+
+    # set bounded loss to False so that you don't have to specify lower and upper bounds. It only affects training, and this model is not being trained
+    model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss=False, filter_size=filter_size, reg_strength=select_alpha)
     model.load_weights(weights_path)
     
-    with DeepExplain(session=K.get_session()) as de:
+    with DeepExplain(session=tf.compat.v1.keras.backend.get_session()) as de:
 
         # initialize a DeepExplain model using the same inputs and outputs as the original model
         # For quantitative models, we want to compute saliencies for the output layer. For binary, get saliencies for the output of the penultimate layer (before the last layer, which applies Softmax)
@@ -115,24 +151,16 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
         else:
             assert np.abs(np.max(de_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
 
-        for idx, batch in enumerate(train_generator):
+        for idx, batch in enumerate(data_generator):
 
-            print(f"Working on batch {idx+1} of {len(train_generator)}")
+            print(f"Working on batch {idx+1} of {len(data_generator)}")
 
             # the second index is the phenotypes
             X_train = batch[0]
 
-            # Remove the batch dimension, which is the first dimension. If the lengths of the dimensions are the same, then the batch dimension is in the reference
-            # for some reason, this needs to be done for every batch. If it is done outside of this loop, ref_data gets another dimension in each input at the end of each batch
-            if include_lineage:
-                if ref_data[0].shape[0] == 1:
-                    ref_data[0] = ref_data[0][0]
-
-                if ref_data[1].shape[0] == 1:
-                    ref_data[1] = ref_data[1][0]
-            else:
-                if ref_data.shape[0] == 1:
-                    ref_data = ref_data[0]
+            # when there are no additional inputs (only sequence inputs), an extra dimension gets added, so it's (1, 128, 5, longest_locus, num_loci)
+            if additional_data_len == 0:
+                X_train = np.squeeze(X_train)
 
             # compute attributions for the training set            
             attributions = de.explain(method='deeplift', 
@@ -147,7 +175,8 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
             idx_to_ignore = np.argmax(np.squeeze(X_h37rv), axis=0)
                 
             # genetic scores shape should be num_samples x 5 x longest_locus x num_loci -- sum scores across nucleotides, which is the second dimension
-            if include_lineage:
+            # this means that there is an MLP block, so there are separate scores for the convolutional block and the flattened MLP input
+            if include_lineage or include_peptide_length:
                 
                 # full scores matrix
                 genetic_attr_by_nuc.append(attributions[0])
@@ -160,7 +189,7 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
     
                 genetic_attr.append(np.sum(attributions[0], axis=1))
                 
-                lineage_attr.append(attributions[1])
+                mlp_attr.append(attributions[1])
             
             else:
                 # full scores matrix
@@ -190,14 +219,14 @@ def get_saliency_scores(model, weights_path, train_generator, ref_data, saliency
         np.save(os.path.join(saliency_dir, f"scores_min{file_suffix}.npy"), np.min(genetic_attr, axis=0))
         # np.save(os.path.join(saliency_dir, f"scores_mean{file_suffix}.npy"), np.mean(genetic_attr, axis=0))
 
-        if include_lineage:
-            lineage_attr = np.concatenate(lineage_attr, axis=0)
-            print(lineage_attr.shape)
-            np.save(os.path.join(saliency_dir, f"lineage_scores{file_suffix}.npy"), lineage_attr)
+        if include_lineage or include_peptide_length:
+            mlp_attr = np.concatenate(mlp_attr, axis=0)
+            print(mlp_attr.shape)
+            np.save(os.path.join(saliency_dir, f"mlp_scores{file_suffix}.npy"), mlp_attr)
+
+    K.clear_session()
 
 
-# get model from cnn_utils. Build using TF v1, then load weights
-model = conv_nn(binary=binary, longest_locus=longest_locus, num_loci=num_loci, num_lineages=num_lineages, bounded_loss=False, filter_size=filter_size)
 
 if not permutation_test:
 
@@ -208,7 +237,7 @@ if not permutation_test:
         os.makedirs(os.path.join(saliency_dir))
         
     # compute saliency scores for the single model
-    get_saliency_scores(model, os.path.join(output_path, f"{model_prefix}best_model.h5"), train_generator, ref_data, saliency_dir, file_suffix="")
+    get_saliency_scores(os.path.join(output_path, f"{model_prefix}best_model.h5"), data_generator, ref_data, saliency_dir, file_suffix="")
 
 else:
     # this path should already exist because that's where the models are stored
@@ -222,17 +251,16 @@ else:
         print(f"Computing saliency scores for model {i+1} out of {len(weights_lst)}")
         model_num = os.path.basename(weights_path).split(".")[0].split("_")[-1]
         
-#         # check if scores have already been computed for the model
-#         if include_lineage:
-#             check_file = os.path.join(saliency_dir, f"lineage_scores_{model_num}.npy")
-#         else:
-#             check_file = os.path.join(saliency_dir, f"scores_min_{model_num}.npy")
+        # check if scores have already been computed for the model
+        if include_lineage or include_peptide_length:
+            check_file = os.path.join(saliency_dir, f"mlp_scores_{model_num}.npy")
+        else:
+            check_file = os.path.join(saliency_dir, f"scores_max_{model_num}.npy")
             
-#         if not os.path.isfile(check_file):
-
-        # compute saliency scores for the single model
-        get_saliency_scores(model, weights_path, train_generator, ref_data, saliency_dir, file_suffix=f"_{model_num}")
-
+        if not os.path.isfile(check_file):
+            # compute saliency scores for a single permuted model
+            get_saliency_scores(weights_path, data_generator, ref_data, saliency_dir, file_suffix=f"_{model_num}")
+            
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

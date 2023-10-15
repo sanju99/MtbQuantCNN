@@ -6,14 +6,18 @@ import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras import layers, models, regularizers
 from tensorflow.keras.utils import Sequence
+from tensorflow.keras.optimizers import Adam
 from sklearn.linear_model import Ridge, RidgeCV
 import sklearn.metrics    
     
+BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
+h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+
 
 
 def quantLoss_CNN(y_true, y_pred, loss_type):
     '''
-    This function returns MAE or MSE (unbounded) for a model.
+    This function returns MAE or MSE (unbounded) for a model. This is just a metric to keep track of, but IT IS NOT USED AS THE MODEL LOSS FUNCTION
     '''
     
     # ensure same types of everything
@@ -34,81 +38,49 @@ def quantLoss_CNN(y_true, y_pred, loss_type):
 
 
 
-# def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
-#     '''
-#     The bounds are in exponentiated form because some lower bounds are 0. So when computing the loss, y_pred must be exponentiated
-#     '''
-
-#     # add a tiny amount so they can be log-transformed
-#     lower_bounds[lower_bounds==0] += 1e-6
-    
-#     # take log2. There is only ln in tensorflow backend, so use the change of base formula
-#     lower_bounds = tf.squeeze(K.log(lower_bounds) / K.log(K.constant(2, shape=len(lower_bounds), dtype=tf.float64)))
-#     upper_bounds = tf.squeeze(K.log(upper_bounds) / K.log(K.constant(2, shape=len(upper_bounds), dtype=tf.float64)))
-    
-#     def boundedLoss_CNN_helper(y_true, y_pred):
-#         '''
-#         y_test and y_pred are log-transformed. lower_bounds and upper_bounds are NOT
-#         '''
-#         # ensure same types of everything
-#         y_true = tf.squeeze(tf.cast(y_true, tf.float64))
-#         y_pred = tf.squeeze(tf.cast(y_pred, tf.float64))
-
-#         # this returns the lower bound, upper bound, or value itself
-#         # if the predicted value is less than the lower bound, return lower
-#         # if prediction > upper bound, return upper
-#         # if lower <= prediction <= upper, return the value
-#         bound_to_compute_error = K.clip(y_pred, lower_bounds, upper_bounds)
-
-#         # compute the errors first using the log-MICs, based on the desired loss type
-#         if loss_type == "L1":
-#             errors = tf.squeeze(K.abs(bound_to_compute_error - y_pred))
-#         elif loss_type == "L2":
-#             errors = tf.squeeze(K.square(bound_to_compute_error - y_pred))
-#         else:
-#             raise RuntimeError(f"{loss_type} is not a valid loss function type")
-        
-#         # assign 1 to predicted points that are less than the lower bound or greater than the upper bound. 
-#         outside_bounds_mask = tf.cast(K.less(y_pred, lower_bounds) | K.greater(y_pred, upper_bounds), tf.float64)
-
-#         # multiply so that the points predicted in their bin are multiplied by 0 so they have 0 error
-#         masked_errors = outside_bounds_mask * errors
-
-#         # return the sum of the errors of only points that are predicted outside of their bin
-#         # return sum because when iterating through batches it will be divided by the total number of points in each batch
-#         return K.sum(masked_errors)
-    
-#     return boundedLoss_CNN_helper
-
-
-
 def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
     '''
     The bounds are in exponentiated form because some lower bounds are 0. So when computing the loss, y_pred must be exponentiated
+
+    This function computes error relative to the lower and upper bounds for each MIC range -- lower if the predicted MIC is below the range and upper if the predicted MIC is above the range.
+
+    This turns the problem into an ordinal regression
     '''
+
+    # add a tiny amount so they can be log-transformed
+    lower_bounds[lower_bounds==0] += 1e-6
+    
+    # take log2. There is only ln in tensorflow backend, so use the change of base formula
+    lower_bounds = tf.squeeze(K.log(lower_bounds) / K.log(K.constant(2, shape=len(lower_bounds), dtype=tf.float64)))
+    upper_bounds = tf.squeeze(K.log(upper_bounds) / K.log(K.constant(2, shape=len(upper_bounds), dtype=tf.float64)))
+
 
     def boundedLoss_CNN_helper(y_true, y_pred):
         '''
         y_test and y_pred are log-transformed. lower_bounds and upper_bounds are NOT
         '''
 
-        # ensure same types of everything
-        y_true = tf.cast(y_true, tf.float64)
-        y_pred = tf.cast(y_pred, tf.float64)
+        # ensure same types of everything -- also remove extra dimension of 1
+        y_pred = tf.squeeze(tf.cast(y_pred, tf.float64))
         
-        # exponentiate the predictions to get actual MICs
-        y_pred_MIC = tf.squeeze(K.pow(2, y_pred))
+        # this returns the lower bound, upper bound, or value itself
+        bound_to_compute_error = K.clip(y_pred, lower_bounds, upper_bounds)
 
         # compute the errors first using the log-MICs, based on the desired loss type
         if loss_type == "L1":
-            errors = tf.squeeze(K.abs(y_true - y_pred))
+            errors = tf.squeeze(K.abs(bound_to_compute_error - y_pred))
         elif loss_type == "L2":
-            errors = tf.squeeze(K.square(y_true - y_pred))
+            errors = tf.squeeze(K.square(bound_to_compute_error - y_pred))
         else:
             raise RuntimeError(f"{loss_type} is not a valid loss function type")
-        
+
+        ########## FOR MOST CASES, THIS NEXT STEP IS NOT NEEDED. HOWEVER
+        # when K.clip is run on arrays with infinities, the non-infinity value is returned
+        # so i.e. if y_pred = 1, lower = 0.5, and upper = inf, K.clip returns lower, and the function will compute an error for that sample
+        # this is not correct though, this sample should have compute_error = 0. Therefore we need to do this step for all cases
         # assign 1 to predicted points that are less than the lower bound or greater than the upper bound. 
-        outside_bounds_mask = tf.cast(K.less(y_pred_MIC, lower_bounds) | K.greater(y_pred_MIC, upper_bounds), tf.float64)
+        # use less than or equal to because the true MIC is in the range (lower, upper], so it is not equal to lower.
+        outside_bounds_mask = tf.cast(K.less_equal(y_pred, lower_bounds) | K.greater(y_pred, upper_bounds), tf.float64)
 
         # multiply so that the points predicted in their bin are multiplied by 0 so they have 0 error
         masked_errors = outside_bounds_mask * errors
@@ -116,14 +88,13 @@ def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
         # return the sum of the errors of only points that are predicted outside of their bin
         # return sum because in the training loop it will be divided by the total number of points in each batch
         return K.sum(masked_errors)
-    
-    return boundedLoss_CNN_helper  
-        
-        
+            
+    return boundedLoss_CNN_helper      
 
 
 
-def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_size):
+
+def conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0.01):
     
     cnn_input = tf.keras.Input(shape=(5, longest_locus, num_loci), name='seq_input')
     
@@ -137,174 +108,269 @@ def conv_nn(binary, longest_locus, num_loci, num_lineages, bounded_loss, filter_
     y = layers.Conv2D(32, (1,3), activation='relu', name='conv4')(y)
 
     conv_block_2 = layers.MaxPooling2D((1,3), name='maxPooling2')(y)
-
-    # flattened output of convolutional block. Concatenate this with the lineages, then pass into dense layers
-    if num_lineages > 0:
+        
+    if additional_data_len > 0:
+        print(f"{additional_data_len} features in the MLP block")
         cnn_output = layers.Flatten(name='flatten')(conv_block_2)
-        mlp_input = tf.keras.Input(shape=(num_lineages, ), name='lineage_input')
+        mlp_input = tf.keras.Input(shape=(additional_data_len, ), name='lineage_peptide_input')
         dense_inputs = layers.concatenate([cnn_output, mlp_input], axis=1, name='concatenate')
     else:
         dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
 
-    # change regularization strength, if desired
-    # kernel_regularizer=regularizers.L2(0.01)
-    
-    # dense = layers.Dense(256, activation='relu', name='dense1', kernel_regularizer='l2')(dense_inputs)
-    # dense = layers.Dense(256, activation='relu', name='dense2', kernel_regularizer='l2')(dense)
-    dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
-    dense = layers.Dense(256, activation='relu', name='dense2')(dense)
-    
+    # if you put kernel_regularizer='l2', the default strength is 0.01
+    if reg_strength != 0:
+        print(f"    Using L2 regularization with {reg_strength} strength")
+        dense = layers.Dense(256, activation='relu', name='dense1', kernel_regularizer=regularizers.L2(reg_strength))(dense_inputs)
+        dense = layers.Dense(256, activation='relu', name='dense2', kernel_regularizer=regularizers.L2(reg_strength))(dense)
+    else:
+        dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
+        dense = layers.Dense(256, activation='relu', name='dense2')(dense)
+        
     if binary:
         output = layers.Dense(1, activation='sigmoid', name='output')(dense)
     else:
         output = layers.Dense(1, activation=None, name='output')(dense)
 
-    if num_lineages > 0:
-        inputs_lst = [cnn_input, mlp_input]
-    else:
-        inputs_lst = [cnn_input]
+    inputs_lst = [cnn_input]
     
+    if additional_data_len > 0:
+        inputs_lst += [mlp_input]
+            
     # add bounds to the inputs list if True
     if bounded_loss:
         lower_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='lower_bounds')
         upper_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='upper_bounds')
 
-        inputs_lst.append(lower_bounds)
-        inputs_lst.append(upper_bounds)
+        inputs_lst += [lower_bounds]
+        inputs_lst += [upper_bounds]
 
     if len(inputs_lst) == 1:
         inputs_lst = inputs_lst[0]
-        
+
     return tf.keras.Model(inputs=inputs_lst, outputs=output)
 
 
 
-    
-# class CustomRidgeCV(RidgeCV):
-                
-#     def fit(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None, *args, **kwargs):
-        
-#         self.loss_type = loss_type
-        
-#         # processing of bounds. first add a tiny amount so they can be log-transformed
-#         lower_bounds[lower_bounds==0] += 1e-6
-        
-#         # take log2. There is only ln in tensorflow backend, so use the change of base formula
-#         self.lower_bounds = np.log2(lower_bounds)
-#         self.upper_bounds = np.log2(upper_bounds)
-        
-#         super().fit(X, y, *args, **kwargs)
-        
-#     def score(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None):
-        
-#         self.loss_type = loss_type
-#         self.lower_bounds = lower_bounds
-#         self.upper_bounds = upper_bounds
-        
-#         def boundedLoss_Reg(y_pred, y_true):
-
-#             '''
-#             y_test and y_pred are log2-transformed. lower_bounds and upper_bounds are NOT
-#             loss_type is L1 or L2, specifying whether to return the MAE or MSE
-#             reg_param is the strength of regularization to apply -- multiply the sum of the squares of sample_weights by this term
-#             '''
-
-#             bound_to_compute_error = np.clip(y_pred, lower_bounds, upper_bounds)
-
-#             # compute the errors first using the log-MICs, based on the desired loss type
-#             if self.loss_type == "L1":
-#                 errors = np.abs(bound_to_compute_error - y_pred)
-#             elif self.loss_type == "L2":
-#                 errors = np.exp2(bound_to_compute_error - y_pred)
-#             else:
-#                 raise RuntimeError(f"{self.loss_type} is not a valid loss function type")
-
-#             # compute error using only the points that are predicted outside of their bin. Sum the errors, then divide by the number of points
-#             binned_error = np.sum(errors[((y_pred < self.lower_bounds) | (y_pred > self.upper_bounds))]) / len(y_pred)
-#             return binned_error + self.alpha * np.sum(np.square(self.coef_))
-        
-#         y_pred = self.predict(X)
-#         return -boundedLoss_Reg(y_pred, y)
-
-
-
-class CustomRidgeCV(RidgeCV):
-                
-    def fit(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None, *args, **kwargs):
-        
-        self.loss_type = loss_type
-        self.lower_bounds = lower_bounds
-        self.upper_bounds = upper_bounds
-        
-        super().fit(X, y, *args, **kwargs)
-        
-    def score(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None):
-        
-        self.loss_type = loss_type
-        self.lower_bounds = lower_bounds
-        self.upper_bounds = upper_bounds
-        
-        def boundedLoss_Reg_L2penalty(y_pred, y_true):
-
-            '''
-            y_test and y_pred are log2-transformed. lower_bounds and upper_bounds are NOT
-            
-            loss_type is L1 or L2, specifying whether to return the MAE or MSE, NOT THE TYPE OF REGULARIZATION. THIS FUNCTION ONLY USES L2 REGULARIZATION
-            
-            reg_param is the strength of regularization to apply -- multiply the sum of the squares of sample_weights by this term
-            '''
-
-            # get predictions, then exponentiate to get actual MICs
-            y_pred_MIC = np.exp2(y_pred)
-
-            # compute the errors first using the log-MICs, based on the desired loss type
-            if self.loss_type == "L1":
-                errors = np.abs(y_true - y_pred)
-            elif self.loss_type == "L2":
-                errors = (y_true - y_pred)**2
-            else:
-                raise RuntimeError(f"{self.loss_type} is not a valid loss function type")
-
-            # compute error using only the points that are predicted outside of their bin. Sum the errors, then divide by the number of points
-            binned_error = np.sum(errors[((y_pred_MIC < self.lower_bounds) | (y_pred_MIC > self.upper_bounds))]) / len(y_pred_MIC)
-            return binned_error + self.alpha * np.sum(np.square(self.coef_))
-        
-        y_pred = self.predict(X)
-        return -boundedLoss_Reg_L2penalty(y_pred, y)
-
-    
-
-def boundedLoss_Reg(y_pred, y_true, lower_bounds, upper_bounds, loss_type="L2"):
-
+@tf.function
+def train_step(model, optimizer, loss_type, x, y):
     '''
+    This is the training step for a single batch. Iterating over batches and epochs is done separately
+    '''
+    
+    # the bounds are the last 2 elements of the x list
+    lower_bounds, upper_bounds = x[-2:]
+    
+    with tf.GradientTape() as tape:
+
+        # Make predictions using the model
+        y_hat = model(x, training=True)
+
+        # Calculate the loss using the two bounds tensors. custom_bounded_mae is imported from cnn_utils
+        loss = boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat)
+
+    # Calculate the gradients
+    gradients = tape.gradient(loss, model.trainable_weights)
+
+    # run the optimizer
+    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+    
+    # return loss and error. quantLoss_CNN returns a numpy object from a tensor
+    return loss.numpy(), quantLoss_CNN(y, y_hat, loss_type)
+    
+    
+@tf.function
+def val_step(model, loss_type, x, y):
+        
+    # the bounds are the last 2 elements of the x list
+    lower_bounds, upper_bounds = x[-2:]
+    
+    # y_hat = model.predict(x)
+    y_hat = model(x, training=False)
+    
+    # return loss and complete error. quantLoss_CNN returns a numpy object from a tensor
+    return boundedLoss_CNN(lower_bounds, upper_bounds, loss_type)(y, y_hat).numpy(), quantLoss_CNN(y, y_hat, loss_type)
+    
+
+
+
+def train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, num_train, num_val, save_model_fName, save_history_df=False, patience_epochs=None, return_min_loss=False):
+
+    output_path = os.path.dirname(save_model_fName)
+    
+    optimizer = Adam(learning_rate = np.exp(-1.0 * 9))
+    
+    if patience_epochs is None:
+        print(f"    Training the model with an {loss_type} loss for {N_epochs} epochs")
+    else:
+        print(f"    Using early stopping with an {loss_type} loss and a delay of {patience_epochs} epochs")
+    
+    # manual implementation of model callbacks
+    patience_counter = 0
+    min_loss = 1e3
+    
+    # initialize lists to store losses
+    train_loss = []
+    train_error = []
+    val_loss = []
+    val_error = []
+    
+    history = pd.DataFrame(columns=["loss", "error", "val_loss", "val_error"])
+
+    for epoch in range(N_epochs):
+                   
+        # list to keep track of the losses for each batch
+        train_epoch_loss = []
+        train_epoch_error = []
+        val_epoch_loss = []
+        val_epoch_error = []
+        
+        # training loop
+        for x_batch_train, y_batch_train in train_generator:
+                    
+            # compute loss and error. These are sums over the points in the batch
+            loss, error = train_step(model, optimizer, loss_type, x_batch_train, y_batch_train)
+            
+            train_epoch_loss.append(loss)
+            train_epoch_error.append(error)
+            
+        # store losses for the epoch -- mean of all the batches
+        train_loss.append(np.sum(train_epoch_loss) / num_train)   
+        train_error.append(np.sum(train_epoch_error) / num_train)
+    
+        # validation loop -- iterate through all batches
+        for x_batch_val, y_batch_val in val_generator:
+                            
+            # compute loss and error
+            loss, error = val_step(model, loss_type, x_batch_val, y_batch_val)
+            
+            val_epoch_loss.append(loss)
+            val_epoch_error.append(error)
+          
+        # store the mean loss of the batch
+        val_loss.append(np.sum(val_epoch_loss) / num_val)
+        val_error.append(np.sum(val_epoch_error) / num_val)
+    
+        history.loc[epoch, :] = [train_loss[-1], train_error[-1], val_loss[-1], val_error[-1]]    
+        
+        if patience_epochs is not None:
+            # if loss decreases by at least 1%
+            if float((min_loss - val_loss[-1]) / min_loss) >= 0.01:
+            
+                print(f"Epoch {epoch+1}: Validation loss improved from {min_loss} to {val_loss[-1]}")
+                
+                # save the model because it is better than the previous iteration
+                model.save(save_model_fName)
+    
+                # update min loss, then zero out the patience counter
+                min_loss = val_loss[-1]
+                patience_counter = 0
+                
+            else:
+                patience_counter += 1
+    
+            if patience_counter == patience_epochs:
+                break
+        
+        # train the model for the specified number of epochs
+        else:
+            print(f"Epoch {epoch} validation loss: {val_loss[-1]}")
+
+    # only save the model if not using early stopping because it doesn't get saved as you go in the above loop
+    if patience_epochs is None:
+        model.save(save_model_fName)
+
+    # clear all model variables
+    K.clear_session()
+
+    # save the history dataframe to see the additional epochs during the patience period. DON'T SAVE THE MODEL because we want the model at the early stop point
+    if save_history_df:
+        history.to_csv(os.path.join(output_path, "history.csv"), index=False)
+    else:
+        return history["val_loss"].values
+    
+    # this is for cross-validation of the regularization parameter: return the losses to keep track which regularization strength is best
+    if return_min_loss:
+        # if using early stopping, then the loss of the trained model is the min_loss (because it got updated)
+        if patience_epochs is not None:
+            return min_loss
+        # if not using early stopping, then the model loss is the last value in val_loss (because you trained the model for a specified number of epochs and are taking the last loss)
+        else:
+            return val_loss[-1]
+
+
+
+def boundedLoss_Reg(y_pred, y_true, lower_bounds, upper_bounds, loss_type="L1"):
+    '''
+    This function is used to select the regularization strength of a Regression model. It is the Regression analog
+    of boundedLoss_CNN
+    
     y_test and y_pred are log2-transformed. lower_bounds and upper_bounds are NOT
     loss_type is L1 or L2, specifying whether to return the MAE or MSE
-    reg_param is the strength of regularization to apply -- multiply the sum of the squares of sample_weights by this term
     '''
 
-    # get predictions, then exponentiate to get actual MICs
-    y_pred_MIC = np.exp2(y_pred)
+    # add a tiny amount so they can be log-transformed, then log-transform
+    lower_bounds[lower_bounds==0] += 1e-6
+    lower_bounds = np.log2(lower_bounds)
+    upper_bounds = np.log2(upper_bounds)
+
+    # determine whether to compute error from the bounds or if the error is 0. 
+    bound_to_compute_error = np.clip(y_pred, lower_bounds, upper_bounds)
 
     # compute the errors first using the log-MICs, based on the desired loss type
+    # if you want to compute error relative to the midpoint, replace bound_to_compute_error with y_true
     if loss_type == "L1":
-        errors = np.abs(y_true - y_pred)
+        errors = np.abs(bound_to_compute_error - y_pred)
     elif loss_type == "L2":
-        errors = (y_true - y_pred)**2
+        errors = np.exp2(bound_to_compute_error - y_pred)
     else:
         raise RuntimeError(f"{loss_type} is not a valid loss function type")
 
-    # compute error using only the points that are predicted outside of their bin. Sum the errors, then divide by the number of points
-    return np.sum(errors[((y_pred_MIC < lower_bounds) | (y_pred_MIC > upper_bounds))]) / len(y_pred_MIC)
+    # use less than or equal to because the true MIC is in the range (lower, upper], so it is not equal to lower.
+    outside_bounds_mask = (np.less_equal(y_pred, lower_bounds) | np.greater(y_pred, upper_bounds)).astype(int)
+
+    # multiply so that the points predicted in their bin are multiplied by 0 so they have 0 error
+    masked_errors = outside_bounds_mask * errors
+
+    # because we used np.clip above, the value in the errors array for points predicted within the MIC bin will be 0, so just take the simple mean
+    return np.mean(masked_errors)
 
 
-    
-    
-class CustomRidge(Ridge):
-                
-    def fit(self, X, y, loss_type=None, lower_bounds=None, upper_bounds=None, *args, **kwargs):
+
+# class CustomRidge(Ridge):
+
+#     # saga is Stochastic Average Gradient descent, so similar to CNN fitting procedure, and n_samples and n_features are both large
+#     def __init__(self, alpha, lower_bounds, upper_bounds, loss_type="L1", solver="auto"):
+
+#         # need to use the same initialization procedure as the regular Ridge function 
+#         super().__init__(alpha=alpha, solver=solver)
+#         self.alpha = alpha
+#         self.loss_type = loss_type
+#         self.lower_bounds = lower_bounds
+#         self.upper_bounds = upper_bounds
+
+#     def _residues(self, y, y_pred, X, alpha):
+#         '''
+#         This overrides the residues method, which takes in the string name of the loss function and returns the mean residuals between the predicted and actual values, to use the custom loss function.
+#         '''
+
+#         # technically the y argument doesn't matter and isn't used when computing the loss, but for consistency
+#         # with the native Ridge class, leave it in
+#         return boundedLoss_Reg(y_pred, y, self.lower_bounds, self.upper_bounds, self.loss_type)
+
+#     # function to override the default fit function and return the custom loss        
+#     def fit(self, X, lower_bounds, upper_bounds):
+
+#         # need to call fit first
+#         super().fit(X, lower_bounds, upper_bounds)
         
-        self.loss_type = loss_type
-        self.lower_bounds = lower_bounds
-        self.upper_bounds = upper_bounds
+#         # get predictions
+#         y_pred = np.squeeze(self.predict(X))
         
-        super().fit(X, y, *args, **kwargs)
+#         # custom loss function. This takes care of log2-transforming the bounds (see above)
+#         loss = boundedLoss_Reg(y_pred, lower_bounds, upper_bounds, loss_type=self.loss_type)
+#         print("Alpha", self.alpha)
+#         loss_with_reg = loss + self.alpha * np.sum(np.square(self.coef_))
+#         print(loss, loss_with_reg)
+
+#         # in regularized regression, the sum of absolute values or squares of the weights must be added to the loss
+#         return loss_with_reg

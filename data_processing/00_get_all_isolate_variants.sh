@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 1
-#SBATCH -t 4-23:59
-#SBATCH -p medium
-#SBATCH --mem=5G 
+#SBATCH -t 0-01:00
+#SBATCH -p short
+#SBATCH --mem=20G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -39,11 +39,15 @@ for fName in "${fNames[@]}"; do
     # Check if the output is empty (string not found)
     if [ -z "$found_isolate" ]; then
 
-        echo $isolate
-    
+        echo "Getting variants for $isolate"
+        
         isolate_variants=$(SnpSift extractFields "$vcf_dir/$isolate/pilon/$isolate.eff.vcf" POS REF ALT FILTER AF "ANN[0].GENE" "ANN[0].EFFECT" "ANN[0].HGVS_C" "ANN[0].HGVS_P" -e "." | tail -n +2 | awk -v sample="$isolate" 'BEGIN { OFS="\t" } { print $0, sample }')
-            
+        
         echo "$isolate_variants" >> "$output_file"
+
+    else
+
+        echo "Already got variants for $isolate"
     
     fi
     

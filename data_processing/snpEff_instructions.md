@@ -10,7 +10,7 @@ The bacterial codon table must also be specified, instead of the default codon t
 Mycobacterium_tuberculosis_gca_000195955.genome: Mycobacterium_tuberculosis_gca_000195955
 
     Mycobacterium_tuberculosis_gca_000195955.reference: https://www.ncbi.nlm.nih.gov/assembly/GCA_000195955.2/
-    Mycobacterium_tuberculosis_gca_000195955.retrieval_date 2023-02-23
+    Mycobacterium_tuberculosis_gca_000195955.retrieval_date: 2023-02-23
     Mycobacterium_tuberculosis_gca_000195955.NC_000962.3.codonTable: Bacterial_and_Plant_Plastid
 ```
 
