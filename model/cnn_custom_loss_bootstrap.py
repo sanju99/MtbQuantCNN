@@ -1,4 +1,4 @@
-import sys, glob, os, yaml, sparse, tracemalloc
+import sys, glob, os, yaml, sparse, tracemalloc, pickle
 import numpy as np
 import pandas as pd
 import scipy.stats as st
@@ -35,16 +35,27 @@ phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
 include_lineage = kwargs["include_lineage"]
-include_peptide_length = kwargs["include_peptide_length"]
+
 loss_type = "L1"
 binary = False
 bounded_loss = True
 N_epochs = 10000
+include_peptide_length = True
 
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
 
 seq_data_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+# naming consistency
+output_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+if include_peptide_length:
+    output_path += "_peptide"
+    
+if include_lineage:
+    output_path += "_lineage"
+
 bootstrap_output_path = os.path.join(output_path, "bootstrapping")
 
 if not os.path.isdir(bootstrap_output_path):
@@ -119,12 +130,11 @@ losses_df = pd.read_csv(os.path.join(output_path, "reg_param_losses.csv"))
 losses_df_grouped_alpha = pd.DataFrame(losses_df.groupby("alpha")["val_loss"].mean()).reset_index().rename(columns={"index": "alpha"})
 select_alpha = np.round(losses_df_grouped_alpha.sort_values("val_loss", ascending=True)["alpha"].values[0], 6)  # not sure why, but some of the alphas are like 0.999999999 instead of 1
 print(f"    Regularization parameter: {select_alpha}, minimum average validation loss across CV splits: {losses_df_grouped_alpha.sort_values('val_loss', ascending=True)['val_loss'].values[0]}\n")
-
-# run the function to train a single model. Use 100 epochs patience for actual model training or 150 for PZA because the loss decreases slower
+    
 if drug == "PZA":
     patience_epochs = 150
 else:
-    patience_epochs = 100
+    patience_epochs = 100 
 
 for rep in range(num_reps):
 
@@ -184,7 +194,7 @@ for rep in range(num_reps):
                                    num_loci, 
                                    model_name="CNN", 
                                    binarize=True, 
-                                   save_fName=None
+                                   save_fName=os.path.join(bootstrap_output_path, f"predictions_{rep}.csv")
                                   )
 
     summary_df["CV"] = rep + 1
@@ -195,7 +205,7 @@ for rep in range(num_reps):
     del patience_counter
     del min_loss
     del val_loss
-    #del df_bootstrap
+    # del df_bootstrap
     del train_idx
     del bs_train_generator
     K.clear_session()

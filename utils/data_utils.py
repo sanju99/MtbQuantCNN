@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import os, glob, sparse, pickle
+import os, glob, sparse
 from Bio import SeqIO, Seq
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 import sklearn.metrics
@@ -157,8 +157,6 @@ def create_all_loci_matrices(config_file):
 
 def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
     '''
-    IMPORTANT: Saliency functions must be run before using this function to make seqDict_fName
-
     Returns: dataframe with shape N_samples x N_loci. Each value is the length of the corresponding CDS
     '''
 
@@ -166,12 +164,13 @@ def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
     h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
 
     # read in dictionary, where each key is a locus and each value is a dataframe of all samples and positions in the alignment with nucleotides
-    seqDict = pickle.load(open(seqDict_fName, "rb"))
+    seqDict = pd.read_pickle(seqDict_fName)
 
     # check that all the same loci are there in both
     assert len(set(seqDict.keys()).symmetric_difference(locus_list)) == 0
     
-    locus_peptide_lengths_df = pd.DataFrame(columns=[f"{locus}_length" for locus in locus_list])
+    # locus_peptide_lengths_df = pd.DataFrame(columns=[f"{locus}_length" for locus in locus_list])
+    locus_peptide_lengths_df = []
 
     for locus in locus_list:
 
@@ -205,7 +204,7 @@ def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
             else:
                 start, end = h37Rv_genes.query("Symbol==@gene")[['End', 'Start']].values[0]
 
-            # add 1 to the 
+            # add 1 to the end because the end is exclusive
             gene_CDS_df = seqDict[locus].loc[:, start:end+1]
     
             # subtract 1 because of the stop character
@@ -215,19 +214,30 @@ def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
             
                 # remove gap characters because those represent insertions in other samples
                 protein_seq = str(Seq.Seq(''.join(gene_CDS_df.loc[i].values).replace('-', '')).translate())
-            
-                # replace the stop character and everything after it with gap characters
-                if '*' in protein_seq:
-                    stop_idx = list(protein_seq).index('*') # by default gets the first index
-                    protein_seq = protein_seq[:stop_idx] + "*"*(WT_protein_length - stop_idx)
-            
-                protein_seq = protein_seq.replace("*", "")
-                gene_peptide_lengths_df.loc[i, f"{gene}_length"] = len(protein_seq)
+
+                # if there is no start codon, make the length 0. Alternative start codons are translated by Biopython to different codons
+                # BUT they are all eventually converted to M, but Biopython doesn't know that this is the beginning of a protein.
+                if len(protein_seq) > 0:
+                    if protein_seq[0] not in ['M', 'L', 'V', 'I']:
+                        gene_peptide_lengths_df.loc[i, f"{gene}_length"] = 0  
+                    
+                    # replace the stop character and everything after it with gap characters
+                    else:
+                        if '*' in protein_seq:
+                            stop_idx = list(protein_seq).index('*') # by default gets the first index
+                            protein_seq = protein_seq[:stop_idx] + "*"*(WT_protein_length - stop_idx)
+                    
+                        protein_seq = protein_seq.replace("*", "")
+                        gene_peptide_lengths_df.loc[i, f"{gene}_length"] = len(protein_seq)
+                else:
+                    gene_peptide_lengths_df.loc[i, f"{gene}_length"] = 0 
 
         # sum across the genes in the locus
-        locus_peptide_lengths_df[f"{locus}_length"] = gene_peptide_lengths_df.sum(axis=1)
+        # locus_peptide_lengths_df[f"{locus}_length"] = gene_peptide_lengths_df.sum(axis=1)
+        locus_peptide_lengths_df.append(gene_peptide_lengths_df)
             
-    return locus_peptide_lengths_df
+    # return locus_peptide_lengths_df
+    return pd.concat(locus_peptide_lengths_df, axis=1)
 
     
     
@@ -278,9 +288,8 @@ def create_X(df_geno_pheno):
 
 
 
-def make_geno_pheno_files(**kwargs):
+def make_geno_pheno_files(seq_data_path, **kwargs):
     
-    output_path = kwargs["output_path"].replace("_lineage", "")
     drug = kwargs["drug"]
 
     # get table for phenotypes and add the reference strain to match the format of the FASTA files
@@ -297,7 +306,7 @@ def make_geno_pheno_files(**kwargs):
 
     # this makes life easier later. Keep H37Rv in this      
     df_genos = df_phenos[["category", "ROLLINGDB_ID"]].merge(df_genos, on="ROLLINGDB_ID", how="inner")
-    df_genos.to_csv(os.path.join(output_path, "df_genos.csv"), index=False)
+    df_genos.to_csv(os.path.join(seq_data_path, "df_genos.csv"), index=False)
 
     # Apply one-hot encoding function to get each isolate sequence
     print('Making one hot encoding for...')
@@ -312,10 +321,11 @@ def make_geno_pheno_files(**kwargs):
 
     # combined dataframe of all genotypes and phenotypes
     df_geno_pheno = df_phenos.merge(df_genos, how='inner', on="ROLLINGDB_ID")
+    print(df_geno_pheno.shape)
     
     # this is to check that df_geno_pheno is in the same order as df_phenos.
     assert sum(df_phenos.ROLLINGDB_ID.values != df_geno_pheno.ROLLINGDB_ID.values) == 0
-
+    
     # Create a one-hot-encoding matrix with dimensions
     # num_isolate x 5 x locus_length x num_loci
     X_all = create_X(df_geno_pheno)
@@ -324,7 +334,7 @@ def make_geno_pheno_files(**kwargs):
     # last row is H37Rv
     X_H37Rv = X_sparse[[-1], :]
     print(f"Reference shape: {X_H37Rv.shape}")
-    sparse.save_npz(os.path.join(output_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=False)
+    sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=False)
 
     # if split_train_test:
 
@@ -337,14 +347,14 @@ def make_geno_pheno_files(**kwargs):
     #     print(f"Training set shape: {X_sparse_train.shape}")
     #     print(f"Test set shape: {X_sparse_test.shape}")
         
-    #     sparse.save_npz(os.path.join(output_path, "pkl_sparse_train.npz"), X_sparse_train, compressed=False)
-    #     sparse.save_npz(os.path.join(output_path, "pkl_sparse_test.npz"), X_sparse_test, compressed=False)
+    #     sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_train.npz"), X_sparse_train, compressed=False)
+    #     sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_test.npz"), X_sparse_test, compressed=False)
 
         
     # H37Rv is the last row, so remove it before saving to avoid redundancy 
     X_data = X_sparse[:-1, :]
     print(f"Full data set shape: {X_data.shape}")
-    sparse.save_npz(os.path.join(output_path, "pkl_sparse_full.npz"), X_data, compressed=False)
+    sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_full.npz"), X_data, compressed=False)
 
     
     
@@ -392,9 +402,10 @@ def get_threshold_val(pred_df, pred_col, test_col, spec_thresh=None):
 def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
         
     # binarize using the critical concentration
+    # see if the upper bound is greater than the critical concentration. If so, resistant. If the upper bound is equal to the CC, then it is susceptible because it dies with the CC.
     if binarize:
-        y_val_binary = (y_val >= np.log2(binary_thresh)).astype(int)
-        y_pred_binary = (y_pred >= np.log2(binary_thresh)).astype(int)
+        y_val_binary = (y_val > binary_thresh).astype(int)
+        y_pred_binary = (y_pred > np.log2(binary_thresh)).astype(int)
     else:
         y_val_binary = np.copy(y_val)
         y_pred_binary = np.copy(y_pred)
@@ -484,34 +495,33 @@ def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col=
     
     This function returns bounded MAE, MSE, and the proportion of points measured within 1 MIC doubling (1 log2 unit)
     ''' 
-
+    
     del_cols = [f"{y_pred_col}_exp", "within_doubling", "within_1bin", "compute_error", f"{lower_bounds_col}_rounded", f"{upper_bounds_col}_rounded"]
 
     for col in del_cols:
         if col in pred_df.columns:
             del pred_df[col]
 
-    # first add essential agreement (proportion within 1 doubling dilution)
-    pred_df[f"{y_pred_col}_exp"] = np.round(np.exp2(pred_df[y_pred_col]), 2)
+    # # first add essential agreement (proportion within 1 doubling dilution)
+    # pred_df[f"{y_pred_col}_exp"] = np.round(np.exp2(pred_df[y_pred_col]).astype(float), 2)
     
-    pred_df.loc[(pred_df[lower_bounds_col] / 2 <= pred_df[f"{y_pred_col}_exp"]) & 
-                (pred_df[upper_bounds_col] * 2 >= pred_df[f"{y_pred_col}_exp"])
-                , "within_doubling"] = 1
+    # pred_df.loc[(pred_df[lower_bounds_col] / 2 <= pred_df[f"{y_pred_col}_exp"]) & 
+    #             (pred_df[upper_bounds_col] * 2 >= pred_df[f"{y_pred_col}_exp"])
+    #             , "within_doubling"] = 1
 
-    # manual fix....
-    pred_df.loc[(pred_df[f"{y_pred_col}_exp"] == 0.06) & (pred_df[lower_bounds_col] == 0.12), "within_doubling"] = 1
-    pred_df["within_doubling"] = pred_df["within_doubling"].fillna(0).astype(int)
+    # pred_df.loc[(pred_df[f"{y_pred_col}_exp"] == 0.06) & (pred_df[lower_bounds_col] == 0.12), "within_doubling"] = 1
+    # pred_df["within_doubling"] = pred_df["within_doubling"].fillna(0).astype(int)
         
     # make copies to avoid changing the original dataframe
     lower_bounds = np.copy(pred_df[lower_bounds_col].values) #pred_df[lower_bounds_col].values / 2
     upper_bounds = np.copy(pred_df[upper_bounds_col].values) #pred_df[upper_bounds_col].values * 2
     
-    lower_bounds[lower_bounds==0] += 1e-6
+    lower_bounds[lower_bounds==0] += 1e-10
     lower_bounds = np.log2(lower_bounds)
     upper_bounds = np.log2(upper_bounds)
 
     # use less than or equal to because the true MIC is in the range (lower, upper], so it is not equal to lower.
-    pred_df["compute_error"] = ((pred_df[y_pred_col] <= lower_bounds) | (pred_df[y_pred_col] > upper_bounds)).astype(int)
+    pred_df["compute_error"] = ((pred_df[y_pred_col].values <= lower_bounds) | (pred_df[y_pred_col].values > upper_bounds)).astype(int)
 
     # compute the error relative to the bounds, NOT RELATIVE TO THE MIDPOINT (y_test) of each isolate
     # np.clip returns one of the values from lower_bounds or upper_bounds, whichever is closest to the prediction, if the value is outside the bounds
@@ -519,7 +529,7 @@ def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col=
     mae = np.mean((np.abs(bound_to_compute_error - pred_df[y_pred_col])))
     mse = np.mean((np.square(bound_to_compute_error - pred_df[y_pred_col])))
 
-    return mae, mse, pred_df["within_doubling"].mean()
+    return mae, mse#, pred_df["within_doubling"].mean()
 
 
 
@@ -722,62 +732,3 @@ def get_single_locus_Reg_input(locus, locus_list, df_phenos, full_matrix, ref_ma
     df_ref.columns = seq_coords
 
     return df_train_test, df_ref
-
-
-
-
-def make_H37Rv_CDS_length_df(locus_list, fasta_dir):
-    '''
-    IMPORTANT: Saliency functions must be run before using this function to make seqDict_fName
-
-    Two indices: Locus and Gene because there are multiple genes in a single locus.
-
-    The goal of this function is to make a dataframe of the H37Rv protein lengths of all genes in all loci in a model. 
-    Then for insilico mutagenesis, you can get the position of the early stop codon and update the peptide length by subtracting the number of AAs that would be truncated from the H37Rv length
-
-    NOTE: This is not supported for WHO catalog frameshift mutations that cause early stop codons. HOWEVER, in the PZA models that this is being used for, there are no such frameshift mutations
-    because they increase the size of the alignment so they were removed from this analysis step. 
-    '''
-
-    # get the dataframe of start and end coordinates from mycobrowser
-    h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-
-    gene_peptide_lengths_df = pd.DataFrame(columns=["Locus", "Gene", "Length"]).set_index(["Locus", "Gene"])
-
-    for locus in locus_list:
-
-        with open(os.path.join(fasta_dir, f"{locus}.sh"), "r") as file:
-            for line in file.readlines():
-                if ".py" in line and ".fasta" in line:
-                    lines = line.split(" ")
-        
-        start_end_lst = []
-        
-        for arg in lines:
-            if arg.isdigit():
-                start_end_lst.append(int(arg))
-        
-        assert len(start_end_lst) == 2
-        locus_start, locus_end = start_end_lst[0] + 1, start_end_lst[-1]
-
-        # all the genes in a single locus
-        genes_lst = h37Rv_genes.query("Start >= @locus_start & End <= @locus_end").Symbol.values
-        single_locus_peptide_lengths_df = pd.DataFrame(columns=[f"{gene}_length" for gene in genes_lst])
-
-        # sum the lengths of all the genes within the locus
-        WT_protein_length = 0
-
-        for gene in genes_lst:
-
-            sense = h37Rv_genes.query("Symbol==@gene")['Strand'].values[0]
-
-            # reverse start and end for negative sense genes because the seqDict dataframes are in translated order (which is easy for translating the nucleotide sequences to AAs)
-            if sense == "+":
-                start, end = h37Rv_genes.query("Symbol==@gene")[['Start', 'End']].values[0]
-            else:
-                start, end = h37Rv_genes.query("Symbol==@gene")[['End', 'Start']].values[0]
-
-            # subtract 1 because of the stop character
-            gene_peptide_lengths_df.loc[(locus, gene), :] =  int((np.abs(end - start) + 1) / 3) - 1
-
-    return gene_peptide_lengths_df.reset_index()

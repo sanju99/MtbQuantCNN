@@ -12,17 +12,42 @@ import scipy.stats as st
 from data_utils import *
 
 
+drug_abbr_dict = {"Delamanid": "DLM",
+                  "Bedaquiline": "BDQ",
+                  "Clofazimine": "CFZ",
+                  "Ethionamide": "ETH",
+                  "Linezolid": "LZD",
+                  "Moxifloxacin": "MXF",
+                  "Capreomycin": "CAP",
+                  "Amikacin": "AMI",
+                  "Pretomanid": "PTM",
+                  "Pyrazinamide": "PZA",
+                  "Kanamycin": "KAN",
+                  "Levofloxacin": "LEV",
+                  "Streptomycin": "STM",
+                  "Ethambutol": "EMB",
+                  "Isoniazid": "INH",
+                  "Rifampicin": "RIF"
+                 }
+
+abbr_drug_dict = {value: key for key, value in drug_abbr_dict.items()}
 
 
-def mutation_catalog_with_bootstrapping(df, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats):
+
+
+def mutation_catalog_with_bootstrapping(df, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, savefName, AF_thresh=0.75):
+
+    # make AF column float so that you can use AF thresh
+    isolate_variants_df['AF'] = isolate_variants_df['AF'].replace('.', 0.76).astype(float)
     
     df = df.rename(columns={"ROLLINGDB_ID": "Isolate"}).reset_index(drop=True)
-    cat1_mutations = who_variants_df.query("drug == @drug & confidence=='1) Assoc w R'").mutation.values
-    isolates_R = isolate_variants_df.query("mutation in @cat1_mutations & FILTER == 'PASS' & Isolate in @df.Isolate.values").Isolate.values
+    highConf_mutations = who_variants_df.query("drug == @drug_abbr & confidence in ['1) Assoc w R', '2) Assoc w R - Interim']").mutation.values
+    isolates_R = isolate_variants_df.query("mutation in @highConf_mutations & FILTER in ['PASS', 'Amb'] & AF >= @AF_thresh & Isolate in @df.Isolate.values").Isolate.values
         
-    df_pred_catalog = df[["Isolate", f"{drug}_midpoint"]]
-    df_pred_catalog["y_test"] = (df[f"{drug}_midpoint"] > binary_thresh).astype(int)
+    df_pred_catalog = df[["Isolate", f"{drug_abbr}_upper_bound"]]
+    df_pred_catalog["y_test"] = (df[f"{drug_abbr}_upper_bound"] > binary_thresh).astype(int)
     df_pred_catalog["y_pred"] = df_pred_catalog["Isolate"].map(dict(zip(isolates_R, np.ones(len(isolates_R))))).fillna(0).astype(int)
+    df_pred_catalog.to_csv(savefName, index=False)
     
     df_stats = compute_binary_metrics(df_pred_catalog["y_test"], df_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
     df_stats["CV"] = 0
@@ -33,10 +58,10 @@ def mutation_catalog_with_bootstrapping(df, drug, who_variants_df, isolate_varia
         
         bs_sample_idx = np.random.choice(df.index.values, size=len(df), replace=True)
         bs_df = df.iloc[bs_sample_idx, :]
-        bs_isolates_R = isolate_variants_df.query("mutation in @cat1_mutations & FILTER == 'PASS' & Isolate in @bs_df.Isolate.values").Isolate.values
+        bs_isolates_R = isolate_variants_df.query("mutation in @highConf_mutations & FILTER in ['PASS', 'Amb'] & AF >= @AF_thresh & Isolate in @bs_df.Isolate.values").Isolate.values
         
-        bs_pred_catalog = bs_df[["Isolate", f"{drug}_midpoint"]]
-        bs_pred_catalog["y_test"] = (bs_df[f"{drug}_midpoint"] > binary_thresh).astype(int)
+        bs_pred_catalog = bs_df[["Isolate", f"{drug_abbr}_upper_bound"]]
+        bs_pred_catalog["y_test"] = (bs_df[f"{drug_abbr}_upper_bound"] > binary_thresh).astype(int)
         bs_pred_catalog["y_pred"] = bs_pred_catalog["Isolate"].map(dict(zip(bs_isolates_R, np.ones(len(bs_isolates_R))))).fillna(0).astype(int)
         
         bs_df_stats = compute_binary_metrics(bs_pred_catalog["y_test"], bs_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
@@ -49,28 +74,43 @@ def mutation_catalog_with_bootstrapping(df, drug, who_variants_df, isolate_varia
 
 
 
-def classify_using_mutation_catalog(drug, data_path, who_variants_df, binary_thresh, valOnlykeepidx=None, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"]):
+def classify_using_mutation_catalog(config_file, who_variants_df, valOnlykeepidx=None, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"], AF_thresh=0.75):
 
-    isolate_variants_df = pd.read_csv(os.path.join(data_path, drug, "isolate_variants_fixed_annot.csv"))
+    kwargs = yaml.safe_load(open(config_file, "r"))
+
+    df_phenos = pd.read_csv(kwargs["phenotype_file"])
+    data_path = os.path.dirname(kwargs["phenotype_file"])
+    locus_list = kwargs["locus_list"]
+    drug_abbr = kwargs["drug"]
+    drug = abbr_drug_dict[drug_abbr]
+    output_path = kwargs["output_path"]
+    binary_thresh = kwargs["binary_thresh"]
+    include_lineage = kwargs["include_lineage"]
+    isolate_variants_df = pd.read_csv(os.path.join(data_path, "isolate_variants_fixed_annot.csv"))
+
+    if AF_thresh == 0.25:
+        suffix = "_lowAF"
+    else:
+        suffix = ""
     
-    df_train = pd.read_csv(os.path.join(data_path, drug, "data_for_model.csv")).query("category=='original_train_set'")
-    df_test = pd.read_csv(os.path.join(data_path, drug, "data_for_model.csv")).query("category=='original_test_set'")
+    df_train = df_phenos.query("category=='original_train_set'")
+    df_test = df_phenos.query("category=='original_test_set'")
 
-    if os.path.isfile(os.path.join(data_path, drug, "validation_data_for_model.csv")):
+    if os.path.isfile(os.path.join(data_path, "validation_data_for_model.csv")):
         include_val = True
-        df_val = pd.read_csv(os.path.join(data_path, drug, "validation_data_for_model.csv"))
+        df_val = pd.read_csv(os.path.join(data_path, "validation_data_for_model.csv"))
     else:
         include_val = False
 
     if valOnlykeepidx is None:
-        df_train = mutation_catalog_with_bootstrapping(df_train, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+        df_train = mutation_catalog_with_bootstrapping(df_train, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_train_predictions{suffix}.csv"), AF_thresh=AF_thresh)
         df_train["Dataset"] = "Train"
         
-        df_test = mutation_catalog_with_bootstrapping(df_test, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+        df_test = mutation_catalog_with_bootstrapping(df_test, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_test_predictions{suffix}.csv"), AF_thresh=AF_thresh)
         df_test["Dataset"] = "Test"
 
         if include_val:
-            df_val = mutation_catalog_with_bootstrapping(df_val, drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+            df_val = mutation_catalog_with_bootstrapping(df_val, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_validation_predictions{suffix}.csv"), AF_thresh=AF_thresh)
             df_val["Dataset"] = "Validation"
             
             return pd.concat([df_train, df_test, df_val], axis=0).reset_index(drop=True)
@@ -79,7 +119,7 @@ def classify_using_mutation_catalog(drug, data_path, who_variants_df, binary_thr
             
     else:
         # only return results for the validation set
-        df_val = mutation_catalog_with_bootstrapping(df_val.iloc[valOnlykeepidx], drug, who_variants_df, isolate_variants_df, binary_thresh, return_stats)
+        df_val = mutation_catalog_with_bootstrapping(df_val.iloc[valOnlykeepidx], drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_validation_predictions{suffix}.csv"), AF_thresh=AF_thresh)
         df_val["Dataset"] = "Validation"
         return df_val
 
@@ -103,7 +143,7 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
     pred_df["y_pred"] = np.squeeze(y_pred)
     pred_df["y_test"] = np.log2(pred_df["y_test"])
 
-    binned_mae, binned_mse, within_doubling = boundedLoss_predict(pred_df, binary_thresh)
+    binned_mae, binned_mse = boundedLoss_predict(pred_df, binary_thresh)
     
     if save_fName is not None:
         pred_df.to_csv(save_fName, index=False)
@@ -115,13 +155,13 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
                                "Binned_MSE": binned_mse,
                                "MAE": np.mean(np.abs(pred_df["y_pred"]-pred_df["y_test"])),
                                "MSE": np.mean(np.square(pred_df["y_pred"]-pred_df["y_test"])),
-                               #"Within_1Bin": within_1bin,
-                               "Within_doubling": within_doubling,
+                               # "Within_doubling": within_doubling,
                                "Spearman": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[0],
                                "Pearson": st.pearsonr(pred_df["y_pred"], pred_df["y_test"])[0],
                               }, index=[0])
 
-    binary_metrics_df = compute_binary_metrics(pred_df["y_test"], pred_df["y_pred"], binary_thresh, binarize=binarize)
+    # compute binary metrics using the upper bound
+    binary_metrics_df = compute_binary_metrics(pred_df["upper"], pred_df["y_pred"], binary_thresh, binarize=binarize)
     summary_df = pd.concat([summary_df, binary_metrics_df], axis=1)
     return summary_df
 
@@ -213,10 +253,11 @@ def binary_model_analysis(path, drug, cc, lineage=0, cv=True, plot=True, patienc
         return summary_df
     
 
-def quant_model_analysis(path, drug, lineage=0, bs=True, plot=True, patience=25, saveName=None):
-    
-    pred_df = pd.read_csv(os.path.join(path, "test_predictions.csv"))
-    history = pd.read_csv(os.path.join(path, "history.csv"))
+def quant_model_analysis(output_path, drug, include_lineage=False, include_peptide_length=False, bs=True, plot=True, patience=25, suffix="", saveName=None):
+
+    print(output_path)
+    pred_df = pd.read_csv(os.path.join(output_path, f"test_predictions{suffix}.csv"))
+    history = pd.read_csv(os.path.join(output_path, "history.csv"))
     
     if patience != 0:
         last_epoch = len(history) - patience
@@ -286,12 +327,14 @@ def quant_model_analysis(path, drug, lineage=0, bs=True, plot=True, patience=25,
                 os.makedirs(os.path.dirname(saveName))
             plt.savefig(saveName, dpi=300)
             
-    summary_df = pd.read_csv(os.path.join(path, "results.csv"))
-    summary_df["Lineage"] = lineage
+    summary_df = pd.read_csv(os.path.join(output_path, f"results{suffix}.csv"))
+    summary_df["Lineage"] = int(include_lineage)
+    summary_df["Peptide"] = int(include_peptide_length)
     
     if bs:
-        bs_results = pd.read_csv(os.path.join(path, "bootstrapping/results.csv"))
-        bs_results["Lineage"] = lineage
+        bs_results = pd.read_csv(os.path.join(output_path, f"bootstrapping/results{suffix}.csv"))
+        bs_results["Lineage"] = int(include_lineage)
+        bs_results["Peptide"] = int(include_peptide_length)
         summary_df = pd.concat([summary_df, bs_results])
 
     del_cols = ["AUC", "AUC_PR"]
@@ -342,8 +385,8 @@ def prepare_model_inputs(X, model_type, include_lineage, feature_names=None, lin
   
         if include_lineage:
             
-            # first combine the dataframes to preserve the features, then get only the features specified in the argument
-            assert sum(X.index.values != lineages_matrix.index.values) == 0
+            # # first combine the dataframes to preserve the features, then get only the features specified in the argument
+            # assert sum(X.index.values != lineages_matrix.index.values) == 0
             model_inputs = X.merge(lineages_matrix, left_index=True, right_index=True, how="inner")
             model_inputs = model_inputs[feature_names].values
         else:
@@ -430,8 +473,8 @@ def get_inputs_for_regression(config_file):
     # this is before anything has been dropped due to redundancy or not being present in the samples
     X_train_test = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "full_seq_matrix.pkl"))
 
-    df_train = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_train_set'").reset_index(drop=True)    
-    df_test = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_test_set'").reset_index(drop=True)    
+    df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)    
+    df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)    
 
     X_train = X_train_test.loc[df_train.ROLLINGDB_ID.values]
     X_test = X_train_test.loc[df_test.ROLLINGDB_ID.values]
@@ -478,11 +521,10 @@ def get_inputs_for_CNN(config_file, keep_idx=None):
     results_dir = kwargs["output_path"]
     fasta_dir = kwargs["genotype_input_directory"]
     include_lineage = kwargs["include_lineage"]
+    df_phenos = pd.read_csv(kwargs["phenotype_file"])
 
     binary_thresh = kwargs["binary_thresh"]
-    loss_type = kwargs["loss_type"]
     binary = kwargs["binary"]
-    bounded_loss = kwargs["bounded_loss"]
 
     # this is for samples that don't have data from the MIC-ML consortium, so there is no validation dataset
     if os.path.isfile(os.path.join(data_dir, "validation_data_for_model.csv")):
@@ -506,8 +548,8 @@ def get_inputs_for_CNN(config_file, keep_idx=None):
         df_val = None
         X_val = None
         
-    df_train = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_train_set'")
-    df_test = pd.read_csv(os.path.join(data_dir, "data_for_model.csv")).query("category=='original_test_set'")    
+    df_train = df_phenos.query("category=='original_train_set'")
+    df_test = df_phenos.query("category=='original_test_set'")    
 
     X_train_test = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_full.npz")).todense()
     X_train = X_train_test[df_train.index.values]

@@ -14,7 +14,7 @@ from data_utils import *
 
 class MtbGeneDataset(Sequence):
 
-    def __init__(self, sparse_file, phenotype_file, drug, locus_list, fasta_dir, binary, cc, train_or_test=None, shuffle_phenos=False, include_lineage=False, include_peptide_length=False, bounded_loss=False, data_idx=None, batch_size=128, shuffle=True):
+    def __init__(self, sparse_file, phenotype_file, drug, locus_list, fasta_dir, binary, cc, train_or_test=None, shuffle_phenos=False, include_lineage=False, include_peptide_length=False, lowAF=False, bounded_loss=False, data_idx=None, batch_size=128, shuffle=True):
         '''
         Sparse files for both the training and testing sets are available, so read those. 
 
@@ -24,9 +24,12 @@ class MtbGeneDataset(Sequence):
 
         If data_idx is specified, then within the pickle file (after train_or_test has been applied), get the specified indices of the data (actual indices, not sample names)
         '''
+
+        if lowAF:
+            file_suffix = "_lowAF"
         
         # read in the one-hot encoded files and convert from sparse to dense format. read in the phenotypes file
-        X = sparse.load_npz(sparse_file)
+        X = sparse.load_npz(sparse_file.replace(".npz", f"{file_suffix}.npz"))
         df_phenos = pd.read_csv(phenotype_file)
         
         # get only the training or testing set
@@ -67,7 +70,7 @@ class MtbGeneDataset(Sequence):
 
         if include_peptide_length:
 
-            locus_peptide_lengths = pd.read_csv(os.path.join(os.path.dirname(sparse_file).replace('_lineage', '').replace('_peptide', ''), "locus_peptide_lengths.csv"), index_col=[0])
+            locus_peptide_lengths = pd.read_csv(os.path.join(os.path.dirname(sparse_file).replace('_lineage', '').replace('_peptide', ''), f"gene_peptide_lengths{file_suffix}.csv"), index_col=[0])
 
             # reorder the isolates to match the rest of the data, then get the values to make it a matrix
             locus_peptide_lengths = locus_peptide_lengths.loc[df_phenos["ROLLINGDB_ID"]].values
@@ -122,7 +125,7 @@ class MtbGeneDataset(Sequence):
         self.shuffle = shuffle
         self.on_epoch_end()
         
-        print(f"{len(locus_list)} loci, longest locus: {X.shape[2]}, {len(self.pheno)} isolates, {self.num_snps} lineages, {self.num_peptides} summed peptide lengths")
+        print(f"{len(locus_list)} loci, longest locus: {X.shape[2]}, {len(self.pheno)} isolates, {self.num_snps} lineages, {self.num_peptides} peptide lengths")
         
     def on_epoch_end(self):
         '''

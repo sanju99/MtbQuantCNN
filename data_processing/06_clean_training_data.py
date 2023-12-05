@@ -125,19 +125,19 @@ if highConf_variants_present:
     df_combined = df_combined.loc[~((df_combined["ROLLINGDB_ID"].isin(highConf_isolates)) & (df_combined[f"{drug}_upper_bound"] < cc / 2))]
     print(f"Removed {prev_len - len(df_combined)} isolates with any of {len(who_high_conf)} category 1 mutations and MIC upper bound < {cc / 2}")
 
-# # kind of a weird case, but in some studies, they basically just measured R vs. S, but they record the MIC as <= CC or > CC. 
-# # The MIC of CC / 2 is rather uninformative and probably introduces noise because it's a very coarse value, so remove those cases
-# prev_len = len(df_combined)
-# df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == 0) & (df_combined[f"{drug}_upper_bound"] == cc))]
-# df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == cc) & (df_combined[drug] == f">{int(cc)}"))]
-# print(f"Removed {prev_len - len(df_combined)} isolates with MICs that are known only relative to the critical concentration of {cc}")
+# kind of a weird case, but in some studies, they basically just measured R vs. S, but they record the MIC as <= CC or > CC. 
+# The MIC of CC / 2 is rather uninformative and probably introduces noise because it's a very coarse value, so remove those cases
+prev_len = len(df_combined)
+df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == 0) & (df_combined[f"{drug}_upper_bound"] == cc))]
+df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == cc) & (df_combined[drug] == f">{int(cc)}"))]
+print(f"Removed {prev_len - len(df_combined)} isolates with MICs that are known only relative to the critical concentration of {cc}")
 
-# # because the CC for RIF was updated, also include the CC of 1
-# if drug == "RIF":
-#     prev_len = len(df_combined)
-#     df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == 0) & (df_combined[f"{drug}_upper_bound"] == 1))]
-#     df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == 1) & (df_combined[drug] == ">1"))]
-#     print(f"Removed {prev_len - len(df_combined)} isolates with MICs that are known only relative to the old critical concentration of 1")
+# because the CC for RIF was updated, also include the CC of 1
+if drug == "RIF":
+    prev_len = len(df_combined)
+    df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == 0) & (df_combined[f"{drug}_upper_bound"] == 1))]
+    df_combined = df_combined.loc[~((df_combined[f"{drug}_lower_bound"] == 1) & (df_combined[drug] == ">1"))]
+    print(f"Removed {prev_len - len(df_combined)} isolates with MICs that are known only relative to the old critical concentration of 1")
 
 # remove the following from datasets because otherwise not sure what to do about sensitivity/specificity. i.e. is such a sample R or S?
 prev_len = len(df_combined)

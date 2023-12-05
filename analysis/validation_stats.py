@@ -25,7 +25,11 @@ results_path = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
 data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
 vcf_dir = "/n/scratch3/users/s/sak0914/annotated_VCF"
 
-who_variants_clean = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
+# who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean_V2.csv", usecols=['drug', 'gene', 'mutation', 'confidence'])
+
+who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
+who_variants[['gene', 'variant']] = who_variants['mutation'].str.split('_', n=1, expand=True)
+del who_variants['genome_index']
 
 tracemalloc.start()
 
@@ -71,7 +75,7 @@ def get_CNN_results(config_file, keep_idx=None):
         if keep_idx is None:
             print(create_summary_df(df_val, model.predict(X_val, batch_size=BATCH_SIZE).flatten(), drug, binary_thresh, num_loci, "CNN", binarize=True, save_fName=os.path.join(results_dir, "validation", "CNN_predictions.csv")))
         else:
-            print(create_summary_df(df_val, model.predict(X_val, batch_size=BATCH_SIZE).flatten(), drug, binary_thresh, num_loci, "CNN", binarize=True, save_fName=None))
+            print(create_summary_df(df_val, model.predict(X_val, batch_size=BATCH_SIZE).flatten(), drug, binary_thresh, num_loci, "CNN", binarize=True, save_fName=os.path.join(results_dir, "validation", "CNN_predictions_noCat1LowMIC.csv")))
             
     # iterate through the bootstrap models
     results = []
@@ -155,7 +159,7 @@ def get_Reg_results(config_file, keep_idx=None):
         if keep_idx is None:
             print(create_summary_df(df_val, np.squeeze(model.predict(X_val)), drug, binary_thresh, num_loci, "Regression", binarize=True, save_fName=os.path.join(os.path.dirname(ridge_dir), "validation", "Reg_predictions.csv")))
         else:
-            print(create_summary_df(df_val, np.squeeze(model.predict(X_val)), drug, binary_thresh, num_loci, "Regression", binarize=True, save_fName=None))
+            print(create_summary_df(df_val, np.squeeze(model.predict(X_val)), drug, binary_thresh, num_loci, "Regression", binarize=True, save_fName=os.path.join(os.path.dirname(ridge_dir), "validation", "Reg_predictions_noCat1LowMIC.csv")))
     else:
         print(X_test.shape)
         
@@ -218,15 +222,15 @@ if not os.path.isdir(os.path.join(output_path, "validation")):
 
 print(f"Saving results to {os.path.join(output_path, 'validation')}")
 
-if val_subset == "True":
+if val_subset.upper() == "TRUE":
 
     if not os.path.isfile(os.path.join(data_dir, drug, "validation_data_for_model.csv")):
         print(f"There is no validation data for {drug}. Quitting...")
         exit()
     
     df_val = pd.read_csv(os.path.join(data_dir, drug, "validation_data_for_model.csv"))
-    keep_idx = df_val.query(f"~(WHO_Cat1_mutation == 1 & {drug}_midpoint < @binary_thresh)").index.values
-    print(f"Removing {len(df_val) - len(keep_idx)}/{len(df_val)} isolates with Category 1 mutations and MIC midpoints less than the CC of {binary_thresh}")
+    keep_idx = df_val.query(f"~(WHO_Cat1_mutation == 1 & {drug}_upper_bound <= @binary_thresh / 2)").index.values
+    print(f"Removing {len(df_val) - len(keep_idx)}/{len(df_val)} isolates with Category 1 mutations and MIC upper bounds ≤ the 1/2 the CC of {binary_thresh}")
     save_suffix = "_noCat1LowMIC"
     
     if len(keep_idx) == 0:
@@ -235,20 +239,24 @@ if val_subset == "True":
 else:
     keep_idx = None
     save_suffix = ""
+
+
+# same classifier with and without lineage, but run anyway so there's another copy in the lineage directory
+catalog_stats = classify_using_mutation_catalog(config_file, who_variants, valOnlykeepidx=keep_idx, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"], AF_thresh=0.75)
+catalog_stats.to_csv(os.path.join(output_path, f"validation/catalog_stats{save_suffix}.csv"), index=False)
+
+# also run with lowering the AF to 0.25 because of heteroresistance
+catalog_stats = classify_using_mutation_catalog(config_file, who_variants, valOnlykeepidx=keep_idx, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"], AF_thresh=0.25)
+catalog_stats.to_csv(os.path.join(output_path, f"validation/catalog_stats{save_suffix}_lowAF.csv"), index=False)
+
+# # no validation data for Pyrazinamide
+# if drug != "PZA":
+
+#     CNN_stats = get_CNN_results(config_file, keep_idx=keep_idx)
+#     CNN_stats.to_csv(os.path.join(output_path, f"validation/CNN_stats{save_suffix}.csv"), index=False)
     
-
-# same classifier with and without lineage, so don't run it for lineage models
-# get catalog results for all three datasets -- train, test, and validation because they were not previously computed, but the quant model metrics were already computed for train and test
-# therefore, the CNN and Regression stats will only be computed on the validation data
-if not include_lineage:
-    catalog_stats = classify_using_mutation_catalog(drug, data_dir, who_variants_clean, binary_thresh, valOnlykeepidx=keep_idx, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"])
-    catalog_stats.to_csv(os.path.join(output_path, f"validation/catalog_stats{save_suffix}.csv"), index=False)
-
-# CNN_stats = get_CNN_results(config_file, keep_idx=keep_idx)
-# CNN_stats.to_csv(os.path.join(output_path, f"validation/CNN_stats{save_suffix}.csv"), index=False)
-
-# Reg_stats = get_Reg_results(config_file, keep_idx=keep_idx)
-# Reg_stats.to_csv(os.path.join(output_path, f"validation/Reg_stats{save_suffix}.csv"), index=False)
+#     Reg_stats = get_Reg_results(config_file, keep_idx=keep_idx)
+#     Reg_stats.to_csv(os.path.join(output_path, f"validation/Reg_stats{save_suffix}.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

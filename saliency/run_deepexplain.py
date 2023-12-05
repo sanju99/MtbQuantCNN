@@ -10,7 +10,7 @@ from deepexplain.tensorflow import DeepExplain
 # utils files are in the model folder
 sys.path.append("utils")
 from model_utils import *
-from data_utils import *
+from inSilicoMut_utils import *
 from dataloader import MtbGeneDataset
 
 # This was suggested in a pull request in the DeepExplain repo to make this compatible with TF v2 models.
@@ -35,19 +35,36 @@ BATCH_SIZE = kwargs["batch_size"]
 N_epochs = kwargs["N_epochs"]
 patience_epochs = kwargs["patience_epochs"]
 
-output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary = kwargs["binary"]
 binary_thresh = kwargs["binary_thresh"]
 include_lineage = kwargs["include_lineage"]
-include_peptide_length = kwargs["include_peptide_length"]
+include_peptide_length = True #kwargs["include_peptide_length"]
+
+# naming consistency
+output_path = kwargs["output_path"]
+output_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+if include_peptide_length:
+    output_path += "_peptide"
+    
+if include_lineage:
+    output_path += "_lineage"
 
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
+seq_data_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+if os.path.isfile(os.path.join(seq_data_path, "pkl_sparse_full.npz")): 
+    print("Input one-hot encodings files exists. Proceeding with modeling \n")    
+else:
+    print("Making input one-hot encodings file...\n")
+    make_geno_pheno_files(seq_data_path, **kwargs)
     
 # get longest locus from the pickle file
-X_h37rv = sparse.load_npz(os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_ref.npz')).todense()
+X_h37rv = sparse.load_npz(os.path.join(seq_data_path, 'pkl_sparse_ref.npz')).todense()
+print(f"Reference shape: {X_h37rv.shape}")
 
 # shape = 1 x 5 x longest_locus x num_loci
 longest_locus = X_h37rv.shape[2]
@@ -57,7 +74,7 @@ print(f"Longest locus: {longest_locus}")
 # the bounds are not necessary for this script, so it's easier to just omit them instead of putting dummy variables into ref_data
 # use all the data (train + test) for computing saliency scores. Test data won't be reflected in the trained model, but an allele different from reference may have an influence
 data_generator = MtbGeneDataset(
-    os.path.join(output_path.replace("_lineage", ""), 'pkl_sparse_full.npz'),
+    os.path.join(seq_data_path, 'pkl_sparse_full.npz'),
     phenotype_file,
     drug,
     locus_list,
@@ -79,11 +96,12 @@ num_lineages = lineages.shape[1]
 del lineages
 
 if include_peptide_length:
-    peptide_lengths_df = make_H37Rv_CDS_length_df(locus_list, genotype_input_directory)
+    peptide_lengths_df, gene_locus_dict = make_H37Rv_CDS_length_df(locus_list, genotype_input_directory)
 
     # ensure same order as locus_list because those are the lengths that the model was trained on
-    H37Rv_peptide_lengths = pd.DataFrame(peptide_lengths_df.groupby("Locus")["Length"].sum()).loc[locus_list].T.reset_index(drop=True)
-
+    # H37Rv_peptide_lengths = pd.DataFrame(peptide_lengths_df.groupby("Locus")["Length"].sum()).loc[locus_list].T.reset_index(drop=True)
+    H37Rv_peptide_lengths = peptide_lengths_df[['Gene', 'Length']].set_index('Gene').T.reset_index(drop=True)
+    
     if include_lineage:
         # the lineage SNP schemes all use H37Rv as the reference, so it's easy because the H37Rv SNPs are all 0
         ref_mlp_data = np.concatenate([np.zeros((1, num_lineages)), H37Rv_peptide_lengths.values], axis=1)
@@ -155,7 +173,7 @@ def get_saliency_scores(weights_path, data_generator, ref_data, saliency_dir, fi
 
             print(f"Working on batch {idx+1} of {len(data_generator)}")
 
-            # the second index is the phenotypes
+            # the first index is the sequence data, the second index is the phenotypes
             X_train = batch[0]
 
             # when there are no additional inputs (only sequence inputs), an extra dimension gets added, so it's (1, 128, 5, longest_locus, num_loci)
@@ -195,10 +213,10 @@ def get_saliency_scores(weights_path, data_generator, ref_data, saliency_dir, fi
                 # full scores matrix
                 genetic_attr_by_nuc.append(attributions)
                 
-                for i, nuc_idx in enumerate(idx_to_ignore):
+                for pos, nuc_idx in enumerate(idx_to_ignore):
                     # set the index to ignore to 0
                     # samples x 5 x position x 1
-                    attributions[:, nuc_idx, i, :] = 0
+                    attributions[:, nuc_idx, pos, :] = 0
     
                 genetic_attr.append(np.sum(attributions, axis=1))
         

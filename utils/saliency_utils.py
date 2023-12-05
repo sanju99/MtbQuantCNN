@@ -20,13 +20,33 @@ h37Rv_coords = pd.read_csv(os.path.join(h37Rv_path, "h37Rv_coords_to_gene.csv"))
 h37Rv_coords_dict = dict(zip(h37Rv_coords["pos"].values, h37Rv_coords["region"].values))
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 
-who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
-
+who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean_V2.csv")
 coll_2014 = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
 freschi_2020 = pd.read_csv("/home/sak0914/who-analysis/data/freschi2020_SNP_scheme.tsv", sep="\t")
 
 coll_2014["position"] = coll_2014["position"].astype(int)
 freschi_2020["position"] = freschi_2020["position"].astype(int)
+
+
+drug_abbr_dict = {"Delamanid": "DLM",
+                  "Bedaquiline": "BDQ",
+                  "Clofazimine": "CFZ",
+                  "Ethionamide": "ETH",
+                  "Linezolid": "LZD",
+                  "Moxifloxacin": "MXF",
+                  "Capreomycin": "CAP",
+                  "Amikacin": "AMI",
+                  "Pretomanid": "PTM",
+                  "Pyrazinamide": "PZA",
+                  "Kanamycin": "KAN",
+                  "Levofloxacin": "LEV",
+                  "Streptomycin": "STM",
+                  "Ethambutol": "EMB",
+                  "Isoniazid": "INH",
+                  "Rifampicin": "RIF"
+                 }
+
+abbr_drug_dict = {value: key for key, value in drug_abbr_dict.items()}
 
 
 # create plotting class
@@ -236,7 +256,7 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
                 new_coord_df.loc[i, "Pos"] = row["Pos"]
 
         res_df = pd.concat([res_df, new_coord_df.iloc[:aln_len, :]])
-       
+
     if not save:
         plt.show()
     else:
@@ -247,10 +267,9 @@ def multi_locus_saliency(out_dir, binary, locus_list, sense_dict, gene_coords, f
 
 
 def did_cnn_find_pos(cnn_saliency_df, drug, cat_to_check=["1", "2"], significance=True):
-    
-    search_df = who_variants.loc[(who_variants.drug == drug) & (who_variants.confidence.str.contains("|".join(cat_to_check)))]
-    who_sites = [val for val in search_df.genome_index.str.split(",")]
-    who_pos = np.unique(list(itertools.chain.from_iterable(who_sites))).astype(int)
+
+    drug_full_name = abbr_drug_dict[drug]
+    who_pos = who_variants.loc[(who_variants.drug == drug_full_name) & (who_variants.confidence.str.contains("|".join(cat_to_check)))]['POS'].unique()
     print(f"{len(who_pos)} Cat {'/'.join(cat_to_check)} WHO catalog sites for {drug}")
 
     # check if the CNN finds all sites as significant of the specified categories -- only RESISTANCE associated, so check max scores

@@ -25,15 +25,31 @@ _, config_file = sys.argv
 kwargs = yaml.safe_load((open(config_file)))
 drug = kwargs["drug"]
 include_lineage = kwargs["include_lineage"]
-include_peptide_length = kwargs["include_peptide_length"]
 binary_thresh = kwargs["binary_thresh"]
 locus_list = kwargs["locus_list"]
 num_loci = len(locus_list)
-fasta_dir = kwargs["genotype_input_directory"]
+genotype_input_directory = kwargs["genotype_input_directory"]
 df_phenos = pd.read_csv(kwargs['phenotype_file'])
 loss_type = "L1"
 
+include_peptide_length = True
+lowAF = False
+
+if lowAF:
+    suffix = "_lowAF"
+else:
+    suffix = ""
+
+# naming consistency
 output_path = kwargs["output_path"]
+output_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+if include_peptide_length:
+    output_path += "_peptide"
+    
+if include_lineage:
+    output_path += "_lineage"
+
 ridge_dir = os.path.join(output_path, "ridge")
     
 if not os.path.isdir(ridge_dir):
@@ -42,26 +58,23 @@ if not os.path.isdir(ridge_dir):
 print(f"Saving results to {ridge_dir}")
 seq_data_path = output_path.replace("_lineage", "").replace("_peptide", "")
 
-gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
-h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
+# make dataframes of coordinates
+gene_coords, _ = get_gene_coords(locus_list, genotype_input_directory)
+h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, genotype_input_directory)
 
 if os.path.isfile(os.path.join(seq_data_path, "pkl_sparse_full.npz")): 
     print("Input one-hot encodings file exists. Proceeding with modeling \n")    
 else:
     print("Making input one-hot encodings file...\n")
-    make_geno_pheno_files(**kwargs)
+    make_geno_pheno_files(seq_data_path, **kwargs)
 
 # read in matrices of input sequences
-full_matrix = sparse.load_npz(f"{seq_data_path}/pkl_sparse_full.npz").todense()
+full_matrix = sparse.load_npz(f"{seq_data_path}/pkl_sparse_full{suffix}.npz").todense()
 ref_matrix = sparse.load_npz(f"{seq_data_path}/pkl_sparse_ref.npz").todense()
 
-# make dataframes of coordinates
-gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
-h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)    
-
 # same input file for models with and without lineages because these are just sequences
-full_mat_file = os.path.join(ridge_dir.replace("_lineage", "").replace("_peptide", ""), "full_seq_matrix.pkl")
-ref_mat_file = os.path.join(ridge_dir.replace("_lineage", "").replace("_peptide", ""), "ref_seq_matrix.pkl")
+full_mat_file = os.path.join(ridge_dir.replace("_lineage", "").replace("_peptide", ""), f"full_seq_matrix{suffix}.pkl")
+ref_mat_file = os.path.join(ridge_dir.replace("_lineage", "").replace("_peptide", ""), f"ref_seq_matrix{suffix}.pkl")
 
 
 if os.path.isfile(full_mat_file) and os.path.isfile(ref_mat_file):
@@ -89,18 +102,17 @@ else:
     df_ref.to_pickle(ref_mat_file)
 
 
-# make peptide lengths dataframe if it has not already been created
-if include_peptide_length and not os.path.isfile(os.path.join(seq_data_path, "locus_peptide_lengths.csv")):
+# # make peptide lengths dataframe if it has not already been created
+# if include_peptide_length and not os.path.isfile(os.path.join(seq_data_path, "gene_peptide_lengths.csv")):
 
-    if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-        all_loci_seq = create_all_loci_matrices(config_file)
-        pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
+#     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
+#         all_loci_seq = create_all_loci_matrices(config_file)
+#         pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
     
-    locus_peptide_lengths = make_CDS_length_df(locus_list, genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
+#     locus_peptide_lengths = make_CDS_length_df(locus_list, genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
     
-    # keep index because that's the samples column
-    locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "locus_peptide_lengths.csv"))
-    
+#     # keep index because that's the samples column
+#     locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"))
 
 
 def ridge_cv_select_regularization(df_seq, df_phenos, drug, include_lineage, binary_thresh, num_loci):
@@ -119,7 +131,7 @@ def ridge_cv_select_regularization(df_seq, df_phenos, drug, include_lineage, bin
 
     if include_peptide_length:
         print("    Fitting model with peptide lengths")
-        locus_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "locus_peptide_lengths.csv"), index_col=[0])
+        locus_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"), index_col=[0])
 
         # reorder the isolates to match the rest of the data, then get the values to make it a matrix
         locus_peptide_lengths = locus_peptide_lengths.loc[df_phenos["ROLLINGDB_ID"]]
@@ -203,7 +215,7 @@ def ridge_mic(df_seq, df_phenos, drug, include_lineage, binary_thresh, num_loci,
 
     if include_peptide_length:
         print("    Fitting model with peptide lengths")
-        locus_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "locus_peptide_lengths.csv"), index_col=[0])
+        locus_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"), index_col=[0])
 
         # reorder the isolates to match the rest of the data, then get the values to make it a matrix
         locus_peptide_lengths = locus_peptide_lengths.loc[df_phenos["ROLLINGDB_ID"]]
@@ -217,44 +229,55 @@ def ridge_mic(df_seq, df_phenos, drug, include_lineage, binary_thresh, num_loci,
 
     df_seq_train = df_seq.iloc[train_idx, :]
     df_seq_test = df_seq.iloc[test_idx, :]
-    
-    # remove redundant sites
-    df_seq_train = remove_redundant_sites_for_Reg(df_seq_train, df_ref, h37Rv_coords)
 
-    # save the features to use for validation data prediction, then use only those for the test matrix
-    keep_features = df_seq_train.columns
-    pd.Series(keep_features).to_csv(os.path.join(ridge_dir, "model_features.txt"), index=False, sep="\t", header=None)
-    df_seq_test = df_seq_test[keep_features]
-        
-    print(f"    Minimizing {loss_type} loss")
-    y_train = np.log2(df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"].values)
-        
-    X_train = df_seq_train.values
-    X_test = df_seq_test.values
-    print(f"    Train: {X_train.shape}, Test: {X_test.shape}")
-        
-    # perform mean / SD scaling using the training set
-    train_mean = X_train.mean()
-    train_sd = X_train.std()
-        
-    X_train = (X_train - train_mean) / train_sd
-    X_test = (X_test - train_mean) / train_sd
+    # only use the lowAF for predicting using an existing model, not for training
+    if not lowAF:
+        # remove redundant sites
+        df_seq_train = remove_redundant_sites_for_Reg(df_seq_train, df_ref, h37Rv_coords)
     
-    # fit a new model with the selected alpha parameter
-    model = Ridge(alpha=alpha)
-    # model = CustomRidge(alpha, 
-    #                     df_phenos.query("category=='original_train_set'")[f"{drug}_lower_bound"], 
-    #                     df_phenos.query("category=='original_train_set'")[f"{drug}_upper_bound"], 
-    #                     loss_type=loss_type, 
-    #                     solver="auto"
-    #                    )
-    model.fit(X_train, y_train)
-    pickle.dump(model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
+        # save the features to use for validation data prediction, then use only those for the test matrix
+        keep_features = df_seq_train.columns
+        pd.Series(keep_features).to_csv(os.path.join(ridge_dir, "model_features.txt"), index=False, sep="\t", header=None)
+            
+        print(f"    Minimizing {loss_type} loss")
+        y_train = np.log2(df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"].values)
+            
+        X_train = df_seq_train.values
+            
+        # perform mean / SD scaling using the training set, then save the values for later use, if needed
+        train_mean = X_train.mean()
+        train_sd = X_train.std()
+        np.save(os.path.join(ridge_dir, "train_mean_sd.npy"), np.array([train_mean, train_sd]))
+            
+        X_train = (X_train - train_mean) / train_sd
+        print(f"    Train: {X_train.shape}")
+        
+        # fit a new model with the selected alpha parameter
+        model = Ridge(alpha=alpha)
+        # model = CustomRidge(alpha, 
+        #                     df_phenos.query("category=='original_train_set'")[f"{drug}_lower_bound"], 
+        #                     df_phenos.query("category=='original_train_set'")[f"{drug}_upper_bound"], 
+        #                     loss_type=loss_type, 
+        #                     solver="auto"
+        #                    )
+        model.fit(X_train, y_train)
+        pickle.dump(model, open(os.path.join(ridge_dir, "model.sav"), "wb"))
+    else:
+        # get the mean and standard deviation from the original X_train to standardize the input matrix with
+        train_mean, train_sd = np.load(os.path.join(ridge_dir, "train_mean_sd.npy"))
+        
+        # get the features used for training the original model with AF = 75%
+        keep_features = pd.read_csv(os.path.join(ridge_dir, "model_features.txt"), sep="\t", header=None)[0].values
+
+    df_seq_test = df_seq_test[keep_features]
+    X_test = df_seq_test.values
+    print(f"Test: {X_test.shape}")
+    X_test = (X_test - train_mean) / train_sd
 
     model = pickle.load(open(os.path.join(ridge_dir, "model.sav"), "rb"))
     y_pred = model.predict(X_test)
     
-    summary_df = create_summary_df(df_phenos.query("category=='original_test_set'"), y_pred, drug, binary_thresh, num_loci, model_name="LinReg", binarize=True, save_fName=os.path.join(ridge_dir, "test_predictions.csv"))
+    summary_df = create_summary_df(df_phenos.query("category=='original_test_set'"), y_pred, drug, binary_thresh, num_loci, model_name="LinReg", binarize=True, save_fName=os.path.join(ridge_dir, f"test_predictions{suffix}.csv"))
     summary_df["CV"] = 0
 
     if loss_type == "L1":
@@ -265,10 +288,15 @@ def ridge_mic(df_seq, df_phenos, drug, include_lineage, binary_thresh, num_loci,
     return summary_df
 
 
-select_alpha = ridge_cv_select_regularization(df_seq, df_phenos, drug, include_lineage, binary_thresh, num_loci)
+if os.path.isfile(os.path.join(ridge_dir, "reg_param_losses.csv")):
+    losses_df = pd.read_csv(os.path.join(ridge_dir, "reg_param_losses.csv"))
+    select_alpha = losses_df.sort_values("val_loss", ascending=True)["alpha"].values[0]
+else:
+    select_alpha = ridge_cv_select_regularization(df_seq, df_phenos, drug, include_lineage, binary_thresh, num_loci)
+
 results_df = ridge_mic(df_seq, df_phenos, drug, include_lineage, binary_thresh, num_loci, select_alpha)
 results_df[["Lineage", "Num_Loci"]] = [int(include_lineage), num_loci]
-results_df.to_csv(os.path.join(ridge_dir, "results.csv"), index=False)
+results_df.to_csv(os.path.join(ridge_dir, f"results{suffix}.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

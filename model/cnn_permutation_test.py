@@ -1,4 +1,4 @@
-import sys, glob, os, yaml, sparse, tracemalloc
+import sys, glob, os, yaml, sparse, tracemalloc, pickle
 import numpy as np
 import pandas as pd
 import scipy.stats as st
@@ -30,11 +30,12 @@ phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
 include_lineage = kwargs["include_lineage"]
-include_peptide_length = kwargs["include_peptide_length"]
+
 N_epochs = 10000
 loss_type = "L1"
 binary = kwargs["binary"]
 bounded_loss = kwargs["bounded_loss"]
+include_peptide_length = True
 
 num_loci = len(locus_list)
 df_phenos = pd.read_csv(phenotype_file)
@@ -48,19 +49,28 @@ else:
     save_prefix = "quant"
 
 seq_data_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+# naming consistency
+output_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+if include_peptide_length:
+    output_path += "_peptide"
+    
+if include_lineage:
+    output_path += "_lineage"
     
 # make peptide lengths dataframe if it has not already been created
-if include_peptide_length and not os.path.isfile(os.path.join(seq_data_path, "locus_peptide_lengths.csv")):
+if include_peptide_length and not os.path.isfile(os.path.join(seq_data_path, "gene_peptide_lengths.csv")):
 
     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-        raise ValueError(f'Please create {os.path.join(seq_data_path, "seqDict.pkl")} using the saliency_utils functions before running this peptide lengths model')
+        all_loci_seq = create_all_loci_matrices(config_file)
+        pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
     
     locus_peptide_lengths = make_CDS_length_df(locus_list, genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
     
     # keep index because that's the samples column
-    locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "locus_peptide_lengths.csv"))
-
-
+    locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"))
+    
 # get longest locus from the pickle file
 X_h37rv = sparse.load_npz(os.path.join(seq_data_path, 'pkl_sparse_ref.npz'))
 longest_locus = X_h37rv.shape[2]
@@ -109,6 +119,7 @@ losses_df_grouped_alpha = pd.DataFrame(losses_df.groupby("alpha")["val_loss"].me
 select_alpha = np.round(losses_df_grouped_alpha.sort_values("val_loss", ascending=True)["alpha"].values[0], 6)  # not sure why, but some of the alphas are like 0.999999999 instead of 1
 print(f"    Regularization parameter: {select_alpha}, minimum average validation loss across CV splits: {losses_df_grouped_alpha.sort_values('val_loss', ascending=True)['val_loss'].values[0]}\n")
 
+# use reduced number of epochs to save time because the models aren't learning anything anyway 
 if drug == "PZA":
     patience_epochs = 75
 else:

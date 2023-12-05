@@ -24,16 +24,32 @@ _, config_file = sys.argv
 kwargs = yaml.safe_load((open(config_file)))
 drug = kwargs["drug"]
 include_lineage = kwargs["include_lineage"]
-include_peptide_length = kwargs["include_peptide_length"]
 binary_thresh = kwargs["binary_thresh"]
 locus_list = kwargs["locus_list"]
 num_loci = len(locus_list)
 loss_type = "L1"
-fasta_dir = kwargs["genotype_input_directory"]
+genotype_input_directory = kwargs["genotype_input_directory"]
 
 df_phenos = pd.read_csv(kwargs['phenotype_file'])
 
+include_peptide_length = False
+lowAF = False
+
+if lowAF:
+    suffix = "_lowAF"
+else:
+    suffix = ""
+    
+# naming consistency
 output_path = kwargs["output_path"]
+output_path = output_path.replace("_lineage", "").replace("_peptide", "")
+
+if include_peptide_length:
+    output_path += "_peptide"
+    
+if include_lineage:
+    output_path += "_lineage"
+    
 ridge_dir = os.path.join(output_path, "ridge")
 bootstrap_dir = os.path.join(output_path, "ridge", "bootstrapping")
     
@@ -43,22 +59,22 @@ if not os.path.isdir(bootstrap_dir):
 print(f"Saving results to {bootstrap_dir}")
 seq_data_path = output_path.replace("_lineage", "").replace("_peptide", "")
 
-gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
-h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
+gene_coords, _ = get_gene_coords(locus_list, genotype_input_directory)
+h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, genotype_input_directory)
 
 if os.path.isfile(os.path.join(output_path.replace("_lineage", ""), "pkl_sparse_full.npz")): 
     print("Input one-hot encodings file exists. Proceeding with modeling \n")    
 else:
     print("Making input one-hot encodings file...\n")
-    make_geno_pheno_files(**kwargs)
+    make_geno_pheno_files(seq_data_path, **kwargs)
 
 # read in matrices of input sequences
 full_matrix = sparse.load_npz(f"{seq_data_path}/pkl_sparse_full.npz").todense()
 ref_matrix = sparse.load_npz(f"{seq_data_path}/pkl_sparse_ref.npz").todense()
 
 # make dataframes of coordinates
-gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
-h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)    
+gene_coords, _ = get_gene_coords(locus_list, genotype_input_directory)
+h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, genotype_input_directory)    
 
 # same input file for models with and without lineages because these are just sequences
 full_mat_file = os.path.join(ridge_dir.replace("_lineage", "").replace("_peptide", ""), "full_seq_matrix.pkl")
@@ -66,15 +82,16 @@ ref_mat_file = os.path.join(ridge_dir.replace("_lineage", "").replace("_peptide"
 # feat_names_file = os.path.join(ridge_dir, "all_feature_names.txt")
 
 # make peptide lengths dataframe if it has not already been created
-if include_peptide_length and not os.path.isfile(os.path.join(seq_data_path, "locus_peptide_lengths.csv")):
+if include_peptide_length and not os.path.isfile(os.path.join(seq_data_path, "gene_peptide_lengths.csv")):
 
     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-        raise ValueError(f'Please create {os.path.join(seq_data_path, "seqDict.pkl")} using the saliency_utils functions before running this peptide lengths model')
+        all_loci_seq = create_all_loci_matrices(config_file)
+        pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
     
-    locus_peptide_lengths = make_CDS_length_df(locus_list, fasta_dir, os.path.join(seq_data_path, "seqDict.pkl"))
+    locus_peptide_lengths = make_CDS_length_df(locus_list, genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
     
     # keep index because that's the samples column
-    locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "locus_peptide_lengths.csv"))
+    locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"))
 
 df_seq = pd.read_pickle(full_mat_file)
 df_ref = pd.read_pickle(ref_mat_file)
@@ -96,7 +113,7 @@ if include_lineage:
 
 if include_peptide_length:
     print("    Fitting model with peptide lengths")
-    locus_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "locus_peptide_lengths.csv"), index_col=[0])
+    locus_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"), index_col=[0])
 
     # reorder the isolates to match the rest of the data, then get the values to make it a matrix
     locus_peptide_lengths = locus_peptide_lengths.loc[df_phenos["ROLLINGDB_ID"]]
@@ -144,7 +161,7 @@ def perform_one_bootstrap_rep(df_seq_train, df_seq_test, df_phenos, rep, drug, b
     model = pickle.load(open(os.path.join(bootstrap_dir, f"model_{rep}.sav"), "rb"))
     y_pred = model.predict(X_test)
     
-    summary_df = create_summary_df(df_phenos.query("category=='original_test_set'"), y_pred, drug, binary_thresh, num_loci, model_name="LinReg", binarize=True, save_fName=None)
+    summary_df = create_summary_df(df_phenos.query("category=='original_test_set'"), y_pred, drug, binary_thresh, num_loci, model_name="LinReg", binarize=True, save_fName=os.path.join(bootstrap_dir, f"predictions_{rep}.csv"))
     summary_df["CV"] = rep + 1
 
     return summary_df, pd.DataFrame({"Mean": train_mean, "SD": train_sd}, index=[0])

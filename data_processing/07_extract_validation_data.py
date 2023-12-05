@@ -338,9 +338,8 @@ if highConf:
     
     prev_len = len(paths_df)
     
-    # lower bound should be equal to or higher than the critical concentration
-    paths_df = paths_df.loc[~((paths_df["ROLLINGDB_ID"].isin(highConf_isolates)) & (paths_df[f"{drug}_lower_bound"] < binary_thresh / 2))]
-    print(f"Removed {prev_len - len(paths_df)} validation isolates with any of {len(who_high_conf)} category 1 mutations and MIC lower bound < {binary_thresh / 2}")
+    paths_df = paths_df.loc[~((paths_df["ROLLINGDB_ID"].isin(highConf_isolates)) & (paths_df[f"{drug}_upper_bound"] < binary_thresh / 2))]
+    print(f"Removed {prev_len - len(paths_df)} validation isolates with any of {len(who_high_conf)} category 1 mutations and MIC upper bound < {binary_thresh / 2}")
     
     paths_df.loc[paths_df["ROLLINGDB_ID"].isin(highConf_isolates), "WHO_Cat1_mutation"] = 1
     paths_df["WHO_Cat1_mutation"] = paths_df["WHO_Cat1_mutation"].fillna(0).astype(int)

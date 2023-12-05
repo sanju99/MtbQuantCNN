@@ -28,7 +28,7 @@ elif len(sys.argv) == 9:
     _, PATHS_FILE, ADDITIONAL_ISOLATES_FILE, INSILICO_MUTS_FILE, START, END, SENSE, OUT_FILE, SAVE_FASTA  = sys.argv
     
 else:
-    raise ValueError(f"Must pass in 7-9 command line arguments. You passed in {len(sys.argv)-1}")
+    raise ValueError(f"Must pass in 6-8 command line arguments. You passed in {len(sys.argv)-1}")
 
 START = int(START)
 END = int(END)
@@ -92,7 +92,7 @@ del h37Rv
 
     
     
-def allele_category(record, qualThresh=10, heteroThresh=0.25):
+def allele_category(record, qualThresh=10, presentThresh=0.75):
     '''
     Returns "alt" or "ref" if the variant is low-quality or ambiguous. Otherwise this function returns "missing"
     
@@ -151,17 +151,6 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
     # check if there are any non alphanumeric characters. This would indicate a heterogeneous alternative allele
     if not "".join(np.array(record.ALT).astype(str)).isalnum():
         return "missing"
-        
-    # PASS or Amb filters and an alternative allele fraction of less than 0.9 means we have a mixture of REF and ALT
-    if "Amb" in record.FILTER or len(record.FILTER) == 0:
-        
-        # default heteroThresh = 0.25. So alternative AF > 0.75 or AF < 0.25 to be a pure alternative call or reference call, respectively
-        if heteroThresh <= af <= (1-heteroThresh):
-            return "missing"
-        elif af < heteroThresh:
-            return "ref"
-        elif af > (1-heteroThresh):
-            return "alt"
 
     # low SNP quality
     if qual < qualThresh:
@@ -180,6 +169,20 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
     if len(record.REF) == len("".join(np.array(record.ALT).astype(str))) and 'BQ' in record.INFO.keys():
         if record.INFO['BQ'] < 20:
             return 'missing'
+
+    # PASS or Amb filters and an alternative allele fraction of less than 0.9 means we have a mixture of REF and ALT
+    if "AF" in record.INFO.keys(): #"Amb" in record.FILTER or len(record.FILTER) == 0:
+        # ≤ 25%, absent
+        if af <= 0.25:
+            return "ref"
+        elif af > presentThresh:
+            if (record.POS == 759627 and record.ALT == 'ACTTGACACCGTGGTCTTAGTC') or (record.POS == 761309 and record.ALT == 'CCCGTTCGGGTTCATCGAA'):
+                print(record)
+                return "ref"
+            else:
+                return "alt"
+        else:
+            return "missing"
         
     # if nothing has been returned, then the variant is high quality (there are no REF = ALT records in the input VCF files, so return the alternative variant)
     # the reference variant only gets returned above if FILTER == Amb and AF < 0.25
@@ -187,7 +190,7 @@ def allele_category(record, qualThresh=10, heteroThresh=0.25):
 
 
 
-def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
+def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END, qualThresh=10, presentThresh=0.75):
     
     new_seq = h37Rv_region.copy()
 
@@ -196,18 +199,27 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
     # start is 0-indexed (exclusive) and end is 1-indexed (inclusive)
     for record in vcf_file:
 
-        # get only the region of interest
-        if record.POS > START and record.POS <= END:
+        # convert alternative allele from list to string
+        alt_allele = "".join(np.array(record.ALT).astype(str))
+        ref_allele = str(record.REF)
 
+        # initialize False meaning don't insert this variant into the reference sequence
+        include_site = False
+
+        if record.POS > START and record.POS <= END:
+            include_site = True
+
+        # for large deletions, the variant site (POS field may not be in the region of interest, but the deletion runs into the region of interest)
+        # we don't want to exclude these, so add the lengths of the ref allele to the position to check that it overlaps the region
+        if record.POS < START and record.POS + len(ref_allele) >= START:
+            include_site = True
+
+        if include_site:
             # get the allele type: ref, alt, or missing
-            single_allele_type = allele_category(record) 
+            single_allele_type = allele_category(record, qualThresh, presentThresh) 
 
             # only change the sequence if the type is not reference
             if single_allele_type != "ref":
-            
-                # convert alternative allele from list to string
-                alt_allele = "".join(np.array(record.ALT).astype(str))
-                ref_allele = str(record.REF)
     
                 # the index to replace -- this is 0-indexed, consistent with Python
                 idx = record.POS - (START + 1)
@@ -228,15 +240,15 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
                     
                     # insertion -- insert both alternative and missing insertions
                     if len(alt_allele) > len(ref_allele):
-    
+                        
                         # replace the nucleotide at the reference index with the alternative nucleotides
                         # also add the number of gap characters needed (len(ALT) - len(REF) to insertion_dict at the appropriate index                        
                         # only input short insertions and also if they pass the QC filters. Leave the others as reference
-                        if (len(alt_allele) - len(ref_allele) <= 15):
-    
+                        if single_allele_type == "alt" or (single_allele_type == "missing" and (len(alt_allele) - len(ref_allele) <= 15)):
+                                
                             if single_allele_type == "missing":
                                 alt_allele = "N"*len(alt_allele)
-    
+
                             # if REF > 1, then the entire REF allele must be removed (across all positions) and replaced with the ALT allele
                             # do this with a dummy character, X, which will be later removed. 
                             # This is generalizable to even the case where REF == 1 because it will just replace the first index
@@ -248,48 +260,63 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
                             new_seq[idx] = alt_allele
     
                             insertion_dict[idx] = np.max([insertion_dict[idx], len(alt_allele) - len(ref_allele)])
-    
-                        # don't do anything if indels are very long
+        
+                        # don't do anything if indels are missing and very long
                         else:
                             continue
     
                     # deletion -- insert both alternative and missing deletions IF ALT IS OF LENGTH 1
-                    # insert only alternative deletions if they are <= 15 bp. Missing deletions can't be reliably inserted because you don't know where to start
+                    # insert only low-quality (Ns) deletions if they are <= 15 bp. Missing deletions can't be reliably inserted because you don't know where to start
                     # for the alternative case, you can match up the starts of the REF and ALT to figure out where to add gap characters
                     else:
     
                         if len(alt_allele) == 1:
-    
-                            new_allele = []
-                            assert alt_allele in ref_allele
-    
-                            # iterate through the reference to find where the alternative allele comes up first, then make everything else the gap character
-                            # boolean to check if we have found the alt_allele (assume that it would be the first instance of that nucleotide in the ref_allele)
-                            found_alt_allele = False
-    
-                            for i, nuc in enumerate(ref_allele):
-                                if nuc == alt_allele:
-                                    if not found_alt_allele:
-                                        new_allele.append(alt_allele)
-                                        found_alt_allele = True
+
+                            # case when the deletion starts outside the region of interest, but overlaps with the region
+                            if record.POS <= START or record.POS > END:
+
+                                # the last position (inclusive) that is deleted
+                                end_deletion_pos = record.POS + len(ref_allele) - 1
+
+                                # the ENTIRE region is deleted because the last deleted position is downstream of the last coordinate of the region
+                                if end_deletion_pos > END:
+                                    new_seq = ["-"] * len(h37Rv_region)
+                                else:
+                                    # everything from START to end_deletion_pos should become a gap character
+                                    # don't add 1 even though the second coordinate is exclusive because START is already 0-indexed, so it reduces the distance by 1 already
+                                    # can't replace multiple elements with a single character
+                                    new_seq[:end_deletion_pos - START] = ["-"]*(end_deletion_pos - START)
+
+                            else:
+                                new_allele = []
+                                # iterate through the reference to find where the alternative allele comes up first, then make everything else the gap character
+                                # boolean to check if we have found the alt_allele (assume that it would be the first instance of that nucleotide in the ref_allele)
+                                found_alt_allele = False
+        
+                                for i, nuc in enumerate(ref_allele):
+                                    if nuc == alt_allele:
+                                        if not found_alt_allele:
+                                            new_allele.append(alt_allele)
+                                            found_alt_allele = True
+                                        else:
+                                            new_allele.append("-")
                                     else:
                                         new_allele.append("-")
-                                else:
-                                    new_allele.append("-")
+        
+                                assert len(new_allele) == len(ref_allele)
+        
+                                # Python will replace all elements if the original and replace string are the same length
+                                old_len = len(new_seq)
+                                new_seq[idx:idx+len(ref_allele)] = new_allele
     
-                            assert len(new_allele) == len(ref_allele)
-    
-                            # Python will replace all elements if the original and replace string are the same length
-                            # add this step so that if the allele extends more than the region of interest, it is truncated
-                            old_len = len(new_seq)
-                            new_seq[idx:idx+len(ref_allele)] = new_allele
-                            new_seq = new_seq[:old_len]
-    
+                                # add this step so that if the allele extends more than the region of interest, it is truncated. This is for large deletions
+                                new_seq = new_seq[:old_len]
+
                         else:                        
                             # only input short deletions and also if they pass the QC filters and if the first nucleotide of the REF and ALT are the same. 
                             # In that case, replace the remaining characters of the REF list with the ALT nucleotides
                             # the point of this is mainly for the insilico mutations. Some of them have differing lengths, but the net change is a deletion
-                            if single_allele_type == "alt" and alt_allele[0] == ref_allele[0] and (len(ref_allele) - len(alt_allele) <= 15):
+                            if single_allele_type == "alt" and alt_allele[0] == ref_allele[0]:
     
                                 # the replacement is the alternative allele padded with gap characters. # of gap characters = the length difference between them 
                                 new_allele = list(alt_allele) + ['-'] * (len(ref_allele) - len(alt_allele))
@@ -318,11 +345,14 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END):
 global insertion_dict
 insertion_dict = dict(zip(np.arange(0, END-START), np.zeros(END-START)))
 
+AF_thresh = 0.25
+print(f"Considering AFs > {AF_thresh} as present")
+
 seq_dict = {}
 
 for i, fName in enumerate(paths):
     
-    seq_dict[os.path.basename(fName).replace(".eff", "").replace(".vcf", "")] = introduce_snps_indels_single_seq(fName, h37Rv_region, START, END)
+    seq_dict[os.path.basename(fName).replace(".eff", "").replace(".vcf", "")] = introduce_snps_indels_single_seq(fName, h37Rv_region, START, END, qualThresh=10, presentThresh=AF_thresh)
 
     if i % 1000 == 0:
         print(i)
