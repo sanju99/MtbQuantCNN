@@ -8,12 +8,10 @@ archive/
 *.gb
 *.vcf
 *_seqdf.csv
+*.gz
 
 # additional files for testing
 *_paths.txt
 config_*.yaml
 *insertion_sites_dict.csv
 *temp*
-
-# sensitive analysis info
-*.png
