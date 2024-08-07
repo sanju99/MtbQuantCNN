@@ -14,44 +14,32 @@ from data_utils import *
 
 h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
 h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+h37Rv_regions = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_v4.csv")
 
+drug_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
 
-# if not os.path.isfile("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean_V2.csv"):
+who_variants_V2 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V2.csv", header=[2]).reset_index(drop=True)
+who_variants_V1 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V1.csv")
 
-#     # don't do any pooled LoF variants
-#     who_variants = pd.read_csv("/home/sak0914/who-analysis/results/WHO-catalog-V2.csv", header=[2], low_memory=False)
-#     who_variants = who_variants.query("~effect.str.contains('|'.join(['feature_ablation', 'LoF']))")
-#     del who_variants["mutation"]
-#     del who_variants["genomic position"]
-    
-#     genomic_coordinates = pd.read_csv("/home/sak0914/who-analysis/results/genomic_coordinates.csv").drop_duplicates(["variant"], keep="first").query("~variant.str.contains('LoF')")
-#     print(who_variants.shape, genomic_coordinates.shape)
-    
-#     # create these manually, only use the WHO columns for protein-coding changes
-#     # this is because there are some combined noncoding variants and redundancies. Do it manually, but it's easy
-#     noncoding_manual_variants = genomic_coordinates.loc[(genomic_coordinates["variant"].str.contains('|'.join(['_n\.', '_c\.']))) & (~genomic_coordinates["variant"].str.contains('|'.join(['del', 'ins', 'dup'])))].reset_index(drop=True)
-    
-#     non_manual_variants = genomic_coordinates.loc[(~genomic_coordinates["variant"].str.contains('|'.join(['_n\.', '_c\.']))) | (genomic_coordinates["variant"].str.contains('|'.join(['del', 'ins', 'dup'])))].reset_index(drop=True)
-#     assert len(genomic_coordinates) == len(noncoding_manual_variants) + len(non_manual_variants)
-    
-#     noncoding_manual_variants["reference_nucleotide"] = [variant[-1] for variant in noncoding_manual_variants.variant.str.split(">", expand=True)[0]]
-#     noncoding_manual_variants["alternative_nucleotide"] = noncoding_manual_variants.variant.str.split(">", expand=True)[1]
-    
-#     assert sum(np.sort(noncoding_manual_variants['reference_nucleotide'].unique()) != np.array(['A', 'C', 'G', 'T'])) == 0
-#     assert sum(np.sort(noncoding_manual_variants['alternative_nucleotide'].unique()) != np.array(['A', 'C', 'G', 'T'])) == 0
-    
-#     combined_variants = pd.concat([noncoding_manual_variants, non_manual_variants]).sort_values(['variant', 'position'])
-#     who_variants = who_variants.merge(combined_variants[['variant', 'position', 'reference_nucleotide', 'alternative_nucleotide']], on='variant', how='left')
-#     assert len(who_variants.loc[pd.isnull(who_variants['reference_nucleotide'])]) == 0
-    
-#     who_variants.rename(columns={"variant": "mutation", "position": "POS", "reference_nucleotide": "REF", "alternative_nucleotide": "ALT", "FINAL CONFIDENCE GRADING": "confidence"}, inplace=True)
-#     who_variants.to_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean_V2.csv", index=False)
+drug_abbr_dict = {"Delamanid": "DLM",
+                  "Bedaquiline": "BDQ",
+                  "Clofazimine": "CFZ",
+                  "Ethionamide": "ETH",
+                  "Linezolid": "LZD",
+                  "Moxifloxacin": "MXF",
+                  "Capreomycin": "CAP",
+                  "Amikacin": "AMI",
+                  "Pretomanid": "PTM",
+                  "Pyrazinamide": "PZA",
+                  "Kanamycin": "KAN",
+                  "Levofloxacin": "LEV",
+                  "Streptomycin": "STM",
+                  "Ethambutol": "EMB",
+                  "Isoniazid": "INH",
+                  "Rifampicin": "RIF"
+                 }
 
-
-# who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean_V2.csv", usecols=["drug", "mutation", "gene", "variant", "effect", "confidence"])
-who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_catalog_clean.csv")
-who_variants[['gene', 'variant']] = who_variants['mutation'].str.split('_', n=1, expand=True)
-del who_variants['genome_index']
+abbr_drug_dict = {value: key for key, value in drug_abbr_dict.items()}
 
 
 def reverse_complement(seq):
@@ -110,7 +98,7 @@ def split_multisite_mutations_dataframe(df):
 
 
 
-def get_WHO_mutations(drug, gene=None):
+def get_WHO_mutations(drug, V1=True, genes_lst=None):
     '''
     This function returns 2 dictionaries:
     
@@ -126,14 +114,22 @@ def get_WHO_mutations(drug, gene=None):
     
     Splitting is necessary because the REF and ALT alleles for each nucleotide need to be filled in with another function.
     '''
-    who_variants_single_drug = who_variants.query("drug == @drug")
 
-    if gene is not None:
+    if V1:
+        who_variants_single_drug = who_variants_V1.query("drug == @drug")
         
-        if type(gene) is not list:
-            gene = list(gene)
+    else:
+        drug = abbr_drug_dict[drug]
 
-        return who_variants_single_drug.loc[who_variants_single_drug["mutation"].str.contains("|".join(gene))]
+        # keep only Tier 1 for V2 of the catalog
+        who_variants_single_drug = who_variants_V2.query("drug == @drug")
+
+    if genes_lst is not None:
+        
+        if type(genes_lst) is not list:
+            genes_lst = list(genes_lst)
+
+        return who_variants_single_drug.loc[who_variants_single_drug["gene"].isin(genes_lst)]
 
     else:
         return who_variants_single_drug
@@ -169,11 +165,18 @@ def get_aa_to_codon_table():
 
 
 
-def get_variant_number(variant, gene_sense):
+def get_variant_number(variant, gene_sense, return_start_and_end=False):
     '''
     This function takes a variant (no gene name) and returns the numerical part. If a variant has multiple numbers because it spans multiple sites, it returns the first one.
 
     It works on protein-coding, synonymous, and non-protein-coding variants
+
+    Returns the end position for negative sense genes and the start position for positive sense to return the MOST UPSTREAM
+
+    If return_start_and_end: then both start and end are returned. 
+    
+        By default (False), the earliest site in a protein is returned, which is the most upstream position. For negative sense genes,
+        that would be later in the protein actually. 
     '''
     
     num_idx = []
@@ -189,20 +192,31 @@ def get_variant_number(variant, gene_sense):
         single_site_lsts = split_consecutive_lists(num_idx)
         
         if len(single_site_lsts) > 2:
-            raise ValueError("More than 2 amino acid coordinates", row["variant"].values)
+            raise ValueError("More than 2 amino acid coordinates", variant)
         else:
             start_site = int(''.join(variant[k] for k in single_site_lsts[0]))
             end_site = int(''.join(variant[k] for k in single_site_lsts[1]))
             
-            # take the codon position of the start of the variant
-            if gene_sense == '-':
-                variant_number = end_site
-            else:
-                variant_number = start_site
+            # return both, but first need to determine if they are negative
+            if return_start_and_end:
 
-    # make it negative
+                if variant.replace('p.', '').replace('c.', '').replace('n.', '')[0] == '-':
+                    start_site *= -1
+                    
+                if variant.replace('p.', '').replace('c.', '').replace('n.', '').split('_')[-1][0] == '-':
+                    end_site *= -1
+                    
+                return start_site, end_site
+
+            else:
+                if gene_sense == '-':
+                    variant_number = end_site
+                else:
+                    variant_number = start_site
+
+    # make it negative if the variant is upstream of the gene
     if variant.replace('p.', '').replace('c.', '').replace('n.', '')[0] == '-':
-        variant_number = variant_number * -1
+        variant_number *= -1
 
     return variant_number
 
@@ -290,14 +304,14 @@ def split_consecutive_lists(lst):
 
 def make_noncoding_mutation(df, row, idx, genome_seq, gene_start, gene_end, gene_sense):
     '''
-    Everything is in positive sense, so coordinates are transformed using reverse_complement for negative sense genes
+    Everything should be in positive sense in the VCF (because that's what make_MSA.py assumes), so coordinates are transformed using reverse_complement for negative sense genes
     '''
     
     assert gene_sense in ["+", "-"]
-    variant = row["variant"]
+    variant = row["mutation"] # without the gene prefix
 
     # this is the numerical part of the variant. If there are multiple, then it returns the smallest position (most upstream)
-    variant_number = get_variant_number(variant, gene_sense)
+    variant_number = get_variant_number(variant, gene_sense, return_start_and_end=False)
 
     # the start of the gene is 0, so if the variant number is negative, then simply add that number (negative) from the start
     # if the variant number is positive, then add variant_number and subtract 1
@@ -328,13 +342,29 @@ def make_noncoding_mutation(df, row, idx, genome_seq, gene_start, gene_end, gene
         else:
             df.loc[idx, "ALT"] = variant.split(">")[1]
 
-    # indels, where REF_len != ALT_len
+    # not necessarily indels. MNPs could be here in the form delNNNinsNNN. This is how some synonymous variants are encoded
     else:
 
         # position will be 1 upstream of the current position (which is where the actual deletion or insertion occurs) UNLESS IT'S AN MNP, WHICH IS ENCODED AS DELINS
         new_pos = variant_pos - 1
+
+        # duplications always occur alone, never with del or ins
+        # same process as for insertions alone?
+        if "dup" in variant:
+
+            # if insertion occurs at position 10, then the variant in the synthetic VCF file should be at position 10. i.e. 10insAT --> POS = 10, REF = C, ALT = CAT
+            # subtract 1 because of 0-indexing in Python 
+            ref = str(genome_seq[variant_pos - 1])
+
+            df.loc[idx, ["POS", "REF"]] = [new_pos, ref] # genome_seq is positive sense
+    
+            # don't reverse complement the REF nucleotide because we want to reverse complement the inserted nucleotides to convert to positive sense coords
+            if gene_sense == '-':
+                df.loc[idx, "ALT"] = ref + reverse_complement(variant.split("dup")[1])
+            else:
+                df.loc[idx, "ALT"] = ref + variant.split("dup")[1]
         
-        if "ins" in variant:
+        elif "ins" in variant:
     
             # if insertion occurs at position 10, then the variant in the synthetic VCF file should be at position 10. i.e. 10insAT --> POS = 10, REF = C, ALT = CAT
             # subtract 1 because of 0-indexing in Python 
@@ -342,9 +372,13 @@ def make_noncoding_mutation(df, row, idx, genome_seq, gene_start, gene_end, gene
     
             # delins -- these are synonymous variants, where the codon is substituted but the same amino acid
             if "del" in variant:
-    
+
+                # the nucleotides in the name will be in the same sense as the gene. So need to reverse complement if negative sense
                 # note that the POS column is already the first position of the codon substitution, because of the function above run on the who_variants file for the V2 catalog results
-                df.loc[idx, ['POS', 'REF', 'ALT']] = [variant_pos, variant.split("del")[1].split("ins")[0], variant.split("ins")[1]]
+                if gene_sense == '-':
+                    df.loc[idx, ['POS', 'REF', 'ALT']] = [variant_pos, reverse_complement(variant.split("del")[1].split("ins")[0]), reverse_complement(variant.split("ins")[1])]
+                else:
+                    df.loc[idx, ['POS', 'REF', 'ALT']] = [variant_pos, variant.split("del")[1].split("ins")[0], variant.split("ins")[1]]
     
             # nucleotide insertion ONLY
             else:
@@ -377,6 +411,21 @@ def make_noncoding_mutation(df, row, idx, genome_seq, gene_start, gene_end, gene
                 # new_pos = gene_end + variant_number - 1
                 alt = str(genome_seq[new_pos - 1]) # because deletion, the alternative allele is the nucleotide in the upstream position. The reference will include the deleted nucleotides
                 del_nuc = reverse_complement(variant.split("del")[1])
+
+                # for extremely long deletions (longer than 100 nucleotides I think), the deletion string is not written out, so need to find it from the reference genome
+                if len(del_nuc) == 0:
+
+                    # get the start and end of the deletion, by default above, we only return the earliest
+                    # both of these will be 1-indexed, and if they are negative, it will be reflected
+                    deletion_start, deletion_end = get_variant_number(variant, gene_sense, return_start_and_end=True)
+
+                    # I think this works for both positive and negative variant numbers
+                    deletion_length = deletion_end - deletion_start + 1
+
+                    if gene_sense == '+':
+                        del_nuc = str(h37Rv.seq[variant_pos-1: variant_pos-1+deletion_length])
+                    else:
+                        del_nuc = reverse_complement(str(h37Rv.seq[variant_pos-1: variant_pos-1+deletion_length]))
                     
                 # add the previous nucleotide to the reference, so that ref will be length N + 1, and alt will be length 1, where N is the length of the deletion
                 ref = alt + del_nuc
@@ -432,27 +481,27 @@ def get_data_for_synthetic_VCF(df):
 
     # start_lost and stop_lost both end in '?'. stop lost is encoded with ext*? start_lost is p.Met1? or p.Val1?
     # start_lost V1 encoding is p.Met1= or p.Val1=
-    df = df.query("~mutation.str.endswith('?') & ~mutation.str.endswith('fs') & ~mutation.str.endswith('=')").reset_index(drop=True)
+
+    # also exclude pooled LoF and deletion (feature ablation) variants
+    df = df.query("~variant.str.endswith('?') & ~variant.str.endswith('fs') & ~variant.str.endswith('=') & ~variant.str.contains('LoF') & ~variant.str.contains('deletion')").reset_index(drop=True)
     
     for i, row in df.iterrows():
         
         # get the start and end coordinates of the gene where the mutation lies
-        start, end, sense = h37Rv_genes.query(f"Symbol=='{row['gene']}'")[["Start", "End", "Strand"]].values[0]
+        # this can be done for both coding and non-coding transcripts, so use the full table, not the genes-only table
+        start, end, sense = h37Rv_regions.query(f"Name=='{row['gene']}'")[['Start', 'Stop', 'Strand']].values[0]
 
         # mutations in noncoding regions. THESE ARE THE EASIEST CHANGES TO MAKE
-        if "p." not in row["variant"]:
+        if "p." not in row["mutation"]:
             df = make_noncoding_mutation(df, row, i, h37Rv.seq, start, end, sense)
         
         # mutations in protein-coding regions
         else:
-            clean_var = row["variant"].replace("p.", "")
+            clean_var = row["mutation"].replace("p.", "")
 
             # separate the mutation before, after, and position
             # get the indices of the position (numeric characters), then everything before or after is the mutation
-            num_idx = []
-            for k, char in enumerate(clean_var):
-                if char.isdigit():
-                    num_idx.append(k)
+            num_idx = [k for k, char in enumerate(clean_var) if char.isdigit()]
 
             # A SINGLE AMINO ACID MUST BE ALTERED, BUT MULTIPLE AMINO ACIDS COULD BE ADDED IN (i.e. delins)
             # if there are only consecutive numbers, that means that there's only a single number
@@ -460,6 +509,10 @@ def get_data_for_synthetic_VCF(df):
 
                 aa1 = clean_var[:num_idx[0]]
                 aa2 = clean_var[num_idx[-1]+1:]
+
+                # this is a bug in the WHO catalog -- an early stop codon is recorded as Rv0565c_p.TrpLeu266*, instead of Rv0565c_p.Trp266*
+                if aa2 == '*' and len(aa1) > 3:
+                    aa1 = aa1[:3]
 
                 aa_pos = int(clean_var[num_idx[0]:num_idx[-1]+1])                    
 
@@ -476,13 +529,16 @@ def get_data_for_synthetic_VCF(df):
                     if aa2 not in aa_to_codon_table.AA.unique():
                         raise ValueError(f"{aa2} is not a valid amino acid")
 
-                    # pick a new codon at random
-                    new_codon = np.random.choice(aa_to_codon_table.query("AA==@aa2").Codon.values)
-                    # # alternative start codons: most frequently Valine, but sometimes Leucine and Isoleucine
-                    # # alternative start codons are c. type in the V2 catalog
-                    # elif aa2 == "?":
-                    #     possible_new_codons = aa_to_codon_table.query("AA in ['Val', 'Ile', 'Leu']").Codon.values
+                    # for the first codon, if it's one of the AAs encoded by alternative start codons, keep only those codons
+                    if aa_pos == 1 and aa2 in ['Val', 'Leu', 'Ile', 'Met']:
 
+                        # pick a new codon at random intersecting with the alternative start codons
+                        new_codon = np.random.choice(list(set(aa_to_codon_table.query("AA==@aa2").Codon.values).intersection(['ATG', 'CTG', 'GTG', 'TTG', 'ATA', 'ATC', 'ATT'])))
+
+                    else:
+                        # pick a new codon at random
+                        new_codon = np.random.choice(aa_to_codon_table.query("AA==@aa2").Codon.values)
+                        
                     # reference = original codon.
                     # put the earliest (most upstream) position in the codon as the position
                     df.loc[i, 'POS'] = np.min(codon_pos)
@@ -610,8 +666,8 @@ def get_data_for_synthetic_VCF(df):
 
     # for synonymous variants, there are many with a del ins annotation because one codon is removed and another inserted. These will not pass, so only consider the p and n variants
     # I *think* _n. variants will pass because it just denotes that gene = rrs / rrl
-    assert len(df.query("~mutation.str.contains('_c.') & REF_len == ALT_len & variant.str.contains('|'.join(['del', 'ins', 'dup']))")) == 0
-    assert len(df.query("~mutation.str.contains('_c.') & REF_len != ALT_len & ~variant.str.contains('|'.join(['del', 'ins', 'dup']))")) == 0
+    assert len(df.query("~variant.str.contains('_c.') & REF_len == ALT_len & variant.str.contains('|'.join(['del', 'ins', 'dup']))")) == 0
+    assert len(df.query("~variant.str.contains('_c.') & REF_len != ALT_len & ~variant.str.contains('|'.join(['del', 'ins', 'dup']))")) == 0
 
     del df["REF_len"]
     del df["ALT_len"]
@@ -620,43 +676,47 @@ def get_data_for_synthetic_VCF(df):
     return df
     
 
-def get_VCF_file_information(drug, seq_df_fName, locus, genes_to_analyze, sense, START, END):
+
+def in_ranges(value, ranges):
+    '''
+    Function to check if a value falls within any of the given ranges. This is to be able to subset a list of variants and keep only those with positions within the model loci
+    '''
+    
+    return any(start < value <= end for start, end in ranges)
+
+
+
+def get_VCF_file_information(drug, tier2=False, V1=False, genes_to_analyze=None):
     '''
     genes_to_analyze can be a list or a string
     
     START is EXCLUSIVE and END is inclusive to be consistent with make_MSA.py
     '''
-    
-    seq_df = pd.read_pickle(seq_df_fName)[locus]
-    
-    who_variants_single_drug = get_WHO_mutations(drug, genes_to_analyze)
+
+    # get the list of loci to get in silico mutations for from the config file
+    kwargs = yaml.safe_load(open(f"config_files/config_{drug.lower()}.yaml"))
+
+    if tier2:
+        locus_list = kwargs['tier1_loci'] + kwargs['tier2_loci']
+    else:
+        locus_list = kwargs['tier1_loci']
+        
+    # get all WHO catalog mutations from the V1 OR V2 editions
+    who_variants_single_drug = get_WHO_mutations(drug, V1=V1, genes_lst=genes_to_analyze)
 
     # make the POS, REF, and ALT columns
     who_variants_single_drug = get_data_for_synthetic_VCF(who_variants_single_drug)
     
-    # keep only sites in our alignment
-    who_variants_single_drug = who_variants_single_drug.query("POS > @START & POS <= @END")
-
+    # keep only variants that lie in the range of nucleotides that the model was trained on. Start is 0-indexed, End is 1-indexed
+    who_variants_single_drug = who_variants_single_drug[who_variants_single_drug['POS'].apply(lambda x: in_ranges(x, drug_loci.loc[drug_loci["Locus"].isin(locus_list)][['Start', 'End']].values))]
+    
     return who_variants_single_drug
 
 
 
 def create_synthetic_VCF_files(df, out_fName, vcf_dir):
 
-    assert len(df) == df.mutation.nunique()
-
-    if not os.path.isdir(os.path.dirname(out_fName)):
-        os.makedirs(os.path.dirname(out_fName))
-        
-    if not os.path.isdir(vcf_dir):
-        os.makedirs(vcf_dir)
-
-    # remove any files that already exist
-    existing_files = glob.glob(f"{vcf_dir}/*")
-
-    if len(existing_files) > 0:
-        for fName in existing_files:
-            os.remove(fName)
+    assert len(df) == df.variant.nunique()
     
     # create a header section
     header = '##fileformat=VCFv4.1\n'
@@ -672,21 +732,24 @@ def create_synthetic_VCF_files(df, out_fName, vcf_dir):
         for _, row in df.iterrows():
 
             # need to remove special characters
-            mutation_str = row['mutation'].replace('.', '_').replace('*', '+')
+            mutation_str = row['variant'].replace('.', '_').replace('*', '+')
 
             # absolute VCF file path
             vcf_fName = f"{vcf_dir}/{mutation_str}.vcf"
+
             out_file.write(vcf_fName + "\n")
-        
-            # create a VCF file for the mutation
-            with open(vcf_fName, 'w+') as vcf_file:
-
-                # write VCF file header
-                vcf_file.write(header)
-
-                # write the variant that causes the mutation
-                vcf_file.write('\t'.join(['NC_000962.3', str(row["POS"]), '.', row["REF"], row["ALT"], '.', 'PASS', '.', 'GT', '1/1']) + '\n')
-
+            
+            if not os.path.isfile(vcf_fName):
+                
+                # create a VCF file for the mutation
+                with open(vcf_fName, 'w+') as vcf_file:
+    
+                    # write VCF file header
+                    vcf_file.write(header)
+    
+                    # write the variant that causes the mutation
+                    vcf_file.write('\t'.join(['NC_000962.3', str(row["POS"]), '.', row["REF"], row["ALT"], '.', 'PASS', '.', 'GT', '1/1']) + '\n')
+    
 
 
 

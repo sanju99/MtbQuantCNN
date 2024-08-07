@@ -1,5 +1,0 @@
-NUM_SHUFFLES: 10000
-prot_id: "I6XD65"
-absolute_path: "/home/sak0914/MtbQuantCNN/structure_annotation"
-output_path: "PZA_CNN_with_zeroes"
-mutations_file: "pncA_mutations_positive_saliency.csv"

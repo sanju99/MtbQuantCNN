@@ -8,7 +8,7 @@ from tensorflow.keras import layers, models, regularizers
 from tensorflow.keras.utils import Sequence
 from tensorflow.keras.optimizers import Adam
 from sklearn.linear_model import Ridge, RidgeCV
-import sklearn.metrics    
+import sklearn.metrics
     
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
@@ -45,20 +45,22 @@ def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
     This function computes error relative to the lower and upper bounds for each MIC range -- lower if the predicted MIC is below the range and upper if the predicted MIC is above the range.
 
     This turns the problem into an ordinal regression
+
+    y_test and y_pred are log-transformed. lower_bounds and upper_bounds are NOT, but they will be log-transformed in the wrapper function after adding a tiny amount to lower_bounds to make it non-zero
     '''
 
-    # add a tiny amount so they can be log-transformed
-    lower_bounds[lower_bounds==0] += 1e-6
+    # lower_bounds /= 2
+    # upper_bounds *= 2
+
+    # add a tiny amount so they can be log-transformed. 1e-10 is well below the smallest MIC measured for any drug
+    lower_bounds[lower_bounds==0] += 1e-10
     
-    # take log2. There is only ln in tensorflow backend, so use the change of base formula
+    # take log2. There is only natural log in tensorflow backend, so use the change of base formula
     lower_bounds = tf.squeeze(K.log(lower_bounds) / K.log(K.constant(2, shape=len(lower_bounds), dtype=tf.float64)))
     upper_bounds = tf.squeeze(K.log(upper_bounds) / K.log(K.constant(2, shape=len(upper_bounds), dtype=tf.float64)))
 
 
     def boundedLoss_CNN_helper(y_true, y_pred):
-        '''
-        y_test and y_pred are log-transformed. lower_bounds and upper_bounds are NOT
-        '''
 
         # ensure same types of everything -- also remove extra dimension of 1
         y_pred = tf.squeeze(tf.cast(y_pred, tf.float64))
@@ -74,7 +76,7 @@ def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
         else:
             raise RuntimeError(f"{loss_type} is not a valid loss function type")
 
-        ########## FOR MOST CASES, THIS NEXT STEP IS NOT NEEDED. HOWEVER
+        ########## FOR MOST ISOLATES, THIS NEXT STEP IS NOT NEEDED. BUT CLEANER TO DO IT FOR ALL ##########
         # when K.clip is run on arrays with infinities, the non-infinity value is returned
         # so i.e. if y_pred = 1, lower = 0.5, and upper = inf, K.clip returns lower, and the function will compute an error for that sample
         # this is not correct though, this sample should have compute_error = 0. Therefore we need to do this step for all cases
@@ -94,13 +96,13 @@ def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
 
 
 
-def conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0.01):
+def conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0):
     
     cnn_input = tf.keras.Input(shape=(5, longest_locus, num_loci), name='seq_input')
     
     # first perform convolutions and max pooling as in the original model. 
     x = layers.Conv2D(64, (5, filter_size), data_format='channels_last', activation='relu', input_shape=(5, longest_locus, num_loci), name='conv1')(cnn_input)
-    x = layers.Conv2D(64, (1,12), activation='relu', name='conv2')(x)
+    x = layers.Conv2D(64, (1, filter_size), activation='relu', name='conv2')(x)
 
     conv_block_1 = layers.MaxPooling2D((1,3), name='maxPooling1')(x)
 
@@ -112,7 +114,7 @@ def conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, 
     if additional_data_len > 0:
         print(f"{additional_data_len} features in the MLP block")
         cnn_output = layers.Flatten(name='flatten')(conv_block_2)
-        mlp_input = tf.keras.Input(shape=(additional_data_len, ), name='lineage_peptide_input')
+        mlp_input = tf.keras.Input(shape=(additional_data_len, ), name='mlp_input')
         dense_inputs = layers.concatenate([cnn_output, mlp_input], axis=1, name='concatenate')
     else:
         dense_inputs = layers.Flatten(name='flatten')(conv_block_2)
@@ -148,6 +150,73 @@ def conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, 
         inputs_lst = inputs_lst[0]
 
     return tf.keras.Model(inputs=inputs_lst, outputs=output)
+
+
+
+
+def multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_genes, additional_data_len, bounded_loss, filter_size, reg_strength=0):
+    
+    nt_cnn_input = tf.keras.Input(shape=(5, longest_locus, num_loci), name='nt_seq_input')
+    aa_cnn_input = tf.keras.Input(shape=(3, longest_protein, num_genes), name='aa_biophys_input')
+
+    ######################### nucleotide convolutions and max pooling #########################
+    nt_cnn_output = layers.Conv2D(64, (5, filter_size), data_format='channels_last', activation='relu', input_shape=(5, longest_locus, num_loci), name='nt_conv1')(nt_cnn_input)
+    nt_cnn_output = layers.Conv2D(64, (1, filter_size), activation='relu', name='nt_conv2')(nt_cnn_output)
+    nt_cnn_output = layers.MaxPooling2D((1,3), name='nt_maxPooling1')(nt_cnn_output)
+
+    nt_cnn_output = layers.Conv2D(32, (1,3), activation='relu', name='nt_conv3')(nt_cnn_output)
+    nt_cnn_output = layers.Conv2D(32, (1,3), activation='relu', name='nt_conv4')(nt_cnn_output)
+    nt_cnn_output = layers.MaxPooling2D((1,3), name='nt_maxPooling2')(nt_cnn_output)
+
+    ######################### amino acid convolutions and max pooling #########################
+    aa_cnn_output = layers.Conv2D(64, (3, filter_size), data_format='channels_last', activation='relu', input_shape=(3, longest_protein, num_genes), name='aa_conv1')(aa_cnn_input)
+    aa_cnn_output = layers.Conv2D(64, (1, filter_size), activation='relu', name='aa_conv2')(aa_cnn_output)
+    aa_cnn_output = layers.MaxPooling2D((1,3), name='aa_maxPooling1')(aa_cnn_output)
+
+    aa_cnn_output = layers.Conv2D(32, (1,3), activation='relu', name='aa_conv3')(aa_cnn_output)
+    aa_cnn_output = layers.Conv2D(32, (1,3), activation='relu', name='aa_conv4')(aa_cnn_output)
+    aa_cnn_output = layers.MaxPooling2D((1,3), name='aa_maxPooling2')(aa_cnn_output)
+
+    # flatten both outputs, then concatenate them
+    dense_inputs = layers.concatenate([layers.Flatten(name='nt_flatten')(nt_cnn_output), layers.Flatten(name='aa_flatten')(aa_cnn_output)], axis=1, name='concatenate_cnn_inputs')
+
+    if additional_data_len > 0:
+        print(f"{additional_data_len} features in the MLP block")                                        
+        mlp_input = tf.keras.Input(shape=(additional_data_len, ), name='mlp_input')
+
+        # combine data for MLP only (no convolving) with the dense_ouputs created from both the NT and AA convolutional outputs
+        dense_inputs = layers.concatenate([dense_inputs, mlp_input], axis=1, name='concatenate_cnn_mlp_inputs')        
+
+    # if you put kernel_regularizer='l2', the default strength is 0.01
+    if reg_strength != 0:
+        print(f"    Using L2 regularization with {reg_strength} strength")
+        dense = layers.Dense(256, activation='relu', name='dense1', kernel_regularizer=regularizers.L2(reg_strength))(dense_inputs)
+        dense = layers.Dense(256, activation='relu', name='dense2', kernel_regularizer=regularizers.L2(reg_strength))(dense)
+    else:
+        dense = layers.Dense(256, activation='relu', name='dense1')(dense_inputs)
+        dense = layers.Dense(256, activation='relu', name='dense2')(dense)
+        
+    if binary:
+        output = layers.Dense(1, activation='sigmoid', name='output')(dense)
+    else:
+        output = layers.Dense(1, activation=None, name='output')(dense)
+
+    # create list of all inputs
+    inputs_lst = [nt_cnn_input, aa_cnn_input]
+    
+    if additional_data_len > 0:
+        inputs_lst += [mlp_input]
+            
+    # add bounds to the inputs list if True
+    if bounded_loss:
+        lower_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='lower_bounds')
+        upper_bounds = tf.keras.Input(shape=(1, ), dtype=tf.float64, name='upper_bounds')
+
+        inputs_lst += [lower_bounds]
+        inputs_lst += [upper_bounds]
+
+    return tf.keras.Model(inputs=inputs_lst, outputs=output)
+
 
 
 
@@ -193,7 +262,7 @@ def val_step(model, loss_type, x, y):
 
 
 
-def train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, num_train, num_val, save_model_fName, save_history_df=False, patience_epochs=None, return_min_loss=False):
+def train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, num_train, num_val, save_model_fName, save_history_fName=None, patience_epochs=None, return_min_loss=False):
 
     output_path = os.path.dirname(save_model_fName)
     
@@ -283,8 +352,8 @@ def train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator,
     K.clear_session()
 
     # save the history dataframe to see the additional epochs during the patience period. DON'T SAVE THE MODEL because we want the model at the early stop point
-    if save_history_df:
-        history.to_csv(os.path.join(output_path, "history.csv"), index=False)
+    if save_history_fName is not None:
+        history.to_csv(save_history_fName, index=False)
     else:
         return history["val_loss"].values
     
@@ -308,8 +377,11 @@ def boundedLoss_Reg(y_pred, y_true, lower_bounds, upper_bounds, loss_type="L1"):
     loss_type is L1 or L2, specifying whether to return the MAE or MSE
     '''
 
+    # lower_bounds /= 2
+    # upper_bounds *= 2
+
     # add a tiny amount so they can be log-transformed, then log-transform
-    lower_bounds[lower_bounds==0] += 1e-6
+    lower_bounds[lower_bounds==0] += 1e-10
     lower_bounds = np.log2(lower_bounds)
     upper_bounds = np.log2(upper_bounds)
 
@@ -333,44 +405,3 @@ def boundedLoss_Reg(y_pred, y_true, lower_bounds, upper_bounds, loss_type="L1"):
 
     # because we used np.clip above, the value in the errors array for points predicted within the MIC bin will be 0, so just take the simple mean
     return np.mean(masked_errors)
-
-
-
-# class CustomRidge(Ridge):
-
-#     # saga is Stochastic Average Gradient descent, so similar to CNN fitting procedure, and n_samples and n_features are both large
-#     def __init__(self, alpha, lower_bounds, upper_bounds, loss_type="L1", solver="auto"):
-
-#         # need to use the same initialization procedure as the regular Ridge function 
-#         super().__init__(alpha=alpha, solver=solver)
-#         self.alpha = alpha
-#         self.loss_type = loss_type
-#         self.lower_bounds = lower_bounds
-#         self.upper_bounds = upper_bounds
-
-#     def _residues(self, y, y_pred, X, alpha):
-#         '''
-#         This overrides the residues method, which takes in the string name of the loss function and returns the mean residuals between the predicted and actual values, to use the custom loss function.
-#         '''
-
-#         # technically the y argument doesn't matter and isn't used when computing the loss, but for consistency
-#         # with the native Ridge class, leave it in
-#         return boundedLoss_Reg(y_pred, y, self.lower_bounds, self.upper_bounds, self.loss_type)
-
-#     # function to override the default fit function and return the custom loss        
-#     def fit(self, X, lower_bounds, upper_bounds):
-
-#         # need to call fit first
-#         super().fit(X, lower_bounds, upper_bounds)
-        
-#         # get predictions
-#         y_pred = np.squeeze(self.predict(X))
-        
-#         # custom loss function. This takes care of log2-transforming the bounds (see above)
-#         loss = boundedLoss_Reg(y_pred, lower_bounds, upper_bounds, loss_type=self.loss_type)
-#         print("Alpha", self.alpha)
-#         loss_with_reg = loss + self.alpha * np.sum(np.square(self.coef_))
-#         print(loss, loss_with_reg)
-
-#         # in regularized regression, the sum of absolute values or squares of the weights must be added to the loss
-#         return loss_with_reg

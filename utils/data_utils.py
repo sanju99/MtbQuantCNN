@@ -2,11 +2,64 @@ import numpy as np
 import pandas as pd
 import os, glob, sparse
 from Bio import SeqIO, Seq
+
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 import sklearn.metrics
 import sklearn.utils
+from sklearn.preprocessing import StandardScaler
 import scipy.stats as st
 from saliency_utils import *
+
+model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
+model_loci[['Start', 'End']] = model_loci[['Start', 'End']].astype(int)
+
+amino_acid_biophysical_properties = pd.read_csv("./data_processing/protein_seqs/biophysical_properties_AA.csv", index_col=[0])
+
+# get the dataframe of start and end coordinates from mycobrowser
+h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+h37Rv_regions = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_v4.csv")
+
+
+
+
+def expand_dims_for_rescaling(array, dims_to_expand, X_target):
+    '''
+    Use this function to expand the dimensions of the mean or standard deviation array so that you can use array operations to scale inputs
+    '''
+
+    # the smallest axis index should not be negative. the largest axis index shouldn't be greater than the number of dimensions in the target array
+    assert np.min(dims_to_expand) >= 0
+    assert np.max(dims_to_expand) < X_target.ndim
+    
+    array = np.expand_dims(array, axis=dims_to_expand)
+
+    for dim in dims_to_expand:
+        array = np.repeat(array, repeats=X_target.shape[dim], axis=dim)
+
+    return array
+    
+
+
+def get_genes_lst(locus_list):
+    """
+    Return a list of the individual genes (excluding pseudogenes) associated with the argument loci, in the same order.
+    """
+
+    # need this for both peptide lengths and amino acid property flags
+    genes_lst = []
+
+    # this was the same code used to get the genes, so the order will be the same
+    for locus in locus_list:
+    
+        # don't need to add 1 to start because it is 1-indexed
+        locus_start, locus_end = model_loci.query("Locus==@locus")[['Start', 'End']].values[0]
+
+        # all the genes in a single locus. Exclude pseudogenes and other noncoding regions because they're very likely not translated to a functional protein
+        genes_lst += list(h37Rv_genes.query("Start > @locus_start & End <= @locus_end & ~Product.str.contains('pseudogene', case=False)").Symbol.values)
+        # genes_lst += list(h37Rv_regions.query("Start > @locus_start & Stop <= @locus_end & ~Product.str.contains('pseudogene', case=False)").Name.values)
+
+    # assert len(genes_lst) >= len(locus_list)
+    return genes_lst
 
 
 def get_one_hot(sequence):
@@ -53,7 +106,7 @@ def sequence_dictionary(filename):
     # remove any file extensions so that isolates are indexed by their names only WITHOUT any extensions
     seq_dict = SeqIO.to_dict(
         SeqIO.parse(filename, "fasta"),
-        key_function=lambda x: x.id.replace(".eff", "").replace(".vcf", "").replace("_freebayes", "").split("/")[-1].split(".cut")[0])
+        key_function=lambda x: x.id.replace(".eff", "").replace(".vcf", "").replace("_freebayes", "").replace("_variants", "").split("/")[-1].split(".cut")[0])
 
     # create a dictionary of identifier: sequence
     for identifier, sequence in seq_dict.items():
@@ -66,7 +119,7 @@ def sequence_dictionary(filename):
     return df
 
 
-def make_genotype_df(locus_list, genotype_input_directory):
+def make_genotype_df(genotype_input_directory, locus_list, amino_acid=False):
     """
 	Parameters
 	----------
@@ -76,13 +129,21 @@ def make_genotype_df(locus_list, genotype_input_directory):
 	Returns
 	-------
 	pd.DataFrame:
-		indexed by isolate name, one column per locus
+		indexed by isolate name, one column per locus/gene
 	"""
     # Make a df that combines all genotype data
     dfs_list = []
-    
-    fastas = [os.path.join(genotype_input_directory, locus + ".fasta") for locus in locus_list]
-    print(f"{len(fastas)} loci!")
+
+    if amino_acid:
+        fastas = [f"{genotype_input_directory}/{locus}_AA.fasta" for locus in locus_list] #glob.glob(f"{genotype_input_directory}/*_AA.fasta")
+        print(f"{len(fastas)} genes!")
+    else:
+        fastas = [f"{genotype_input_directory}/{locus}.fasta" for locus in locus_list] #list(set(glob.glob(f"{genotype_input_directory}/*.fasta")) - set(glob.glob(f"{genotype_input_directory}/*_AA.fasta")))
+        print(f"{len(fastas)} loci!")
+
+    for fName in fastas:
+        if not os.path.isfile(fName):
+            raise ValueError(f"{fName} is not a valid file name")
 
     for df_file in fastas:
         print("reading fasta file", df_file)
@@ -103,15 +164,249 @@ def make_genotype_df(locus_list, genotype_input_directory):
 
 
 
-def create_all_loci_matrices(config_file):
+
+def create_X(df_geno_pheno, amino_acid=False, L_longest=None):
+    """
+	Create an input X matrix, with output dimensions:
+		n_strains x 5 (one-hot) x longest locus length x no. of loci
+
+    L_longest should only be specified when making input matrices for additional data to get predictions on. 
+    
+    If the alignment length of the additional data is SMALLER than that of the training data, then need to increase the length in that axis by padding so that the shapes match
+	"""
+
+    def _get_shapes(df_geno_pheno):
+        """
+		Finds the length of each gene in the input dataframe
+		Parameters
+		----------
+		df_geno_pheno: pd.Dataframe
+
+		Returns
+		-------
+		dict of str: int
+			length of coordinates in each column
+		"""
+        shapes = {}
+        for column in df_geno_pheno.columns:
+            if "one_hot" in column or "_biophys" in column:
+                shapes[column] = df_geno_pheno.loc[df_geno_pheno.index[0], column].shape[0]
+
+        return shapes
+
+    shapes = _get_shapes(df_geno_pheno)
+
+    # Length of longest gene locus
+    n_genes = len(shapes)
+
+    # if not passed in, compute from the data
+    if L_longest is None:
+        L_longest = max(list(shapes.values()))
+
+    # Number of strains in model
+    n_strains = df_geno_pheno.shape[0]
+
+    # define shape of matrix - fill with zeros (effectively accomplishes padding)
+    if amino_acid:
+        X = np.zeros((n_strains, 3, L_longest, n_genes))
+    else:
+        X = np.zeros((n_strains, 5, L_longest, n_genes))
+
+    # for each strain and gene locus
+    for idx, strain in enumerate(df_geno_pheno.index):
+        
+        for gene_index, gene in enumerate(shapes.keys()):
+
+            # shape is longest_locus x 3 or 5
+            single_gene_matrix = df_geno_pheno.loc[strain, gene]
+
+            # single_gene_matrix.shape[0] is the length of the locus
+            X[idx, :, range(0, single_gene_matrix.shape[0]), gene_index] = single_gene_matrix
+
+    return X
+
+
+
+def make_nucleotide_matrices(drug, locus_list, seq_data_path, df_phenos, genotype_input_directory, split_groups=False):
+
+    # get table for phenotypes and add the reference strain to match the format of the FASTA files
+    print(f"Found phenotypes for {len(df_phenos)} strains")
+    df_phenos.loc[-1, ['ROLLINGDB_ID', 'category']] = np.array(["MT_H37Rv", "reference"], dtype=object)
+
+    # make table of all genotypes. Index is the identifier
+    df_genos = make_genotype_df(genotype_input_directory, locus_list, amino_acid=False)
+    
+    df_genos.index = [name.split(".")[0] for name in df_genos.index]
+    df_genos.index.rename('ROLLINGDB_ID', inplace=True)
+
+    # this makes life easier later. Keep H37Rv in this
+    if split_groups:
+        df_genos = df_phenos[["category", "ROLLINGDB_ID"]].merge(df_genos, on="ROLLINGDB_ID", how="inner")
+    else:
+        df_genos = df_phenos[["ROLLINGDB_ID"]].merge(df_genos, on="ROLLINGDB_ID", how="inner")
+    
+    df_genos.to_csv(os.path.join(seq_data_path, "df_genos.csv"), index=False)
+
+    # Apply one-hot encoding function to get each isolate sequence
+    print('Making one hot encoding for...')
+    
+    for locus in locus_list:
+        print("...", locus)
+        lengths = [len(seq) for seq in df_genos[locus]]
+        assert len(np.unique(lengths)) == 1
+
+        # df_genos[locus + "_one_hot"] = df_genos[locus].apply(np.vectorize(get_one_hot))
+        
+        # not sure why, but this has to be done first otherwise an error is thrown
+        df_genos[f"{locus}_one_hot"] = None
+
+        # get the reference amino acid sequence
+        ref_seq = df_genos.loc[df_genos['ROLLINGDB_ID']=='MT_H37Rv'][locus].values[0]
+        ref_seq_one_hot = get_one_hot(ref_seq)
+    
+        # Create a list of repeated arrays for the rows that match the condition
+        matched_indices = df_genos[df_genos[locus] == ref_seq].index.values
+        ref_repeat = [ref_seq_one_hot for _ in matched_indices]
+        
+        # Assign the repeated arrays to the appropriate rows
+        df_genos.loc[matched_indices, f"{locus}_one_hot"] = ref_repeat
+        
+        # Apply the function only to rows that do not match the condition
+        df_genos.loc[~df_genos.index.isin(matched_indices), f"{locus}_one_hot"] = df_genos.loc[~df_genos.index.isin(matched_indices), locus].apply(get_one_hot)
+        
+    if "category" in df_genos and "category" in df_phenos:
+        del df_genos["category"]
+
+    # combined dataframe of all genotypes and phenotypes
+    df_geno_pheno = df_phenos.merge(df_genos, how='inner', on="ROLLINGDB_ID")
+
+    # Create a one-hot-encoding matrix with dimensions
+    # num_isolate x 5 x locus_length x num_loci
+    X = create_X(df_geno_pheno)
+    X_sparse = sparse.COO(X)
+
+    # train-validation-test-ref splitting, which is only done for the training data (not addl data like TRUST or insilico predictions)
+    if split_groups:
+    
+        # last row is H37Rv
+        X_H37Rv = X_sparse[[-1], :]
+        print(f"Reference shape: {X_H37Rv.shape}")
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=False)
+    
+        # H37Rv is the last row, so remove it before saving to avoid redundancy 
+        X_sparse = X_sparse[:-1, :]
+        
+        # Reset index first
+        df_geno_pheno = df_geno_pheno.reset_index(drop=True)
+        train_val_idx = df_geno_pheno.query("category in ['train_set', 'validation_set']").index
+        test_idx = df_geno_pheno.query("category == 'test_set'").index
+
+        # Separate train + val from test to keep test aside only for final predictions
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_train_val.npz"), X_sparse[train_val_idx, :], compressed=False)
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_test.npz"), X_sparse[test_idx, :], compressed=False)
+    
+    # save all data (including H37Rv) to a single pkl file. This is for getting model predictions on addl data
+    else:
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_full.npz"), X_sparse, compressed=False)
+
+
+
+def make_AA_property_matrices(drug, genes_lst, seq_data_path, df_phenos, genotype_input_directory, L_longest=None, split_groups=False):
+    
+    print(f"Found phenotypes for {len(df_phenos)} strains")
+    df_phenos.loc[-1, ['ROLLINGDB_ID', 'category']] = np.array(["MT_H37Rv", "reference"], dtype=object)
+    
+    # get table for phenotypes and add the reference strain to match the format of the FASTA files      
+    # make table of all genotypes. Index is the identifier
+    df_genos = make_genotype_df(genotype_input_directory, genes_lst, amino_acid=True)
+    
+    df_genos.index = [name.split(".")[0] for name in df_genos.index]
+    df_genos.index.rename('ROLLINGDB_ID', inplace=True)
+
+    # Add the isolate IDs and category to df_genos before saving. Keep H37Rv in this
+    if split_groups:
+        df_genos = df_phenos[["category", "ROLLINGDB_ID"]].merge(df_genos, on="ROLLINGDB_ID", how="inner")
+    else:
+        df_genos = df_phenos[["ROLLINGDB_ID"]].merge(df_genos, on="ROLLINGDB_ID", how="inner")
+        
+    df_genos.to_csv(os.path.join(seq_data_path, "df_protein_seqs.csv"), index=False)
+    
+    # Apply one-hot encoding function to get each isolate sequence
+    print(f'Making biophysical property matrices for {len(genes_lst)} genes...')
+    for gene in genes_lst:
+        
+        print("...", gene)
+        lengths = [len(seq) for seq in df_genos[f"{gene}_AA"]]
+        assert len(np.unique(lengths)) == 1
+
+        # df_genos[f"{gene}_biophys"] = df_genos[f"{gene}_AA"].apply(np.vectorize(convert_AA_seq_to_property_matrix))
+        
+        # not sure why, but this has to be done first otherwise an error is thrown
+        df_genos[f"{gene}_biophys"] = None
+
+        # get the reference amino acid sequence
+        ref_seq = df_genos.loc[df_genos['ROLLINGDB_ID']=='MT_H37Rv'][f"{gene}_AA"].values[0]
+        ref_AA_matrix = convert_AA_seq_to_property_matrix(ref_seq)
+    
+        # Create a list of repeated arrays for the rows that match the condition
+        matched_indices = df_genos[df_genos[f"{gene}_AA"] == ref_seq].index.values
+        ref_repeat = [ref_AA_matrix for _ in matched_indices]
+        
+        # Assign the repeated arrays to the appropriate rows
+        df_genos.loc[matched_indices, f"{gene}_biophys"] = ref_repeat
+        
+        # Apply the function only to rows that do not match the condition
+        df_genos.loc[~df_genos.index.isin(matched_indices), f"{gene}_biophys"] = df_genos.loc[~df_genos.index.isin(matched_indices), f"{gene}_AA"].apply(convert_AA_seq_to_property_matrix)
+            
+    if "category" in df_genos and "category" in df_phenos:
+        del df_genos["category"]
+
+    # combined dataframe of all genotypes and phenotypes
+    df_geno_pheno = df_phenos.merge(df_genos, how='inner', on="ROLLINGDB_ID")
+    
+    X = create_X(df_geno_pheno, amino_acid=True, L_longest=L_longest)
+
+    # train-validation-test-ref splitting, which is only done for the training data (not addl data like TRUST or insilico predictions)
+    if split_groups:
+        
+        # last row is H37Rv
+        X_H37Rv = X[[-1], :]
+        print(f"Reference shape: {X_H37Rv.shape}")
+        np.save(os.path.join(seq_data_path, "pkl_AA_ref.npy"), X_H37Rv)
+        
+        # H37Rv is the last row, so remove it before saving to avoid redundancy 
+        X = X[:-1, :]
+
+        # Reset index first
+        df_geno_pheno = df_geno_pheno.reset_index(drop=True)
+        train_val_idx = df_geno_pheno.query("category in ['train_set', 'validation_set']").index
+        test_idx = df_geno_pheno.query("category == 'test_set'").index
+
+        # Separate train + val from test to keep test aside only for final predictions
+        np.save(os.path.join(seq_data_path, "pkl_AA_train_val.npy"), X[train_val_idx, :])
+        np.save(os.path.join(seq_data_path, "pkl_AA_test.npy"), X[test_idx, :])
+    else:
+        np.save(os.path.join(seq_data_path, "pkl_AA_full.npy"), X)
+
+
+
+
+def create_all_loci_matrices(config_file, fasta_dir=None, isolates_lst=None):
     '''
     Creates a dictionary of matrices with every nucleotide for every isolate in the given loci. This is so that we can get the CDS in the next function and compute the lengths of the translated proteins for each sample.
     '''
 
     kwargs = yaml.safe_load(open(config_file, "r"))
-    locus_list = kwargs["locus_list"]
-    fasta_dir = kwargs["genotype_input_directory"]
-    df_phenos = pd.read_csv(kwargs["phenotype_file"])
+    locus_list = kwargs["tier1_loci"] + kwargs['tier2_loci']
+
+    if fasta_dir is None:
+        fasta_dir = kwargs['genotype_input_directory']
+    
+    if isolates_lst is None:
+        isolates_lst = pd.read_csv(kwargs["phenotype_file"])['ROLLINGDB_ID'].values
+
+    if "MT_H37Rv" not in isolates_lst:
+        isolates_lst = list(isolates_lst) + ["MT_H37Rv"]            
 
     gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
     X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
@@ -122,7 +417,7 @@ def create_all_loci_matrices(config_file):
     
         locus_idx = locus_list.index(locus)
         locus_pos_lst = []
-    
+
         seq_lst = [(seq.id, str(seq.seq)) for seq in SeqIO.parse(os.path.join(fasta_dir, f"{locus}.fasta"), "fasta")]        
         aln_len = len(seq_lst[0][1])
         seq_df = pd.DataFrame(seq_lst)
@@ -130,10 +425,10 @@ def create_all_loci_matrices(config_file):
         
         # fasta files contain the full VCF file name, without the .vcf extension
         # The ROLLINGDB_ID column is just the isolate name, not the full file path
-        seq_df["Isolate"] = [isolate.split(".")[0] for isolate in seq_df["Isolate"].values]
+        seq_df["Isolate"] = [isolate.replace(".eff", "").replace(".vcf", "").replace("_freebayes", "").replace("_variants", "").replace("_combinedCodons", "") for isolate in seq_df["Isolate"].values]
         seq_df = seq_df.set_index("Isolate")
-        seq_df = seq_df.loc[np.concatenate([df_phenos["ROLLINGDB_ID"].values, np.array(["MT_H37Rv"])])]
-        
+        seq_df = seq_df.loc[isolates_lst]
+
         nuc_matrix = seq_df["Seq"].str.split("", expand=True)
         nuc_matrix = nuc_matrix.iloc[:, 1:-1]
         
@@ -155,14 +450,11 @@ def create_all_loci_matrices(config_file):
 
 
 
-def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
+def make_CDS_length_df(drug, locus_list, fasta_dir, seqDict_fName):
     '''
     Returns: dataframe with shape N_samples x N_loci. Each value is the length of the corresponding CDS
     '''
-
-    # get the dataframe of start and end coordinates from mycobrowser
-    h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-
+    
     # read in dictionary, where each key is a locus and each value is a dataframe of all samples and positions in the alignment with nucleotides
     seqDict = pd.read_pickle(seqDict_fName)
 
@@ -174,63 +466,75 @@ def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
 
     for locus in locus_list:
 
-        with open(os.path.join(fasta_dir, f"{locus}.sh"), "r") as file:
-            for line in file.readlines():
-                if ".py" in line and ".fasta" in line:
-                    lines = line.split(" ")
-        
-        start_end_lst = []
-        
-        for arg in lines:
-            if arg.isdigit():
-                start_end_lst.append(int(arg))
-        
-        assert len(start_end_lst) == 2
-        locus_start, locus_end = start_end_lst[0] + 1, start_end_lst[-1]
+        # don't need to add 1 to start because it is 1-indexed
+        locus_start, locus_end, locus_sense = model_loci.query("Locus==@locus")[['Start', 'End', 'Sense']].values[0]
 
-        # all the genes in a single locus
-        genes_lst = h37Rv_genes.query("Start >= @locus_start & End <= @locus_end").Symbol.values
+        # all the genes in a single locus. Exclude pseudogenes because they're very likely not translated to a functional protein
+        genes_lst = h37Rv_genes.query("Start >= @locus_start & End <= @locus_end & ~Product.str.contains('pseudogene', case=False)").Symbol.values
 
         # sum the lengths of all the genes within the locus
         gene_peptide_lengths_df = pd.DataFrame(columns=[f"{gene}_length" for gene in genes_lst])
 
         for gene in genes_lst:
 
-            sense = h37Rv_genes.query("Symbol==@gene")['Strand'].values[0]
+            gene_sense = h37Rv_genes.query("Symbol==@gene")['Strand'].values[0]
 
             # reverse start and end for negative sense genes because the seqDict dataframes are in translated order (which is easy for translating the nucleotide sequences to AAs)
-            if sense == "+":
-                start, end = h37Rv_genes.query("Symbol==@gene")[['Start', 'End']].values[0]
+            if gene_sense == "+":
+                gene_start, gene_end = h37Rv_genes.query("Symbol==@gene")[['Start', 'End']].values[0]
+            elif gene_sense == '-':
+                gene_start, gene_end = h37Rv_genes.query("Symbol==@gene")[['End', 'Start']].values[0]
             else:
-                start, end = h37Rv_genes.query("Symbol==@gene")[['End', 'Start']].values[0]
+                raise ValueError(f"{gene_sense} is not a valid gene sense!")
 
-            # add 1 to the end because the end is exclusive
-            gene_CDS_df = seqDict[locus].loc[:, start:end+1]
+            # the column names are mixed floats (positions) and strings (insertion sites), so convert them all to strings, then you can use slicing
+            # to get all columns between two column names. The names must all be integers or all strings, so need to do this conversion
+            str_column_names = [col if type(col) == str else str(int(col)) for col in seqDict[locus].columns]
+            seqDict[locus].columns = str_column_names
     
+            # add 1 to the end because the end is exclusive, then convert to strings. But if the last column name is the same as end, you will get an error when you add 1. So check first
+            if gene_sense == locus_sense:
+                gene_CDS_df = seqDict[locus].loc[:, str(gene_start):str(gene_end)]
+                # if str(end) == seqDict[locus].columns[-1]:
+                #     gene_CDS_df = seqDict[locus].loc[:, str(start):str(end)]
+                # else:
+                #     gene_CDS_df = seqDict[locus].loc[:, str(start):str(end+1)]
+            else:
+                # end is exclusive and gene sense is positive while locus sense is negative, 
+                if locus_sense == '-' and gene_sense == '+':
+                    gene_CDS_df = seqDict[locus].loc[:, str(gene_end):str(gene_start)]
+                else:
+                    raise ValueError("Figure out this edge case!")
+            
             # subtract 1 because of the stop character
-            WT_protein_length = int((np.abs(end - start) + 1) / 3) - 1
-    
-            for i, row in gene_CDS_df.iterrows():
+            WT_protein_length = int((np.abs(gene_end - gene_start) + 1) / 3) - 1
+            print(f"{gene} H37Rv length: {WT_protein_length}")
+
+            # index is the isolate name
+            for isolate, row in gene_CDS_df.iterrows():
             
                 # remove gap characters because those represent insertions in other samples
-                protein_seq = str(Seq.Seq(''.join(gene_CDS_df.loc[i].values).replace('-', '')).translate())
+                region_seq = Seq.Seq(''.join(gene_CDS_df.loc[isolate].values).replace('-', ''))
 
-                # if there is no start codon, make the length 0. Alternative start codons are translated by Biopython to different codons
-                # BUT they are all eventually converted to M, but Biopython doesn't know that this is the beginning of a protein.
-                if len(protein_seq) > 0:
-                    if protein_seq[0] not in ['M', 'L', 'V', 'I']:
-                        gene_peptide_lengths_df.loc[i, f"{gene}_length"] = 0  
+                # in the case that there is a gene that is of opposite sense as the rest of the locus
+                if locus_sense != gene_sense:
+                    region_seq = Seq.Seq(reverse_complement(region_seq))
                     
-                    # replace the stop character and everything after it with gap characters
-                    else:
-                        if '*' in protein_seq:
-                            stop_idx = list(protein_seq).index('*') # by default gets the first index
-                            protein_seq = protein_seq[:stop_idx] + "*"*(WT_protein_length - stop_idx)
+                # must be one of the start codons. Otherwise, the sequence length is 0 because no protein is translated
+                if region_seq[:3] not in ['ATG', 'CTG', 'GTG', 'TTG', 'ATA', 'ATC', 'ATT']:
+                    gene_peptide_lengths_df.loc[isolate, f"{gene}_length"] = 0
+                else:         
+                    protein_seq = str(region_seq.translate())
                     
-                        protein_seq = protein_seq.replace("*", "")
-                        gene_peptide_lengths_df.loc[i, f"{gene}_length"] = len(protein_seq)
-                else:
-                    gene_peptide_lengths_df.loc[i, f"{gene}_length"] = 0 
+                    # checked above that the first three nucleotides are in the start codon list above. But double check that the translated AA is one of these
+                    assert protein_seq[0] in ['M', 'L', 'V', 'I']
+
+                    if '*' in protein_seq:
+                        stop_idx = list(protein_seq).index('*') # by default gets the first index
+                        protein_seq = protein_seq[:stop_idx] + "*"*(WT_protein_length - stop_idx)
+                
+                    protein_seq = protein_seq.replace("*", "")
+                    gene_peptide_lengths_df.loc[isolate, f"{gene}_length"] = len(protein_seq)                    
 
         # sum across the genes in the locus
         # locus_peptide_lengths_df[f"{locus}_length"] = gene_peptide_lengths_df.sum(axis=1)
@@ -239,125 +543,137 @@ def make_CDS_length_df(locus_list, fasta_dir, seqDict_fName):
     # return locus_peptide_lengths_df
     return pd.concat(locus_peptide_lengths_df, axis=1)
 
+
+
+def create_AA_alns(drug, locus_list, fasta_dir, seqDict_fName):
+    '''
+    Writes FASTA files for the individual protein sequences associated with the model loci. 
+
+    Each gene has a separate FASTA file. They are left aligned sequences, so all sequences are the same length.
+    '''
+
+    # read in dictionary, where each key is a locus and each value is a dataframe of all samples and positions in the alignment with nucleotides
+    seqDict = pd.read_pickle(seqDict_fName)
+
+    # check that all the same loci are there in both
+    assert len(set(seqDict.keys()).symmetric_difference(locus_list)) == 0
     
+    for locus in locus_list:
     
-def create_X(df_geno_pheno):
-    """
-	Create an input X matrix, with output dimensions:
-		n_strains x 5 (one-hot) x longest locus length x no. of loci
-	"""
-
-    def _get_shapes(df_geno_pheno):
-        """
-		Finds the length of each gene in the input dataframe
-		Parameters
-		----------
-		df_geno_pheno: pd.Dataframe
-
-		Returns
-		-------
-		dict of str: int
-			length of coordinates in each column
-		"""
-        shapes = {}
-        for column in df_geno_pheno.columns:
-            if "one_hot" in column:
-                shapes[column] = df_geno_pheno.loc[df_geno_pheno.index[0], column].shape[0]
-
-        return shapes
-
-    shapes = _get_shapes(df_geno_pheno)
-
-    # Length of longest gene locus
-    n_genes = len(shapes)
-    L_longest = max(list(shapes.values()))
-
-    # Number of strains in model
-    n_strains = df_geno_pheno.shape[0]
-
-    # define shape of matrix - fill with zeros (effectively accomplishes padding)
-    X = np.zeros((n_strains, 5, L_longest, n_genes))
-
-    # for each strain and gene locus
-    for idx, strain in enumerate(df_geno_pheno.index):
-        for gene_index, gene in enumerate(shapes.keys()):
-            one_hot_gene = df_geno_pheno.loc[strain, gene]
-            X[idx, :, range(0, one_hot_gene.shape[0]), gene_index] = one_hot_gene
-
-    return X
-
-
-
-def make_geno_pheno_files(seq_data_path, **kwargs):
+        # don't need to add 1 to start because it is 1-indexed
+        locus_start, locus_end, locus_sense = model_loci.query("Locus==@locus")[['Start', 'End', 'Sense']].values[0]
     
-    drug = kwargs["drug"]
-
-    # get table for phenotypes and add the reference strain to match the format of the FASTA files
-    df_phenos = pd.read_csv(kwargs['phenotype_file'])
-    print(f"Found phenotypes for {len(df_phenos)} strains")
-    df_phenos.loc[-1, ['ROLLINGDB_ID', 'category']] = np.array(["MT_H37Rv", "reference"], dtype=object)
-
-    # make table of all genotypes. Index is the identifier
-    df_genos = make_genotype_df(kwargs["locus_list"], kwargs['genotype_input_directory'])
+        # all the genes in a single locus. Exclude pseudogenes because the genes are not fully functional. May be transcribed, probably not translated due to presence of early stop codons
+        genes_lst = h37Rv_genes.query("Start >= @locus_start & End <= @locus_end & ~Product.str.contains('pseudogene', case=False)").Symbol.values
     
-    df_genos.index = [name.split(".")[0] for name in df_genos.index]
-    df_phenos["ROLLINGDB_ID"] = [name for name in df_phenos["ROLLINGDB_ID"]]
-    df_genos.index.rename('ROLLINGDB_ID', inplace=True)
-
-    # this makes life easier later. Keep H37Rv in this      
-    df_genos = df_phenos[["category", "ROLLINGDB_ID"]].merge(df_genos, on="ROLLINGDB_ID", how="inner")
-    df_genos.to_csv(os.path.join(seq_data_path, "df_genos.csv"), index=False)
-
-    # Apply one-hot encoding function to get each isolate sequence
-    print('Making one hot encoding for...')
-    for locus in kwargs["locus_list"]:
-        print("...", locus)
-        lengths = [len(seq) for seq in df_genos[locus]]
-        assert len(np.unique(lengths)) == 1
-        df_genos[locus + "_one_hot"] = df_genos[locus].apply(np.vectorize(get_one_hot))
-        
-    if "category" in df_genos and "category" in df_phenos:
-        del df_genos["category"]
-
-    # combined dataframe of all genotypes and phenotypes
-    df_geno_pheno = df_phenos.merge(df_genos, how='inner', on="ROLLINGDB_ID")
-    print(df_geno_pheno.shape)
+        for gene in genes_lst:
     
-    # this is to check that df_geno_pheno is in the same order as df_phenos.
-    assert sum(df_phenos.ROLLINGDB_ID.values != df_geno_pheno.ROLLINGDB_ID.values) == 0
+            # keep track of isolates
+            translated_sequences = []
     
-    # Create a one-hot-encoding matrix with dimensions
-    # num_isolate x 5 x locus_length x num_loci
-    X_all = create_X(df_geno_pheno)
-    X_sparse = sparse.COO(X_all)
-
-    # last row is H37Rv
-    X_H37Rv = X_sparse[[-1], :]
-    print(f"Reference shape: {X_H37Rv.shape}")
-    sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=False)
-
-    # if split_train_test:
-
-    #     # Works because index was reset to default
-    #     train_indices = df_geno_pheno.query("category=='original_train_set'").index
-    #     test_indices = df_geno_pheno.query("category=='original_test_set'").index
+            gene_sense = h37Rv_genes.query("Symbol==@gene")['Strand'].values[0]
     
-    #     X_sparse_train = X_sparse[train_indices, :]
-    #     X_sparse_test = X_sparse[test_indices, :]
-    #     print(f"Training set shape: {X_sparse_train.shape}")
-    #     print(f"Test set shape: {X_sparse_test.shape}")
-        
-    #     sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_train.npz"), X_sparse_train, compressed=False)
-    #     sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_test.npz"), X_sparse_test, compressed=False)
-
-        
-    # H37Rv is the last row, so remove it before saving to avoid redundancy 
-    X_data = X_sparse[:-1, :]
-    print(f"Full data set shape: {X_data.shape}")
-    sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_full.npz"), X_data, compressed=False)
-
+            # reverse start and end for negative sense genes because the seqDict dataframes are in translated order (which is easy for translating the nucleotide sequences to AAs)
+            if gene_sense == "+":
+                gene_start, gene_end = h37Rv_genes.query("Symbol==@gene")[['Start', 'End']].values[0]
+            elif gene_sense == '-':
+                gene_start, gene_end = h37Rv_genes.query("Symbol==@gene")[['End', 'Start']].values[0]
+            else:
+                raise ValueError(f"{gene_sense} is not a valid gene sense!")
     
+            # the column names are mixed floats (positions) and strings (insertion sites), so convert them all to strings, then you can use slicing
+            # to get all columns between two column names. The names must all be integers or all strings, so need to do this conversion
+            str_column_names = [col if type(col) == str else str(int(col)) for col in seqDict[locus].columns]
+            seqDict[locus].columns = str_column_names
     
+            if gene_sense == locus_sense:
+                # when you do loc like this, both values are inclusive. I don't know why
+                gene_CDS_df = seqDict[locus].loc[:, str(gene_start):str(gene_end)]
+
+            else:
+                # gene sense is positive while locus sense is negative. Removed these cases so this shouldn't happen, but leaving the code here just in case
+                if locus_sense == '-' and gene_sense == '+':
+                    gene_CDS_df = seqDict[locus].loc[:, str(gene_end):str(gene_start)]
+                else:
+                    raise ValueError("Figure out this edge case!")
+            
+            # subtract 1 because of the stop character
+            WT_protein_length = int((np.abs(gene_end - gene_start) + 1) / 3) - 1
+            print(f"{gene} H37Rv length: {WT_protein_length}")
+    
+            # index is the isolate name
+            for isolate, row in gene_CDS_df.iterrows():
+            
+                # remove gap characters because those represent insertions in other samples
+                region_seq = Seq.Seq(''.join(gene_CDS_df.loc[isolate].values).replace('-', ''))
+
+                # in the case that there is a gene that is of opposite sense as the rest of the locus
+                if locus_sense != gene_sense:
+                    region_seq = Seq.Seq(reverse_complement(region_seq))
+                
+                # must be one of the start codons. Otherwise, there is no sequence because no protein is translated
+                if region_seq[:3] not in ['ATG', 'CTG', 'GTG', 'TTG', 'ATA', 'ATC', 'ATT']:
+                    protein_seq = ''
+                else:         
+                    protein_seq = str(region_seq.translate())
+                    
+                    # checked above that the first three nucleotides are in the start codon list above. But double check that the translated AA is one of these
+                    assert protein_seq[0] in ['M', 'L', 'V', 'I']
+    
+                    # replace first amino acid with M (because that's what happens post-translation). Can't change the first character because strings are immutable though
+                    protein_seq = 'M' + protein_seq[1:]
+    
+                    if '*' in protein_seq:
+                        stop_idx = list(protein_seq).index('*') # by default gets the first index
+                        protein_seq = protein_seq[:stop_idx] + "*"*(WT_protein_length - stop_idx)
+                
+                    protein_seq = protein_seq.replace("*", "")
+    
+                translated_sequences.append([isolate, protein_seq])
+    
+            # find the longest protein length. All others have to be padded with '-' characters
+            lengths = []
+    
+            for isolate, seq in translated_sequences:
+                lengths.append(len(seq))
+    
+            longest_protein_length = np.max(lengths)
+            del lengths
+
+            # write to a new FASTA file for amino acid sequences. Put quotes around the name for special characters like in oxyR'
+            with open(f"{fasta_dir}/{gene}_AA.fasta", "w+") as file:
+                for isolate, seq in translated_sequences:
+                    file.write(f">{isolate}\n")
+                    file.write(seq + '-' * (longest_protein_length - len(seq)) + '\n')
+
+
+
+
+def convert_AA_seq_to_property_matrix(aa_seq):
+    '''
+    Convert a single amino acid sequence to a matrix of biophysical properties. 
+    
+    The properties are Eisenberg-Weiss consensus hydrophobicity scale, molecular weight (molar mass), and isoelectronic point at 25 degrees C.
+    '''
+    
+    # Convert sequences to matrix
+    biophys_matrix = []
+
+    for aa in aa_seq:
+        if aa not in amino_acid_biophysical_properties.index.values:
+            raise ValueError(f"{aa} is not in the biophysical property table")
+            
+        biophys_matrix.append(amino_acid_biophysical_properties.loc[aa, :].values.flatten())
+
+    biophys_matrix = np.array(biophys_matrix)
+    
+    assert biophys_matrix.shape[0] == len(aa_seq)
+    assert biophys_matrix.shape[1] == amino_acid_biophysical_properties.shape[1]
+
+    # return the matrix, which is of shape amino acid coord x 3
+    return biophys_matrix
+
+
     
 def get_threshold_val(pred_df, pred_col, test_col, spec_thresh=None):
     
@@ -399,32 +715,34 @@ def get_threshold_val(pred_df, pred_col, test_col, spec_thresh=None):
 
 
 
-def compute_binary_metrics(y_val, y_pred, binary_thresh, binarize=False):
+def compute_binary_metrics(y_true, y_pred, binary_thresh, binarize=False):
         
     # binarize using the critical concentration
-    # see if the upper bound is greater than the critical concentration. If so, resistant. If the upper bound is equal to the CC, then it is susceptible because it dies with the CC.
+    # see if the upper bound is greater than the critical concentration. If so, resistant. If the upper bound is equal to the CC, then it is susceptible because it dies at the CC.
     if binarize:
-        y_val_binary = (y_val > binary_thresh).astype(int)
+        y_true_binary = (y_true > binary_thresh).astype(int)
         y_pred_binary = (y_pred > np.log2(binary_thresh)).astype(int)
     else:
-        y_val_binary = np.copy(y_val)
+        y_true_binary = np.copy(y_true)
         y_pred_binary = np.copy(y_pred)
         
-    assert len(np.unique(y_val_binary)) <= 2
+    assert len(np.unique(y_true_binary)) <= 2
     assert len(np.unique(y_pred_binary)) <= 2
     
-    tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_val_binary, y_pred_binary).ravel()
+    tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true_binary, y_pred_binary).ravel()
     sens = tp / (tp+fn)
     spec = tn / (tn+fp)
     precision = tp / (tp+fp)
-    acc = sklearn.metrics.accuracy_score(y_val_binary, y_pred_binary)
-    balanced_acc = sklearn.metrics.balanced_accuracy_score(y_val_binary, y_pred_binary)
+    acc = sklearn.metrics.accuracy_score(y_true_binary, y_pred_binary)
+    balanced_acc = sklearn.metrics.balanced_accuracy_score(y_true_binary, y_pred_binary)
+    F1 = sklearn.metrics.f1_score(y_true_binary, y_pred_binary)
 
     return pd.DataFrame({"Sensitivity": sens,
                          "Specificity": spec,
                          "Precision": precision,
                          "Accuracy": acc,
-                         "Balanced_Acc": balanced_acc
+                         "Balanced_Acc": balanced_acc,
+                         "F1": F1
                         }, index=[0]
                        )
 
@@ -489,7 +807,7 @@ def compute_proportion_within_1bin(df, y_pred_col, y_true_col, lower_bounds_col,
 
 
 
-def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col="y_test", lower_bounds_col="lower", upper_bounds_col="upper"):
+def boundedLoss_predict(pred_df, y_pred_col="y_pred", lower_bounds_col="lower", upper_bounds_col="upper"):
     '''
     y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated. 
     
@@ -502,15 +820,16 @@ def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col=
         if col in pred_df.columns:
             del pred_df[col]
 
-    # # first add essential agreement (proportion within 1 doubling dilution)
-    # pred_df[f"{y_pred_col}_exp"] = np.round(np.exp2(pred_df[y_pred_col]).astype(float), 2)
+    # first add essential agreement (proportion within 1 doubling dilution)
+    # not always helpful because some "doubling" dilutions are not exact, i.e. 0.3, 0.6, 0.125, 0.5. But the number is here if needed
+    pred_df[f"{y_pred_col}_exp"] = np.round(np.exp2(pred_df[y_pred_col]).astype(float), 2)
     
-    # pred_df.loc[(pred_df[lower_bounds_col] / 2 <= pred_df[f"{y_pred_col}_exp"]) & 
-    #             (pred_df[upper_bounds_col] * 2 >= pred_df[f"{y_pred_col}_exp"])
-    #             , "within_doubling"] = 1
+    pred_df.loc[(pred_df[lower_bounds_col] / 2 <= pred_df[f"{y_pred_col}_exp"]) & 
+                (pred_df[upper_bounds_col] * 2 >= pred_df[f"{y_pred_col}_exp"])
+                , "within_doubling"] = 1
 
-    # pred_df.loc[(pred_df[f"{y_pred_col}_exp"] == 0.06) & (pred_df[lower_bounds_col] == 0.12), "within_doubling"] = 1
-    # pred_df["within_doubling"] = pred_df["within_doubling"].fillna(0).astype(int)
+    pred_df.loc[(pred_df[f"{y_pred_col}_exp"] == 0.06) & (pred_df[lower_bounds_col] == 0.12), "within_doubling"] = 1
+    pred_df["within_doubling"] = pred_df["within_doubling"].fillna(0).astype(int)
         
     # make copies to avoid changing the original dataframe
     lower_bounds = np.copy(pred_df[lower_bounds_col].values) #pred_df[lower_bounds_col].values / 2
@@ -525,11 +844,12 @@ def boundedLoss_predict(pred_df, binary_thresh, y_pred_col="y_pred", y_true_col=
 
     # compute the error relative to the bounds, NOT RELATIVE TO THE MIDPOINT (y_test) of each isolate
     # np.clip returns one of the values from lower_bounds or upper_bounds, whichever is closest to the prediction, if the value is outside the bounds
+    # if the test values are within the bounds, the values themselves are returned
     bound_to_compute_error = np.clip(pred_df[y_pred_col].values, lower_bounds, upper_bounds)
     mae = np.mean((np.abs(bound_to_compute_error - pred_df[y_pred_col])))
     mse = np.mean((np.square(bound_to_compute_error - pred_df[y_pred_col])))
 
-    return mae, mse#, pred_df["within_doubling"].mean()
+    return mae, mse, pred_df["within_doubling"].mean()
 
 
 
@@ -541,66 +861,38 @@ def get_gene_coords(locus_list, fasta_dir):
     coords_lst is a list of tuples of the start and end coordinates of the genes
     '''
     coords = []
-    sense_lst = []
-    
-    for i, locus in enumerate(locus_list):
-        
-        # read the coordinates from the file
-        with open(os.path.join(fasta_dir, locus + ".sh"), "r") as file:
 
-            for line in file.readlines():
-                if ".py" in line and ".fasta" in line:
-                    lines = line.split(" ")
-
-        start_end_lst = []
-    
-        for arg in lines:
-            if arg.isdigit():
-                start_end_lst.append(int(arg))
-        
-        assert len(start_end_lst) == 2
-        coords.append([start_end_lst[0], start_end_lst[-1]])
-
-        if "NEG" in lines or '"NEG"' in lines:
-            sense_lst.append('NEG')
-        elif "POS" in lines or '"POS"' in lines:
-            sense_lst.append('POS')
-        else:
-            raise ValueError("Did not find locus sense!")
-
-    gene_coords = pd.DataFrame(coords)
-    gene_coords.columns = ["Start", "End"]
-    gene_coords["Locus"] = locus_list    
-                    
-    gene_coords["Length"] = gene_coords["End"] - gene_coords["Start"]
-    gene_coords["Sense"] = sense_lst
+    # don't filter by drug because some loci (Tier 2 only) are associated with multiple drugs
+    gene_coords = model_loci.query("Locus in @locus_list")                    
+    gene_coords["Length"] = (gene_coords["End"] - gene_coords["Start"]) # don't need to add 1 because these are 0-indexed half open intervals.
     gene_coords = gene_coords.set_index("Locus")
 
     # during this iteration, convert everything to 1-indexing because using np.arange on inverted coordinates is going to get messy
     # so add 1 to the start position, and then both coordinates should be inclusive
     for i, row in gene_coords.iterrows():
-        if row["Sense"].upper() == "NEG":
+        if row["Sense"] == "-":
             new_start = row["End"]
             new_end = row["Start"] + 1
             gene_coords.loc[i, "Start"] = new_start
             gene_coords.loc[i, "End"] = new_end
-        elif row["Sense"].upper() == "POS":
+        elif row["Sense"] == "+":
             gene_coords.loc[i, "Start"] = row["Start"] + 1
             gene_coords.loc[i, "End"] = row["End"]
         else:
             raise ValueError(f"{row['Sense']} is not a valid gene sense!")
             
-    assert sum(gene_coords.query("Sense=='NEG'").End > gene_coords.query("Sense=='NEG'").Start) == 0
-    assert sum(gene_coords.query("Sense=='POS'").End < gene_coords.query("Sense=='POS'").Start) == 0
+    assert sum(gene_coords.query("Sense=='-'").End > gene_coords.query("Sense=='-'").Start) == 0
+    assert sum(gene_coords.query("Sense=='+'").End < gene_coords.query("Sense=='+'").Start) == 0
 
-    return gene_coords, dict(zip(locus_list, sense_lst))
-
+    return gene_coords.drop_duplicates(), dict(zip(gene_coords.index.values, gene_coords.Sense.values))
+    
 
 
 def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
     '''
     gene_coords is 1-indexed, and for negative sense genes, start position is downstream of end position.
     '''
+
     dfs_list = []
     
     for locus in locus_list:
@@ -617,7 +909,11 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
         pos = gene_coords.loc[locus, "Start"]
         sense = gene_coords.loc[locus, "Sense"]
         length = gene_coords.loc[locus, "Length"]
+
         assert len(H37Rv) >= length
+        # except:
+        #     print(len(H37Rv), length, locus)
+        #     exit()
 
         for _, row in H37Rv_coords.iterrows():
 
@@ -625,9 +921,11 @@ def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
                 coords_count.append(np.nan)
             else:
                 coords_count.append(pos)
-                if sense.upper() == "POS":
+                # increment because we're going from 5' to 3'
+                if sense == "+":
                     pos += 1
-                elif sense.upper() == "NEG":
+                # decrement because we're going from 3' to 5'
+                elif sense == "-":
                     pos -= 1
                 else:
                     raise ValueError(f"{sense} is not a valid gene sense!")
@@ -696,39 +994,132 @@ def remove_redundant_sites_for_Reg(df_seq, df_ref, h37Rv_coords):
     
 
 
-def get_single_locus_Reg_input(locus, locus_list, df_phenos, full_matrix, ref_matrix, h37Rv_coords):
+def get_single_matrix_regression_input(matrix, keep_idx=None, num_keep_channels=None):
 
-    # matrix shape: samples x 5 x locus_length x number of loci
-    locus_idx = locus_list.index(locus)
-    one_hot_encodings = full_matrix.shape[1]
-    longest_locus = full_matrix.shape[2]
-    num_loci = full_matrix.shape[3]
-    assert one_hot_encodings == 5
+    # subset the loci if specified. num_keep_loci should be an integer
+    if num_keep_channels is not None:
+        matrix = matrix[:, :, :, :num_keep_channels]
 
-    # turn the matrices into dataframes for easy manipulation
-    df_train_test = pd.DataFrame(np.reshape(full_matrix[:, :, :, locus_idx], (full_matrix.shape[0], one_hot_encodings * longest_locus), order='F'))
-    df_ref = pd.DataFrame(np.reshape(ref_matrix[:, :, :, locus_idx], (1, one_hot_encodings * longest_locus), order='F'))
+    # use keep_idx to keep only specifid isolates (row index)
+    if keep_idx is not None:
+        matrix = matrix[keep_idx, :, :, :]
 
-    # need to get all the nucleotide positions to name the columns. This makes manipulation easier and is also useful to keep track of which positions went into the model (interpretability)
-    # k is an iterator to keep track of indels
-    seq_coords = []
-    k = 0
+    # matrix shape: samples x 3/5 x locus_length x number of loci
+    num_features = matrix.shape[1]
+    longest_locus = matrix.shape[2]
+    num_loci = matrix.shape[3]
+    assert num_features in [3, 5]
+
+    # reshape to a two-dimensional form that can be passed into the regression model
+    # order doesn't matter because they're all treated as separate features by regression. Just need to make sure it's consistent across different inputs
+    return np.reshape(matrix, (matrix.shape[0], num_features * longest_locus * num_loci), order='C')
+
+
+
+def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_data_path, locus_list, include_lineage=False, include_amino_acid_properties=False):
+    '''
+    Use this function to create the train, val, and test matrices for all regression problems: Ridge regression, gradient boosting, and XGBoost
+    '''
+    # read in matrices of input sequences. These are not in the ridge directory, they are the same as the matrices used by the CNN
+    X_train_val = sparse.load_npz(f"{seq_data_path}/pkl_sparse_train_val.npz").todense()
+    X_AA_train_val = np.load(f"{seq_data_path}/pkl_AA_train_val.npy")
     
-    for coord in h37Rv_coords[:, locus_idx]:
+    # different path for the test data because of the possibility of using different AF threshold
+    X_AA_test = np.load(f"{test_seq_data_path}/pkl_AA_test.npy")
 
-        # indels -- position is NaN, so give unique names that are a concatenation of the locus and an index
-        if pd.isnull(coord):
-            coord = f"indel{k}"
-            k += 1
+    # train_idx = df_train_val.query("category=='train_set'").index.values
+    # val_idx = df_train_val.query("category=='validation_set'").index.values
+    
+    # nucleotide inputs
+    X_train = get_single_matrix_regression_input(X_train_val, keep_idx=None, num_keep_channels=len(locus_list))
+    # X_val = get_single_matrix_regression_input(X_train_val, keep_idx=val_idx, num_keep_channels=len(locus_list))
+    
+    # different path for the test data because of the possibility of using different AF threshold
+    X_test = get_single_matrix_regression_input(sparse.load_npz(f"{test_seq_data_path}/pkl_sparse_test.npz").todense(), keep_idx=None, num_keep_channels=len(locus_list))
+    
+    # get the genes to keep (this is needed for both amino acid and gene peptide lengths inputs)
+    # keep only the specified loci for this model
+    genes_list = get_genes_lst(locus_list)
+    
+    # check that feature shapes are the same across the matrices
+    # assert X_train.shape[1] == X_val.shape[1] == X_test.shape[1]
+    assert X_train.shape[1] == X_test.shape[1]
+    
+    # get the number of unique values per site in the training dataset
+    unique_values = np.apply_along_axis(lambda x: len(np.unique(x)), axis=0, arr=X_train)
+    
+    # features with variation, only keep these for computational efficiency. These will be indexes
+    # it's most important to do this for the nucleotide features because they are the largest
+    # drop sites with no signal, meaning all isolates have the same value, so unique_values == 1
+    keep_features = np.where(unique_values > 1)[0]
+    print(f"Keeping {len(keep_features)} nucleotide features in the model")
+    
+    X_train = X_train[:, keep_features]
+    # X_val = X_val[:, keep_features]
+    X_test = X_test[:, keep_features]
+    
+    if include_lineage:
+    
+        lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
+        assert len(np.unique(lineages)) == 2
+
+        X_train = np.concatenate([X_train, lineages.loc[df_train_val['ROLLINGDB_ID']]], axis=1)
+        # X_train = np.concatenate([X_train, lineages.loc[df_train_val['ROLLINGDB_ID']].values[train_idx, :]], axis=1)
+        # X_val = np.concatenate([X_val, lineages.loc[df_train_val['ROLLINGDB_ID']].values[val_idx, :]], axis=1)
+        X_test = np.concatenate([X_test, lineages.loc[df_test['ROLLINGDB_ID']]], axis=1)
+    
+    # if include_peptide_lengths:
+    
+    #     gene_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"), index_col=[0])
+    
+    #     # keep only those indicated by the locus list
+    #     gene_peptide_lengths = gene_peptide_lengths[[f"{gene}_length" for gene in genes_list]]
+    #     print(gene_peptide_lengths.columns)
+    
+    #     # combine with the nucleotide matrices
+    #     X_train = np.concatenate([X_train, gene_peptide_lengths.loc[df_train_val['ROLLINGDB_ID']].values[train_idx, :]], axis=1)
+    #     X_val = np.concatenate([X_val, gene_peptide_lengths.loc[df_train_val['ROLLINGDB_ID']].values[val_idx, :]], axis=1)
+    #     X_test = np.concatenate([X_test, gene_peptide_lengths.loc[df_test['ROLLINGDB_ID']]], axis=1)
+    
+    if include_amino_acid_properties:
+    
+        # compute the mean and SD of the training set to scale validation and test data later. Only amino acid features need to be scaled
+        # scale across the sample axis (0) and the length of the amino acid sequence (2). Don't scale different biophysical properties together (1), or different genes together (3)
+        train_mean_fName = os.path.join(seq_data_path, "AA_train_mean.npy")
+        train_std_fName = os.path.join(seq_data_path, "AA_train_std.npy")
+        
+        if not os.path.isfile(train_mean_fName) or not os.path.isfile(train_std_fName):
+    
+            print(f"Computing training dataset mean and standard deviation for the amino acid features and saving to {seq_data_path}")
+    
+            # X_AA_train = X_AA_train_val[train_idx, :]
+            train_mean = X_AA_train_val.mean(axis=(0, 2))
+            train_std = X_AA_train_val.std(axis=(0, 2))
+    
+            np.save(train_mean_fName, train_mean)
+            np.save(train_std_fName, train_std)
+    
         else:
-            coord = str(int(coord))
-            
-        seq_coords += [f"{locus}_{coord}_{nuc}" for nuc in BASE_TO_COLUMN.keys()]
+            train_mean = np.load(train_mean_fName)
+            train_std = np.load(train_std_fName)
     
-    assert len(seq_coords) == len(df_train_test.columns)
-    df_train_test.columns = seq_coords
+        # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
+        # scale all 3 matrices
+        X_AA_train_val = (X_AA_train_val - expand_dims_for_rescaling(train_mean, (0, 2), X_AA_train_val)) / expand_dims_for_rescaling(train_std, (0, 2), X_AA_train_val)
+        X_AA_test = (X_AA_test - expand_dims_for_rescaling(train_mean, (0, 2), X_AA_test)) / expand_dims_for_rescaling(train_std, (0, 2), X_AA_test)
+        
+        train_AA_matrix = get_single_matrix_regression_input(X_AA_train_val, keep_idx=None, num_keep_channels=len(genes_list))
+        # val_AA_matrix = get_single_matrix_regression_input(X_AA_train_val, keep_idx=val_idx, num_keep_channels=len(genes_list))
+        test_AA_matrix = get_single_matrix_regression_input(X_AA_test, keep_idx=None, num_keep_channels=len(genes_list))
+        
+        X_train = np.concatenate([X_train, train_AA_matrix], axis=1)
+        # X_val = np.concatenate([X_val, val_AA_matrix], axis=1)
+        X_test = np.concatenate([X_test, test_AA_matrix], axis=1)
+    
+    
+    # check that feature shapes are the same across the matrices
+    # assert X_train.shape[1] == X_val.shape[1] == X_test.shape[1]
+    assert X_train.shape[1] == X_test.shape[1]
 
-    # this is a dataframe of length 1
-    df_ref.columns = seq_coords
-
-    return df_train_test, df_ref
+    # return X_train, X_val, X_test
+    return X_train, X_test

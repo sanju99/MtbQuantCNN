@@ -1,4 +1,4 @@
-import sys, glob, os, yaml, sparse, tracemalloc, pickle
+import sys, argparse, glob, os, yaml, sparse, tracemalloc, pickle
 import numpy as np
 import pandas as pd
 import scipy.stats as st
@@ -14,116 +14,127 @@ from analysis_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
+from Bio import SeqIO, Seq
+import warnings
+warnings.filterwarnings("ignore")
+
+# don't log warnings like compiled metrics aren't available because they clog up the logs file
+tf.get_logger().setLevel('ERROR')
+
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file = sys.argv
+parser = argparse.ArgumentParser()
+
+# Add a required string argument for the config file
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+
+# boolean argument for including lineage SNPs, default value False. If you include the flag, it is considered True
+parser.add_argument('--lineage', action='store_true', help='Flag to add lineage SNPs to model')
+
+# boolean argument for including peptide lengths, default value False. If you include the flag, it is considered True
+parser.add_argument('--peptide-lengths', dest='peptide_lengths', action='store_true', help='Flag to add peptide lengths to model')
+
+# boolean argument for including tier 2 loci (also encoded as NT sequences), default value False. If you include the flag, it is considered True
+parser.add_argument('--tier2', action='store_true', help='Flag to add tier 2 loci to the model')
+
+# boolean argument for including tier 2 loci (also encoded as NT sequences), default value False. If you include the flag, it is considered True
+parser.add_argument('--amino-acid', dest='amino_acid', action='store_true', help='Flag to add amino acid biophysical properties to the model')
+
+parser.add_argument('--patience', default=100, type=int, help='Number of patience epochs for model training')
+
+cmd_line_args = parser.parse_args()
+
+config_file = cmd_line_args.config_file
+include_lineage = cmd_line_args.lineage
+include_peptide_lengths = cmd_line_args.peptide_lengths
+include_tier2 = cmd_line_args.tier2
+include_amino_acid_properties = cmd_line_args.amino_acid
+patience_epochs = cmd_line_args.patience
 
 kwargs = yaml.safe_load(open(config_file, "r"))
 
 drug = kwargs["drug"]
-locus_list = kwargs["locus_list"]
+tier1_loci = kwargs["tier1_loci"]
+
+if include_tier2:
+    tier2_loci = kwargs["tier2_loci"]
+else:
+    tier2_loci = []
+
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
-output_path = kwargs["output_path"]
 phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
-include_lineage = kwargs["include_lineage"]
+output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
 
-N_epochs = 10000
 loss_type = "L1"
-binary = kwargs["binary"]
-bounded_loss = kwargs["bounded_loss"]
-include_peptide_length = True
+binary = False
+bounded_loss = True
+N_epochs = 10000
 
-num_loci = len(locus_list)
+if drug == 'PZA':
+    patience_epochs = 150
+
 df_phenos = pd.read_csv(phenotype_file)
+df_train = df_phenos.query("category in ['train_set', 'validation_set']").reset_index(drop=True)
+df_test = df_phenos.query("category == 'test_set'").reset_index(drop=True)
 
-# creat output directories
-if binary:
-    model_prefix = "binary_"
-    save_prefix = "binary"
-else:
-    model_prefix = ""
-    save_prefix = "quant"
+seq_data_path = output_path
 
-seq_data_path = output_path.replace("_lineage", "").replace("_peptide", "")
-
-# naming consistency
-output_path = output_path.replace("_lineage", "").replace("_peptide", "")
-
-if include_peptide_length:
+if include_peptide_lengths:
     output_path += "_peptide"
     
 if include_lineage:
     output_path += "_lineage"
-    
-# make peptide lengths dataframe if it has not already been created
-if include_peptide_length and not os.path.isfile(os.path.join(seq_data_path, "gene_peptide_lengths.csv")):
 
-    if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-        all_loci_seq = create_all_loci_matrices(config_file)
-        pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
-    
-    locus_peptide_lengths = make_CDS_length_df(locus_list, genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
-    
-    # keep index because that's the samples column
-    locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"))
-    
-# get longest locus from the pickle file
-X_h37rv = sparse.load_npz(os.path.join(seq_data_path, 'pkl_sparse_ref.npz'))
-longest_locus = X_h37rv.shape[2]
-del X_h37rv
+if include_tier2:
+    output_path += "_tier2"
 
-val_generator = MtbGeneDataset(
-    os.path.join(seq_data_path, 'pkl_sparse_full.npz'),
-    phenotype_file,
-    drug,
-    locus_list,
-    fasta_dir=genotype_input_directory,
-    train_or_test="original_test_set",
-    binary=binary,
-    cc=binary_thresh,
-    shuffle_phenos=False,
-    include_lineage=include_lineage,
-    include_peptide_length=include_peptide_length,
-    bounded_loss=bounded_loss,
-    data_idx=None,
-    batch_size=BATCH_SIZE,
-    shuffle=False
-)          
-        
-# both features are combined into the same vector, so if at least one of them is True, there is a vector
-if include_lineage or include_peptide_length:
-    additional_data_len = val_generator[0][0][1].shape[1]
-else:
-    additional_data_len = 0
-
+if include_amino_acid_properties:
+    output_path += "_amino_acid"
+    
 # update output path for the saliency folder. Save the permutation models in a new subdirectory
-saliency_dir = os.path.join(output_path, "saliency", save_prefix, "permutation_test")
+saliency_dir = os.path.join(output_path, "saliency", "permutation_test")
 print(f"Saving results to {saliency_dir}")
+del output_path
     
 if not os.path.isdir(saliency_dir):
-    os.makedirs(os.path.join(saliency_dir))    
-    
-# need the train dataframe indices for slicing it. Reset index so that it's the index within the values, not in the overall dataframe
-df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)
-df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)
+    os.makedirs(os.path.join(saliency_dir)) 
 
-# get regularization parameter
-losses_df = pd.read_csv(os.path.join(output_path, "reg_param_losses.csv"))
+test_generator = MtbGeneDataset(
+    drug,
+    df_test,
+    os.path.join(seq_data_path, 'pkl_sparse_test.npz'),
+    os.path.join(seq_data_path, 'pkl_AA_test.npy'),
+    seq_data_path=seq_data_path, # use this for the test dataset if AF_thresh is not 0.75
+    binary=binary,
+    cc=binary_thresh,
+    tier1_loci=tier1_loci,
+    tier2_loci=tier2_loci,
+    include_lineage=include_lineage,
+    include_peptide_lengths=include_peptide_lengths,
+    include_amino_acid_properties=include_amino_acid_properties,
+    bounded_loss=bounded_loss,
+    shuffle_batches=False, # don't need to shuffle test data because order doesn't matter
+)
 
-# get average loss across the 5 splits for a given regularization parameter, then get the param with the smallest average loss across the split
-losses_df_grouped_alpha = pd.DataFrame(losses_df.groupby("alpha")["val_loss"].mean()).reset_index().rename(columns={"index": "alpha"})
-select_alpha = np.round(losses_df_grouped_alpha.sort_values("val_loss", ascending=True)["alpha"].values[0], 6)  # not sure why, but some of the alphas are like 0.999999999 instead of 1
-print(f"    Regularization parameter: {select_alpha}, minimum average validation loss across CV splits: {losses_df_grouped_alpha.sort_values('val_loss', ascending=True)['val_loss'].values[0]}\n")
+num_loci = len(test_generator.nuc_locus_list)
+longest_locus = test_generator.longest_locus
+longest_protein = test_generator.longest_protein
+num_proteins = test_generator.num_proteins
+num_peptide_lengths = test_generator.num_peptide_lengths
 
-# use reduced number of epochs to save time because the models aren't learning anything anyway 
-if drug == "PZA":
-    patience_epochs = 75
+# both features are combined into the same vector, so if at least one of them is True, there is a vector
+# first dimension: batches, so take any one. Here, I took index 0
+# second dimension: (CNN_inputs, MIC_outputs), so take index 0
+# third dimension: CNN_inputs, can be of length 3-5. If length 3, there is nucleotide matrix, lower bounds, and upper bounds. AA properties and MLP inputs are in the middle in that order. Last two are always the bounds. One before is MLP
+# fourth dimension: samples in a single batch, so take any one. Here, I took index -1
+if include_lineage or include_peptide_lengths:
+    additional_data_len = test_generator[0][0][-3].shape[1]
 else:
-    patience_epochs = 50
+    additional_data_len = 0
         
 num_reps = 10
 
@@ -131,64 +142,45 @@ for rep in range(num_reps):
     
     print(f"\nTraining permutation {rep+1}/{num_reps} with {loss_type} loss")
     
-    # for each replicate, randomly shuffle the MICs, so get new training data each time. Use entire training set
+    # for each replicate, randomly shuffle the MICs, which is stochastic. Use entire training set, but because the shuffling is different, we can train 10 times like this
     train_generator = MtbGeneDataset(
-        os.path.join(seq_data_path, 'pkl_sparse_full.npz'),
-        phenotype_file,
         drug,
-        locus_list,
-        fasta_dir=genotype_input_directory,
-        train_or_test="original_train_set",
+        df_train, 
+        os.path.join(seq_data_path, 'pkl_sparse_train_val.npz'), 
+        os.path.join(seq_data_path, 'pkl_AA_train_val.npy'),
+        seq_data_path=seq_data_path,
         binary=binary,
         cc=binary_thresh,
-        shuffle_phenos=True,
-        include_lineage=include_lineage,
-        include_peptide_length=include_peptide_length,
+        tier1_loci=tier1_loci,
+        tier2_loci=tier2_loci,
+        data_subset="train_set", 
+        shuffle_phenos=True, # shuffle phenotypes for the permutation test
+        include_lineage=include_lineage, 
+        include_peptide_lengths=include_peptide_lengths, 
+        include_amino_acid_properties=include_amino_acid_properties, 
         bounded_loss=bounded_loss,
-        data_idx=None,
-        batch_size=BATCH_SIZE,
-        shuffle=True
+        shuffle_batches=True
     )
-
-    if bounded_loss:
-        
-        # initialize the model using the function from cnn_utils and the optimizer
-        model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=select_alpha)
-
-        # run the function to train a single model. Use 50 epochs patience because it's not going to change much
-        # save the model, but don't need the history array
-        _ = train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, len(df_train), len(df_test), save_model_fName=os.path.join(saliency_dir, f"permutation_{rep}.h5"), save_history_df=False, patience_epochs=patience_epochs, return_min_loss=False)
-
+            
+    # initialize the model using the regularization strength determined above:
+    if include_amino_acid_properties:
+        model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
     else:
-        if binary:
-            loss_func = tf.keras.losses.BinaryCrossentropy()
-            
-            # get class weights for the training data only
-            df_phenos = pd.read_csv(phenotype_file)
-            
-            if f"{drug}_midpoint" in df_phenos.columns:
-                y_train = (df_phenos.query("category=='original_train_set'")[f"{drug}_midpoint"].values > binary_thresh).astype(int)
-            else:
-                y_train = df_phenos.query("category=='original_train_set'")["phenotype"].values.astype(int)
+        model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
 
-            assert len(np.unique(y_train)) == 2
-            class_weights = class_weighting_dictionary(y_train)
-            del y_train
-            
-        else:
-            loss_func = tf.keras.losses.MeanAbsoluteError()
-            class_weights = None
-        
-        model.compile(loss=loss_func, optimizer=optimizer)
-        
-        model.fit(x=train_generator, 
-                  epochs=N_epochs,
-                  use_multiprocessing=True,
-                  workers=4,
-                  class_weight=class_weights,
-                )
-        
-        model.save(os.path.join(saliency_dir, f"permutation_{rep+1}.h5"))                
+    # just need to train and save the permuted models here. In the saliency scripts, we will use the trained models to compute saliency scores
+    train_single_CNN(model, 
+                     loss_type, 
+                     N_epochs, 
+                     train_generator, 
+                     test_generator, 
+                     len(df_train), 
+                     len(df_test), 
+                     save_model_fName=os.path.join(saliency_dir, f"permutation_{rep}.h5"), 
+                     save_history_fName=None, 
+                     patience_epochs=patience_epochs, 
+                     return_min_loss=False
+                    )              
 
     K.clear_session()
 

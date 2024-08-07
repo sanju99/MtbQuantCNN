@@ -35,100 +35,100 @@ abbr_drug_dict = {value: key for key, value in drug_abbr_dict.items()}
 
 
 
-def mutation_catalog_with_bootstrapping(df, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, savefName, AF_thresh=0.75):
+# def mutation_catalog_with_bootstrapping(df, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, savefName, AF_thresh=0.75):
 
-    # make AF column float so that you can use AF thresh
-    isolate_variants_df['AF'] = isolate_variants_df['AF'].replace('.', 0.76).astype(float)
+#     # make AF column float so that you can use AF thresh
+#     isolate_variants_df['AF'] = isolate_variants_df['AF'].replace('.', 0.76).astype(float)
     
-    df = df.rename(columns={"ROLLINGDB_ID": "Isolate"}).reset_index(drop=True)
-    highConf_mutations = who_variants_df.query("drug == @drug_abbr & confidence in ['1) Assoc w R', '2) Assoc w R - Interim']").mutation.values
-    isolates_R = isolate_variants_df.query("mutation in @highConf_mutations & FILTER in ['PASS', 'Amb'] & AF >= @AF_thresh & Isolate in @df.Isolate.values").Isolate.values
+#     df = df.rename(columns={"ROLLINGDB_ID": "Isolate"}).reset_index(drop=True)
+#     highConf_mutations = who_variants_df.query("drug == @drug_abbr & confidence in ['1) Assoc w R', '2) Assoc w R - Interim']").mutation.values
+#     isolates_R = isolate_variants_df.query("mutation in @highConf_mutations & FILTER in ['PASS', 'Amb'] & AF >= @AF_thresh & Isolate in @df.Isolate.values").Isolate.values
         
-    df_pred_catalog = df[["Isolate", f"{drug_abbr}_upper_bound"]]
-    df_pred_catalog["y_test"] = (df[f"{drug_abbr}_upper_bound"] > binary_thresh).astype(int)
-    df_pred_catalog["y_pred"] = df_pred_catalog["Isolate"].map(dict(zip(isolates_R, np.ones(len(isolates_R))))).fillna(0).astype(int)
-    df_pred_catalog.to_csv(savefName, index=False)
+#     df_pred_catalog = df[["Isolate", f"{drug_abbr}_upper_bound"]]
+#     df_pred_catalog["y_test"] = (df[f"{drug_abbr}_upper_bound"] > binary_thresh).astype(int)
+#     df_pred_catalog["y_pred"] = df_pred_catalog["Isolate"].map(dict(zip(isolates_R, np.ones(len(isolates_R))))).fillna(0).astype(int)
+#     df_pred_catalog.to_csv(savefName, index=False)
     
-    df_stats = compute_binary_metrics(df_pred_catalog["y_test"], df_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
-    df_stats["CV"] = 0
-    bs_lst = []
+#     df_stats = compute_binary_metrics(df_pred_catalog["y_test"], df_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
+#     df_stats["CV"] = 0
+#     bs_lst = []
     
-    # perform bootstrapping with 10 replicates
-    for i in range(10):
+#     # perform bootstrapping with 10 replicates
+#     for i in range(10):
         
-        bs_sample_idx = np.random.choice(df.index.values, size=len(df), replace=True)
-        bs_df = df.iloc[bs_sample_idx, :]
-        bs_isolates_R = isolate_variants_df.query("mutation in @highConf_mutations & FILTER in ['PASS', 'Amb'] & AF >= @AF_thresh & Isolate in @bs_df.Isolate.values").Isolate.values
+#         bs_sample_idx = np.random.choice(df.index.values, size=len(df), replace=True)
+#         bs_df = df.iloc[bs_sample_idx, :]
+#         bs_isolates_R = isolate_variants_df.query("mutation in @highConf_mutations & FILTER in ['PASS', 'Amb'] & AF >= @AF_thresh & Isolate in @bs_df.Isolate.values").Isolate.values
         
-        bs_pred_catalog = bs_df[["Isolate", f"{drug_abbr}_upper_bound"]]
-        bs_pred_catalog["y_test"] = (bs_df[f"{drug_abbr}_upper_bound"] > binary_thresh).astype(int)
-        bs_pred_catalog["y_pred"] = bs_pred_catalog["Isolate"].map(dict(zip(bs_isolates_R, np.ones(len(bs_isolates_R))))).fillna(0).astype(int)
+#         bs_pred_catalog = bs_df[["Isolate", f"{drug_abbr}_upper_bound"]]
+#         bs_pred_catalog["y_test"] = (bs_df[f"{drug_abbr}_upper_bound"] > binary_thresh).astype(int)
+#         bs_pred_catalog["y_pred"] = bs_pred_catalog["Isolate"].map(dict(zip(bs_isolates_R, np.ones(len(bs_isolates_R))))).fillna(0).astype(int)
         
-        bs_df_stats = compute_binary_metrics(bs_pred_catalog["y_test"], bs_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
-        bs_df_stats["CV"] = i + 1
-        bs_lst.append(bs_df_stats)
+#         bs_df_stats = compute_binary_metrics(bs_pred_catalog["y_test"], bs_pred_catalog["y_pred"], binary_thresh, binarize=False)[return_stats]
+#         bs_df_stats["CV"] = i + 1
+#         bs_lst.append(bs_df_stats)
 
-    df_return = pd.concat([df_stats, pd.concat(bs_lst, axis=0)], axis=0).reset_index(drop=True)
-    df_return["Model"] = "Catalog"
-    return df_return
+#     df_return = pd.concat([df_stats, pd.concat(bs_lst, axis=0)], axis=0).reset_index(drop=True)
+#     df_return["Model"] = "Catalog"
+#     return df_return
 
 
 
-def classify_using_mutation_catalog(config_file, who_variants_df, valOnlykeepidx=None, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"], AF_thresh=0.75):
+# def classify_using_mutation_catalog(config_file, who_variants_df, valOnlykeepidx=None, return_stats=["Sensitivity", "Specificity", "Precision", "Accuracy", "Balanced_Acc"], AF_thresh=0.75):
 
-    kwargs = yaml.safe_load(open(config_file, "r"))
+#     kwargs = yaml.safe_load(open(config_file, "r"))
 
-    df_phenos = pd.read_csv(kwargs["phenotype_file"])
-    data_path = os.path.dirname(kwargs["phenotype_file"])
-    locus_list = kwargs["locus_list"]
-    drug_abbr = kwargs["drug"]
-    drug = abbr_drug_dict[drug_abbr]
-    output_path = kwargs["output_path"]
-    binary_thresh = kwargs["binary_thresh"]
-    include_lineage = kwargs["include_lineage"]
-    isolate_variants_df = pd.read_csv(os.path.join(data_path, "isolate_variants_fixed_annot.csv"))
+#     df_phenos = pd.read_csv(kwargs["phenotype_file"])
+#     data_path = os.path.dirname(kwargs["phenotype_file"])
+#     locus_list = kwargs["locus_list"]
+#     drug_abbr = kwargs["drug"]
+#     drug = abbr_drug_dict[drug_abbr]
+#     output_path = kwargs["output_path"]
+#     binary_thresh = kwargs["binary_thresh"]
+#     include_lineage = kwargs["include_lineage"]
+#     isolate_variants_df = pd.read_csv(os.path.join(data_path, "isolate_variants_fixed_annot.csv"))
 
-    if AF_thresh == 0.25:
-        suffix = "_lowAF"
-    else:
-        suffix = ""
+#     if AF_thresh == 0.25:
+#         suffix = "_lowAF"
+#     else:
+#         suffix = ""
     
-    df_train = df_phenos.query("category=='original_train_set'")
-    df_test = df_phenos.query("category=='original_test_set'")
+#     df_train = df_phenos.query("category=='original_train_set'")
+#     df_test = df_phenos.query("category=='original_test_set'")
 
-    if os.path.isfile(os.path.join(data_path, "validation_data_for_model.csv")):
-        include_val = True
-        df_val = pd.read_csv(os.path.join(data_path, "validation_data_for_model.csv"))
-    else:
-        include_val = False
+#     if os.path.isfile(os.path.join(data_path, "validation_data_for_model.csv")):
+#         include_val = True
+#         df_val = pd.read_csv(os.path.join(data_path, "validation_data_for_model.csv"))
+#     else:
+#         include_val = False
 
-    if valOnlykeepidx is None:
-        df_train = mutation_catalog_with_bootstrapping(df_train, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_train_predictions{suffix}.csv"), AF_thresh=AF_thresh)
-        df_train["Dataset"] = "Train"
+#     if valOnlykeepidx is None:
+#         df_train = mutation_catalog_with_bootstrapping(df_train, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_train_predictions{suffix}.csv"), AF_thresh=AF_thresh)
+#         df_train["Dataset"] = "Train"
         
-        df_test = mutation_catalog_with_bootstrapping(df_test, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_test_predictions{suffix}.csv"), AF_thresh=AF_thresh)
-        df_test["Dataset"] = "Test"
+#         df_test = mutation_catalog_with_bootstrapping(df_test, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_test_predictions{suffix}.csv"), AF_thresh=AF_thresh)
+#         df_test["Dataset"] = "Test"
 
-        if include_val:
-            df_val = mutation_catalog_with_bootstrapping(df_val, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_validation_predictions{suffix}.csv"), AF_thresh=AF_thresh)
-            df_val["Dataset"] = "Validation"
+#         if include_val:
+#             df_val = mutation_catalog_with_bootstrapping(df_val, drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_validation_predictions{suffix}.csv"), AF_thresh=AF_thresh)
+#             df_val["Dataset"] = "Validation"
             
-            return pd.concat([df_train, df_test, df_val], axis=0).reset_index(drop=True)
-        else:
-            return pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
+#             return pd.concat([df_train, df_test, df_val], axis=0).reset_index(drop=True)
+#         else:
+#             return pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
             
-    else:
-        # only return results for the validation set
-        df_val = mutation_catalog_with_bootstrapping(df_val.iloc[valOnlykeepidx], drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_validation_predictions{suffix}.csv"), AF_thresh=AF_thresh)
-        df_val["Dataset"] = "Validation"
-        return df_val
+#     else:
+#         # only return results for the validation set
+#         df_val = mutation_catalog_with_bootstrapping(df_val.iloc[valOnlykeepidx], drug, drug_abbr, who_variants_df, isolate_variants_df, binary_thresh, return_stats, os.path.join(output_path, f"catalog_validation_predictions{suffix}.csv"), AF_thresh=AF_thresh)
+#         df_val["Dataset"] = "Validation"
+#         return df_val
 
     
 
 def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name, binarize=True, save_fName=None):
     
     # predictions dataframe: get indices of validation data in the cv splits
-    pred_df = df_test[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound"]]
+    pred_df = df_test[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound", "Span_CC"]]
 
     # rename columns to make them easier to read
     pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
@@ -142,11 +142,14 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
     # add model predictions, and log-transform the test values
     pred_df["y_pred"] = np.squeeze(y_pred)
     pred_df["y_test"] = np.log2(pred_df["y_test"])
-
-    binned_mae, binned_mse = boundedLoss_predict(pred_df, binary_thresh)
     
     if save_fName is not None:
         pred_df.to_csv(save_fName, index=False)
+
+    # exclude isolates whose MICs span the CC from the final error calculation. BUT they are saved in the dataframe above to see later
+    pred_df = pred_df.query("Span_CC==0").reset_index(drop=True)
+
+    binned_mae, binned_mse, within_doubling = boundedLoss_predict(pred_df, y_pred_col="y_pred", lower_bounds_col="lower", upper_bounds_col="upper")
 
     summary_df = pd.DataFrame({"Drug": drug,
                                "Model": model_name,
@@ -155,7 +158,7 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
                                "Binned_MSE": binned_mse,
                                "MAE": np.mean(np.abs(pred_df["y_pred"]-pred_df["y_test"])),
                                "MSE": np.mean(np.square(pred_df["y_pred"]-pred_df["y_test"])),
-                               # "Within_doubling": within_doubling,
+                               "Within_doubling": within_doubling,
                                "Spearman": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[0],
                                "Pearson": st.pearsonr(pred_df["y_pred"], pred_df["y_test"])[0],
                               }, index=[0])
@@ -169,35 +172,28 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
 
 
 
-def plot_histories(path, binary=False, patience_epochs=25, replicates=True, saveName=None):
-        
-    if binary:
-        prefix = "binary_"
-    else:
-        prefix = ""
+def plot_histories(path, patience_epochs=200, cv=True, saveName=None):
 
-    if replicates:
-        histories = pd.read_csv(os.path.join(path, f"bootstrapping/{prefix}histories.csv"))
+    if cv:
+        combined_replicates = [pd.read_csv(fName)[['val_loss']] for fName in glob.glob(os.path.join(path, f"cross_validation/history*.csv"))]
     
-    history = pd.read_csv(os.path.join(path, f"{prefix}history.csv"))
+    history = pd.read_csv(os.path.join(path, "history.csv"))
     history = history.iloc[:-patience_epochs, :]
     
     fig, ax = plt.subplots(figsize=(10, 4))
 
-    if replicates:
-        for col in histories.columns:
-            single_rep = histories[[col]]
-            single_rep = single_rep.loc[~pd.isnull(single_rep[col])].reset_index(drop=True)
+    if cv:
+        for i, single_rep in enumerate(combined_replicates):
             single_rep = single_rep.iloc[:-patience_epochs, :]
-            print(f"Trained replicate {col} for {len(single_rep)} epochs (excluding patience period)")
+            print(f"Trained replicate {i} for {len(single_rep)} epochs")
             
-            plt.plot(single_rep.index.values + 1, single_rep[col], color="lightgray")
+            plt.plot(single_rep.index.values + 1, single_rep['val_loss'], color="lightgray")
 
-    # plt.plot(histories.index + 1, histories.mean(axis=1), color="red", linewidth=1.5)
     plt.plot(history.index + 1, history["val_loss"], color="red", linewidth=1.5)
+    print(f"Trained full model for {len(history)} epochs")
 
     plt.xlabel("Epoch", fontsize=12)
-    plot_title = "Tuning Loss" + " for " + os.path.basename(path) + " Model"
+    plot_title = "Validation Loss" + " for " + os.path.basename(path) + " Model"
     plt.title(plot_title, fontsize=14)
     sns.despine()
     
