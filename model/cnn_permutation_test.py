@@ -125,16 +125,8 @@ longest_locus = test_generator.longest_locus
 longest_protein = test_generator.longest_protein
 num_proteins = test_generator.num_proteins
 num_peptide_lengths = test_generator.num_peptide_lengths
-
-# both features are combined into the same vector, so if at least one of them is True, there is a vector
-# first dimension: batches, so take any one. Here, I took index 0
-# second dimension: (CNN_inputs, MIC_outputs), so take index 0
-# third dimension: CNN_inputs, can be of length 3-5. If length 3, there is nucleotide matrix, lower bounds, and upper bounds. AA properties and MLP inputs are in the middle in that order. Last two are always the bounds. One before is MLP
-# fourth dimension: samples in a single batch, so take any one. Here, I took index -1
-if include_lineage or include_peptide_lengths:
-    additional_data_len = test_generator[0][0][-3].shape[1]
-else:
-    additional_data_len = 0
+additional_data_len = test_generator.mlp_data_shape
+print(f"MLP input shape: {additional_data_len}")
         
 num_reps = 10
 

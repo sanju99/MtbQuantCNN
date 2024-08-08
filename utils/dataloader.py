@@ -211,7 +211,7 @@ class MtbGeneDataset(Sequence):
         self.include_lineage = include_lineage
         self.include_peptide_lengths = include_peptide_lengths
         self.include_amino_acid_properties = include_amino_acid_properties
-
+        
         if bounded_loss:
             self.lower_bounds = lower_bounds
             self.upper_bounds = upper_bounds
@@ -228,6 +228,8 @@ class MtbGeneDataset(Sequence):
             assert len(self.genes_lst) == self.num_peptide_lengths
         else:
             self.num_peptide_lengths = 0
+
+        self.mlp_data_shape = self.num_snps + self.num_peptide_lengths
 
         if include_amino_acid_properties:
             self.amino_acid_properties = X_amino_acid_rescaled
