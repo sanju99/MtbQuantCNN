@@ -172,6 +172,11 @@ def process_intragenic_variant_WHO_catalog_coord(row):
         # return comma-separated string for compatibility with later function
         return ','.join([single_gene + '_deletion' for single_gene in gene.split('&')])
 
+    # initiator_codon_variants are listed as p.Met1? in the HGVS_P column by snpEff, so change those to the nucleotide change (so silent variants)
+    # p.Met1? is only used for start lost mutations
+    if 'initiator_codon_variant' in effect:
+        return gene + '_' + nt_change
+    
     # account for the alternative start codons. But in the catalog, they are all encoded as p.Met1? because the first amino acid in a protein is changed to Met after translation
     if 'start_lost' in effect:
         if 'p.Met1' in prot_change or 'p.Val1' in prot_change or 'p.Ile1' in prot_change or 'p.Leu1' in prot_change:
