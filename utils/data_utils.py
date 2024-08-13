@@ -742,7 +742,7 @@ def compute_binary_metrics(y_true, y_pred, binary_thresh, binarize=False):
                          "Precision": precision,
                          "Accuracy": acc,
                          "Balanced_Acc": balanced_acc,
-                         "F1": F1
+                         "F1": F1,
                         }, index=[0]
                        )
 

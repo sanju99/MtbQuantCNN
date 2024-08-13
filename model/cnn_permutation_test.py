@@ -74,9 +74,6 @@ binary = False
 bounded_loss = True
 N_epochs = 10000
 
-if drug == 'PZA':
-    patience_epochs = 150
-
 df_phenos = pd.read_csv(phenotype_file)
 df_train = df_phenos.query("category in ['train_set', 'validation_set']").reset_index(drop=True)
 df_test = df_phenos.query("category == 'test_set'").reset_index(drop=True)
