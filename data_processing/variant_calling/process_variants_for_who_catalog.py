@@ -408,9 +408,10 @@ def get_variants_with_ablations(df):
                         elif variant == 'start_lost':
                             # this is the format of the start lost mutations
                             add_row['variant'] = row[gene_col] + '_p.Met1?'
-                        
-                        else:
-                            add_row['variant'] = variant
+
+                        # for stop_gained can leave the variant column because it will already be in the compatible form                        
+                        # else:
+                        #     add_row['variant'] = variant
 
                         # same for all cases
                         add_row['GENE'] = row[gene_col]
