@@ -26,11 +26,11 @@ exclude_branch_SNP_thresh = 20
 
 # use lineage as the counts column too, so the index and the column have the same name
 excluded_branches = pd.DataFrame(lineage_defining_SNPs.groupby('lineage')['lineage'].count()).query("lineage < @exclude_branch_SNP_thresh").index.values
-print(f"Excluding lineages {excluded_branches} with fewer than {exclude_branch_SNP_thresh} SNPs defining them")
+# print(f"Excluding lineages {excluded_branches} with fewer than {exclude_branch_SNP_thresh} SNPs defining them")
 full_length = len(lineage_defining_SNPs)
 
 lineage_defining_SNPs = lineage_defining_SNPs.query("lineage not in @excluded_branches").reset_index(drop=True)
-print(f"Keeping {len(lineage_defining_SNPs)}/{full_length} lineage-defining SNPs from the Coll 2014 scheme")
+# print(f"Keeping {len(lineage_defining_SNPs)}/{full_length} lineage-defining SNPs from the Coll 2014 scheme")
 
 
 ##########################################################################################################################################################
@@ -260,7 +260,7 @@ for i, sample_ID in enumerate(sample_IDs):
             F2 = calculate_F2(sorted_minor_allele_fraction_per_SNP_set, lineage_SNP_depths_from_sample_df)
             
             with open(F2_txt, 'w+') as file:
-                file.write(str(F2))
+                file.write(str(F2) + "\n")
     
             # delete the intermediate files
             os.remove(f"{sample_lineage_dir}/{sample_ID}.bcf")

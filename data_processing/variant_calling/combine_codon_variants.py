@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import os, vcf, sys, itertools
+import os, vcf, sys, itertools, argparse
 from Bio import Entrez, Seq, SeqIO
 
 h37Rv_genes_df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
@@ -33,7 +33,8 @@ def check_is_snp(record):
         alt_allele = "".join(np.array(record.ALT).astype(str))
         
         # check string lengths to ensure no indels and also the IC and DC flags in the INFO field
-        if len(record.REF) == len(alt_allele) and record.INFO['IC'] == 0 and record.INFO['DC'] == 0:
+        # skip cases where REF = ALT (not a SNP)
+        if len(record.REF) == len(alt_allele) and record.INFO['IC'] == 0 and record.INFO['DC'] == 0 and record.REF != alt_allele:
             return True
     
     return False
@@ -258,9 +259,18 @@ def combine_all_variants_single_codon(pos, vcf_fName):
     return combined_entry, coords_of_codon
 
 
-_, vcf_fName = sys.argv
+parser = argparse.ArgumentParser()
 
-updated_vcf_fName = vcf_fName.replace(".vcf", '_combinedCodons.vcf')
+# dest indicates the name that each argument is stored in so that you can access it after running .parse_args()
+parser.add_argument('-i', type=str, dest='vcf_fName', help='VCF file to combine codons for', required=True)
+parser.add_argument('-o', type=str, dest='updated_vcf_fName', help='Output VCF file with combined codons')
+
+cmd_line_args = parser.parse_args()
+vcf_fName = cmd_line_args.vcf_fName
+updated_vcf_fName = cmd_line_args.updated_vcf_fName
+
+if updated_vcf_fName is None:
+    updated_vcf_fName = vcf_fName.replace(".vcf", '_combinedCodons.vcf')
 
 if not os.path.isfile(updated_vcf_fName):
 

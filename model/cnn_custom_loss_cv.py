@@ -356,45 +356,45 @@ if train_model:
 ####################################### TO GET A FINAL MODEL FOR DOWNSTREAM ANALYSES, USE THE ENTIRE TRAINING SET AND TUNE IT USING THE TEST SET #######################################
 
 
-    # the model performance metrics have already been determined using cross-validation, and this is what will be used to compare model performances, so I believe this should be fine.
-    print("\nFitting full model on training set")
+    # # the model performance metrics have already been determined using cross-validation, and this is what will be used to compare model performances, so I believe this should be fine.
+    # print("\nFitting full model on training set")
 
-    # this is the full training dataset
-    train_generator = MtbGeneDataset(
-                drug,
-                df_train_val, 
-                os.path.join(seq_data_path, 'pkl_sparse_train_val.npz'), 
-                os.path.join(seq_data_path, 'pkl_AA_train_val.npy'),
-                seq_data_path=seq_data_path,
-                binary=binary,
-                cc=binary_thresh,
-                tier1_loci=tier1_loci,
-                tier2_loci=tier2_loci,
-                include_lineage=include_lineage, 
-                include_peptide_lengths=include_peptide_lengths, 
-                include_amino_acid_properties=include_amino_acid_properties, 
-                bounded_loss=bounded_loss, 
-                shuffle_batches=True
-            )
+    # # this is the full training dataset
+    # train_generator = MtbGeneDataset(
+    #             drug,
+    #             df_train_val, 
+    #             os.path.join(seq_data_path, 'pkl_sparse_train_val.npz'), 
+    #             os.path.join(seq_data_path, 'pkl_AA_train_val.npy'),
+    #             seq_data_path=seq_data_path,
+    #             binary=binary,
+    #             cc=binary_thresh,
+    #             tier1_loci=tier1_loci,
+    #             tier2_loci=tier2_loci,
+    #             include_lineage=include_lineage, 
+    #             include_peptide_lengths=include_peptide_lengths, 
+    #             include_amino_acid_properties=include_amino_acid_properties, 
+    #             bounded_loss=bounded_loss, 
+    #             shuffle_batches=True
+    #         )
     
-    if include_amino_acid_properties:
-        model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
-    else:
-        model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+    # if include_amino_acid_properties:
+    #     model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+    # else:
+    #     model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
     
-    # train a model on the full dataset, tuning on the test dataset. Just save the model and history dataframe, don't need the loss
-    train_single_CNN(model,
-                     loss_type, 
-                     N_epochs, 
-                     train_generator, 
-                     test_generator, 
-                     len(df_train_val), 
-                     len(df_test),
-                     save_model_fName=os.path.join(output_path, "best_model.h5"), 
-                     save_history_fName=os.path.join(output_path, "history.csv"), 
-                     patience_epochs=patience_epochs, 
-                     return_min_loss=False
-                    )
+    # # train a model on the full dataset, tuning on the test dataset. Just save the model and history dataframe, don't need the loss
+    # train_single_CNN(model,
+    #                  loss_type, 
+    #                  N_epochs, 
+    #                  train_generator, 
+    #                  test_generator, 
+    #                  len(df_train_val), 
+    #                  len(df_test),
+    #                  save_model_fName=os.path.join(output_path, "best_model.h5"), 
+    #                  save_history_fName=os.path.join(output_path, "history.csv"), 
+    #                  patience_epochs=patience_epochs, 
+    #                  return_min_loss=False
+    #                 )
 
     K.clear_session()
 

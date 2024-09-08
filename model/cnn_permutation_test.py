@@ -67,8 +67,12 @@ BATCH_SIZE = kwargs["batch_size"]
 phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
-output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
 
+if 'output_path' in kwargs.keys():
+    output_path = kwargs["output_path"]
+else:
+    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+    
 loss_type = "L1"
 binary = False
 bounded_loss = True

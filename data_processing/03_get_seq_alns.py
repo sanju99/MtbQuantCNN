@@ -33,8 +33,10 @@ def create_MSA_script(locus, drug, AF_thresh=0.75, TRUST_data=False, insilico_mu
         file.write("source activate MtbQuantCNN\n\n")
 
         # for these, need to make an additional subdirectory for the variable locus, and the other loci FASTAs (all H37Rv ref seqs) will be in that subdirectory
-        if insilico_muts or saturation_muts:
+        if insilico_muts:
             cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{locus}/fastas/{locus}.fasta --save-fasta"
+        if saturation_muts:
+            cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{gene}/fastas/{locus}.fasta --save-fasta"
         else:
             cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/fastas/{locus}.fasta --save-fasta"
             
@@ -50,7 +52,7 @@ def create_MSA_script(locus, drug, AF_thresh=0.75, TRUST_data=False, insilico_mu
         # saturation mutagenesis is done at the gene level. Can get the gene name by splitting on the - character for loci like katG-furA and fabG1-inhA
         if saturation_muts:
             assert gene is not None
-            cmd += f" --insilico-muts-file {out_dir}/{locus}/{gene}_mutations.txt"
+            cmd += f" --insilico-muts-file {out_dir}/{gene}/{gene}_mutations.txt"
         
         file.write(cmd + f" --AF-thresh {AF_thresh} \n")
 
@@ -137,8 +139,10 @@ for locus in locus_list:
 
     
     # don't rerun if the FASTA file already exists
-    if insilico_muts or saturation_muts:
+    if insilico_muts:
         out_file = f"{out_dir}/{locus}/fastas/{locus}.fasta"
+    elif saturation_muts:
+        out_file = f"{out_dir}/{gene}/fastas/{locus}.fasta"
     else:
         out_file = f"{out_dir}/fastas/{locus}.fasta"
         
@@ -151,10 +155,12 @@ if TRUST_data or insilico_muts or saturation_muts:
     
     for locus in locus_list:
 
-        if TRUST_data:
-            fName = f"{out_dir}/fastas/{locus}.fasta"
-        else:
+        if insilico_muts:
             fName = f"{out_dir}/{locus}/fastas/{locus}.fasta"
+        elif saturation_muts:
+            fName = f"{out_dir}/{gene}/fastas/{locus}.fasta"
+        else:
+            fName = f"{out_dir}/fastas/{locus}.fasta"
         
         seq_df = pd.DataFrame([(seq.id, str(seq.seq)) for seq in SeqIO.parse(fName, "fasta")])
         seq_df.columns = ['Isolate', 'Seq']

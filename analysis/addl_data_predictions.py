@@ -47,7 +47,9 @@ parser.add_argument('--insilico-muts', dest='insilico_muts', action='store_true'
 
 parser.add_argument('--saturation-muts', dest='saturation_muts', action='store_true', help='Get MIC predictions for insilico mutations')
 
-parser.add_argument("--locus", type=str, help='For in silico and saturation mutagenesis, specify the locus for which you want to get variant predictions')
+parser.add_argument("--locus", type=str, help='For in silico mutagenesis, specify the locus for which you want to get variant predictions')
+
+parser.add_argument("--gene", type=str, help='For saturation mutagenesis, specify the gene for which you want to get variant predictions')
 
 parser.add_argument('--predict', action='store_true', help='Get MIC predictions. If not specified, just create input data for the additional samples')
 
@@ -61,6 +63,7 @@ TRUST_data = cmd_line_args.TRUST_data
 insilico_muts = cmd_line_args.insilico_muts
 saturation_muts = cmd_line_args.saturation_muts
 locus = cmd_line_args.locus
+gene = cmd_line_args.gene
 get_predictions = cmd_line_args.predict
 
 count_flags_true = 0
@@ -92,7 +95,7 @@ if 'output_path' in kwargs.keys():
 else:
     output_path = f"{results_path}/{drug}"
     
-seq_data_path = output_path
+seq_data_path = f"{results_path}/{drug}"
 training_data_path = output_path
 
 binary = False
@@ -130,15 +133,24 @@ if insilico_muts:
 if saturation_muts:
 
     # this command line argument must be specified
-    assert locus is not None
-    gene = locus
+    assert gene is not None
     
-    if locus not in drug_loci.Locus.values:
+    if gene not in drug_loci.Locus.values:
+        
         locus = drug_loci.query("Locus.str.contains(@gene)").Locus.values
+
+        if len(locus) == 0:
+            if gene in ['gyrA', 'gyrB']:
+                locus = ['gyrBA']
+            elif gene in ['rpoB', 'rpoC']:
+                locus = ['rpoBC']
+            elif gene in ['mmpL5', 'mmpS5']:
+                locus = ['mmpLS5']
+            
         assert len(locus) == 1
         locus = locus[0]
 
-    subdir = f"inSilico_analysis/saturation_mutagenesis/{locus}"
+    subdir = f"inSilico_analysis/saturation_mutagenesis/{gene}"
 
     # set True so that lineage SNPs are excluded and all SNPs are 0
     no_lineage_SNPs = True
@@ -316,6 +328,8 @@ if get_predictions:
     
     df_samples["log2_pred_MIC"] = y_pred
     df_samples["pred_MIC"] = np.exp2(y_pred)
+
+    df_samples['ROLLINGDB_ID'] = df_samples['ROLLINGDB_ID'].str.replace('_p_', '_p.').str.replace('_c_', '_c.').str.replace('+', '*')
     df_samples.to_csv(os.path.join(output_path, "test_predictions.csv"), index=False)
     
     # get lineage predictions if the model has lineage in it. Predict MIC for H37Rv with a single lineage SNP

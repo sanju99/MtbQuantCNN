@@ -70,9 +70,13 @@ BATCH_SIZE = kwargs["batch_size"]
 phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
-output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
 bounded_loss = False # for all models, set bounded_loss = False so that the bounds are not returned
 
+if 'output_path' in kwargs.keys():
+    output_path = kwargs["output_path"]
+else:
+    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+    
 if drug == 'PZA':
     patience_epochs = 150
 

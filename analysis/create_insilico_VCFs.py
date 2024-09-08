@@ -35,7 +35,6 @@ h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h3
 h37Rv_coords_to_gene = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/h37Rv_coords_to_gene.csv")
 h37Rv_coords_to_gene_dict = dict(zip(h37Rv_coords_to_gene['pos'], h37Rv_coords_to_gene['region']))
 
-
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
                   "Clofazimine": "CFZ",
@@ -56,6 +55,26 @@ drug_abbr_dict = {"Delamanid": "DLM",
 
 abbr_drug_dict = {value: key for key, value in drug_abbr_dict.items()}
 
+
+parser = argparse.ArgumentParser()
+
+# Add a required string argument for the drug
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+
+# boolean argument for including tier 2 loci (also encoded as NT sequences), default value False. If you include the flag, it is considered True
+parser.add_argument('--tier2', action='store_true', help='Flag to add tier 2 loci to in silico mutagenesis (not used for saturation mutagenesis)')
+
+# Add an optional argument for site-saturation mutagenesis
+parser.add_argument('--saturation-muts', dest='saturation_muts', action='store_true', help='Get MIC predictions for insilico mutations')
+
+# Add an optional string argument for the locus for which to perform site-saturation mutagenesis. Because there are so many variants, don't do it by default for all genes
+parser.add_argument("--gene", type=str, help='Specify the gene (not locus) for which to perform site-saturation mutagenesis. This is only used if --saturation-muts is specified')
+
+cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+include_tier2 = cmd_line_args.tier2
+gene = cmd_line_args.gene
+saturation_muts = cmd_line_args.saturation_muts
 
 
 def create_WHO_catalog_insilico_files(drug, out_dir, include_tier2=False):
@@ -93,7 +112,7 @@ def create_WHO_catalog_insilico_files(drug, out_dir, include_tier2=False):
 
 
 
-def create_synthetic_VCF_saturation_mutagenesis(drug, gene, locus, out_dir):
+def create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir):
     '''
     This creates synthetic VCF files for all possible amino acid substitutions at each site, including eacrly stop codons
     '''
@@ -141,19 +160,17 @@ def create_synthetic_VCF_saturation_mutagenesis(drug, gene, locus, out_dir):
     df_site_saturation_mutagenesis_variants = get_data_for_synthetic_VCF(df_site_saturation_mutagenesis)
 
     # save
-    if not os.path.isdir(f"{out_dir}/{locus}"):
-        os.mkdir(f"{out_dir}/{locus}")
+    if not os.path.isdir(f"{out_dir}/{gene}"):
+        os.mkdir(f"{out_dir}/{gene}")
         
     df_site_saturation_mutagenesis_variants.to_csv(f"{out_dir}/{gene}_nucleotide_variants.csv", index=False)
     
     create_synthetic_VCF_files(df_site_saturation_mutagenesis_variants, 
-                               f"{out_dir}/{locus}/{gene}_mutations.txt",
+                               f"{out_dir}/{gene}/{gene}_mutations.txt",
                                vcf_dir,
                               )
 
-    # subprocess.run(f"source activate bioinformatics && snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList -no-downstream -no-upstream {out_dir}/{locus}/{gene}_mutations.txt", shell=True, executable='/bin/bash')
-
-    print(f"\nPlease run\n    snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList -no-downstream -no-upstream {out_dir}/{locus}/{gene}_mutations.txt\n")
+    print(f"\nPlease run\n    snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList -no-downstream -no-upstream {out_dir}/{gene}/{gene}_mutations.txt\n")
 
     return df_site_saturation_mutagenesis_variants
 
@@ -200,8 +217,8 @@ def remove_mutations_to_preserve_aln_create_new_files(drug, locus):
     nucleotide_vars_fName = f"{out_dir}/WHO_nucleotide_variants.csv"
     nucleotide_vars_fName_original = f"{out_dir}/WHO_nucleotide_variants_original.csv"
 
-    insertion_sites_fName = f"{out_dir}/{locus}/fastas/{locus}_insertion_sites.csv"
-    insertion_sites_fName_original = f"{out_dir}/{locus}/fastas/{locus}_insertion_sites_original.csv"
+    insertion_sites_fName = f"{fasta_dir}/{locus}_insertion_sites.csv"
+    insertion_sites_fName_original = f"{fasta_dir}/{locus}_insertion_sites_original.csv"
     
     # original dataframe of insertions when the original data were aligned
     model_aln_df = pd.read_csv(os.path.join(data_dir, drug, "fastas", f"{locus}_insertion_sites.csv"))
@@ -304,25 +321,6 @@ def write_ref_seqs_for_constant_loci(drug, variable_locus, constant_loci_list, o
                     file.write(ref_seq + "\n")
 
 
-parser = argparse.ArgumentParser()
-
-# Add a required string argument for the drug
-parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
-
-# boolean argument for including tier 2 loci (also encoded as NT sequences), default value False. If you include the flag, it is considered True
-parser.add_argument('--tier2', action='store_true', help='Flag to add tier 2 loci to the model')
-
-# Add an optional argument for site-saturation mutagenesis
-parser.add_argument('--saturation-muts', dest='saturation_muts', action='store_true', help='Get MIC predictions for insilico mutations')
-
-# Add an optional string argument for the locus for which to perform site-saturation mutagenesis. Because there are so many variants, don't do it by default for all genes
-parser.add_argument("--gene", type=str, help='Specify the gene (not locus) for which to perform site-saturation mutagenesis. This is only used if --saturation-muts is specified')
-
-cmd_line_args = parser.parse_args()
-config_file = cmd_line_args.config_file
-include_tier2 = cmd_line_args.tier2
-gene = cmd_line_args.gene
-saturation_muts = cmd_line_args.saturation_muts
 
 # need to figure out which loci need to be re-aligned (i.e. which loci have in silico mutations in them)
 kwargs = yaml.safe_load(open(config_file, "r"))
@@ -358,22 +356,31 @@ if not os.path.isdir(vcf_dir):
 if saturation_muts:
 
     if gene not in drug_loci.Locus.values:
+        
         locus_list = drug_loci.query("Locus.str.contains(@gene)").Locus.values
 
+        # if the string search above fails, assign locus list manually
         if len(locus_list) == 0:
             if gene in ['mmpS5', 'mmpL5']:
                 locus_list = ['mmpLS5']
+
+            elif gene in ['gyrA', 'gyrB']:
+                locus_list = ['gyrBA']
+
+            elif gene in ['rpoB', 'rpoC']:
+                locus_list = ['rpoBC']
                 
         assert len(locus_list) == 1
     else:
         locus_list = [gene]
 
-    # this will print a command to run snpEff on the VCF files to check annotations
-    if locus_list[0] == 'mmpLS5':
-        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpS5', locus_list[0], out_dir)
-        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpL5', locus_list[0], out_dir)
-    else:
-        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, gene, locus_list[0], out_dir)
+    # # this will print a command to run snpEff on the VCF files to check annotations
+    # if locus_list[0] == 'mmpLS5':
+    #     df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpS5', locus_list[0], out_dir)
+    #     df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpL5', locus_list[0], out_dir)
+    # else:
+        
+    df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir)
 
 else:
     # this will print a command to run snpEff on the VCF files to check annotations
@@ -387,6 +394,12 @@ else:
     print(f"Making in silico mutations for {','.join(locus_list)}")
         
 
+if saturation_muts:
+    fasta_dir = f"{out_dir}/{gene}/fastas"
+else:
+    fasta_dir = f"{out_dir}/{locus}/fastas"
+    
+
 # check that everything actually is a variant. If REF = ALT, then it's a new case that I haven't considered
 if len(df_variants.query("REF == ALT")) > 0:
     print(df_variants.query("REF == ALT"))
@@ -397,12 +410,8 @@ proceed = input("Please press Enter when you have finished running snpEff to ann
 if proceed.lower() == "":
 
     if saturation_muts:
-        if locus_list[0] == 'mmpLS5':
-            annotated_VCFs = glob.glob(f"{vcf_dir}/mmp*.eff.vcf")
-            nonannotated_VCFs = glob.glob(f"{vcf_dir}/mmp*.vcf")
-        else:
-            annotated_VCFs = glob.glob(f"{vcf_dir}/{gene}*.eff.vcf")
-            nonannotated_VCFs = glob.glob(f"{vcf_dir}/{gene}*.vcf")
+        annotated_VCFs = glob.glob(f"{vcf_dir}/{gene}*.eff.vcf")
+        nonannotated_VCFs = glob.glob(f"{vcf_dir}/{gene}*.vcf")
     else:
         annotated_VCFs = glob.glob(f"{vcf_dir}/*.eff.vcf")
         nonannotated_VCFs = glob.glob(f"{vcf_dir}/*.vcf")
@@ -418,11 +427,7 @@ if proceed.lower() == "":
 
     # create a text file of full paths to the synthetic VCF files
     if saturation_muts:
-        if locus_list[0] == 'mmpLS5':
-            # these need to be in the same file for alignment because they are in the same locus
-            pd.Series(annotated_VCFs).to_csv(os.path.join(out_dir, locus_list[0], f'{locus_list[0]}_mutations.txt'), index=False, header=None)
-        else:
-            pd.Series(annotated_VCFs).to_csv(os.path.join(out_dir, locus_list[0], f'{gene}_mutations.txt'), index=False, header=None)
+        pd.Series(annotated_VCFs).to_csv(os.path.join(out_dir, gene, f'{gene}_mutations.txt'), index=False, header=None)
     else:
         pd.Series(annotated_VCFs).to_csv(os.path.join(out_dir, 'WHO_mutations.txt'), index=False, header=None)            
         
@@ -431,11 +436,7 @@ if proceed.lower() == "":
         
 
 if saturation_muts:
-    # here, they can be in separate files
-    if locus_list[0] == 'mmpLS5':
-        df_variants = pd.concat([pd.read_csv(f"{out_dir}/mmpS5_nucleotide_variants.csv"), pd.read_csv(f"{out_dir}/mmpL5_nucleotide_variants.csv")])
-    else:
-        df_variants = pd.read_csv(f"{out_dir}/{gene}_nucleotide_variants.csv")
+    df_variants = pd.read_csv(f"{out_dir}/{gene}_nucleotide_variants.csv")
 else:
     df_variants = pd.read_csv(f"{out_dir}/WHO_nucleotide_variants.csv")
 
@@ -478,11 +479,11 @@ for locus in locus_list:
         locus_start, locus_end = drug_loci.query("Locus==@locus")[['Start', 'End']].values[0]
         
         single_locus_mutations = df_variants.query("POS > @locus_start & POS <= @locus_end")
-        
-        # make a separate subdirectory for each locus because that one will be variable, and the rest of the loci in the model will be constant (H37Rv ref seq) for predictions
-        if not os.path.isdir(f"{out_dir}/{locus}/fastas"):
-            os.makedirs(f"{out_dir}/{locus}/fastas")
 
+        # make a separate subdirectory for each locus because that one will be variable, and the rest of the loci in the model will be constant (H37Rv ref seq) for predictions
+        if not os.path.isdir(fasta_dir):
+            os.makedirs(fasta_dir)
+        
         if not saturation_muts:
             
             with open(f"{out_dir}/{locus}/WHO_mutations.txt" , "w+") as file:
@@ -497,6 +498,7 @@ for locus in locus_list:
             subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus}", shell=True)
 
         else:
+                
             # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
             subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene}", shell=True)
 
@@ -516,4 +518,4 @@ for locus in locus_list:
         constant_loci_list = list(set(kwargs['tier1_loci'] + kwargs['tier2_loci']) - set([locus]))
         
         # write files for all other loci, both tiers in the directory for each variable locus
-        write_ref_seqs_for_constant_loci(drug, locus, constant_loci_list, out_dir=f"{out_dir}/{locus}/fastas")
+        write_ref_seqs_for_constant_loci(drug, locus, constant_loci_list, out_dir=fasta_dir)

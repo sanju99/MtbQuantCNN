@@ -409,9 +409,10 @@ def get_variants_with_ablations(df):
                             # this is the format of the start lost mutations
                             add_row['variant'] = row[gene_col] + '_p.Met1?'
 
-                        # for stop_gained can leave the variant column because it will already be in the compatible form                        
-                        # else:
-                        #     add_row['variant'] = variant
+                        # for stop_gained (the only other possible lof string) can leave the variant column because it will already be in the compatible form
+                        # so just get the strings from the gene and HGVS_P columns and combine them
+                        else:
+                            add_row['variant'] = row[gene_col] + '_' + row['HGVS_P']
 
                         # same for all cases
                         add_row['GENE'] = row[gene_col]

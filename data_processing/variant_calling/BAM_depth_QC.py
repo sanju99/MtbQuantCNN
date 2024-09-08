@@ -37,10 +37,8 @@ with open(f"{sample_dir}/bam/pass_run_IDs.txt", "w+") as file:
         # proportion of sites with a coverage of at least 20. Round in case there are samples with 0.949 or something (saw one with 0.9498)
         prop_sites_depth_20 = np.round(len(depths.loc[depths[run_ID] >= 20]) / len(depths), 2)
 
-        print(f"Depth: {prop_sites_depth_20}")
-
-        # median depth must be greater than 15, and at least 95% of sites must have a coverage of at least 20
-        if median > 15 and prop_sites_depth_20 >= 0.95:
+        # median depth must be greater than 15, and at least 90% of sites must have a coverage of at least 20
+        if median > 15 and prop_sites_depth_20 >= 0.90:
 
             # if they are the same, there is no extra directory level
             if sample_ID == run_ID:
