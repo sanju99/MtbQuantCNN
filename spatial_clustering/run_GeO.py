@@ -131,7 +131,7 @@ def random_G_score_table(runs, X, w, dm):
 
 
 
-def compute_GeO_score_with_permutation(values_fName, prefix):
+def compute_GeO_score_with_permutation(values_fName):
 
     to_analyze = pd.read_csv(values_fName)
     
@@ -139,7 +139,7 @@ def compute_GeO_score_with_permutation(values_fName, prefix):
     keep_residues = dm.residues_i.id.values.astype(int)
     to_analyze = to_analyze.query("residue in @keep_residues").reset_index(drop=True)
     
-    print(f"Computing GeO scores for {len(to_analyze)} residues")
+    print(f"Computing GeO scores for {len(to_analyze)} residues with {NUM_SHUFFLES} permutations")
     
     w = compute_weight_matrix(dm.dist_matrix)
     
@@ -148,27 +148,28 @@ def compute_GeO_score_with_permutation(values_fName, prefix):
     
     df = pd.DataFrame([dm.residues_i.id.values, G_scores.flatten()]).T
     df.columns = ["residue", "G_score"]
-    df.to_csv(f"{absolute_path}/{output_path}/{prefix}_G_scores.csv", index=False)
+    df.to_csv(f"{absolute_path}/{output_path}/G_scores.csv", index=False)
     G_score_df = df
 
     shuffle_table = random_G_score_table(NUM_SHUFFLES, X, w, dm)
-    shuffle_table.to_csv(f"{absolute_path}/{output_path}/{prefix}_random_GeO_iterations_{NUM_SHUFFLES}.csv.gz", compression='gzip', index=False)
+    shuffle_table.to_csv(f"{absolute_path}/{output_path}/random_GeO_iterations_{NUM_SHUFFLES}.csv.gz", compression='gzip', index=False)
+
+    # don't need this because we're doing per-residue clustering, not global protein clustering
+    # ks_results = []
     
-    ks_results = []
+    # # is the distribution of per-residue GeO scores significantly different from the per-residue scores of a randomly shuffled protein?
+    # for i in range(1,NUM_SHUFFLES+1):
+    #     ks = ks_2samp(G_scores.flatten(), shuffle_table.iloc[:,i].values.flatten())
+    #     ks_results.append([ks.statistic, ks.pvalue])
     
-    # is the distribution of per-residue GeO scores significantly different from the per-residue scores of a randomly shuffled protein?
-    for i in range(1,NUM_SHUFFLES+1):
-        ks = ks_2samp(G_scores.flatten(), shuffle_table.iloc[:,i].values.flatten())
-        ks_results.append([ks.statistic, ks.pvalue])
+    # result_table = pd.DataFrame(ks_results, columns=["KS_score", "pvalue"])
+    # result_table.sort_values("pvalue", inplace=True)
+    # result_table.to_csv(f"{absolute_path}/{output_path}/{prefix}_random_GeO_pvalues_{NUM_SHUFFLES}.csv.gz", compression='gzip', index=False)
     
-    result_table = pd.DataFrame(ks_results, columns=["KS_score", "pvalue"])
-    result_table.sort_values("pvalue", inplace=True)
-    result_table.to_csv(f"{absolute_path}/{output_path}/{prefix}_random_GeO_pvalues_{NUM_SHUFFLES}.csv.gz", compression='gzip', index=False)
-    
-    ### Now compute GeO versus combination of all shuffled isolates
-    ks = ks_2samp(G_scores.flatten(), shuffle_table.iloc[:,1::].values.flatten())
-    result_table_full = pd.DataFrame([[ks.statistic, ks.pvalue]], columns=["score", "pvalue"])
-    result_table_full.to_csv(f"{absolute_path}/{output_path}/random_GeO_full_distribution_{NUM_SHUFFLES}.csv")
+    # ### Now compute GeO versus combination of all shuffled isolates
+    # ks = ks_2samp(G_scores.flatten(), shuffle_table.iloc[:,1::].values.flatten())
+    # result_table_full = pd.DataFrame([[ks.statistic, ks.pvalue]], columns=["score", "pvalue"])
+    # result_table_full.to_csv(f"{absolute_path}/{output_path}/random_GeO_full_distribution_{NUM_SHUFFLES}.csv")
 
 
 
@@ -187,11 +188,5 @@ absolute_path = "/home/sak0914/MtbQuantCNN/spatial_clustering"
 # DON'T INCLUDE .CSV OR .NPY IN THE FILE EXTENSION
 dm = DistanceMap.from_file(f"{absolute_path}/distance_maps/{prot_id}")
 
-# compute separately for positive and negative values (log fold change, so negative means lower than H37Rv)
-if os.path.isfile(f"{absolute_path}/{output_path}/pos_values_to_cluster.csv"):
-    print(f"Computing GeO scores with {NUM_SHUFFLES} permutations on positive scores")
-    compute_GeO_score_with_permutation(f"{absolute_path}/{output_path}/pos_values_to_cluster.csv", "pos")
-
-if os.path.isfile(f"{absolute_path}/{output_path}/neg_values_to_cluster.csv"):
-    print(f"Computing GeO scores with {NUM_SHUFFLES} permutations on negative scores")
-    compute_GeO_score_with_permutation(f"{absolute_path}/{output_path}/neg_values_to_cluster.csv", "neg")
+# will threshold afterwards based on the value in the "average" column to distinguish between neutral mutations and S-associated mutations
+compute_GeO_score_with_permutation(f"{absolute_path}/{output_path}/values_to_cluster.csv")
