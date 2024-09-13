@@ -8,7 +8,7 @@ import sklearn.metrics
 import sklearn.utils
 from sklearn.preprocessing import StandardScaler
 import scipy.stats as st
-from saliency_utils import *
+# from saliency_utils import *
 
 model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
 model_loci[['Start', 'End']] = model_loci[['Start', 'End']].astype(int)
@@ -387,6 +387,7 @@ def make_AA_property_matrices(drug, genes_lst, seq_data_path, df_phenos, genotyp
         np.save(os.path.join(seq_data_path, "pkl_AA_test.npy"), X[test_idx, :])
     else:
         np.save(os.path.join(seq_data_path, "pkl_AA_full.npy"), X)
+
 
 
 

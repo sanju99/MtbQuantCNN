@@ -1,13 +1,14 @@
 import sys, argparse, glob, os, yaml, sparse, tracemalloc, pickle
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras import backend as K
+import tensorflow_probability as tfp
+from tensorflow.keras.optimizers import Adam
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
-from tensorflow.keras import backend as K
-from tensorflow.keras.optimizers import Adam
-tf.config.run_functions_eagerly(True)
+tf.config.run_functions_eagerly(False)
 
 model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
 
@@ -15,7 +16,7 @@ model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
 sys.path.append("utils")
 from data_utils import *
 from analysis_utils import *
-from model_utils import *
+from bayesian_model_utils import *
 from dataloader import MtbGeneDataset
 
 from Bio import SeqIO, Seq
@@ -86,7 +87,7 @@ binary_thresh = kwargs["binary_thresh"]
 if 'output_path' in kwargs.keys():
     output_path = kwargs["output_path"]
 else:
-    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/Bayesian_CNN_results/{drug}"
 
 loss_type = "L1"
 binary = False
@@ -97,7 +98,7 @@ df_phenos = pd.read_csv(phenotype_file)
 df_train_val = df_phenos.query("category in ['train_set', 'validation_set']").reset_index(drop=True)
 df_test = df_phenos.query("category == 'test_set'").reset_index(drop=True)
 
-seq_data_path = output_path
+seq_data_path = output_path.replace('Bayesian_', '')
 
 if include_peptide_lengths:
     output_path += "_peptide"
@@ -262,95 +263,95 @@ cv_model_results = []
 
 if train_model:
 
-    # don't need to shuffle because samples within a batch are shuffled by the dataloader
-    kfold_splits = StratifiedKFold(n_splits=num_cv_splits, shuffle=False)
+    # # don't need to shuffle because samples within a batch are shuffled by the dataloader
+    # kfold_splits = StratifiedKFold(n_splits=num_cv_splits, shuffle=False)
 
-    # stratify by the binary resistance phenotype only. You can pass in a dummy variable for X, which is np.zeros(len(df_train_val)) here
-    for split, (train_idx, val_idx) in enumerate(kfold_splits.split(np.zeros(len(df_train_val)), df_train_val["Binary"])): 
+    # # stratify by the binary resistance phenotype only. You can pass in a dummy variable for X, which is np.zeros(len(df_train_val)) here
+    # for split, (train_idx, val_idx) in enumerate(kfold_splits.split(np.zeros(len(df_train_val)), df_train_val["Binary"])): 
 
-        print(f"\nTraining {split+1}/{num_cv_splits} cross-validation splits")
+    #     print(f"\nTraining {split+1}/{num_cv_splits} cross-validation splits")
         
-        print(f"    CV train R: {df_train_val.iloc[train_idx]['Binary'].mean()}")
-        print(f"    CV val R: {df_train_val.iloc[val_idx]['Binary'].mean()}")
+    #     print(f"    CV train R: {df_train_val.iloc[train_idx]['Binary'].mean()}")
+    #     print(f"    CV val R: {df_train_val.iloc[val_idx]['Binary'].mean()}")
     
-        train_generator = MtbGeneDataset(
-            drug,
-            df_train_val, 
-            os.path.join(seq_data_path, 'pkl_sparse_train_val.npz'), 
-            os.path.join(seq_data_path, 'pkl_AA_train_val.npy'),
-            seq_data_path=seq_data_path,
-            binary=binary,
-            cc=binary_thresh,
-            tier1_loci=tier1_loci,
-            tier2_loci=tier2_loci,
-            data_idx=train_idx, # get the train indices from the cross-validation splits
-            include_lineage=include_lineage, 
-            include_peptide_lengths=include_peptide_lengths, 
-            include_amino_acid_properties=include_amino_acid_properties, 
-            bounded_loss=bounded_loss, 
-            shuffle_batches=True
-        )
+    #     train_generator = MtbGeneDataset(
+    #         drug,
+    #         df_train_val, 
+    #         os.path.join(seq_data_path, 'pkl_sparse_train_val.npz'), 
+    #         os.path.join(seq_data_path, 'pkl_AA_train_val.npy'),
+    #         seq_data_path=seq_data_path,
+    #         binary=binary,
+    #         cc=binary_thresh,
+    #         tier1_loci=tier1_loci,
+    #         tier2_loci=tier2_loci,
+    #         data_idx=train_idx, # get the train indices from the cross-validation splits
+    #         include_lineage=include_lineage, 
+    #         include_peptide_lengths=include_peptide_lengths, 
+    #         include_amino_acid_properties=include_amino_acid_properties, 
+    #         bounded_loss=bounded_loss, 
+    #         shuffle_batches=True
+    #     )
       
-        val_generator = MtbGeneDataset(
-            drug,
-            df_train_val,
-            os.path.join(seq_data_path, 'pkl_sparse_train_val.npz'),
-            os.path.join(seq_data_path, 'pkl_AA_train_val.npy'),
-            seq_data_path=seq_data_path,
-            binary=binary,
-            cc=binary_thresh,
-            tier1_loci=tier1_loci,
-            tier2_loci=tier2_loci,
-            data_idx=val_idx, # get the train indices from the cross-validation splits
-            include_lineage=include_lineage,
-            include_peptide_lengths=include_peptide_lengths,
-            include_amino_acid_properties=include_amino_acid_properties, 
-            bounded_loss=bounded_loss,
-            shuffle_batches=False, # don't need to shuffle validation data because order in which you get the losses doesn't matter
-        )
+    #     val_generator = MtbGeneDataset(
+    #         drug,
+    #         df_train_val,
+    #         os.path.join(seq_data_path, 'pkl_sparse_train_val.npz'),
+    #         os.path.join(seq_data_path, 'pkl_AA_train_val.npy'),
+    #         seq_data_path=seq_data_path,
+    #         binary=binary,
+    #         cc=binary_thresh,
+    #         tier1_loci=tier1_loci,
+    #         tier2_loci=tier2_loci,
+    #         data_idx=val_idx, # get the train indices from the cross-validation splits
+    #         include_lineage=include_lineage,
+    #         include_peptide_lengths=include_peptide_lengths,
+    #         include_amino_acid_properties=include_amino_acid_properties, 
+    #         bounded_loss=bounded_loss,
+    #         shuffle_batches=False, # don't need to shuffle validation data because order in which you get the losses doesn't matter
+    #     )
         
-        if include_amino_acid_properties:
-            model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
-        else:
-            model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+    #     if include_amino_acid_properties:
+    #         model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+    #     else:
+    #         model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
 
-        # train a model for on each split
-        train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, len(train_idx), len(val_idx), save_model_fName=os.path.join(cv_dir, f"model_{split}.h5"), save_history_fName=os.path.join(cv_dir, f"history_{split}.csv"), patience_epochs=patience_epochs, return_min_loss=False)
+    #     # train a model for on each split
+    #     train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, len(train_idx), len(val_idx), save_model_fName=os.path.join(cv_dir, f"model_{split}.h5"), save_history_fName=os.path.join(cv_dir, f"history_{split}.csv"), patience_epochs=patience_epochs, return_min_loss=False)
 
-        # load in the finished model
-        model.load_weights(os.path.join(cv_dir, f"model_{split}.h5"))
+    #     # load in the finished model
+    #     model.load_weights(os.path.join(cv_dir, f"model_{split}.h5"))
     
-        # get final model predictions on the TEST dataset, which has been until now set aside
-        y_pred = model.predict(
-            x=test_generator,
-            workers=4,
-            use_multiprocessing=True,
-        )
+    #     # get final model predictions on the TEST dataset, which has been until now set aside
+    #     y_pred = model.predict(
+    #         x=test_generator,
+    #         workers=4,
+    #         use_multiprocessing=True,
+    #     )
 
-        # predictions will be saved for isolates with Span_CC = 1, but the summary df will not include them in the computation
-        summary_df = create_summary_df(df_test,
-                                       y_pred, 
-                                       drug,
-                                       binary_thresh, 
-                                       num_loci, 
-                                       model_name="CNN", 
-                                       binarize=True, 
-                                       save_fName=os.path.join(cv_dir, f"test_predictions_{split}.csv"),
-                                      )
-        summary_df["CV"] = split
-        cv_model_results.append(summary_df)
+    #     # predictions will be saved for isolates with Span_CC = 1, but the summary df will not include them in the computation
+    #     summary_df = create_summary_df(df_test,
+    #                                    y_pred, 
+    #                                    drug,
+    #                                    binary_thresh, 
+    #                                    num_loci, 
+    #                                    model_name="CNN", 
+    #                                    binarize=True, 
+    #                                    save_fName=os.path.join(cv_dir, f"test_predictions_{split}.csv"),
+    #                                   )
+    #     summary_df["CV"] = split
+    #     cv_model_results.append(summary_df)
         
-        if loss_type == "L1":
-            print(f"    Final loss on the test set: {summary_df['Binned_MAE'].values[0]}")
-        else:
-            print(f"    Final loss on the test set: {summary_df['Binned_MSE'].values[0]}")
+    #     if loss_type == "L1":
+    #         print(f"    Final loss on the test set: {summary_df['Binned_MAE'].values[0]}")
+    #     else:
+    #         print(f"    Final loss on the test set: {summary_df['Binned_MSE'].values[0]}")
                     
-        del train_generator
-        del val_generator
+    #     del train_generator
+    #     del val_generator
 
 
-    # save the cross-validation model results
-    pd.concat(cv_model_results).to_csv(test_results_fName, index=False)
+    # # save the cross-validation model results
+    # pd.concat(cv_model_results).to_csv(test_results_fName, index=False)
 
 
 ####################################### TO GET A FINAL MODEL FOR DOWNSTREAM ANALYSES, USE THE ENTIRE TRAINING SET AND TUNE IT USING THE TEST SET #######################################
@@ -378,9 +379,15 @@ if train_model:
             )
     
     if include_amino_acid_properties:
-        model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+        # model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+        model = bayesian_multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
     else:
-        model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+        model = bayesian_conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+
+    print(model.summary())
+    
+    N_epochs = 1
+    patience_epochs =  0
     
     # train a model on the full dataset, tuning on the test dataset. Just save the model and history dataframe, don't need the loss
     train_single_CNN(model,
