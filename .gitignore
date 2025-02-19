@@ -9,6 +9,7 @@ archive/
 *.vcf
 *_seqdf.csv
 *.gz
+./analysis/L3_MXF/L3_MXF_genome_matrix.csv
 
 # additional files for testing
 *_paths.txt
