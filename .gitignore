@@ -1,6 +1,6 @@
-.ipynb_checkpoints/
-__pycache__/
-archive/
+*.ipynb_checkpoints/
+*/__pycache__/
+*/archive/
 
 # too big or too many files. also could be sensitive data
 *.fasta
@@ -9,11 +9,11 @@ archive/
 *.vcf
 *_seqdf.csv
 *.gz
-./analysis/L3_MXF/L3_MXF_genome_matrix.csv
 
 # also large files
 *.svg
-*snakemake*
+*snakemake/*
+*/analysis/L3_MXF/*
 
 # additional files for testing
 *_paths.txt
