@@ -158,7 +158,7 @@ def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name
                                "MSE": np.mean(np.square(pred_df["y_pred"]-pred_df["y_test"])),
                                "Within_doubling": within_doubling,
                                "Spearman": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[0],
-                               "Pearson": st.pearsonr(pred_df["y_pred"], pred_df["y_test"])[0],
+                               "Spearman_pval": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[1],
                               }, index=[0])
 
     # compute binary metrics using the upper bound

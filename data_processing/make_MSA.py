@@ -295,7 +295,10 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END, qualThresh
         vcf_reader = vcf.Reader(filename=f"{fName}.bgz", compressed=True)
     
         # need to read in the bgzipped file in order to use fetch
-        records = vcf_reader.fetch('NC_000962.3', start=START, end=END)
+        try:
+            records = vcf_reader.fetch('NC_000962.3', start=START, end=END)
+        except:
+            records = vcf_reader.fetch('Chromosome', start=START, end=END)
 
     # start is 0-indexed (exclusive) and end is 1-indexed (inclusive)
     for record in records:
@@ -330,15 +333,14 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END, qualThresh
                 # inframe indels can be left as missing, but frameshift indels must be reverted to reference
                 if single_allele_type == 'missing': 
                     
-                    print(os.path.basename(fName).split('.')[0].split('_')[0], record, 'REF!')
+                    print(os.path.basename(fName).replace(".eff", "").replace(".vcf", "").replace("_variants", ""), record, 'REF!')
                     single_allele_type = 'ref'
     
             # encode these as present variants because they pass the other QC thresholds, but may have low AF due to an alignment artifact
             # this is the same for both inframe and frameshift indels
             if single_allele_type == 'lowAF':
-
                 single_allele_type = 'alt'
-                print(os.path.basename(fName).split('.')[0].split('_')[0], record, 'ALT!')
+                print(os.path.basename(fName).replace(".eff", "").replace(".vcf", "").replace("_variants", ""), record, 'ALT!')
 
         # no more lowAF should remain
         assert single_allele_type in ['ref', 'missing', 'alt']

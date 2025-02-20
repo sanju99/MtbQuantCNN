@@ -11,24 +11,8 @@ warnings.filterwarnings('ignore')
 # see /n/data1/hms/dbmi/farhat/rollingDB/metadata/MIC/MIC_combined_data_readme.txt
 # df_rollingDB.loc[df_rollingDB['STUDY_NAME']=='Eldholm Nat Comm 2015', 'MEDIA'] = '7H9'
 
-rollingDB_drugs = ['INH', 'RIF',
-       'RFB', 'EMB', 'STM', 'ETH', 'CIP', 'CYS', 'CAP', 'KAN', 'OFX', 'PAS',
-       'PZA', 'AMI', 'MXF', 'PRO', 'CFZ', 'LEV', 'CLAR', 'GATI', 'AMOXCLAV',
-       'LZD']
-
-# no_mic_isolates = []
-
-# for i, row in df_rollingDB.iterrows():
-#     if sum(~pd.isnull(row[rollingDB_drugs])) == 0:
-#         no_mic_isolates.append(row['BioSample'])
-
-# 40 samples
-# print(f"Removed {len(no_mic_isolates)} samples with no MICs")
-# df_rollingDB = df_rollingDB.query("BioSample not in @no_mic_isolates").reset_index(drop=True)
-
-# 22 samples
-# print(f"Removed {sum(pd.isnull(df_rollingDB['MEDIA']))} samples with no media listed")
-# df_rollingDB = df_rollingDB.loc[~pd.isnull(df_rollingDB['MEDIA'])]
+rollingDB_drugs = ['INH', 'RIF', 'RFB', 'EMB', 'STM', 'ETO', 'CIP', 'CYS', 'CAP', 'KAN', 'OFX', 'PAS',
+                   'PZA', 'AMK', 'MXF', 'PRO', 'CFZ', 'LFX', 'CLAR', 'GATI', 'AMOXCLAV', 'LZD']
 
 # contains multiple rows for the same biosample if they have multiple sequencing runs
 df_rollingDB = pd.read_csv("./MIC_data/rollingDB_MIC_raw.csv").drop_duplicates('BioSample', keep='first')
@@ -41,22 +25,25 @@ df_MIC_ML = pd.read_csv("./MIC_data/MIC_ML.csv").drop_duplicates(keep='first').d
 
 df_cryptic = pd.read_csv("./MIC_data/CRyPTIC_normalized.csv")
 
-# from Sacha Laurent, FIND
-cc_df = pd.read_csv("~/who-analysis/data/drug_CC.csv")
+# from Sacha Laurent, FIND that was curated for the 2023 WHO mutation catalogue
+df_WHO_catalog = pd.read_csv("./MIC_data/2023_WHO_catalog_MIC.csv")
+
+# from Sacha Laurent, FIND with some updates
+cc_df = pd.read_csv("./MIC_data/drug_CC.csv").query("Medium != '7H9'") # not sure about these critical concentrations, so skip
 
 # curated by the Farhat lab
-cc_df_internal = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/critical_concentrations.csv", index_col=[0])
+# cc_df_internal = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/critical_concentrations.csv", index_col=[0])
 
-drug_abbr_dict = {'Amikacin': 'AMI',
+drug_abbr_dict = {'Amikacin': 'AMK',
                   'Bedaquiline': 'BDQ',
                   'Capreomycin': 'CAP',
                   'Clofazimine': 'CFZ',
                   'Delamanid': 'DLM',
                   'Ethambutol': 'EMB',
-                  'Ethionamide': 'ETH',
+                  'Ethionamide': 'ETO',
                   'Isoniazid': 'INH',
                   'Kanamycin': 'KAN',
-                  'Levofloxacin': 'LEV',
+                  'Levofloxacin': 'LFX',
                   'Linezolid': 'LZD',
                   'Moxifloxacin': 'MXF',
                   'Ofloxacin': 'OFX',
@@ -120,7 +107,7 @@ def split_mic_ranges(df, drug):
     if drug in ['INH', 'RIF', 'STM', 'EMB']:
         df.loc[df['MEDIA']=='LJ (INH, RIF, STR, EMB), 7H11 (CIP, KAN, CAP, ETA, PAS, CYS)', 'MEDIA'] = 'LJ'
 
-    if drug in ['CIP', 'KAN', 'CAP', 'ETH', 'PAS', 'CYS']:
+    if drug in ['CIP', 'KAN', 'CAP', 'ETO', 'PAS', 'CYS']:
         df.loc[df['MEDIA']=='LJ (INH, RIF, STR, EMB), 7H11 (CIP, KAN, CAP, ETA, PAS, CYS)', 'MEDIA'] = '7H11'
 
     # No 7H10 or 7H11 critical concentrations
@@ -164,6 +151,9 @@ def normalize_MICs(df, drug, cc_df):
     df[f'{drug}_MEDIA_NORM'] = medium_to_normalize_to
     df['NORM_CC'] = normalize_cc
     df['ORIG_CC'] = df['MEDIA'].map(medium_cc_dict)
+
+    if sum(pd.isnull(df['ORIG_CC'])) > 0:
+        raise ValueError(f"Media {df.loc[pd.isnull(df['ORIG_CC'])].MEDIA.values} do not have specified critical concentrations")
 
     for col in [f'{drug}_lower_bound', f'{drug}_midpoint', f'{drug}_upper_bound']:
 
@@ -235,6 +225,76 @@ def process_bounds_MICML_data(df, drug):
     
 
 
+
+def get_WHO_single_drug_MIC_normalized(df, drug_code):
+        
+    df_single_drug = df.query("drug_code==@drug_code")
+
+    drug = abbr_drug_dict[drug_code]
+
+    if drug != 'Pretomanid':
+        keep_media = cc_df.query("Drug == @drug").Medium.unique()
+    else:
+        keep_media = ['MGIT']
+    
+    df_single_drug = df_single_drug.query("Medium in @keep_media").reset_index(drop=True)[['name', 'range', 'Medium']]
+
+    # get a dictionary to map media to critical concentrations
+    single_drug_media_dict = dict(zip(cc_df.query("Drug == @drug")['Medium'], cc_df.query("Drug == @drug")['Value']))
+
+    if drug in ['Bedaquiline', 'Delamanid']:
+        media_norm = '7H11'
+    elif drug in ['Pyrazinamide', 'Pretomanid']:
+        media_norm = 'MGIT'
+    else:
+        media_norm = '7H10'
+
+    df_single_drug[f'{drug_code}_MEDIA_NORM'] = media_norm
+
+    if drug != 'Pretomanid':
+        df_single_drug['NORM_CC'] = cc_df.query("Drug==@drug & Medium==@media_norm").Value.values[0]
+        df_single_drug['ORIG_CC'] = df_single_drug['Medium'].map(single_drug_media_dict)
+    # only kept MGIT samples above for Pretomanid
+    else:
+        df_single_drug['NORM_CC'] = 1        
+        df_single_drug['ORIG_CC'] = 1
+
+    for i, row in df_single_drug.iterrows():
+        df_single_drug.loc[i, [f"{drug_code}_lower_bound", f"{drug_code}_upper_bound"]] = row['range'].replace('[', '').replace('(', '').replace(']', '').replace(')', '').split(',')
+
+    # left- and right-censoring will be missing values, replaced with the empty string
+    df_single_drug[f"{drug_code}_lower_bound"] = df_single_drug[f"{drug_code}_lower_bound"].replace('', 0)
+    df_single_drug[f"{drug_code}_upper_bound"] = df_single_drug[f"{drug_code}_upper_bound"].replace('', np.inf)
+    
+    df_single_drug[[f"{drug_code}_lower_bound", f"{drug_code}_upper_bound"]] = df_single_drug[[f"{drug_code}_lower_bound", f"{drug_code}_upper_bound"]].astype(float)
+
+    # replace the cases where lower = upper with upper / 2 for the lower. This means that the bug died at the listed concentration, so at half that, it lived.
+    df_single_drug.loc[df_single_drug[f'{drug_code}_lower_bound']==df_single_drug[f'{drug_code}_upper_bound'], f'{drug_code}_lower_bound'] = df_single_drug[f'{drug_code}_upper_bound'] / 2
+    
+    # add midpoint, but make sure to make the midpoint the same as the lower bound for cases where the upper bound is infinity
+    df_single_drug[f"{drug_code}_midpoint"] = np.mean([df_single_drug[f"{drug_code}_lower_bound"], df_single_drug[f"{drug_code}_upper_bound"]], axis=0)
+    df_single_drug.loc[df_single_drug[f"{drug_code}_upper_bound"]==np.inf, f"{drug_code}_midpoint"] = df_single_drug[f"{drug_code}_lower_bound"]
+    
+    # multiply by the ratio of NORM_CC to MEDIA_CC to get the MIC in MEDIA_NORM
+    df_single_drug[f"{drug_code}_lower_bound_NORM"] = df_single_drug[f"{drug_code}_lower_bound"] * df_single_drug['NORM_CC'] / df_single_drug['ORIG_CC']
+    df_single_drug[f"{drug_code}_upper_bound_NORM"] = df_single_drug[f"{drug_code}_upper_bound"] * df_single_drug['NORM_CC'] / df_single_drug['ORIG_CC']
+
+    df_single_drug.rename(columns={'name': 'ROLLINGDB_ID', 'Medium': 'MEDIA'}, inplace=True)
+
+    # add midpoint, but make sure to make the midpoint the same as the lower bound for cases where the upper bound is infinity
+    df_single_drug[f"{drug_code}_midpoint_NORM"] = np.mean([df_single_drug[f"{drug_code}_lower_bound_NORM"], df_single_drug[f"{drug_code}_upper_bound_NORM"]], axis=0)
+    df_single_drug.loc[df_single_drug[f"{drug_code}_upper_bound_NORM"]==np.inf, f"{drug_code}_midpoint_NORM"] = df_single_drug[f"{drug_code}_lower_bound_NORM"]
+
+    # return df_single_drug[['ROLLINGDB_ID', 'MEDIA', 'ORIG_CC', f'{drug_code}_MEDIA_NORM', 'NORM_CC', f"{drug_code}_lower_bound", f"{drug_code}_midpoint", f"{drug_code}_upper_bound", f"{drug_code}_lower_bound_NORM", f"{drug_code}_midpoint_NORM", f"{drug_code}_upper_bound_NORM"]]
+
+    # at this point, there shouldn't be any more cases of lower = upper. But there could be duplicates of the MICs themselves after we did the lower replacement. So drop one
+    df_single_drug = df_single_drug.drop_duplicates(['ROLLINGDB_ID', f'{drug_code}_lower_bound_NORM', f'{drug_code}_upper_bound_NORM'], keep='first')
+
+    # finally, we need to drop samples with multiple measured MICs
+    return df_single_drug.drop_duplicates('ROLLINGDB_ID', keep=False).reset_index(drop=True)[['ROLLINGDB_ID', 'MEDIA', 'ORIG_CC', f'{drug_code}_MEDIA_NORM', 'NORM_CC', f"{drug_code}_lower_bound", f"{drug_code}_midpoint", f"{drug_code}_upper_bound", f"{drug_code}_lower_bound_NORM", f"{drug_code}_midpoint_NORM", f"{drug_code}_upper_bound_NORM"]]
+
+
+
 _, drug = sys.argv
 
 output_dir = os.path.join("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs", drug.upper())
@@ -246,22 +306,24 @@ if drug in df_rollingDB.columns:
     df_rollingDB_single_drug = split_mic_ranges(df_rollingDB, drug)
     df_rollingDB_single_drug = normalize_MICs(df_rollingDB_single_drug, drug, cc_df)
     df_rollingDB_single_drug = df_rollingDB_single_drug.rename(columns={'BioSample': 'ROLLINGDB_ID'})[['ROLLINGDB_ID', 'DB_OF_ORIGIN', 'MEDIA'] + list(df_rollingDB_single_drug.columns[df_rollingDB_single_drug.columns.str.contains(drug)])].dropna(subset=f"{drug}_midpoint_NORM", axis=0)
+
+    df_rollingDB_single_drug['DB_OF_ORIGIN'] = 'farhat_internal'
 else:
     df_rollingDB_single_drug = pd.DataFrame()
 
-# already split to midpoint/bounds and assume normalization
-if drug in df_alland.columns:
-    df_alland_single_drug = df_alland[['ROLLINGDB_ID', f"{drug}_lower_bound_NORM", f"{drug}_midpoint_NORM", f"{drug}_upper_bound_NORM"]]
-    df_alland_single_drug['DB_OF_ORIGIN'] = 'Alland'
-else:
-    df_alland_single_drug = pd.DataFrame()
+# # already split to midpoint/bounds and assume normalization
+# if drug in df_alland.columns:
+#     df_alland_single_drug = df_alland[['ROLLINGDB_ID', f"{drug}_lower_bound_NORM", f"{drug}_midpoint_NORM", f"{drug}_upper_bound_NORM"]]
+#     df_alland_single_drug['DB_OF_ORIGIN'] = 'Alland'
+# else:
+#     df_alland_single_drug = pd.DataFrame()
     
 if drug in df_MIC_ML.columns:
-    df_MIC_ML_single_drug = process_bounds_MICML_data(df_MIC_ML, drug)
-
     # MIC-ML data was already normalized, so leave as is
+    df_MIC_ML_single_drug = process_bounds_MICML_data(df_MIC_ML, drug)
 else:
     df_MIC_ML_single_drug = pd.DataFrame()
+
 
 if f"{drug}_midpoint_NORM" in df_cryptic.columns:
     df_cryptic_single_drug = df_cryptic.dropna(subset=f"{drug}_midpoint_NORM", axis=0)
@@ -272,13 +334,23 @@ if f"{drug}_midpoint_NORM" in df_cryptic.columns:
 else:
     df_cryptic_single_drug = pd.DataFrame()
 
+
+if drug in df_WHO_catalog['drug_code'].unique():
+    print(f"Adding WHO catalog data")
+    df_WHO_catalog_single_drug = get_WHO_single_drug_MIC_normalized(df_WHO_catalog, drug)
+    df_WHO_catalog_single_drug['DB_OF_ORIGIN'] = 'WHO_catalog'
+else:
+    df_WHO_catalog_single_drug = pd.DataFrame()
+
 # remove LOW quality phenotypes and combine the four datasets. Keep the first instance (for i.e. TDR isolates that are in rollingDB and Alland)
 df_combined = pd.concat([df_cryptic_single_drug,
                          df_rollingDB_single_drug,
                          df_MIC_ML_single_drug,
-                         df_alland_single_drug
+                         df_WHO_catalog_single_drug,
+                         # df_alland_single_drug
                         ]).drop_duplicates('ROLLINGDB_ID', keep='first')
 
+# exclude low-quality phenotypes from the cryptic data
 if f"{drug}_PHENOTYPE_QUALITY" in df_combined.columns:
     df_combined = df_combined.query(f"{drug}_PHENOTYPE_QUALITY != 'LOW'")
 
@@ -290,5 +362,10 @@ for col in del_cols:
         del df_combined[col]
 
 print(f"{len(df_combined)} MICs for {drug}") 
-print(df_combined['DB_OF_ORIGIN'].value_counts())
-df_combined.rename(columns={f"{drug}_MEDIA_NORM": "MEDIA_NORM"}).to_csv(os.path.join(output_dir, "combined_MIC.csv"), index=False)
+
+try:
+    print(df_combined['DB_OF_ORIGIN'].value_counts())
+except:
+    print(len(df_combined))
+    
+df_combined.to_csv(os.path.join(output_dir, "combined_MIC.csv"), index=False)

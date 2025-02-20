@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2024-09-07T22:25:55.742740</dc:date>
+    <dc:date>2025-02-17T15:40:50.141644</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -40,29 +40,29 @@ z
    <g id="line2d_1">
     <path d="M 43.027246 34.68 
 L 133.2 34.68 
-" clip-path="url(#pbd32456b30)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #ff6347"/>
+" clip-path="url(#pd2dafc4847)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #ff6347"/>
    </g>
    <g id="line2d_2">
-    <path d="M 43.027246 201.283469 
-L 133.2 201.283469 
-" clip-path="url(#pbd32456b30)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #000000"/>
+    <path d="M 43.027246 203.400904 
+L 133.2 203.400904 
+" clip-path="url(#pd2dafc4847)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #000000"/>
    </g>
    <g id="matplotlib.axis_1"/>
    <g id="matplotlib.axis_2">
     <g id="ytick_1">
      <g id="line2d_3">
       <defs>
-       <path id="m226ecc08b4" d="M 0 0 
+       <path id="m41af3a5eab" d="M 0 0 
 L -3.5 0 
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#m226ecc08b4" x="43.027246" y="173.729041" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m41af3a5eab" x="43.027246" y="173.122245" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_1">
       <!-- $\mathdefault{2^{-4}}$ -->
-      <g transform="translate(22.347246 176.768416) scale(0.08 -0.08)">
+      <g transform="translate(22.347246 176.16162) scale(0.08 -0.08)">
        <defs>
         <path id="DejaVuSans-32" d="M 1228 531 
 L 3431 531 
@@ -124,12 +124,12 @@ z
     <g id="ytick_2">
      <g id="line2d_4">
       <g>
-       <use xlink:href="#m226ecc08b4" x="43.027246" y="90.866655" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m41af3a5eab" x="43.027246" y="90.621462" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_2">
       <!-- $\mathdefault{2^{-3}}$ -->
-      <g transform="translate(22.347246 93.90603) scale(0.08 -0.08)">
+      <g transform="translate(22.347246 93.660837) scale(0.08 -0.08)">
        <defs>
         <path id="DejaVuSans-33" d="M 2597 2516 
 Q 3050 2419 3304 2112 
@@ -534,7 +534,7 @@ L 133.2 205.2
    </g>
    <g id="PathCollection_1">
     <defs>
-     <path id="m6f89d76690" d="M 0 2.5 
+     <path id="m07dfef8739" d="M 0 2.5 
 C 0.663008 2.5 1.29895 2.236584 1.767767 1.767767 
 C 2.236584 1.29895 2.5 0.663008 2.5 0 
 C 2.5 -0.663008 2.236584 -1.29895 1.767767 -1.767767 
@@ -546,8 +546,8 @@ C -1.29895 2.236584 -0.663008 2.5 0 2.5
 z
 " style="stroke: #000000; stroke-opacity: 0.75; stroke-width: 0.75"/>
     </defs>
-    <g clip-path="url(#pbd32456b30)">
-     <use xlink:href="#m6f89d76690" x="88.113623" y="197.08" style="fill: #1f77b4; fill-opacity: 0.75; stroke: #000000; stroke-opacity: 0.75; stroke-width: 0.75"/>
+    <g clip-path="url(#pd2dafc4847)">
+     <use xlink:href="#m07dfef8739" x="88.113623" y="197.08" style="fill: #1f77b4; fill-opacity: 0.75; stroke: #000000; stroke-opacity: 0.75; stroke-width: 0.75"/>
     </g>
    </g>
    <g id="text_4">
@@ -876,7 +876,7 @@ z
   </g>
  </g>
  <defs>
-  <clipPath id="pbd32456b30">
+  <clipPath id="pd2dafc4847">
    <rect x="43.027246" y="26.56" width="90.172754" height="178.64"/>
   </clipPath>
  </defs>

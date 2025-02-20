@@ -145,6 +145,8 @@ class MtbGeneDataset(Sequence):
                 train_idx = df_train.query("category=='train_set'").index.values
                 del df_train
 
+                # need to generalize this. Doesn't work for both AF = 25% and TRUST/in silico muts
+                # X_amino_acid_train = np.load(os.path.join(seq_data_path, "pkl_AA_train_val.npy"))
                 X_amino_acid_train = np.load(os.path.join(results_dir, drug, "pkl_AA_train_val.npy"))
                 X_amino_acid_train = X_amino_acid_train[train_idx, :]
                 

@@ -1,0 +1,322 @@
+Study: Gandhi, Medium: MGIT, Breakpoints: [0.039, 0.078, 0.156, 0.312, 0.625, 1.25]
+Study: Kreiswirth, Medium: 7H10, Breakpoints: [0.02, 0.04, 0.08, 0.16, 0.32]
+Study: NICD, Medium: BMD, Breakpoints: [0.008, 0.031, 0.062, 0.125, 0.25, 0.521, 1.042]
+Adding WHO catalog data
+10607 MICs for BDQ
+DB_OF_ORIGIN
+CRyPTIC        9889
+NICD            396
+WHO_catalog     151
+Kreiswirth       96
+Gandhi           75
+Name: count, dtype: int64
+Critical concentration of 0.25 in 7H11 for BDQ
+10069/10607 isolates have high-quality WGS data
+Removed 151 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 0 isolates with MICs that are known only relative to the critical concentration of 0.25
+11 isolates have MIC bounds that span the CC of 0.25
+    ROLLINGDB_ID    GENE  POS
+5   SAMEA7525723  Rv0678    2
+18  SAMEA8718270  Rv0678    3
+30  SAMEA8741484  Rv0678    2
+34  SAMEA8742282  Rv0678    2
+37  SAMEA8742321  Rv0678    2
+41  SAMEA8742439  Rv0678    2
+44  SAMN37124219  Rv0678    2
+48    TRL0116938  Rv0678    3
+['SAMEA7525723' 'SAMEA8718270' 'SAMEA8741484' 'SAMEA8742282'
+ 'SAMEA8742321' 'SAMEA8742439' 'SAMN37124219' 'TRL0116938']
+Removed 8 isolates with multiple ambiguous frameshifts in a single gene
+Removed 1 isolates in the ['2,3'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 9909 samples in the training data
+                  Binary  BDQ_midpoint
+category                              
+test_set        0.013636      0.041082
+train_set       0.013356      0.041153
+validation_set  0.013636      0.040656
+Adding WHO catalog data
+9442 MICs for DLM
+DB_OF_ORIGIN
+CRyPTIC    9442
+Name: count, dtype: int64
+Critical concentration of 0.016 in 7H11 for DLM
+8995/9442 isolates have high-quality WGS data
+Removed 146 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 0 isolates with MICs that are known only relative to the critical concentration of 0.016
+0 isolates have MIC bounds that span the CC of 0.016
+   ROLLINGDB_ID GENE  POS
+1  SAMEA5569775  ndh    2
+['SAMEA5569775']
+Removed 1 isolates with multiple ambiguous frameshifts in a single gene
+Removed 1 isolates in the ['2,3'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 8847 samples in the training data
+                  Binary  DLM_midpoint
+category                              
+test_set        0.010734      0.002475
+train_set       0.010493      0.002284
+validation_set  0.010165      0.001877
+Normalizing to 7H10 medium
+Dropped 0/1768 isolates with MICs tested in media without critical concentrations
+Study: JATA-KIT, Medium: MGIT, Breakpoints: [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 48.0]
+Study: JATA-Mongolia, Medium: MGIT, Breakpoints: [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
+Study: NICD, Medium: BMD, Breakpoints: [0.156, 0.625, 1.25, 2.5, 5.0, 10.0, 20.0]
+Study: NSW, Medium: NSW_sensititre_plate, Breakpoints: [0.25, 1.0, 2.0, 8.0, 16.0, 32.0]
+Study: Wadsworth, Medium: UKMYC, Breakpoints: [0.625, 1.25, 1.875, 2.5, 5.0, 10.0, 20.0, 40.0]
+Study: CASS, Medium: MYCOTB, Breakpoints: [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0, 16.0]
+Adding WHO catalog data
+12332 MICs for EMB
+DB_OF_ORIGIN
+CRyPTIC            8860
+farhat_internal    1768
+CASS                400
+NICD                396
+JATA-KIT            342
+WHO_catalog         259
+Wadsworth           247
+JATA-Mongolia        41
+NSW                  19
+Name: count, dtype: int64
+Critical concentration of 5.0 in 7H10 for EMB
+11698/12332 isolates have high-quality WGS data
+Removed 272 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 119 isolates with MICs that are known only relative to the critical concentration of 5.0
+281 isolates have MIC bounds that span the CC of 5.0
+   ROLLINGDB_ID     GENE  POS
+1  SAMEA1102315  Rv2752c    2
+3  SAMEA7544213  Rv2752c    2
+7  SAMEA8741636  Rv2752c    2
+['SAMEA1102315' 'SAMEA7544213' 'SAMEA8741636']
+Removed 3 isolates with multiple ambiguous frameshifts in a single gene
+Removed 1 isolates in the ['5'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 11303 samples in the training data
+                  Binary  EMB_midpoint
+category                              
+test_set        0.265760      4.256884
+train_set       0.265280      4.085870
+validation_set  0.265306      4.216877
+Normalizing to 7H10 medium
+Dropped 0/1395 isolates with MICs tested in media without critical concentrations
+Adding WHO catalog data
+11825 MICs for ETO
+DB_OF_ORIGIN
+CRyPTIC            10174
+farhat_internal     1395
+WHO_catalog          256
+Name: count, dtype: int64
+Critical concentration of 5.0 in 7H10 for ETO
+11303/11825 isolates have high-quality WGS data
+Removed 196 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 2 isolates with MICs that are known only relative to the critical concentration of 5.0
+83 isolates have MIC bounds that span the CC of 5.0
+    ROLLINGDB_ID     GENE  POS
+0   SAMEA1101695     ethA    2
+4   SAMEA3402869  Rv0565c    2
+9   SAMEA5569563     ethA    2
+12  SAMEA5569774     ethA    2
+13  SAMEA5569775      ndh    2
+17  SAMEA7525350     ethA    2
+28  SAMEA7555803     ethA    2
+37  SAMEA8741748  Rv0565c    2
+44  SAMN05916269     ethA    2
+46  SAMN05916300     ethA    2
+61  SAMN05918780     ethA    2
+['SAMEA1101695' 'SAMEA3402869' 'SAMEA5569563' 'SAMEA5569774'
+ 'SAMEA5569775' 'SAMEA7525350' 'SAMEA7555803' 'SAMEA8741748'
+ 'SAMN05916269' 'SAMN05916300' 'SAMN05918780']
+Removed 11 isolates with multiple ambiguous frameshifts in a single gene
+Removed 20 isolates in the ['2,4', 'BOV_AFRI'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 11074 samples in the training data
+                  Binary  ETO_midpoint
+category                              
+test_set        0.164166      2.856765
+train_set       0.164044      2.921318
+validation_set  0.163767      2.894452
+Normalizing to 7H10 medium
+Dropped 0/1771 isolates with MICs tested in media without critical concentrations
+Study: Cox, Medium: MGIT, Breakpoints: [0.1, 0.2, 1.1, 2.0]
+Study: JATA-KIT, Medium: MGIT, Breakpoints: [0.06, 0.24, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 96.0, 128.0]
+Study: JATA-Mongolia, Medium: MGIT, Breakpoints: [0.24, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 64.0, 128.0]
+Study: Kreiswirth, Medium: 7H10, Breakpoints: [0.06, 0.12, 0.25]
+Study: Lizma, Medium: MGIT, Breakpoints: [0.1, 1.1, 6.0, 15.0, 20.0]
+Study: NICD, Medium: BMD, Breakpoints: [0.012, 0.048, 0.096, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4, 12.8]
+Study: NSW, Medium: NSW_sensititre_plate, Breakpoints: [0.03, 0.09, 0.12, 0.24, 1.0, 4.0, 8.0]
+Study: Wadsworth, Medium: UKMYC, Breakpoints: [0.03, 0.12, 0.18, 0.24, 0.28, 0.5, 0.58, 1.0, 2.0, 4.0, 4.66, 6.66, 8.0]
+Study: CASS, Medium: MYCOTB, Breakpoints: [0.015, 0.03, 0.06, 0.12, 0.25, 0.5, 0.625, 0.75, 1.0, 1.5, 2.0, 4.0]
+Adding WHO catalog data
+14568 MICs for INH
+DB_OF_ORIGIN
+CRyPTIC            10868
+farhat_internal     1771
+CASS                 403
+NICD                 396
+JATA-KIT             342
+WHO_catalog          260
+Wadsworth            246
+Lizma                135
+Cox                   48
+JATA-Mongolia         41
+Kreiswirth            39
+NSW                   19
+Name: count, dtype: int64
+Critical concentration of 0.2 in 7H10 for INH
+13756/14568 isolates have high-quality WGS data
+Removed 304 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 116 isolates with MICs that are known only relative to the critical concentration of 0.2
+168 isolates have MIC bounds that span the CC of 0.2
+    ROLLINGDB_ID     GENE  POS
+3   SAMEA1102315  Rv2752c    2
+7   SAMEA3558192     katG    2
+9   SAMEA5569775      ndh    2
+13  SAMEA7541504  Rv1129c    2
+14  SAMEA7541688  Rv1129c    2
+15  SAMEA7544213  Rv2752c    2
+26  SAMEA8741636  Rv2752c    2
+['SAMEA1102315' 'SAMEA3558192' 'SAMEA5569775' 'SAMEA7541504'
+ 'SAMEA7541688' 'SAMEA7544213' 'SAMEA8741636']
+Removed 7 isolates with multiple ambiguous frameshifts in a single gene
+Removed 7 isolates in the ['2,4', '2,3', '3,4', '3,4', '5'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 13322 samples in the training data
+                  Binary  INH_midpoint
+category                              
+test_set        0.548081      2.821188
+train_set       0.547953      2.999890
+validation_set  0.547863      3.002324
+Normalizing to 7H10 medium
+Dropped 0/99 isolates with MICs tested in media without critical concentrations
+Adding WHO catalog data
+9309 MICs for LFX
+DB_OF_ORIGIN
+CRyPTIC            9126
+farhat_internal      99
+WHO_catalog          84
+Name: count, dtype: int64
+Critical concentration of 1.0 in 7H10 for LFX
+8859/9309 isolates have high-quality WGS data
+Removed 139 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 92 isolates with MICs that are known only relative to the critical concentration of 1.0
+0 isolates have MIC bounds that span the CC of 1.0
+    ROLLINGDB_ID     GENE  POS
+3   SAMEA7541504  Rv1129c    2
+4   SAMEA7544213  Rv2752c    2
+10  SAMEA8741636  Rv2752c    2
+['SAMEA7541504' 'SAMEA7544213' 'SAMEA8741636']
+Removed 3 isolates with multiple ambiguous frameshifts in a single gene
+Removed 16 isolates in the ['3,4', '3,4', '2,3', 'BOV_AFRI'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 8609 samples in the training data
+                  Binary  LFX_midpoint
+category                              
+test_set        0.179443      1.121182
+train_set       0.179546      1.066772
+validation_set  0.180157      1.089271
+Normalizing to 7H10 medium
+Dropped 0/1205 isolates with MICs tested in media without critical concentrations
+Study: JATA-KIT, Medium: MGIT, Breakpoints: [0.12, 0.24, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
+Study: JATA-Mongolia, Medium: MGIT, Breakpoints: [0.0, 0.06, 0.12, 0.24, 0.5, 1.0, 2.0, 4.0, 8.0]
+Study: NICD, Medium: BMD, Breakpoints: [0.015, 0.06, 0.125, 0.25, 0.5, 1.0, 2.0]
+Study: NSW, Medium: NSW_sensititre_plate, Breakpoints: [0.015, 0.06, 0.125, 0.25, 1.0, 4.0]
+Study: Wadsworth, Medium: UKMYC, Breakpoints: [0.015, 0.06, 0.125, 0.145, 0.19, 0.25, 0.29, 0.5, 1.0, 2.0, 4.0]
+Study: CASS, Medium: MYCOTB, Breakpoints: [0.008, 0.015, 0.03, 0.062, 0.094, 0.125, 0.25, 0.375, 0.5, 1.0, 1.5, 2.0]
+10790 MICs for MXF
+DB_OF_ORIGIN
+CRyPTIC            8136
+farhat_internal    1205
+CASS                403
+NICD                396
+JATA-KIT            342
+Wadsworth           248
+JATA-Mongolia        41
+NSW                  19
+Name: count, dtype: int64
+Critical concentration of 0.5 in 7H10 for MXF
+10226/10790 isolates have high-quality WGS data
+Removed 173 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 1 isolates with MICs that are known only relative to the critical concentration of 0.5
+2 isolates have MIC bounds that span the CC of 0.5
+    ROLLINGDB_ID     GENE  POS
+0   SAMEA1102315  Rv2752c    2
+4   SAMEA7541504  Rv1129c    2
+5   SAMEA7544213  Rv2752c    2
+11  SAMEA8741636  Rv2752c    2
+['SAMEA1102315' 'SAMEA7541504' 'SAMEA7544213' 'SAMEA8741636']
+Removed 4 isolates with multiple ambiguous frameshifts in a single gene
+Removed 4 isolates in the ['3,4', '2,3'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 10044 samples in the training data
+                  Binary  MXF_midpoint
+category                              
+test_set        0.178696      0.457392
+train_set       0.178852      0.440134
+validation_set  0.179171      0.429802
+Normalizing to MGIT medium
+Dropped 0/1266 isolates with MICs tested in media without critical concentrations
+Adding WHO catalog data
+1360 MICs for PZA
+DB_OF_ORIGIN
+farhat_internal    1266
+WHO_catalog          94
+Name: count, dtype: int64
+Critical concentration of 100.0 in MGIT for PZA
+1325/1360 isolates have high-quality WGS data
+Removed 47 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 200 isolates with MICs that are known only relative to the critical concentration of 100.0
+0 isolates have MIC bounds that span the CC of 100.0
+   ROLLINGDB_ID  GENE  POS
+1  SAMN05915261  pncA    2
+2  SAMN05916319  pncA    2
+['SAMN05915261' 'SAMN05916319']
+Removed 2 isolates with multiple ambiguous frameshifts in a single gene
+Removed 2 isolates in the ['1', 'BOV_AFRI'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 1074 samples in the training data
+                  Binary  PZA_midpoint
+category                              
+test_set        0.497674    221.022167
+train_set       0.500655    215.490620
+validation_set  0.500000    208.779762
+Normalizing to 7H10 medium
+Dropped 0/1806 isolates with MICs tested in media without critical concentrations
+Study: Cox, Medium: MGIT, Breakpoints: [0.124, 0.25, 0.5, 1.0, 2.0, 10.0, 20.0]
+Study: EXIT-RIF, Medium: MGIT, Breakpoints: [0.5, 3.0, 7.5, 15.0, 22.5, 75.0, 100.0]
+Study: JATA-KIT, Medium: MGIT, Breakpoints: [0.016, 0.03, 0.06, 0.12, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 48.0, 64.0]
+Study: JATA-Mongolia, Medium: MGIT, Breakpoints: [2.0, 4.0, 16.0, 64.0]
+Study: Kreiswirth, Medium: 7H10, Breakpoints: [0.03, 0.06, 0.12, 0.125, 0.25]
+Study: NICD, Medium: BMD, Breakpoints: [0.12, 0.48, 1.0, 2.0, 4.0, 8.0, 16.0]
+Study: NSW, Medium: NSW_sensititre_plate, Breakpoints: [0.06, 0.25, 0.5, 16.0]
+Study: Wadsworth, Medium: UKMYC, Breakpoints: [0.06, 0.12, 0.25, 0.5, 0.62, 1.0, 2.0, 4.0, 8.0, 16.0]
+Study: CASS, Medium: MYCOTB, Breakpoints: [0.03, 0.06, 0.125, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 4.0, 8.0]
+Adding WHO catalog data
+14274 MICs for RIF
+DB_OF_ORIGIN
+CRyPTIC            10310
+farhat_internal     1806
+CASS                 404
+NICD                 396
+EXIT-RIF             353
+JATA-KIT             342
+WHO_catalog          268
+Wadsworth            248
+Cox                   48
+JATA-Mongolia         41
+Kreiswirth            39
+NSW                   19
+Name: count, dtype: int64
+Critical concentration of 0.5 in 7H10 for RIF
+13375/14274 isolates have high-quality WGS data
+Removed 297 isolates with an F2 score > 0.09710291965560701, which is 3 standard deviations above the mean on the full dataset
+Removed 39 isolates with MICs that are known only relative to the critical concentration of 0.5
+Removed 124 isolates with MICs that are known only relative to the old critical concentration of 1
+63 isolates have MIC bounds that span the CC of 0.5
+    ROLLINGDB_ID     GENE  POS
+0   SAMEA1102315  Rv2752c    2
+5   SAMEA7541504  Rv1129c    2
+6   SAMEA7541688  Rv1129c    2
+7   SAMEA7544213  Rv2752c    2
+13  SAMEA8741636  Rv2752c    2
+['SAMEA1102315' 'SAMEA7541504' 'SAMEA7541688' 'SAMEA7544213'
+ 'SAMEA8741636']
+Removed 5 isolates with multiple ambiguous frameshifts in a single gene
+Removed 11 isolates in the ['5', '2,4', '3,4', '2,3', '1,4'] lineage groups with fewer than 2 isolates in one of the binary resistance groups
+Final: 12899 samples in the training data
+                  Binary  RIF_midpoint
+category                              
+test_set        0.485981      6.335793
+train_set       0.486030      6.533295
+validation_set  0.485539      6.867560

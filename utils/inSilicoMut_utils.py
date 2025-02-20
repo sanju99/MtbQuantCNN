@@ -24,15 +24,15 @@ who_variants_V1 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V1.csv")
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
                   "Clofazimine": "CFZ",
-                  "Ethionamide": "ETH",
+                  "Ethionamide": "ETO",
                   "Linezolid": "LZD",
                   "Moxifloxacin": "MXF",
                   "Capreomycin": "CAP",
-                  "Amikacin": "AMI",
-                  "Pretomanid": "PTM",
+                  "Amikacin": "AMK",
+                  "Pretomanid": "PMD",
                   "Pyrazinamide": "PZA",
                   "Kanamycin": "KAN",
-                  "Levofloxacin": "LEV",
+                  "Levofloxacin": "LFX",
                   "Streptomycin": "STM",
                   "Ethambutol": "EMB",
                   "Isoniazid": "INH",
@@ -40,6 +40,34 @@ drug_abbr_dict = {"Delamanid": "DLM",
                  }
 
 abbr_drug_dict = {value: key for key, value in drug_abbr_dict.items()}
+
+
+def compute_codon_edit_distance(codon1, codon2):
+    '''
+    Use this function to determine which of the possible codons to use. Preferentially use the one that is closest in distance space to th  reference codon.
+    '''
+    # double check that codon lengths match
+    assert len(codon1) == len(codon2)
+    
+    # Count the number of differing positions
+    return sum(1 for a, b in zip(codon1, codon2) if a != b)
+    
+
+
+def select_new_codon_from_list(ref_codon, codon_lst):
+
+    # only 1 possible codon
+    if len(codon_lst) == 1:
+        return codon_lst[0]
+        
+    codons_select_from_df = pd.DataFrame({'codon': codon_lst})
+    
+    for i, row in codons_select_from_df.iterrows():
+        codons_select_from_df.loc[i, 'ref_distance'] = compute_codon_edit_distance(ref_codon, row['codon'])
+
+    # take the codon with the smallest distance from the reference
+    return codons_select_from_df.sort_values("ref_distance", ascending=True)['codon'].values[0]
+
 
 
 def reverse_complement(seq):
@@ -453,6 +481,8 @@ def aa_to_nuc(aa_lst, aa_to_codon_table, sense):
 
         # get the 3-letter amino acid abbreviation
         single_aa = aa_lst[k:k+3] 
+
+        # randomly select a codon. Because this is for insertions, there is no reference codon to compare to, so pick a codon at random
         add_nuc += np.random.choice(aa_to_codon_table.query("AA==@single_aa").Codon.values)
 
     if sense == "-":
@@ -473,123 +503,152 @@ def get_data_for_synthetic_VCF(df):
     '''
     
     aa_to_codon_table = get_aa_to_codon_table()
-    
-    # exclude stop lost mutations because we don't know what the actual mutation is and how much longer the protein goes on
-    # exclude start lost mutations because we do not know what the identity of the codon is (it could literally be any of the other 19 amino acids)
-    # also exclude frameshift variants because there are many possible variants that could cause frameshifts, and we have no way of knowing which ones should be added
-    # df = df.query("effect not in ['start_lost', 'stop_lost', 'frameshift']").reset_index(drop=True)
 
-    # start_lost and stop_lost both end in '?'. stop lost is encoded with ext*? start_lost is p.Met1? or p.Val1?
-    # start_lost V1 encoding is p.Met1= or p.Val1=
-
-    # also exclude pooled LoF and deletion (feature ablation) variants
-    df = df.query("~variant.str.endswith('?') & ~variant.str.endswith('fs') & ~variant.str.endswith('=') & ~variant.str.contains('LoF') & ~variant.str.contains('deletion')").reset_index(drop=True)
+    alternative_start_codons = ['ATG', 'CTG', 'GTG', 'TTG', 'ATA', 'ATC', 'ATT']
+    stop_codons = aa_to_codon_table.query("AA=='*'").Codon.values
     
+    # exclude the following:
+    # 1. stop lost mutations because we don't know what the actual mutation is and how much longer the protein goes on
+    # 2. frameshift variants because there are many possible variants that could cause frameshifts, and we have no way of knowing which ones should be added    
+    # 3. stop_lost mutations because we don't know how much longer the sequence would continue before the enzymes falling off
+    # 4. pooled LoF and feature ablation variants
+
+    # this is only for in silico mutagenesis. For SSM, all mutations are missense or nonsense, so this doesn't apply. Don't need to remove any mutations before generating variant calls
+    if 'effect' in df.columns:
+        # start_lost and stop_lost both end in '?'. stop lost is encoded with ext*? start_lost is p.Met1? or p.Val1?
+        df = df.query("effect not in ['stop_lost', 'frameshift', 'LoF', 'feature_ablation']").reset_index(drop=True)
+        
     for i, row in df.iterrows():
         
         # get the start and end coordinates of the gene where the mutation lies
         # this can be done for both coding and non-coding transcripts, so use the full table, not the genes-only table
         start, end, sense = h37Rv_regions.query(f"Name=='{row['gene']}'")[['Start', 'Stop', 'Strand']].values[0]
-
+        
+        # this is for checking if it's the first codon
+        variant_number = get_variant_number(row['mutation'], sense)
+    
+        df.loc[i, ['sense', 'variant_number']] = [sense, variant_number]
+    
         # mutations in noncoding regions. THESE ARE THE EASIEST CHANGES TO MAKE
         if "p." not in row["mutation"]:
             df = make_noncoding_mutation(df, row, i, h37Rv.seq, start, end, sense)
         
         # mutations in protein-coding regions
-        else:
+        else:            
             clean_var = row["mutation"].replace("p.", "")
-
+    
             # separate the mutation before, after, and position
             # get the indices of the position (numeric characters), then everything before or after is the mutation
             num_idx = [k for k, char in enumerate(clean_var) if char.isdigit()]
-
+    
             # A SINGLE AMINO ACID MUST BE ALTERED, BUT MULTIPLE AMINO ACIDS COULD BE ADDED IN (i.e. delins)
             # if there are only consecutive numbers, that means that there's only a single number
             if is_list_consecutive(num_idx):
-
+    
                 aa1 = clean_var[:num_idx[0]]
                 aa2 = clean_var[num_idx[-1]+1:]
-
+    
                 # this is a bug in the WHO catalog -- an early stop codon is recorded as Rv0565c_p.TrpLeu266*, instead of Rv0565c_p.Trp266*
                 if aa2 == '*' and len(aa1) > 3:
                     aa1 = aa1[:3]
-
+    
                 aa_pos = int(clean_var[num_idx[0]:num_idx[-1]+1])                    
-
+    
                 # for negative sense genes, codon_pos will be in decreasing order, but codon is in the order of translation (5' - 3')
                 codon, codon_pos = get_codon_from_seq(h37Rv.seq, aa_pos, start, end, sense)
-
+    
                 # double checking methods. Check that the codon retrieved from the reference sequence is the same as the variant
-                assert Bio.SeqUtils.IUPACData.protein_letters_1to3[Seq.Seq(codon).translate()] == aa1
+                if variant_number == 1:
+                    # alternative start codons are possible
+                    assert Bio.SeqUtils.IUPACData.protein_letters_1to3[Seq.Seq(codon).translate()] in ['Met', 'Val', 'Ile', 'Leu']
+                else:
+                    assert Bio.SeqUtils.IUPACData.protein_letters_1to3[Seq.Seq(codon).translate()] == aa1
 
-                # INSERT SINGLE AMINO ACID
-                if aa2 in aa_to_codon_table.AA.unique():
+                # start lost encoded in a different way
+                if variant_number == 1 and row['variant'].endswith('?'):
+    
+                    # alternative allele is randomly chosen from the codons that are not alternative start codons nor stop codons (excluding stop codons isn't really necessary, but do it anyway)
+                    codon_search_lst = list(set(aa_to_codon_table.Codon.values) - set(alternative_start_codons) - set(stop_codons))
+                    new_codon = select_new_codon_from_list(codon, codon_search_lst)
 
-                    # list of possible codons
-                    if aa2 not in aa_to_codon_table.AA.unique():
-                        raise ValueError(f"{aa2} is not a valid amino acid")
-
-                    # for the first codon, if it's one of the AAs encoded by alternative start codons, keep only those codons
-                    if aa_pos == 1 and aa2 in ['Val', 'Leu', 'Ile', 'Met']:
-
-                        # pick a new codon at random intersecting with the alternative start codons
-                        new_codon = np.random.choice(list(set(aa_to_codon_table.query("AA==@aa2").Codon.values).intersection(['ATG', 'CTG', 'GTG', 'TTG', 'ATA', 'ATC', 'ATT'])))
-
+                    # convert all to positive sense system.
+                    if sense == '+':
+                        df.loc[i, ['POS', 'REF', 'ALT']] = [np.min(codon_pos), str(codon), str(new_codon)]
                     else:
-                        # pick a new codon at random
-                        new_codon = np.random.choice(aa_to_codon_table.query("AA==@aa2").Codon.values)
-                        
-                    # reference = original codon.
-                    # put the earliest (most upstream) position in the codon as the position
-                    df.loc[i, 'POS'] = np.min(codon_pos)
-
-                    # alternative = new codon
-                    if sense == "+":
-                        df.loc[i, ['REF', 'ALT']] = [str(codon), new_codon]
-                    elif sense == '-':
-                        df.loc[i, ['REF', 'ALT']] = [str(reverse_complement(codon)), reverse_complement(new_codon)]
-                    else:
-                        raise ValueError(f"{sense} is not a valid strand sense")
-
-                # INSERT (duplicate) OR DELETE SINGLE AMINO ACID, WHICH IS AA1
+                        df.loc[i, ['POS', 'REF', 'ALT']] = [np.min(codon_pos), str(reverse_complement(codon)), str(reverse_complement(new_codon))]
+    
                 else:
                     
-                    # use the previous nucleotide as the reference site, then the deletion comes right after it. pos is the coordinate, but need pos - 1 to index the correct nucleotide
-                    if sense == "+":
-
-                        # this is the position in coordinate space of the previous nucleotide
-                        pos = codon_pos[0]-1
-                        prev_nuc = str(h37Rv.seq[pos-1]) # to get the actual nucleotide, subtract 1 to go into 0-indexed Python space
-
-                        # Get the nucleotides (inclusive) that need to be deleted or duplicated
-                        intermediate_nuc = str(h37Rv.seq[pos:codon_pos[-1]])
-                        
-                    else:
-                        # for negative sense, have to take the downstream (lower coordinate number) nucleotide as the REF to support deletions as well
-                        pos = codon_pos[-1]-1
-                        prev_nuc = str(h37Rv.seq[pos-1]) # to get the actual nucleotide, subtract 1 to go into 0-indexed Python space
-
-                        # for negative sense, reorder so that they are decreasing. codon_pos[-1] is the smallest position chronologically, up to pos
-                        # intermediate_nuc = str(h37Rv.seq[codon_pos[-1]-1:pos])
-                        intermediate_nuc = str(h37Rv.seq[pos:codon_pos[0]])
-                                            
-                    if "dup" in clean_var:
-                        df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc, prev_nuc + intermediate_nuc]
-
-                    elif "del" in clean_var:
-                        # delete a single amino acid
-                        if 'ins' not in clean_var:
-                            df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc + intermediate_nuc, prev_nuc]
-                        # delete the amino acid and add in an aribtrary number of amino acids
+                    # INSERT SINGLE AMINO ACID
+                    if aa2 in aa_to_codon_table.AA.unique():
+    
+                        # list of possible codons
+                        if aa2 not in aa_to_codon_table.AA.unique():
+                            raise ValueError(f"{aa2} is not a valid amino acid")
+    
+                        # for the first codon, if it's one of the AAs encoded by alternative start codons, keep only those codons
+                        if aa_pos == 1 and aa2 in ['Val', 'Leu', 'Ile', 'Met']:
+    
+                            # pick a new codon at random intersecting with the alternative start codons
+                            codon_search_lst = list(set(aa_to_codon_table.query("AA==@aa2").Codon.values).intersection(alternative_start_codons))
+                            new_codon = select_new_codon_from_list(codon, codon_search_lst)
+    
                         else:
-                            # intermediate_nuc will be removed in the variant
-                            # remove additional strings from the variant string on the right side of the position
-                            aa2 = aa2.replace("del", "").replace("ins", "")
-                            add_nuc = aa_to_nuc(aa2, aa_to_codon_table, sense)
+                            # pick a new codon at random
+                            codon_search_lst = list(set(aa_to_codon_table.query("AA==@aa2").Codon.values))
+                            new_codon = select_new_codon_from_list(codon, codon_search_lst)
                             
-                            # the length of the additional nucleotides (3 per codon) should match the length of aa2, which as 3 letters per codon
-                            assert len(add_nuc) == len(aa2)                                
-                            df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc + intermediate_nuc, prev_nuc + add_nuc]
+                        # reference = original codon.
+                        # put the earliest (most upstream) position in the codon as the position
+                        df.loc[i, 'POS'] = np.min(codon_pos)
+    
+                        # alternative = new codon
+                        if sense == "+":
+                            df.loc[i, ['REF', 'ALT']] = [str(codon), new_codon]
+                        elif sense == '-':
+                            df.loc[i, ['REF', 'ALT']] = [str(reverse_complement(codon)), reverse_complement(new_codon)]
+                        else:
+                            raise ValueError(f"{sense} is not a valid strand sense")
+    
+                    # INSERT (duplicate) OR DELETE SINGLE AMINO ACID, WHICH IS AA1
+                    else:
+                        
+                        # use the previous nucleotide as the reference site, then the deletion comes right after it. pos is the coordinate, but need pos - 1 to index the correct nucleotide
+                        if sense == "+":
+    
+                            # this is the position in coordinate space of the previous nucleotide
+                            pos = codon_pos[0]-1
+                            prev_nuc = str(h37Rv.seq[pos-1]) # to get the actual nucleotide, subtract 1 to go into 0-indexed Python space
+    
+                            # Get the nucleotides (inclusive) that need to be deleted or duplicated
+                            intermediate_nuc = str(h37Rv.seq[pos:codon_pos[-1]])
+                            
+                        else:
+                            # for negative sense, have to take the downstream (lower coordinate number) nucleotide as the REF to support deletions as well
+                            pos = codon_pos[-1]-1
+                            prev_nuc = str(h37Rv.seq[pos-1]) # to get the actual nucleotide, subtract 1 to go into 0-indexed Python space
+    
+                            # for negative sense, reorder so that they are decreasing. codon_pos[-1] is the smallest position chronologically, up to pos
+                            # intermediate_nuc = str(h37Rv.seq[codon_pos[-1]-1:pos])
+                            intermediate_nuc = str(h37Rv.seq[pos:codon_pos[0]])
+                                                
+                        if "dup" in clean_var:
+                            df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc, prev_nuc + intermediate_nuc]
+    
+                        elif "del" in clean_var:
+                            # delete a single amino acid
+                            if 'ins' not in clean_var:
+                                df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc + intermediate_nuc, prev_nuc]
+                            # delete the amino acid and add in the inserted nucleotides
+                            else:
+                                # intermediate_nuc will be removed in the variant
+                                # remove additional strings from the variant string on the right side of the position
+                                aa2 = aa2.replace("del", "").replace("ins", "")
+                                add_nuc = aa_to_nuc(aa2, aa_to_codon_table, sense)
+                                
+                                # the length of the additional nucleotides (3 per codon) should match the length of aa2, which as 3 letters per codon
+                                assert len(add_nuc) == len(aa2)                                
+                                df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc + intermediate_nuc, prev_nuc + add_nuc]
             
             # MULTIPLE AMINO ACID CHANGES ARE AFFECTED, SO NEED TO ITERATE THROUGH THEM
             else:
@@ -601,12 +660,12 @@ def get_data_for_synthetic_VCF(df):
                 else:
                     start_site = int(''.join(clean_var[k] for k in single_AA_site_lsts[0]))
                     end_site = int(''.join(clean_var[k] for k in single_AA_site_lsts[1]))
-
+    
                 # don't need the actual codons here, just the nucleotides of the start and end
                 _, start_codon_sites = get_codon_from_seq(h37Rv.seq, start_site, start, end, sense)
                 _, end_coord = get_codon_from_seq(h37Rv.seq, end_site, start, end, sense)
                 end_coord = end_coord[-1]
-
+    
                 # this is used in both the deletion and duplication cases. Get the nucleotides (inclusive) that need to be deleted or duplicated
                 if sense == "+":
                     intermediate_nuc = str(h37Rv.seq[start_codon_sites[0]-1:end_coord])
@@ -615,7 +674,7 @@ def get_data_for_synthetic_VCF(df):
                 
                 # nucleotide coordinates to remove
                 if "del" in clean_var:
-
+    
                     if sense == "+":
                         # use the previous nucleotide as the reference site, then the deletion comes right after it. pos is the coordinate in 1-indexed space
                         pos = start_codon_sites[0]-1
@@ -624,7 +683,7 @@ def get_data_for_synthetic_VCF(df):
                     
                     prev_nuc = str(h37Rv.seq[pos-1]) # to get the actual nucleotide, subtract 1 to go into 0-indexed Python space
                     df.loc[i, ["POS", "REF", "ALT"]] = [pos, prev_nuc + intermediate_nuc, prev_nuc]
-
+    
                     # if there is an insertion, then update the alternative allele to have it
                     if "ins" in clean_var:
                         add_nuc = aa_to_nuc(clean_var.split("ins")[-1], aa_to_codon_table, sense)
@@ -632,7 +691,7 @@ def get_data_for_synthetic_VCF(df):
                 
                 elif "ins" in clean_var:
                     add_nuc = aa_to_nuc(clean_var.split("ins")[-1], aa_to_codon_table, sense)
-
+    
                     if sense == "+":
                         # use the end of the start codon as the reference site, then insert nucleotides after it
                         pos = start_codon_sites[-1]
@@ -643,7 +702,7 @@ def get_data_for_synthetic_VCF(df):
                     df.loc[i, ["POS", "REF", "ALT"]] = [pos, str(h37Rv.seq[pos-1]), str(h37Rv.seq[pos-1]) + add_nuc]
                 
                 elif "dup" in clean_var:
-
+    
                     if sense == "+":
                         # use the previous nucleotide as the reference site, then the deletion comes right after it. pos is the coordinate in 1-indexed space
                         pos = start_codon_sites[0]-1
@@ -655,10 +714,10 @@ def get_data_for_synthetic_VCF(df):
                 
                 else:
                     print("Protein-coding, no indels", row["variant"])
-
+    
     # check that there are no NaNs
     assert len(df[['POS', 'REF', 'ALT']].dropna()) == len(df)
-    
+
     # length checks
     df["REF_len"] = [len(val) for val in df["REF"].values]
     df["ALT_len"] = [len(val) for val in df["ALT"].values]
@@ -763,7 +822,6 @@ def check_annotation_matches_fName(fName):
     # remove all file extensions and directories
     variant_fName = os.path.basename(fName).split(".")[0]
         
-    # variant_fName = variant_fName.replace('+', '*')
     with open(fName, "r") as file:
         lines = file.readlines()
     

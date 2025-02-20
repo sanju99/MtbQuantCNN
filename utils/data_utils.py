@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import os, glob, sparse
+import os, glob, sparse, yaml
 from Bio import SeqIO, Seq
 
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
@@ -19,6 +19,203 @@ amino_acid_biophysical_properties = pd.read_csv("./data_processing/protein_seqs/
 h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
 h37Rv_regions = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_v4.csv")
 
+
+
+
+def split_mic_ranges(df, drug):
+    '''
+    For ROLLINGDB data, most of it is already in bound form, so the upper and lower bounds are extracted, and the average becomes the midpoint. Isolates with only a single MIC (no range) recorded are removed. 
+    
+    MICs at the upper extreme have the same value for the lower and upper bounds and the midpoint. MICs at the lower extreme have lower = 0, upper = MIC, and midpoint = average. 
+    '''
+
+    df = df.dropna(subset=drug).reset_index(drop=True)
+    drug = drug.upper()
+
+    # get the tested concentrations
+    tested_conc = list(np.unique(np.sort(df[drug].str.lstrip('<=').str.lstrip('>=').fillna(df[drug]).unique().astype(float))))
+    print(tested_conc)
+
+    for i, row in df.iterrows():
+
+        raw_mic = str(row[f"{drug}"])
+        
+        if "<" in raw_mic:
+            val = float(raw_mic.strip("<="))
+            df.loc[i, f"{drug}_lower_bound"] = 0
+            df.loc[i, f"{drug}_midpoint"] = val / 2
+            df.loc[i, f"{drug}_upper_bound"] = val
+
+        # for this case, put the value for everything because the error function should be computed normally
+        elif ">" in raw_mic:
+            val = float(raw_mic.strip(">"))
+            df.loc[i, f"{drug}_lower_bound"] = val
+            df.loc[i, f"{drug}_midpoint"] = val
+            df.loc[i, f"{drug}_upper_bound"] = np.inf
+                
+        elif "-" in raw_mic:
+            lower = float(raw_mic.split("-")[0])
+            upper = float(raw_mic.split("-")[1])
+            df.loc[i, f"{drug}_lower_bound"] = lower
+            df.loc[i, f"{drug}_midpoint"] = np.mean([lower, upper])
+            df.loc[i, f"{drug}_upper_bound"] = upper
+
+        # the recorded value is the upper bound, and the lower bound is the next lowest tested concentration
+        else:
+            val = float(raw_mic)
+            val_idx = tested_conc.index(val)
+
+            # this shouldn't happpen (the MIC should be recorded as <val or <=val), but just in case
+            if val_idx == 0:
+                lb = 0
+            else:
+                lb = tested_conc[val_idx - 1] # lower bound will be the previous tested concentration
+                
+            df.loc[i, f"{drug}_lower_bound"] = lb
+            df.loc[i, f"{drug}_midpoint"] = np.mean([lb, val])
+            df.loc[i, f"{drug}_upper_bound"] = val
+            
+        i += 1
+
+    # check that bounds make sense with the midpoints
+    assert len(df.query(f"{drug}_lower_bound > {drug}_midpoint")) == 0
+    assert len(df.query(f"{drug}_upper_bound < {drug}_midpoint")) == 0
+
+    # there will be some NaNs (e.g. no MIC range, so drop them)
+    return df#.loc[~pd.isnull(df[f'{drug}_midpoint'])]
+
+
+
+def extract_kraken_reports(df, sample_id_col, run_id_col):
+
+    df_add = pd.DataFrame(columns = [sample_id_col, run_id_col, 'Kraken_Unclassified_Percent'])
+    k = 0
+
+    for i, name in enumerate(df[sample_id_col].values):
+
+        for run_id in np.sort(df.query(f"{sample_id_col}==@name")[run_id_col].values):
+    
+            if os.path.isfile(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/{run_id}/kraken/kraken_report"):
+        
+                df_kraken = pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/{run_id}/kraken/kraken_report", sep='\t', header=None)
+
+                kraken_unclassified = df_kraken.loc[df_kraken[3]=='U'][0].values[0]
+
+                df_add.loc[k, :] = [name, run_id, kraken_unclassified]
+                k += 1
+    
+    return df_add
+    
+    
+    
+    
+def compute_BAM_depth_metrics(df, sample_id_col, run_id_col):
+
+    df_BAM_depths = pd.DataFrame(columns = [sample_id_col, run_id_col, 'Mean_Depth', 'Median_Depth', 'Prop_20x', 'Prop_10x'])
+    idx = 0
+    
+    for i, name in enumerate(df[sample_id_col].values):
+
+        run_ids = np.sort(df.query(f"{sample_id_col}==@name")[run_id_col].values)
+    
+        if os.path.isfile(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/bam/{name}.depth.tsv.gz"):
+    
+            df_depth = pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/bam/{name}.depth.tsv.gz", compression='gzip', header=None, sep='\t')
+        
+            pass_props = []
+            
+            for k, col in enumerate(df_depth.columns[2:]):
+
+                mean_depth = df_depth[col].mean()
+                median_depth = df_depth[col].median()
+                prop_20x = len(df_depth.loc[df_depth[col] >= 20]) / len(df_depth)
+                prop_10x = len(df_depth.loc[df_depth[col] >= 10]) / len(df_depth)
+
+                df_BAM_depths.loc[idx, :] = [name, run_ids[k], mean_depth, median_depth, prop_20x, prop_10x]
+                idx += 1
+    
+        else:
+            print(f"No depth file for {name}")
+    
+        if i % 1000 == 0:
+            print(i)
+    
+    return df_BAM_depths
+
+
+
+def extract_WHO_variant_annotations(df, name_col):
+
+    df_add = []
+    
+    for sample in df[name_col].unique():
+
+        fName = f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/WHO_resistance/{sample}_variants_annot.tsv"
+
+        if os.path.isfile(fName):
+        
+            df_pred = pd.read_csv(fName, sep='\t')
+            df_pred[name_col] = sample
+            df_add.append(df_pred)
+    
+    df_add = pd.concat(df_add)
+    
+    return df_add
+
+
+
+def extract_WHO_resistance_predictions(df, name_col):
+
+    df_add = []
+    
+    for sample in df[name_col].unique():
+
+        fName = f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/WHO_resistance/{sample}_pred_AF_thresh_75.csv"
+
+        if os.path.isfile(fName):
+        
+            df_pred = pd.read_csv(fName)
+            df_pred[name_col] = sample
+            df_add.append(df_pred)
+    
+    df_add = pd.concat(df_add)
+    
+    return df_add
+
+
+
+def extract_lineages(df, name_col):
+
+    df_add = []
+    
+    for sample in df[name_col].unique():
+
+        if os.path.isfile(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/lineage/fast_lineage_caller_output.txt"):
+        
+            F2 = float(pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/lineage/F2_Coll2014.txt", sep='\t', header=None)[0].values[0])
+    
+            df_flc = pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/lineage/fast_lineage_caller_output.txt", sep='\t')
+    
+            df_flc['ROLLINGDB_ID'] = df_flc['Isolate'].str.split('_').str[0]
+            
+            for col in df_flc.columns:
+                if col not in ['Isolate', 'ROLLINGDB_ID']:
+                    df_flc.rename(columns={col: col.capitalize()}, inplace=True)
+    
+            df_flc['Coll2014'] = df_flc['Coll2014'].str.replace('lineage', '')
+            df_flc['F2'] = F2
+    
+            if df_flc['Coll2014'].values[0][0].isnumeric():
+                df_flc['Lineage'] = df_flc['Coll2014'].values[0][0]
+            else:
+                df_flc['Lineage'] = df_flc['Coll2014'].values[0]
+            
+            df_add.append(df_flc)
+    
+    df_add = pd.concat(df_add)
+    del df_add['Isolate']
+    
+    return df_add
 
 
 
@@ -50,6 +247,9 @@ def get_genes_lst(locus_list):
 
     # this was the same code used to get the genes, so the order will be the same
     for locus in locus_list:
+
+        if locus not in model_loci.Locus.values:
+            raise ValueError(f"{locus} is not in ./data_processing/data_utils/drug_loci.csv")
     
         # don't need to add 1 to start because it is 1-indexed
         locus_start, locus_end = model_loci.query("Locus==@locus")[['Start', 'End']].values[0]
@@ -1054,6 +1254,9 @@ def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_dat
     # drop sites with no signal, meaning all isolates have the same value, so unique_values == 1
     keep_features = np.where(unique_values > 1)[0]
     print(f"Keeping {len(keep_features)} nucleotide features in the model")
+
+    # keep_features is a list of indices of columns to keep. Need to save it to get those features only when getting additional model predictions
+    np.save(f"{seq_data_path}/regression_train_features_idx.npy", keep_features)
     
     X_train = X_train[:, keep_features]
     # X_val = X_val[:, keep_features]
@@ -1124,3 +1327,57 @@ def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_dat
 
     # return X_train, X_val, X_test
     return X_train, X_test
+
+
+
+
+def get_all_regression_inputs_for_addl_predictions(seq_data_path, train_seq_data_path, locus_list, lineage_SNPs_zero=True, samples_lst=None, include_lineage=False, include_amino_acid_properties=False):
+    '''
+    Use this function to create matrices for additional sequences to get predictions for for all regression problems: Ridge regression, gradient boosting, and XGBoost
+    '''
+    # read in matrices of input sequences. These are not in the ridge directory, they are the same as the matrices used by the CNN
+    X = sparse.load_npz(f"{seq_data_path}/pkl_sparse_full.npz").todense()
+    X_AA = np.load(f"{seq_data_path}/pkl_AA_full.npy")
+    
+    # nucleotide inputs. This function converts the one-hot encoded matrix passed into the CNN above to a format compatible with regression problems
+    X_reg = get_single_matrix_regression_input(X, keep_idx=None, num_keep_channels=len(locus_list))
+    del X
+
+    # get the genes to keep (this is needed for both amino acid and gene peptide lengths inputs)
+    # keep only the specified loci for this model
+    genes_list = get_genes_lst(locus_list)
+
+    # features to keep in the nucleotide matrix. These were determined from the training matrix
+    keep_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx.npy")    
+    X_reg = X_reg[:, keep_features]
+
+    if include_lineage:
+    
+        lineages = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
+        assert len(np.unique(lineages)) == 2
+
+        # if TRUST samples, then get lineage SNPs. If not, make matrix of 0s
+        if lineage_SNPs_zero:
+            print(np.zeros((X_reg.shape[0], lineages.shape[1])).shape)
+            X_reg = np.concatenate([X_reg, np.zeros((X_reg.shape[0], lineages.shape[1]))], axis=1)
+        else:
+            X_reg = np.concatenate([X_reg, lineages.loc[samples_lst]], axis=1)
+
+    if include_amino_acid_properties:
+    
+        # compute the mean and SD of the training set to scale validation and test data later. Only amino acid features need to be scaled
+        # scale across the sample axis (0) and the length of the amino acid sequence (2). Don't scale different biophysical properties together (1), or different genes together (3)
+        # should already exist
+        train_mean = np.load(os.path.join(train_seq_data_path, "AA_train_mean.npy"))
+        train_std = np.load(os.path.join(train_seq_data_path, "AA_train_std.npy"))
+    
+        # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
+        # scale all 3 matrices
+        X_AA = (X_AA - expand_dims_for_rescaling(train_mean, (0, 2), X_AA)) / expand_dims_for_rescaling(train_std, (0, 2), X_AA)
+        
+        X_AA_reg = get_single_matrix_regression_input(X_AA, keep_idx=None, num_keep_channels=len(genes_list))
+
+        # concatenate nucleotide and AA inputs
+        X_reg = np.concatenate([X_reg, X_AA_reg], axis=1)
+    
+    return X_reg

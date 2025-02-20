@@ -104,7 +104,7 @@ def calculate_G_scores(X, w):
 
         S = np.sqrt(np.sum(np.power(zeroed_X,2))/n - np.power(np.mean(zeroed_X),2))
 
-        K = np.sqrt(n * np.sum(np.power(w[i,:], 2)) - np.power(np.sum(w[i,:]),2))/(n-1)
+        K = np.sqrt(n * np.sum(np.power(w[i,:], 2)) - np.power(np.sum(w[i,:]),2)) / np.sqrt(n-1)
 
         # Compute G_score
         G_i = (sum_of_wx - mean_x_times_weights) / (S * K)  

@@ -45,6 +45,8 @@ parser.add_argument('--binary', action='store_true', help='If provided, assumes 
 # boolean argument for whether or not to compute saliency scores for the permutated models
 parser.add_argument('--permutation', action='store_true', help='If provided, compute saliency scores for permutation models')
 
+parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
+
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
@@ -54,7 +56,12 @@ include_tier2 = cmd_line_args.tier2
 include_amino_acid_properties = cmd_line_args.amino_acid
 binary = cmd_line_args.binary
 compute_permuted_models = cmd_line_args.permutation
+AF_thresh = cmd_line_args.AF_thresh
 
+# use the non-75% AF thresh for the test data generator if specified
+if AF_thresh > 1:
+    AF_thresh /= 100
+    
 kwargs = yaml.safe_load(open(config_file, "r"))
 
 drug = kwargs["drug"]
@@ -96,6 +103,15 @@ if include_tier2:
 
 if include_amino_acid_properties:
     output_path += "_amino_acid"
+
+if AF_thresh != 0.75:
+
+    # separate input paths for different AF
+    seq_data_path = f"{seq_data_path}_AF{int(AF_thresh*100)}"
+
+    output_path = f"{output_path}_AF{int(AF_thresh*100)}"
+
+    genotype_input_directory = f"{genotype_input_directory.replace('fastas', 'AF_thresh_25/fastas')}"
 
 # the bounds are not necessary for this script, so it's easier to just omit them instead of putting dummy variables into ref_data
 # use train + validation data for computing saliency scores

@@ -38,15 +38,15 @@ h37Rv_coords_to_gene_dict = dict(zip(h37Rv_coords_to_gene['pos'], h37Rv_coords_t
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
                   "Clofazimine": "CFZ",
-                  "Ethionamide": "ETH",
+                  "Ethionamide": "ETO",
                   "Linezolid": "LZD",
                   "Moxifloxacin": "MXF",
                   "Capreomycin": "CAP",
-                  "Amikacin": "AMI",
-                  "Pretomanid": "PTM",
+                  "Amikacin": "AMK",
+                  "Pretomanid": "PMD",
                   "Pyrazinamide": "PZA",
                   "Kanamycin": "KAN",
-                  "Levofloxacin": "LEV",
+                  "Levofloxacin": "LFX",
                   "Streptomycin": "STM",
                   "Ethambutol": "EMB",
                   "Isoniazid": "INH",
@@ -75,6 +75,7 @@ config_file = cmd_line_args.config_file
 include_tier2 = cmd_line_args.tier2
 gene = cmd_line_args.gene
 saturation_muts = cmd_line_args.saturation_muts
+
 
 
 def create_WHO_catalog_insilico_files(drug, out_dir, include_tier2=False):
@@ -123,9 +124,9 @@ def create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir):
     gene_start, gene_end, gene_sense = h37Rv_genes.query("Symbol==@gene")[['Start', 'End', 'Strand']].values[0]
 
     if gene_sense == '+':
-        protein_seq = h37Rv_seq.seq[gene_start-1:gene_end].translate()
+        protein_seq = h37Rv.seq[gene_start-1:gene_end].translate()
     else:
-        protein_seq = h37Rv_seq.seq[gene_start-1:gene_end].reverse_complement().translate()
+        protein_seq = h37Rv.seq[gene_start-1:gene_end].reverse_complement().translate()
     
     assert protein_seq[0] in ['M', 'I', 'V', 'L']
     assert protein_seq[-1] == '*'
@@ -292,13 +293,13 @@ def write_ref_seqs_for_constant_loci(drug, variable_locus, constant_loci_list, o
 
                 for variable_gene in variable_genes_lst:
 
-                    # # only write the sequences that have a gene name in the id
-                    # # for insilico mutations, the id is like gyrA_p_Asp94Gly, whereas isolates will be i.e. SAMN...
-                    # # edge case: because the regions for Rv0678 and mmpS5-mmpL5 overlap (they are separate loci because they have different strand sense), some variants will be in both regions because they are in the promoter region, which is the same for both
-                    # if variable_gene in seq or 'mmp' in seq or 'Rv0678' in seq:
-                    #     file.write(">" + seq + "\n")
-                    #     file.write(ref_seq + "\n")
-                    #     break
+                    # only write the sequences that have a gene name in the id
+                    # for insilico mutations, the id is like gyrA_p_Asp94Gly, whereas isolates will be i.e. SAMN...
+                    # edge case: because the regions for Rv0678 and mmpS5-mmpL5 overlap (they are separate loci because they have different strand sense), some variants will be in both regions because they are in the promoter region, which is the same for both
+                    if variable_gene in seq or 'mmp' in seq or 'Rv0678' in seq:
+                        file.write(">" + seq + "\n")
+                        file.write(ref_seq + "\n")
+                        break
 
                     # only write the sequences that have a gene name in the id
                     # for insilico mutations, the id is like gyrA_p_Asp94Gly, whereas isolates will be i.e. SAMN...
@@ -333,9 +334,9 @@ if saturation_muts:
 else:
     out_dir = f"{data_dir}/{drug}/inSilico_analysis"
 
-    # # if it exists, delete and make a new one. But only for insilico-muts because all loci are done together.
-    # if os.path.isdir(out_dir):
-    #     shutil.rmtree(out_dir)
+    # if it exists, delete and make a new one. But only for insilico-muts because all loci are done together.
+    if os.path.isdir(out_dir):
+        shutil.rmtree(out_dir)
 
     for fName in ['WHO_mutations.txt', 'WHO_nucleotide_variants.csv', 'WHO_nucleotide_variants_original.csv']:
         if os.path.isfile(f"{data_dir}/{drug}/inSilico_analysis/{fName}"):
@@ -374,13 +375,14 @@ if saturation_muts:
     else:
         locus_list = [gene]
 
-    # # this will print a command to run snpEff on the VCF files to check annotations
-    # if locus_list[0] == 'mmpLS5':
-    #     df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpS5', locus_list[0], out_dir)
-    #     df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpL5', locus_list[0], out_dir)
-    # else:
-        
-    df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir)
+    # this will print a command to run snpEff on the VCF files to check annotations
+    if locus_list[0] == 'mmpLS5':
+        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpS5', locus_list[0], out_dir)
+        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpL5', locus_list[0], out_dir)
+    else:
+        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir)
+
+    df_variants = pd.read_csv(f"{out_dir}/{gene}_nucleotide_variants.csv")
 
 else:
     # this will print a command to run snpEff on the VCF files to check annotations
@@ -392,14 +394,10 @@ else:
         locus_list += kwargs['tier2_loci']
 
     print(f"Making in silico mutations for {','.join(locus_list)}")
+
+    df_variants = pd.read_csv(f"{out_dir}/WHO_nucleotide_variants.csv")
         
-
-if saturation_muts:
-    fasta_dir = f"{out_dir}/{gene}/fastas"
-else:
-    fasta_dir = f"{out_dir}/{locus}/fastas"
     
-
 # check that everything actually is a variant. If REF = ALT, then it's a new case that I haven't considered
 if len(df_variants.query("REF == ALT")) > 0:
     print(df_variants.query("REF == ALT"))
@@ -450,7 +448,9 @@ for fName in glob.glob(f"{vcf_dir}/*.eff.vcf"):
     
     if '_p_' in fName:
         for possibility in results:
-            if '_'.join(os.path.basename(fName).split(".")[0].split('_')[1:]) == possibility.replace('.', '_').replace('*', '+'):
+            # check that the variant name in the file name is one of the annotations
+            # for start lost mutations, if it's an alternative start codon, then it will say p.Val1? or p.Ile? even though the first codon codes for a Met
+            if '_'.join(os.path.basename(fName).split(".")[0].split('_')[1:]) in [possibility.replace('.', '_').replace('*', '+'), 'p_Val1?', 'p_Ile1?', 'p_Leu1?']:
                 found = True
 
         if not found:
@@ -472,19 +472,27 @@ for locus in locus_list:
 
     locus_start, locus_end = drug_loci.query("Locus==@locus")[['Start', 'End']].values[0]
 
+    if saturation_muts:
+        fasta_dir = f"{out_dir}/{gene}/fastas"    
+    else:
+        fasta_dir = f"{out_dir}/{locus}/fastas"
+
     # check if there are in silico mutations in the locus region
     if len(df_variants.query("POS > @locus_start & POS <= @locus_end")) > 0:
 
         # create separate text files for the individual loci for ease later. All variants will be in the master WHO_mutations.txt file though
-        locus_start, locus_end = drug_loci.query("Locus==@locus")[['Start', 'End']].values[0]
-        
         single_locus_mutations = df_variants.query("POS > @locus_start & POS <= @locus_end")
 
         # make a separate subdirectory for each locus because that one will be variable, and the rest of the loci in the model will be constant (H37Rv ref seq) for predictions
         if not os.path.isdir(fasta_dir):
             os.makedirs(fasta_dir)
+
+        if saturation_muts:
+
+            # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
+            subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene}", shell=True)
         
-        if not saturation_muts:
+        else:
             
             with open(f"{out_dir}/{locus}/WHO_mutations.txt" , "w+") as file:
                 
@@ -493,14 +501,9 @@ for locus in locus_list:
                     fName = f"{vcf_dir}/{variant.replace('.', '_').replace('*', '+')}.eff.vcf"
                     assert os.path.isfile(fName)
                     file.write(f"{fName}\n")
-        
+
             # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
             subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus}", shell=True)
-
-        else:
-                
-            # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
-            subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene}", shell=True)
 
 
 ##################################################### STEP 4: REMOVE MUTATIONS THAT INCREASE THE ALIGNMENT LENGTH #####################################################
@@ -516,6 +519,8 @@ for locus in locus_list:
 
         
         constant_loci_list = list(set(kwargs['tier1_loci'] + kwargs['tier2_loci']) - set([locus]))
+
+        print(locus, constant_loci_list)
         
         # write files for all other loci, both tiers in the directory for each variable locus
         write_ref_seqs_for_constant_loci(drug, locus, constant_loci_list, out_dir=fasta_dir)

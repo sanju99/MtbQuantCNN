@@ -13,9 +13,6 @@ drug_loci = pd.read_csv("/home/sak0914/MtbQuantCNN/data_processing/data_utils/dr
 def create_MSA_script(locus, drug, AF_thresh=0.75, TRUST_data=False, insilico_muts=False, saturation_muts=False, gene=None, hours=3, memory=1):
 
     constant_lines = ['#!/bin/bash', '#SBATCH -c 1', f'#SBATCH -t 0-0{hours}:00', '#SBATCH -p short', f'#SBATCH --mem={memory}G', '#SBATCH -o /home/sak0914/Errors/zerrors_%j.out', '#SBATCH -e /home/sak0914/Errors/zerrors_%j.err', '#SBATCH --mail-type=ALL', '#SBATCH --mail-user=skulkarni@g.harvard.edu']
-
-    if locus not in drug_loci.Locus.values:
-        print(locus)
         
     start, end, sense = drug_loci.query("Locus==@locus")[['Start', 'End', 'Sense']].replace('+', 'POS').replace('-', 'NEG').values[0]
 
@@ -28,23 +25,24 @@ def create_MSA_script(locus, drug, AF_thresh=0.75, TRUST_data=False, insilico_mu
         for line in constant_lines:
             file.write(line)
             file.write("\n")
-        
+
+        file.write("source activate MtbQuantCNN")
         file.write("\n")
-        file.write("source activate MtbQuantCNN\n\n")
 
         # for these, need to make an additional subdirectory for the variable locus, and the other loci FASTAs (all H37Rv ref seqs) will be in that subdirectory
         if insilico_muts:
             cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{locus}/fastas/{locus}.fasta --save-fasta"
-        if saturation_muts:
+        elif saturation_muts:
             cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{gene}/fastas/{locus}.fasta --save-fasta"
         else:
             cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/fastas/{locus}.fasta --save-fasta"
             
         if TRUST_data:
-            if drug == 'PZA':
-                cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths_filtered.txt"
-            else:
-                cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths.txt"
+            # if drug == 'PZA':
+            #     cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths_filtered.txt"
+            # else:
+            #     cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths.txt"
+            cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths.txt"
 
         if insilico_muts:
             cmd += f" --insilico-muts-file {out_dir}/{locus}/WHO_mutations.txt"
@@ -132,7 +130,7 @@ if not os.path.isdir(os.path.join(out_dir, "bash_scripts")):
 print(f"Generating nucleotide MSA scripts for {len(locus_list)} loci")
 
 for locus in locus_list:
-    create_MSA_script(locus, drug, AF_thresh, TRUST_data, insilico_muts, saturation_muts, gene=gene)
+    create_MSA_script(locus, drug, AF_thresh=AF_thresh, TRUST_data=TRUST_data, insilico_muts=insilico_muts, saturation_muts=saturation_muts, gene=gene)
 
 
 ###################################### STEP 2: RUN MSA OR SNP CONCATENATOR SCRIPT ###################################### 
@@ -177,8 +175,9 @@ if TRUST_data or insilico_muts or saturation_muts:
             old_seq = [(seq.id, str(seq.seq)) for seq in SeqIO.parse(fName.replace('/TRUST', ''), "fasta") if seq.id == "MT_H37Rv"][0][1] # first and only element is H37Rv, second element is sequence
     
             if len(new_seq) != len(old_seq):
-                raise ValueError(f"Alignments length for {drug}, {locus} differ -/+ TRUST isolates")
-                exit()
+                # raise ValueError(f"Alignments length for {drug}, {locus} differ -/+ TRUST isolates")
+                # exit()
+                print(f"Alignments length for {drug}, {locus} differ -/+ TRUST isolates")
     
         with open(fName, "w+") as file:
             for i, row in seq_df.iterrows():

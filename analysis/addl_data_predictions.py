@@ -23,6 +23,7 @@ coll_2014["lineage"] = coll_2014["#lineage"].str.replace("lineage", "")
 del coll_2014["#lineage"]
 
 lineages_matrix = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
+drug_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
 
 # starting the memory monitoring
 tracemalloc.start()
@@ -51,6 +52,11 @@ parser.add_argument("--locus", type=str, help='For in silico mutagenesis, specif
 
 parser.add_argument("--gene", type=str, help='For saturation mutagenesis, specify the gene for which you want to get variant predictions')
 
+# use the model trained on variants with presence at an AF threshold different from the default
+parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
+
+parser.add_argument('--permutation', action='store_true', help='If specified, get predictions using the permuted models')
+
 parser.add_argument('--predict', action='store_true', help='Get MIC predictions. If not specified, just create input data for the additional samples')
 
 cmd_line_args = parser.parse_args()
@@ -64,7 +70,13 @@ insilico_muts = cmd_line_args.insilico_muts
 saturation_muts = cmd_line_args.saturation_muts
 locus = cmd_line_args.locus
 gene = cmd_line_args.gene
+AF_thresh = cmd_line_args.AF_thresh
+permutation = cmd_line_args.permutation
 get_predictions = cmd_line_args.predict
+
+# use the non-75% AF thresh for the test data generator if specified
+if AF_thresh > 1:
+    AF_thresh /= 100
 
 count_flags_true = 0
 flags_lst = np.array([TRUST_data, insilico_muts, saturation_muts])
@@ -109,6 +121,9 @@ if include_tier2:
 
 if include_amino_acid_properties:
     output_path += "_amino_acid"
+
+if AF_thresh != 0.75:
+    output_path += f"_AF{int(AF_thresh * 100)}"
     
 # add an additional subdirectory for the additional dataset
 if TRUST_data:
@@ -179,9 +194,9 @@ if TRUST_data:
     # rename the column to ROLLINGDB_ID for consistency with the TRUST dataframe
     df_samples.columns = ['ROLLINGDB_ID']
 
-    # increased the size of the alignment for Rv3236c
-    if drug == 'PZA':
-        df_samples = df_samples.query("ROLLINGDB_ID not in ['MFS-370', 'MFS-371']")
+    # # increased the size of the alignment for Rv3236c
+    # if drug == 'PZA':
+    #     df_samples = df_samples.query("ROLLINGDB_ID not in ['MFS-370', 'MFS-371']")
 
 elif insilico_muts:
 
@@ -300,27 +315,30 @@ else:
 
 # initialize a new model and load the weights of the best model
 if include_amino_acid_properties:
-    best_model = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
+    model_architecture = multi_conv_nn(binary, longest_locus, num_loci, longest_protein, num_proteins, additional_data_len, bounded_loss, filter_size, reg_strength=0)
 else:
-    best_model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
-        
-# best model is one directory up. For saturation mutagenesis, two directories up
-if get_predictions:
+    model_architecture = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
 
-    print(f"output path: {output_path}")
-    
-    if saturation_muts:
-        model_weights_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(output_path))), "best_model.h5")
-    elif insilico_muts:
-        model_weights_file = os.path.join(os.path.dirname(os.path.dirname(output_path)), "best_model.h5")
-    else:
-        model_weights_file = os.path.join(os.path.dirname(output_path), "best_model.h5")
 
-    print(f"\nLoading model {model_weights_file}")
+def get_all_sublineages_from_single_lineage(lineage_str):
+
+    lineage_levels = lineage_str.split('.')
+
+    all_lineages = []
+
+    for i, _ in enumerate(lineage_levels):
+
+        all_lineages.append('.'.join(lineage_levels[:i+1]))
+
+    return all_lineages
+
+
+
+def get_predictions_single_model(model_architecture, model_weights_file, data_generator, df_samples, output_path, coll_2014, fName_suffix='', insilico_muts=True, include_lineage=False, include_amino_acid_properties=False):
+
+    model_architecture.load_weights(model_weights_file)
     
-    best_model.load_weights(model_weights_file)
-    
-    y_pred = best_model.predict(
+    y_pred = model_architecture.predict(
         x=data_generator,
         workers=4,
         use_multiprocessing=True,
@@ -330,35 +348,46 @@ if get_predictions:
     df_samples["pred_MIC"] = np.exp2(y_pred)
 
     df_samples['ROLLINGDB_ID'] = df_samples['ROLLINGDB_ID'].str.replace('_p_', '_p.').str.replace('_c_', '_c.').str.replace('+', '*')
-    df_samples.to_csv(os.path.join(output_path, "test_predictions.csv"), index=False)
+    df_samples.to_csv(os.path.join(output_path, f"test_predictions{fName_suffix}.csv"), index=False)
     
     # get lineage predictions if the model has lineage in it. Predict MIC for H37Rv with a single lineage SNP
     if insilico_muts and include_lineage:
-    
+                
         # put Coll 2014 dataframe in same order as the lineages matrix to get correct order of lineage predictions
         coll_2014 = coll_2014.set_index('position').loc[lineages_matrix.columns.astype(int)].reset_index().rename(columns={'index': 'position'})
-    
+        
+        # remove the asterisks so that they are found to be components of other lineages
+        coll_2014.loc[coll_2014['lineage'].str.contains('\*'), 'lineage'] = coll_2014['lineage'].str.replace('*', '')
+        
         # prediction for each lineage. Also add MT_H37Rv (no SNP)
         df_lineage_pred = pd.DataFrame({'Lineage': list(coll_2014['lineage'].values) + ['MT_H37Rv'], 
                                         'Position': list(coll_2014['position'].values) + [0]
                                        })
-    
+        
         # easier to do this without data generators because otherwise need to save files of H37Rv repeated 62 times, which is inefficient
         # this keeps the lineage SNPs in the same order that was used for training (because coll_2014 is what was used to get training lineage SNPs)
         lineages = coll_2014.copy()
         lineages["Count"] = 1
         lineages = lineages.pivot(index="lineage", columns="position", values="Count").fillna(0).astype(int)
-    
+        
         assert np.min(lineages.sum(axis=1).values) == 1
         assert np.max(lineages.sum(axis=1).values) == 1
-    
-        # add MT_H37Rv (no SNP) to get that prediction
-        lineages.loc['MT_H37Rv', :] = 0
-    
+        
         # check ordering
         assert sum(df_lineage_pred.Position.values[:-1] != lineages_matrix.columns.astype(int)) == 0
         assert sum(lineages.columns != lineages_matrix.columns.astype(int)) == 0
-                          
+
+        for lineage_str in lineages.index.values:
+            
+            # get all the sublineages
+            all_sublineages = get_all_sublineages_from_single_lineage(lineage_str)
+                
+            # make all the position values 1 for SNP present
+            lineages.loc[lineage_str, coll_2014.query("lineage in @all_sublineages").position.values] = 1
+
+        # add MT_H37Rv (no SNP) to get that prediction
+        lineages.loc['MT_H37Rv', :] = 0
+
         # get longest locus from the pickle file. The first dimension is the isolates, and H37Rv is the last one
         X_H37Rv_nuc = sparse.load_npz(os.path.join(seq_data_path, 'pkl_sparse_full.npz'))[[-1], :].todense()
     
@@ -416,11 +445,61 @@ if get_predictions:
         # else:
         #     inputs_lst.append(lineages.values)
         
-        df_lineage_pred["log2_pred_MIC"] = best_model.predict(inputs_lst, batch_size=BATCH_SIZE).flatten()
+        df_lineage_pred["log2_pred_MIC"] = model_architecture.predict(inputs_lst, batch_size=BATCH_SIZE).flatten()
         df_lineage_pred["pred_MIC"] = np.exp2(df_lineage_pred['log2_pred_MIC'])
 
         # save one directory up because it's not locus-dependent
-        df_lineage_pred.to_csv(os.path.join(os.path.dirname(output_path), "lineage_SNP_predictions.csv"), index=False)
+        df_lineage_pred.to_csv(os.path.join(os.path.dirname(output_path), f"lineage_SNP_predictions{fName_suffix}.csv"), index=False)
+
+
+# best model is one directory up. For saturation mutagenesis, two directories up
+if get_predictions:
+
+    print(f"output path: {output_path}")
+    
+    if saturation_muts:
+        model_weights_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(output_path))), "best_model.h5")
+    elif insilico_muts:
+        model_weights_file = os.path.join(os.path.dirname(os.path.dirname(output_path)), "best_model.h5")
+    else:
+        model_weights_file = os.path.join(os.path.dirname(output_path), "best_model.h5")
+
+    # if permutation, there are 10 models to get with glob
+    if permutation:
+        print(os.path.dirname(model_weights_file))
+        model_weights_files = glob.glob(os.path.join(os.path.dirname(model_weights_file), "saliency", "permutation_test", "permutation_*.h5"))
+        del model_weights_file
+        print(f"Getting predictions for {len(model_weights_files)} models in {os.path.dirname(model_weights_files[0])}")
+
+        for fName in model_weights_files:
+
+            fName_suffix = os.path.basename(fName).split('permutation')[-1].split('.h5')[0]
+            
+            get_predictions_single_model(model_architecture, 
+                                         fName, 
+                                         data_generator, 
+                                         df_samples, 
+                                         output_path, 
+                                         coll_2014,
+                                         fName_suffix=fName_suffix, 
+                                         insilico_muts=insilico_muts, 
+                                         include_lineage=include_lineage, 
+                                         include_amino_acid_properties=include_amino_acid_properties
+                                        )
+    else:
+        print(f"\nLoading model {model_weights_file}")
+
+        get_predictions_single_model(model_architecture, 
+                                     model_weights_file, 
+                                     data_generator, 
+                                     df_samples, 
+                                     output_path, 
+                                     coll_2014,
+                                     fName_suffix='', 
+                                     insilico_muts=insilico_muts, 
+                                     include_lineage=include_lineage, 
+                                     include_amino_acid_properties=include_amino_acid_properties
+                                    )
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

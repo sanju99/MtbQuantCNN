@@ -153,7 +153,7 @@ for i, fName in enumerate(duplicate_indels_df.VCF.unique()):
     for pos in remove_pos_lst:
         cmd += f'POS != {pos} & '
 
-    # remoe trailing ampersand from above
+    # remove trailing ampersand from above
     cmd = cmd.strip('& ')
     df_remove_pos_commands.loc[i, :] = [os.path.basename(fName).replace('.vcf', '').replace('_variants', ''), fName, cmd]
 

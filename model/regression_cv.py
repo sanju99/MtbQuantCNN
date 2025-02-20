@@ -98,20 +98,21 @@ if include_tier2:
 if include_amino_acid_properties:
     output_path += "_amino_acid"
 
-ridge_dir = os.path.join(output_path, "ridge")
-
 if AF_thresh != 0.75:
-    test_seq_data_path = os.path.join(seq_data_path, f"AF_thresh_{int(AF_thresh*100)}")
+    # separate input and output paths for different AF
+    test_seq_data_path = f"{seq_data_path}_AF{int(AF_thresh*100)}"
 
-    if not os.path.isdir(test_seq_data_path):
-        os.makedirs(test_seq_data_path)
-    
-    test_predictions_fName = os.path.join(ridge_dir, f"test_predictions_AF_thresh_{int(AF_thresh*100)}.csv")
-    test_results_fName = os.path.join(ridge_dir, f"results_AF_thresh_{int(AF_thresh*100)}.csv")
+    genotype_input_directory = f"{genotype_input_directory.replace('fastas', 'AF_thresh_25/fastas')}"
+
+    output_path = f"{output_path}_AF{int(AF_thresh*100)}"
+
 else:
     test_seq_data_path = seq_data_path
-    test_predictions_fName = os.path.join(ridge_dir, "test_predictions.csv")
-    test_results_fName = os.path.join(ridge_dir, "results.csv")
+
+ridge_dir = os.path.join(output_path, "ridge")
+
+# but the output file names will be the same
+results_fName = os.path.join(ridge_dir, "results.csv")
 
 if not os.path.isdir(os.path.join(ridge_dir, "cross_validation")):
     os.makedirs(os.path.join(ridge_dir, "cross_validation"))
@@ -196,7 +197,7 @@ for split, (train_idx, val_idx) in enumerate(kfold_splits.split(np.zeros(len(df_
     summary_df["CV"] = split
     results.append(summary_df)
 
-pd.concat(results).to_csv(test_results_fName, index=False)
+pd.concat(results).to_csv(results_fName, index=False)
 
 print("Fitting full model")
 

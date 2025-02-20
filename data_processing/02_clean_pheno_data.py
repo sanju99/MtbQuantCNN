@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, sys, itertools, yaml
+import glob, os, sys, itertools, yaml, shutil
 import Bio.SeqUtils
 from sklearn.model_selection import train_test_split
 import warnings
@@ -10,26 +10,32 @@ sys.path.append("utils")
 from data_utils import *
 
 h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-cc_df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/criticalConcentrations_updated.csv")
+# cc_df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/criticalConcentrations_updated.csv")
+cc_df = pd.read_csv("./MIC_data/drug_CC.csv").query("Medium != '7H9'") # not sure about these critical concentrations, so skip
+
+who_variants = pd.read_csv("./data_processing/data_utils/WHO_catalog_V2.csv", header=[2]).reset_index(drop=True)
 
 # all variants in the 2023 WHO catalog regions, using their BED file
 isolate_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/isolate_WHO_catalog_variants.csv").dropna(subset='variant').reset_index(drop=True)
 
 # this contains the lineage designations from fast-lineage-caller and the F2 score
-df_pass_QC = pd.read_csv("./data_processing/samples_pass_geno_QC.csv")# file of isolates that pass genotypic quality control and have a VCF file. Need to do F2 score filtering though
+df_pass_QC = pd.read_csv("./data_processing/samples_pass_geno_QC.csv").query("~ROLLINGDB_ID.str.startswith('MFS')")# file of isolates that pass genotypic quality control and have a VCF file. Need to do F2 score filtering though
 del df_pass_QC['DB_OF_ORIGIN']  # delete this column because it's already in combined_MIC.csv, but keep everything else
 
+# convert to log-scale first
+df_pass_QC['log2_F2'] = np.log2(df_pass_QC['F2'])
 
-drug_abbr_dict = {'Amikacin': 'AMI',
+
+drug_abbr_dict = {'Amikacin': 'AMK',
                   'Bedaquiline': 'BDQ',
                   'Capreomycin': 'CAP',
                   'Clofazimine': 'CFZ',
                   'Delamanid': 'DLM',
                   'Ethambutol': 'EMB',
-                  'Ethionamide': 'ETH',
+                  'Ethionamide': 'ETO',
                   'Isoniazid': 'INH',
                   'Kanamycin': 'KAN',
-                  'Levofloxacin': 'LEV',
+                  'Levofloxacin': 'LFX',
                   'Linezolid': 'LZD',
                   'Moxifloxacin': 'MXF',
                   'Ofloxacin': 'OFX',
@@ -42,47 +48,42 @@ drug_abbr_dict = {'Amikacin': 'AMI',
 
 abbr_drug_dict = {val: key for (key, val) in drug_abbr_dict.items()}
 
+
 def get_critical_concentration(drug):
 
-    drug_full_name = abbr_drug_dict[drug].upper()
+    drug_full_name = abbr_drug_dict[drug]
 
     # get the row associcated with the particular drug
-    for val in cc_df.query("antb == @drug_full_name").values[0]:
+    for medium in cc_df.query("Drug == @drug_full_name").Medium.values:
 
-        # skip the columns of the drug or the abbreviation
-        if val != drug_full_name and val != drug:
-            
-            # get the first non-null critical concentration. This will prefer 7H10 > 7H11 > LJ > MGIT > UKMYC
-            if not pd.isnull(val):
-                cc = val
+        # This will prefer 7H10 > 7H11 > LJ > MGIT > UKMYC
+        for medium in ['7H10', '7H11', 'LJ', 'MGIT', 'UKMYC5']:
+            if len(cc_df.query("Drug == @drug_full_name & Medium==@medium")) > 0:
+                cc = cc_df.query("Drug == @drug_full_name & Medium==@medium")['Value'].values[0]
                 break
+                
+    if cc is None:
+        raise ValueError(f"No critical concentration found for {drug}")
+    else:
+        print(f"Critical concentration of {cc} in {medium} for {drug}")
 
     return float(cc)
 
 
-def reverse_complement(seq):
-    
-    comp_dict = {'A': 'T', 
-                 'C': 'G', 
-                 'G': 'C', 
-                 'T': 'A', 
-                 'N': 'N', 
-                 '-': '-'
-                }
-    
-    # this is to turn it into a list where each element is of length 1
-    seq = list("".join(seq))
-    
-    if len(np.unique(seq)) > 6:
-        raise ValueError(f"More than 6 types of characters in the sequence!")
 
-    if "X" in np.unique(seq):
-        raise ValueError(f"There are Xs in the sequence!")
-        
-    seq = [comp_dict[base] for base in seq] 
+def compute_outlier_bounds(vals_array):
+    '''
+    Calibrate so that there are no outliers at the low end
+    '''
     
-    # reverse the sequence and return as a list
-    return "".join(seq[::-1])
+    # lower bound should be 0 because the F2 score can't be negative
+    lb = np.min(vals_array)
+    
+    # upper bound is the same distance away from the median as lb is from the median
+    ub = np.median(vals_array) + (np.median(vals_array) - lb)
+
+    return lb, ub
+    
 
 
 _, drug = sys.argv
@@ -108,20 +109,47 @@ for col in df_combined.columns:
         df_combined.rename(columns={col: col.replace('_NORM', '')}, inplace=True)
 
 
-#################################### STEP 1: REMOVE ISOLATES WITH AN F2 SCORE ABOVE 0.05 ####################################
+#################################### STEP 1: REMOVE ISOLATES WITH AN F2 SCORE ABOVE 3 STD DEVS ABOVE THE MEAN ####################################
 
 
-F2_thresh = 0.05
 prev_len = len(df_combined)
-df_combined = df_combined.query("F2 <= @F2_thresh").reset_index(drop=True)
-print(f"Removed {prev_len-len(df_combined)} isolates with an F2 score > {F2_thresh}")
+
+# # use the log-scaled mean and standard deviation
+# _, upper_bound = compute_outlier_bounds(df_pass_QC['log2_F2'])
+
+upper_bound = df_pass_QC['log2_F2'].mean() + 3 * df_pass_QC['log2_F2'].std()
+
+df_combined = df_combined.query("log2_F2 <= @upper_bound").reset_index(drop=True)
+print(f"Removed {prev_len-len(df_combined)} isolates with an F2 score > {np.exp2(upper_bound)}, which is 3 standard deviations above the mean on the full dataset")
 
 
 #################################### STEP 2: REMOVE ISOLATES WITH CATEGORY 1 MUTATIONS AND MIC < 1/2 THE CC ####################################
 
 
 # check that the inverse of the filters is not met because some indels don't have all fields filled in
-isolates_with_group1_mutations = isolate_variants.query("ROLLINGDB_ID in @df_combined.ROLLINGDB_ID.values & drug_V2==@full_drug_name & confidence_V2=='1) Assoc w R' & ~FILTER.str.contains('|'.join(['Del', 'LowCov'])) & ~(AF <= 0.75) & ~(DP < 5) & ~(BQ < 20) & ~(MQ < 30)").ROLLINGDB_ID.unique()
+isolates_with_group1_mutations = isolate_variants.query("ROLLINGDB_ID in @df_combined.ROLLINGDB_ID.values & drug==@full_drug_name & confidence=='1) Assoc w R' & ~FILTER.str.contains('|'.join(['Del', 'LowCov'])) & ~(AF <= 0.75) & ~(DP < 5) & ~(BQ < 20) & ~(MQ < 30)").ROLLINGDB_ID.unique()
+
+if drug in ['BDQ', 'CFZ', 'AMK', 'KAN']:
+    # raise ValueError(f"Write code to adjust for epistasis when checking for Group 1 mutations and low MICs!")
+
+    lof_muts_effects = ['stop_gained', 'frameshift', 'start_lost', 'feature_ablation']
+    
+    all_variants_in_isolates_with_group1_mutations = isolate_variants.query("ROLLINGDB_ID in @isolates_with_group1_mutations & drug==@full_drug_name")
+    all_variants_in_isolates_with_group1_mutations['Value'] = 1
+
+    R_abrogating_genes = who_variants.dropna(subset='Comment').query("drug==@full_drug_name & Comment.str.contains('abrogate', case=False)").gene.unique()
+    print(f"Negating resistance for LoF mutations in {R_abrogating_genes}")
+    
+    R_abrogating_muts = all_variants_in_isolates_with_group1_mutations.loc[(all_variants_in_isolates_with_group1_mutations['EFFECT'].str.contains('|'.join(lof_muts_effects))) & (all_variants_in_isolates_with_group1_mutations['GENE'].isin(R_abrogating_genes))].variant.unique()
+
+    # pivot to matrix to easily subset
+    all_variants_in_isolates_with_group1_mutations_matrix = all_variants_in_isolates_with_group1_mutations.pivot(index='ROLLINGDB_ID', columns='variant', values='Value').fillna(0).astype(int)
+    
+    # these isolates wouldn't be expected to be resistant because they have resistance-abrogating mutations
+    S_isolates = (all_variants_in_isolates_with_group1_mutations_matrix[R_abrogating_muts]==1).index.values
+    
+    # so remove them from the group
+    isolates_with_group1_mutations = list(set(isolates_with_group1_mutations) - set(S_isolates))
 
 prev_len = len(df_combined)
 df_combined = df_combined.query(f"~(ROLLINGDB_ID in @isolates_with_group1_mutations & {drug}_upper_bound < {cc/2})")
@@ -240,21 +268,21 @@ df_combined = df_combined.reset_index(drop=True)
 #################################### STEP 5: CREATE TRAIN AND TEST SPLITS, STRATIFYING BY BINARY PHENOTYPE AND PRIMARY LINEAGE ####################################
 
 
-# split train + validation from test, stratifying by binary phenotype and primary lineage. 80% train, 10% validation, 10% test
+# split train + validation from test, stratifying by binary phenotype and primary lineage. First do 80% train + validation, 20% hold-out test
 train_index, test_index = train_test_split(df_combined.index.values, test_size=0.2, stratify=df_combined['Stratify'].values)
 
 df_combined.loc[train_index, "category"] = "train_set" 
 df_combined.loc[test_index, "category"] = "test_set"
 
-# # do it again on the test set only to split test and validation
-# df_train = df_combined.query("category=='train_set'").reset_index(drop=True)
-# train_index, validation_index = train_test_split(df_train.index.values, test_size=float(1/9), stratify=df_train['Binary'].values)
+# Then split the train + validation set. Use 90% for training and 10% for validation (meaning to determine when to stop training)
+df_train = df_combined.query("category=='train_set'").reset_index(drop=True)
+train_index, validation_index = train_test_split(df_train.index.values, test_size=float(1/9), stratify=df_train['Binary'].values)
 
-# df_train.loc[train_index, "category"] = "train_set" 
-# df_train.loc[validation_index, "category"] = "validation_set"
+df_train.loc[train_index, "category"] = "train_set" 
+df_train.loc[validation_index, "category"] = "validation_set"
 
-# df_combined = pd.concat([df_combined.query("category=='test_set'"), df_train]).reset_index(drop=True)
-# assert df_combined['ROLLINGDB_ID'].nunique() == len(df_combined) # check that no IDs were duplicated
+df_combined = pd.concat([df_combined.query("category=='test_set'"), df_train]).reset_index(drop=True)
+assert df_combined['ROLLINGDB_ID'].nunique() == len(df_combined) # check that no IDs were duplicated
 
 # put the isolates with MICs that span the CC back into the dataframe, all in the test set. Don't add Binary because MIC spans the CC 
 df_MIC_span_CC['category'] = 'test_set'
@@ -262,7 +290,7 @@ df_MIC_span_CC["Lineage"] = [get_primary_lineage(lineage) for lineage in df_MIC_
 
 df_combined = pd.concat([df_combined, df_MIC_span_CC], axis=0)
 print(f"Final: {df_combined.shape[0]} samples in the training data")
-# print(df_combined['DB_OF_ORIGIN'].value_counts())
+print(df_combined['DB_OF_ORIGIN'].value_counts())
 
 # print the means of the two groups as a check
 print(df_combined.groupby("category")[["Binary", f"{drug}_midpoint"]].mean())
@@ -272,11 +300,23 @@ df_combined.to_csv(os.path.join(out_dir, "data_for_model.csv"), index=False)
 #################################### STEP : WRITE TXT FILE WITH THE PATHS OF THE VCF FILES WITH BOTH THE TRAINING AND VALIDATION DATASETS ####################################
 
 
+my_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF"
+
 # create a new txt file of paths, adding the validation file paths to the original file
 with open(os.path.join(out_dir, "combined_paths_for_aln.txt"), "w+") as file:
 
     # already reset the index above and previously checked that all files exist
-    for fName in df_combined['VCF']:
-        new_fName = f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF_clean/{os.path.basename(fName).replace('_variants', '')}"
-        assert os.path.isfile(new_fName)
-        file.write(new_fName + "\n")
+    for sample in df_combined.ROLLINGDB_ID.values:
+        
+        og_fName = f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/pilon/{sample}_variants.vcf"
+        new_fName = f"{my_dir}/{sample}.vcf"
+        
+        if os.path.isfile(og_fName):
+            
+            if not os.path.isfile(new_fName):
+                shutil.copy(og_fName, new_fName)
+                
+            file.write(new_fName + "\n")
+
+        else:
+            print(f"{og_fName} not found")

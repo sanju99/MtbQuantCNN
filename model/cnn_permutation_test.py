@@ -43,6 +43,8 @@ parser.add_argument('--amino-acid', dest='amino_acid', action='store_true', help
 
 parser.add_argument('--patience', default=100, type=int, help='Number of patience epochs for model training')
 
+parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
+
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
@@ -51,7 +53,12 @@ include_peptide_lengths = cmd_line_args.peptide_lengths
 include_tier2 = cmd_line_args.tier2
 include_amino_acid_properties = cmd_line_args.amino_acid
 patience_epochs = cmd_line_args.patience
+AF_thresh = cmd_line_args.AF_thresh
 
+# use the non-75% AF thresh for the test data generator if specified
+if AF_thresh > 1:
+    AF_thresh /= 100
+    
 kwargs = yaml.safe_load(open(config_file, "r"))
 
 drug = kwargs["drug"]
@@ -95,6 +102,15 @@ if include_tier2:
 
 if include_amino_acid_properties:
     output_path += "_amino_acid"
+
+if AF_thresh != 0.75:
+
+    # separate input paths for different AF
+    seq_data_path = f"{seq_data_path}_AF{int(AF_thresh*100)}"
+
+    output_path = f"{output_path}_AF{int(AF_thresh*100)}"
+
+    genotype_input_directory = f"{genotype_input_directory.replace('fastas', 'AF_thresh_25/fastas')}"
     
 # update output path for the saliency folder. Save the permutation models in a new subdirectory
 saliency_dir = os.path.join(output_path, "saliency", "permutation_test")
