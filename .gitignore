@@ -11,6 +11,10 @@ archive/
 *.gz
 ./analysis/L3_MXF/L3_MXF_genome_matrix.csv
 
+# also large files
+*.svg
+*snakemake*
+
 # additional files for testing
 *_paths.txt
 config_*.yaml
