@@ -1246,21 +1246,21 @@ def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_dat
     # assert X_train.shape[1] == X_val.shape[1] == X_test.shape[1]
     assert X_train.shape[1] == X_test.shape[1]
     
-    # get the number of unique values per site in the training dataset
-    unique_values = np.apply_along_axis(lambda x: len(np.unique(x)), axis=0, arr=X_train)
+    # # get the number of unique values per site in the training dataset
+    # unique_values = np.apply_along_axis(lambda x: len(np.unique(x)), axis=0, arr=X_train)
     
-    # features with variation, only keep these for computational efficiency. These will be indexes
-    # it's most important to do this for the nucleotide features because they are the largest
-    # drop sites with no signal, meaning all isolates have the same value, so unique_values == 1
-    keep_features = np.where(unique_values > 1)[0]
-    print(f"Keeping {len(keep_features)} nucleotide features in the model")
+    # # features with variation, only keep these for computational efficiency. These will be indexes
+    # # it's most important to do this for the nucleotide features because they are the largest
+    # # drop sites with no signal, meaning all isolates have the same value, so unique_values == 1
+    # keep_features = np.where(unique_values > 1)[0]
+    # print(f"Keeping {len(keep_features)} nucleotide features in the model")
 
-    # keep_features is a list of indices of columns to keep. Need to save it to get those features only when getting additional model predictions
-    np.save(f"{seq_data_path}/regression_train_features_idx.npy", keep_features)
+    # # keep_features is a list of indices of columns to keep. Need to save it to get those features only when getting additional model predictions
+    # np.save(f"{seq_data_path}/regression_train_NT_features_idx.npy", keep_features)
     
-    X_train = X_train[:, keep_features]
-    # X_val = X_val[:, keep_features]
-    X_test = X_test[:, keep_features]
+    # X_train = X_train[:, keep_features]
+    # # X_val = X_val[:, keep_features]
+    # X_test = X_test[:, keep_features]
     
     if include_lineage:
     
@@ -1347,9 +1347,9 @@ def get_all_regression_inputs_for_addl_predictions(seq_data_path, train_seq_data
     # keep only the specified loci for this model
     genes_list = get_genes_lst(locus_list)
 
-    # features to keep in the nucleotide matrix. These were determined from the training matrix
-    keep_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx.npy")    
-    X_reg = X_reg[:, keep_features]
+    # # features to keep in the nucleotide matrix. These were determined from the training matrix
+    # keep_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx.npy")    
+    # X_reg = X_reg[:, keep_features]
 
     if include_lineage:
     

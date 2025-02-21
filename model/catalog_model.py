@@ -69,16 +69,13 @@ def single_isolate_catalog_resistance_prediction(sample_id, drug, get_V1_pred=Fa
 
     drug_full_name = abbr_drug_dict[drug]
 
-    fName = f"/n/data1/hms/dbmi/farhat/rollingDB/cryptic_output/{sample_id}/WHO_resistance/{sample_id}_pred_AF_thresh_{int(AF_thresh*100)}.csv"
+    fName = f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample_id}/WHO_resistance/{sample_id}_pred_AF_thresh_{int(AF_thresh*100)}.csv"
 
     if get_V1_pred:
         fName = '.'.join(fName.split(".")[:-1]) + '_V1.csv'
         
-    try:
-        df_resistance = pd.read_csv(fName, index_col=['Drug'])
-    except:
-        df_resistance = pd.read_csv(fName.replace('cryptic_output', 'genomic_data'), index_col=['Drug'])
-        
+    df_resistance = pd.read_csv(fName, index_col=['Drug'])
+
     # returns 'R' or 'S'
     return df_resistance.loc[drug_full_name, 'Phenotype']
 

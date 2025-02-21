@@ -15,6 +15,9 @@
 *snakemake/*
 */analysis/L3_MXF/*
 
+# unpublished data
+MIC_data/MIC_ML/*
+
 # additional files for testing
 *_paths.txt
 config_*.yaml

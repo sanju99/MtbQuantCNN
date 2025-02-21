@@ -122,6 +122,8 @@ print(f"Saving results to {ridge_dir}")
 # get the input matrices using the helper function.
 X_train, X_test = get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_data_path, locus_list, include_lineage=include_lineage, include_amino_acid_properties=include_amino_acid_properties)
 
+print(f"{X_train.shape[1]} features in the regression model")
+
 lower_bounds_train, upper_bounds_train = df_train_val[[f"{drug}_lower_bound", f"{drug}_upper_bound"]].T.values
 lower_bounds_test, upper_bounds_test = df_test[[f"{drug}_lower_bound", f"{drug}_upper_bound"]].T.values
 
