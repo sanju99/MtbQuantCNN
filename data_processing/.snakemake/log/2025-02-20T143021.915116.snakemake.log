@@ -1,7 +1,0 @@
-Building DAG of jobs...
-MissingInputException in rule create_WHO_catalog_variants_TSV in file /home/sak0914/Mtb_Megapipe/rules_WHO.smk, line 15:
-Missing input files for rule create_WHO_catalog_variants_TSV:
-    output: /n/data1/hms/dbmi/farhat/rollingDB/genomic_data/MFS-1/WHO_resistance/MFS-1_variants_combinedCodons.eff.vcf.bgz, /n/data1/hms/dbmi/farhat/rollingDB/genomic_data/MFS-1/WHO_resistance/MFS-1_variants_combinedCodons.eff.vcf.bgz.tbi, /n/data1/hms/dbmi/farhat/rollingDB/genomic_data/MFS-1/WHO_resistance/MFS-1_variants.tsv
-    wildcards: sample_ID=MFS-1
-    affected files:
-        /n/data1/hms/dbmi/farhat/rollingDB/genomic_data/MFS-1/WHO_resistance/MFS-1_variants_combinedCodons.eff.vcf

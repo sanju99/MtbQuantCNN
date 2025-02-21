@@ -16,7 +16,7 @@
 */analysis/L3_MXF/*
 
 # unpublished data
-MIC_data/MIC_ML/*
+/MIC_data/*
 
 # additional files for testing
 *_paths.txt
