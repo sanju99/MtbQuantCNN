@@ -90,16 +90,14 @@ if sum(flags_lst) == 0:
 kwargs = yaml.safe_load(open(config_file, "r"))
 
 drug = kwargs["drug"]
-tier1_loci = kwargs["tier1_loci"]
-
-if include_tier2:
-    tier2_loci = kwargs["tier2_loci"]
-else:
-    tier2_loci = []
-
 filter_size = kwargs["filter_size"]
 phenotype_file = kwargs["phenotype_file"]
 binary_thresh = kwargs["binary_thresh"]
+
+locus_list = kwargs['tier1_loci']
+
+if include_tier2:
+    locus_list += kwargs['tier2_loci']
 
 if 'output_path' in kwargs.keys():
     output_path = kwargs["output_path"]
@@ -123,7 +121,9 @@ if include_amino_acid_properties:
 
 if AF_thresh != 0.75:
     output_path += f"_AF{int(AF_thresh * 100)}"
-    
+
+output_path = os.path.join(output_path, "ridge")
+
 # add an additional subdirectory for the additional dataset
 if TRUST_data:
     subdir = "TRUST"
@@ -175,7 +175,7 @@ genotype_input_directory = f"{data_dir}/fastas"
 # train_seq_data_path is already present because it contains the training data. Need to make the other two though
 train_seq_data_path = seq_data_path
 seq_data_path =  os.path.join(seq_data_path, subdir)
-output_path = os.path.join(output_path, subdir, "ridge")
+output_path = os.path.join(output_path, subdir)
 print(f"Saving prediction results to {output_path}")
 
 if not os.path.isdir(output_path):
@@ -183,10 +183,6 @@ if not os.path.isdir(output_path):
 
 if not os.path.isdir(seq_data_path):
     os.makedirs(seq_data_path)
-
-num_loci = len(tier1_loci + tier2_loci)
-genes_lst = get_genes_lst(tier1_loci + tier2_loci)
-num_proteins = len(genes_lst)
 
 # get the lists of samples to get MIC predictions for
 if TRUST_data:
@@ -236,23 +232,6 @@ if not os.path.isfile(pkl_fName):
                             )
 
 
-# # make peptide lengths dataframe if it has not already been created
-# if include_peptide_lengths and not os.path.isfile(gene_peptide_lengths_fName):
-
-#     print("Creating gene peptide lengths dataframe")
-
-#     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-#         all_loci_seq = create_all_loci_matrices(config_file, fasta_dir=genotype_input_directory, isolates_lst=df_samples['ROLLINGDB_ID'].values)
-        
-#         pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
-
-#     gene_peptide_lengths = make_CDS_length_df(drug, kwargs['tier1_loci'] + kwargs['tier2_loci'], genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
-    
-#     # keep index because that's the samples column
-#     gene_peptide_lengths.to_csv(gene_peptide_lengths_fName)
-
-
-
 if include_amino_acid_properties and not os.path.isfile(pkl_AA_fName):
 
     print(f"Creating amino acid biophysical properties matrix and saving to {pkl_AA_fName}")
@@ -288,14 +267,14 @@ if include_amino_acid_properties and not os.path.isfile(pkl_AA_fName):
 
 if TRUST_data:
     lineage_SNPs_zero = False
-    samples_lst = df_samples.columns
+    samples_lst = df_samples['ROLLINGDB_ID'].values
 else:
     lineage_SNPs_zero = True
     samples_lst = None
 
 X_for_prediction = get_all_regression_inputs_for_addl_predictions(seq_data_path, 
                                                                   train_seq_data_path,
-                                                                  tier1_loci + tier2_loci, 
+                                                                  locus_list, # only the loci indicated, not both tiers 
                                                                   lineage_SNPs_zero=lineage_SNPs_zero, 
                                                                   samples_lst=samples_lst, 
                                                                   include_lineage=include_lineage, 
@@ -318,7 +297,14 @@ def get_all_sublineages_from_single_lineage(lineage_str):
 
 
 
-def get_predictions_single_model(model_weights_file, df_samples, output_path, coll_2014, fName_suffix='', insilico_muts=True, include_lineage=False, include_amino_acid_properties=False):
+def get_predictions_single_model(model_weights_file, df_samples, output_path, coll_2014, fName_suffix='', insilico_muts=True, include_lineage=False, include_amino_acid_properties=False, include_tier2=False):
+
+    locus_list = kwargs['tier1_loci']
+
+    if include_tier2:
+        locus_list += kwargs['tier2_loci']
+
+    genes_list = get_genes_lst(locus_list)
     
     # save the model in case it's needed for later (i.e. TRUST predictions or something)
     model = pickle.load(open(model_weights_file, "rb"))
@@ -332,87 +318,96 @@ def get_predictions_single_model(model_weights_file, df_samples, output_path, co
     df_samples['ROLLINGDB_ID'] = df_samples['ROLLINGDB_ID'].str.replace('_p_', '_p.').str.replace('_c_', '_c.').str.replace('+', '*')
     df_samples.to_csv(os.path.join(output_path, f"test_predictions{fName_suffix}.csv"), index=False)
 
-    # this part doesn't work. Add functionality if needed it, not worth it right now.
-    # # get lineage predictions if the model has lineage in it. Predict MIC for H37Rv with a single lineage SNP
-    # if insilico_muts and include_lineage:
+    # get lineage predictions if the model has lineage in it. Predict MIC for H37Rv with a single lineage SNP
+    if insilico_muts and include_lineage:
                 
-    #     # put Coll 2014 dataframe in same order as the lineages matrix to get correct order of lineage predictions
-    #     coll_2014 = coll_2014.set_index('position').loc[lineages_matrix.columns.astype(int)].reset_index().rename(columns={'index': 'position'})
+        # put Coll 2014 dataframe in same order as the lineages matrix to get correct order of lineage predictions
+        coll_2014 = coll_2014.set_index('position').loc[lineages_matrix.columns.astype(int)].reset_index().rename(columns={'index': 'position'})
         
-    #     # remove the asterisks so that they are found to be components of other lineages
-    #     coll_2014.loc[coll_2014['lineage'].str.contains('\*'), 'lineage'] = coll_2014['lineage'].str.replace('*', '')
+        # remove the asterisks so that they are found to be components of other lineages
+        coll_2014.loc[coll_2014['lineage'].str.contains('\*'), 'lineage'] = coll_2014['lineage'].str.replace('*', '')
         
-    #     # prediction for each lineage. Also add MT_H37Rv (no SNP)
-    #     df_lineage_pred = pd.DataFrame({'Lineage': list(coll_2014['lineage'].values) + ['MT_H37Rv'], 
-    #                                     'Position': list(coll_2014['position'].values) + [0]
-    #                                    })
+        # prediction for each lineage. Also add MT_H37Rv (no SNP)
+        df_lineage_pred = pd.DataFrame({'Lineage': list(coll_2014['lineage'].values) + ['MT_H37Rv'], 
+                                        'Position': list(coll_2014['position'].values) + [0]
+                                       })
         
-    #     # easier to do this without data generators because otherwise need to save files of H37Rv repeated 62 times, which is inefficient
-    #     # this keeps the lineage SNPs in the same order that was used for training (because coll_2014 is what was used to get training lineage SNPs)
-    #     lineages = coll_2014.copy()
-    #     lineages["Count"] = 1
-    #     lineages = lineages.pivot(index="lineage", columns="position", values="Count").fillna(0).astype(int)
+        # easier to do this without data generators because otherwise need to save files of H37Rv repeated 62 times, which is inefficient
+        # this keeps the lineage SNPs in the same order that was used for training (because coll_2014 is what was used to get training lineage SNPs)
+        lineages = coll_2014.copy()
+        lineages["Count"] = 1
+        lineages = lineages.pivot(index="lineage", columns="position", values="Count").fillna(0).astype(int)
         
-    #     assert np.min(lineages.sum(axis=1).values) == 1
-    #     assert np.max(lineages.sum(axis=1).values) == 1
+        assert np.min(lineages.sum(axis=1).values) == 1
+        assert np.max(lineages.sum(axis=1).values) == 1
         
-    #     # check ordering
-    #     assert sum(df_lineage_pred.Position.values[:-1] != lineages_matrix.columns.astype(int)) == 0
-    #     assert sum(lineages.columns != lineages_matrix.columns.astype(int)) == 0
+        # check ordering
+        assert sum(df_lineage_pred.Position.values[:-1] != lineages_matrix.columns.astype(int)) == 0
+        assert sum(lineages.columns != lineages_matrix.columns.astype(int)) == 0
 
-    #     for lineage_str in lineages.index.values:
+        for lineage_str in lineages.index.values:
             
-    #         # get all the sublineages
-    #         all_sublineages = get_all_sublineages_from_single_lineage(lineage_str)
+            # get all the sublineages
+            all_sublineages = get_all_sublineages_from_single_lineage(lineage_str)
                 
-    #         # make all the position values 1 for SNP present
-    #         lineages.loc[lineage_str, coll_2014.query("lineage in @all_sublineages").position.values] = 1
+            # make all the position values 1 for SNP present
+            lineages.loc[lineage_str, coll_2014.query("lineage in @all_sublineages").position.values] = 1
 
-    #     # add MT_H37Rv (no SNP) to get that prediction
-    #     lineages.loc['MT_H37Rv', :] = 0
+        # add MT_H37Rv (no SNP) to get that prediction
+        lineages.loc['MT_H37Rv', :] = 0
 
-    #     # get longest locus from the pickle file. The first dimension is the isolates, and H37Rv is the last one
-    #     X_H37Rv_nuc = sparse.load_npz(os.path.join(seq_data_path, 'pkl_sparse_full.npz'))[[-1], :].todense()
-    
-    #     # keep only the number of loci specified, which is the last dimension
-    #     X_H37Rv_nuc = X_H37Rv_nuc[:, :, :, :num_loci]
-    
-    #     # copy so that there is one reference sequence for each lineage
-    #     X_H37Rv_nuc = np.repeat(X_H37Rv_nuc, lineages.shape[0], axis=0)
-    #     inputs_lst = [X_H37Rv_nuc]
-    
-    #     if include_amino_acid_properties:
-    
-    #         # the last one is H37Rv
-    #         X_ref = np.load(os.path.join(seq_data_path, "pkl_AA_full.npy"))[[-1], :]
-            
-    #         X_ref = np.repeat(X_ref, lineages.shape[0], axis=0)
-
-    #         # scale across the sample axis (0) and the length of the amino acid sequence (2). Don't scale different biophysical properties together (1), or different genes together (3)
-    #         # load in mean and std of the training data
-    #         train_mean = np.load(os.path.join(seq_data_path, "AA_train_mean.npy"))
-    #         train_std = np.load(os.path.join(seq_data_path, "AA_train_std.npy"))
-
-    #         # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
-    #         train_mean = expand_dims_for_rescaling(train_mean, (0, 2), X_ref)
-    #         train_std = expand_dims_for_rescaling(train_std, (0, 2), X_ref)
-            
-    #         # scale
-    #         X_ref = (X_ref - train_mean) / train_std
-
-    #         # keep only the number of genes specified, which is the last dimension
-    #         X_ref = X_ref[:, :, :, :num_proteins]
-            
-    #         inputs_lst.append(X_ref)
-
-    #     # add the lineage SNPs
-    #     inputs_lst.append(lineages.values)
+        # get longest locus from the pickle file. The first dimension is the isolates, and H37Rv is the last one
+        X_H37Rv_nuc = sparse.load_npz(os.path.join(seq_data_path, 'pkl_sparse_full.npz'))[[-1], :].todense()
         
-    #     df_lineage_pred["log2_pred_MIC"] = np.squeeze(model.predict(inputs_lst))
-    #     df_lineage_pred["pred_MIC"] = np.exp2(df_lineage_pred['log2_pred_MIC'])
+        # copy so that there is one reference sequence for each lineage
+        X_H37Rv_nuc = np.repeat(X_H37Rv_nuc, lineages.shape[0], axis=0)
 
-    #     # save one directory up because it's not locus-dependent
-    #     df_lineage_pred.to_csv(os.path.join(os.path.dirname(output_path), f"lineage_SNP_predictions{fName_suffix}.csv"), index=False)
+        # flatten to two-dimensional format, then keep only the features used for training
+        X_H37Rv_nuc = get_single_matrix_regression_input(X_H37Rv_nuc, keep_idx=None, num_keep_channels=len(locus_list))
+
+        # keep_features is a list of indices of columns to keep. Need to save it to get those features only when getting additional model predictions
+        # do this separately for tier 1 vs. tier 1 + tier 2 because the get_single_matrix_regression_input function does the tier splitting, and it's run before determining unique values
+        if include_tier2:
+            keep_NT_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx_tier2.npy")
+        else:
+            keep_NT_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx.npy")
+
+        # concatenate lineage SNPs with the NT inputs. The order of inputs is NT, lineage SNPs, then AA features
+        X_input_for_lineage_pred = np.concatenate([X_H37Rv_nuc[:, keep_NT_features], lineages], axis=1)
+    
+        if include_amino_acid_properties:
+    
+            # the last one is H37Rv
+            X_H37Rv_AA = np.load(os.path.join(seq_data_path, "pkl_AA_full.npy"))[[-1], :]
+
+            # duplicate the sequence, one for each lineage SNP
+            X_H37Rv_AA = np.repeat(X_H37Rv_AA, lineages.shape[0], axis=0)
+
+            # scale across the sample axis (0) and the length of the amino acid sequence (2). Don't scale different biophysical properties together (1), or different genes together (3)
+            # load in mean and std of the training data
+            train_mean = np.load(os.path.join(train_seq_data_path, "AA_train_mean.npy"))
+            train_std = np.load(os.path.join(train_seq_data_path, "AA_train_std.npy"))
+
+            # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
+            X_H37Rv_AA = (X_H37Rv_AA - expand_dims_for_rescaling(train_mean, (0, 2), X_H37Rv_AA)) / expand_dims_for_rescaling(train_std, (0, 2), X_H37Rv_AA)
+
+            # flatten to a two dimensional matrix
+            X_H37Rv_AA = get_single_matrix_regression_input(X_H37Rv_AA, keep_idx=None, num_keep_channels=len(genes_list))
+    
+            # keep only the features used for training the models
+            if include_tier2:
+                keep_AA_features = np.load(f"{train_seq_data_path}/regression_train_AA_features_idx_tier2.npy")
+            else:
+                keep_AA_features = np.load(f"{train_seq_data_path}/regression_train_AA_features_idx.npy")
+    
+            # concatenate nucleotide, lineage, and AA inputs
+            X_input_for_lineage_pred = np.concatenate([X_input_for_lineage_pred, X_H37Rv_AA[:, keep_AA_features]], axis=1)
+
+        df_lineage_pred["log2_pred_MIC"] = np.squeeze(model.predict(X_input_for_lineage_pred))
+        df_lineage_pred["pred_MIC"] = np.exp2(df_lineage_pred['log2_pred_MIC'])
+
+        # save one directory up because it's not locus-dependent
+        df_lineage_pred.to_csv(os.path.join(os.path.dirname(output_path), f"lineage_SNP_predictions{fName_suffix}.csv"), index=False)
 
 
 # best model is one directory up. For saturation mutagenesis, two directories up
@@ -445,7 +440,8 @@ if get_predictions:
                                          fName_suffix=fName_suffix, 
                                          insilico_muts=insilico_muts, 
                                          include_lineage=include_lineage, 
-                                         include_amino_acid_properties=include_amino_acid_properties
+                                         include_amino_acid_properties=include_amino_acid_properties,
+                                         include_tier2=include_tier2
                                         )
     else:
         print(f"\nLoading model {model_weights_file}")
@@ -457,7 +453,8 @@ if get_predictions:
                                      fName_suffix='', 
                                      insilico_muts=insilico_muts, 
                                      include_lineage=include_lineage, 
-                                     include_amino_acid_properties=include_amino_acid_properties
+                                     include_amino_acid_properties=include_amino_acid_properties,
+                                     include_tier2=include_tier2
                                     )
 
 # returns a tuple: current, peak memory in bytes 

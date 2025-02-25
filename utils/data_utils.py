@@ -1201,7 +1201,7 @@ def get_single_matrix_regression_input(matrix, keep_idx=None, num_keep_channels=
     if num_keep_channels is not None:
         matrix = matrix[:, :, :, :num_keep_channels]
 
-    # use keep_idx to keep only specifid isolates (row index)
+    # use keep_idx to keep only specified isolates (row index)
     if keep_idx is not None:
         matrix = matrix[keep_idx, :, :, :]
 
@@ -1217,23 +1217,19 @@ def get_single_matrix_regression_input(matrix, keep_idx=None, num_keep_channels=
 
 
 
-def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_data_path, locus_list, include_lineage=False, include_amino_acid_properties=False):
+def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_data_path, locus_list, include_lineage=False, include_amino_acid_properties=False, include_tier2=False):
     '''
     Use this function to create the train, val, and test matrices for all regression problems: Ridge regression, gradient boosting, and XGBoost
     '''
     # read in matrices of input sequences. These are not in the ridge directory, they are the same as the matrices used by the CNN
-    X_train_val = sparse.load_npz(f"{seq_data_path}/pkl_sparse_train_val.npz").todense()
-    X_AA_train_val = np.load(f"{seq_data_path}/pkl_AA_train_val.npy")
+    X_train = sparse.load_npz(f"{seq_data_path}/pkl_sparse_train_val.npz").todense()
+    X_AA_train = np.load(f"{seq_data_path}/pkl_AA_train_val.npy")
     
     # different path for the test data because of the possibility of using different AF threshold
     X_AA_test = np.load(f"{test_seq_data_path}/pkl_AA_test.npy")
 
-    # train_idx = df_train_val.query("category=='train_set'").index.values
-    # val_idx = df_train_val.query("category=='validation_set'").index.values
-    
     # nucleotide inputs
-    X_train = get_single_matrix_regression_input(X_train_val, keep_idx=None, num_keep_channels=len(locus_list))
-    # X_val = get_single_matrix_regression_input(X_train_val, keep_idx=val_idx, num_keep_channels=len(locus_list))
+    X_train = get_single_matrix_regression_input(X_train, keep_idx=None, num_keep_channels=len(locus_list))
     
     # different path for the test data because of the possibility of using different AF threshold
     X_test = get_single_matrix_regression_input(sparse.load_npz(f"{test_seq_data_path}/pkl_sparse_test.npz").todense(), keep_idx=None, num_keep_channels=len(locus_list))
@@ -1246,21 +1242,24 @@ def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_dat
     # assert X_train.shape[1] == X_val.shape[1] == X_test.shape[1]
     assert X_train.shape[1] == X_test.shape[1]
     
-    # # get the number of unique values per site in the training dataset
-    # unique_values = np.apply_along_axis(lambda x: len(np.unique(x)), axis=0, arr=X_train)
+    # get the number of unique values per site in the training dataset
+    unique_values = np.apply_along_axis(lambda x: len(np.unique(x)), axis=0, arr=X_train)
     
-    # # features with variation, only keep these for computational efficiency. These will be indexes
-    # # it's most important to do this for the nucleotide features because they are the largest
-    # # drop sites with no signal, meaning all isolates have the same value, so unique_values == 1
-    # keep_features = np.where(unique_values > 1)[0]
-    # print(f"Keeping {len(keep_features)} nucleotide features in the model")
+    # features with variation, only keep these for computational efficiency. These will be indexes
+    # it's most important to do this for the nucleotide features because they are the largest
+    # drop sites with no signal, meaning all isolates have the same value, so unique_values == 1
+    keep_features = np.where(unique_values > 1)[0]
+    print(f"Keeping {len(keep_features)} nucleotide features in the model")
 
-    # # keep_features is a list of indices of columns to keep. Need to save it to get those features only when getting additional model predictions
-    # np.save(f"{seq_data_path}/regression_train_NT_features_idx.npy", keep_features)
+    # keep_features is a list of indices of columns to keep. Need to save it to get those features only when getting additional model predictions
+    # do this separately for tier 1 vs. tier 1 + tier 2 because the get_single_matrix_regression_input function does the tier splitting, and it's run before determining unique values
+    if include_tier2:
+        np.save(f"{seq_data_path}/regression_train_NT_features_idx_tier2.npy", keep_features)
+    else:
+        np.save(f"{seq_data_path}/regression_train_NT_features_idx.npy", keep_features)
     
-    # X_train = X_train[:, keep_features]
-    # # X_val = X_val[:, keep_features]
-    # X_test = X_test[:, keep_features]
+    X_train = X_train[:, keep_features]
+    X_test = X_test[:, keep_features]
     
     if include_lineage:
     
@@ -1268,22 +1267,7 @@ def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_dat
         assert len(np.unique(lineages)) == 2
 
         X_train = np.concatenate([X_train, lineages.loc[df_train_val['ROLLINGDB_ID']]], axis=1)
-        # X_train = np.concatenate([X_train, lineages.loc[df_train_val['ROLLINGDB_ID']].values[train_idx, :]], axis=1)
-        # X_val = np.concatenate([X_val, lineages.loc[df_train_val['ROLLINGDB_ID']].values[val_idx, :]], axis=1)
         X_test = np.concatenate([X_test, lineages.loc[df_test['ROLLINGDB_ID']]], axis=1)
-    
-    # if include_peptide_lengths:
-    
-    #     gene_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"), index_col=[0])
-    
-    #     # keep only those indicated by the locus list
-    #     gene_peptide_lengths = gene_peptide_lengths[[f"{gene}_length" for gene in genes_list]]
-    #     print(gene_peptide_lengths.columns)
-    
-    #     # combine with the nucleotide matrices
-    #     X_train = np.concatenate([X_train, gene_peptide_lengths.loc[df_train_val['ROLLINGDB_ID']].values[train_idx, :]], axis=1)
-    #     X_val = np.concatenate([X_val, gene_peptide_lengths.loc[df_train_val['ROLLINGDB_ID']].values[val_idx, :]], axis=1)
-    #     X_test = np.concatenate([X_test, gene_peptide_lengths.loc[df_test['ROLLINGDB_ID']]], axis=1)
     
     if include_amino_acid_properties:
     
@@ -1296,60 +1280,73 @@ def get_all_regression_inputs(df_train_val, df_test, seq_data_path, test_seq_dat
     
             print(f"Computing training dataset mean and standard deviation for the amino acid features and saving to {seq_data_path}")
     
-            # X_AA_train = X_AA_train_val[train_idx, :]
-            train_mean = X_AA_train_val.mean(axis=(0, 2))
-            train_std = X_AA_train_val.std(axis=(0, 2))
+            train_mean = X_AA_train.mean(axis=(0, 2))
+            train_std = X_AA_train.std(axis=(0, 2))
     
             np.save(train_mean_fName, train_mean)
             np.save(train_std_fName, train_std)
     
-        else:
-            train_mean = np.load(train_mean_fName)
-            train_std = np.load(train_std_fName)
+        # these are both 2 dimensions. First dimension is the number of properties (3), and the second dimension is the proteins.
+        train_mean = np.load(train_mean_fName)
+        train_std = np.load(train_std_fName)
     
         # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
         # scale all 3 matrices
-        X_AA_train_val = (X_AA_train_val - expand_dims_for_rescaling(train_mean, (0, 2), X_AA_train_val)) / expand_dims_for_rescaling(train_std, (0, 2), X_AA_train_val)
+        X_AA_train = (X_AA_train - expand_dims_for_rescaling(train_mean, (0, 2), X_AA_train)) / expand_dims_for_rescaling(train_std, (0, 2), X_AA_train)
         X_AA_test = (X_AA_test - expand_dims_for_rescaling(train_mean, (0, 2), X_AA_test)) / expand_dims_for_rescaling(train_std, (0, 2), X_AA_test)
         
-        train_AA_matrix = get_single_matrix_regression_input(X_AA_train_val, keep_idx=None, num_keep_channels=len(genes_list))
-        # val_AA_matrix = get_single_matrix_regression_input(X_AA_train_val, keep_idx=val_idx, num_keep_channels=len(genes_list))
+        train_AA_matrix = get_single_matrix_regression_input(X_AA_train, keep_idx=None, num_keep_channels=len(genes_list))
         test_AA_matrix = get_single_matrix_regression_input(X_AA_test, keep_idx=None, num_keep_channels=len(genes_list))
+
+        # do the same thing as above to drop constant sites in the amino acid matrix
+        # get the number of unique values per site in the training dataset
+        unique_AA_values = np.apply_along_axis(lambda x: len(np.unique(x)), axis=0, arr=train_AA_matrix)
         
-        X_train = np.concatenate([X_train, train_AA_matrix], axis=1)
-        # X_val = np.concatenate([X_val, val_AA_matrix], axis=1)
-        X_test = np.concatenate([X_test, test_AA_matrix], axis=1)
+        # features with variation, only keep these for computational efficiency. These will be indexes
+        # it's most important to do this for the nucleotide features because they are the largest
+        # drop sites with no signal, meaning all isolates have the same value, so unique_values == 1
+        keep_AA_features = np.where(unique_AA_values > 1)[0]
+        print(f"Keeping {len(keep_AA_features)} amino acid features in the model")
     
+        # keep_features is a list of indices of columns to keep. Need to save it to get those features only when getting additional model predictions
+        if include_tier2:
+            np.save(f"{seq_data_path}/regression_train_AA_features_idx_tier2.npy", keep_AA_features)
+        else:
+            np.save(f"{seq_data_path}/regression_train_AA_features_idx.npy", keep_AA_features)
+
+        X_train = np.concatenate([X_train, train_AA_matrix[:, keep_AA_features]], axis=1)
+        X_test = np.concatenate([X_test, test_AA_matrix[:, keep_AA_features]], axis=1)
     
     # check that feature shapes are the same across the matrices
-    # assert X_train.shape[1] == X_val.shape[1] == X_test.shape[1]
     assert X_train.shape[1] == X_test.shape[1]
 
-    # return X_train, X_val, X_test
     return X_train, X_test
 
 
 
 
-def get_all_regression_inputs_for_addl_predictions(seq_data_path, train_seq_data_path, locus_list, lineage_SNPs_zero=True, samples_lst=None, include_lineage=False, include_amino_acid_properties=False):
+def get_all_regression_inputs_for_addl_predictions(seq_data_path, train_seq_data_path, locus_list, lineage_SNPs_zero=True, samples_lst=None, include_lineage=False, include_amino_acid_properties=False, include_tier2=False):
     '''
     Use this function to create matrices for additional sequences to get predictions for for all regression problems: Ridge regression, gradient boosting, and XGBoost
     '''
     # read in matrices of input sequences. These are not in the ridge directory, they are the same as the matrices used by the CNN
-    X = sparse.load_npz(f"{seq_data_path}/pkl_sparse_full.npz").todense()
-    X_AA = np.load(f"{seq_data_path}/pkl_AA_full.npy")
+    X_reg = sparse.load_npz(f"{seq_data_path}/pkl_sparse_full.npz").todense()
+    X_reg_AA = np.load(f"{seq_data_path}/pkl_AA_full.npy")
     
     # nucleotide inputs. This function converts the one-hot encoded matrix passed into the CNN above to a format compatible with regression problems
-    X_reg = get_single_matrix_regression_input(X, keep_idx=None, num_keep_channels=len(locus_list))
-    del X
+    X_reg = get_single_matrix_regression_input(X_reg, keep_idx=None, num_keep_channels=len(locus_list))
 
     # get the genes to keep (this is needed for both amino acid and gene peptide lengths inputs)
     # keep only the specified loci for this model
     genes_list = get_genes_lst(locus_list)
 
-    # # features to keep in the nucleotide matrix. These were determined from the training matrix
-    # keep_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx.npy")    
-    # X_reg = X_reg[:, keep_features]
+    # features to keep in the nucleotide matrix. These were determined from the training matrix
+    if include_tier2:
+        keep_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx_tier2.npy")
+    else:
+        keep_features = np.load(f"{train_seq_data_path}/regression_train_NT_features_idx.npy")
+        
+    X_reg = X_reg[:, keep_features]
 
     if include_lineage:
     
@@ -1371,13 +1368,20 @@ def get_all_regression_inputs_for_addl_predictions(seq_data_path, train_seq_data
         train_mean = np.load(os.path.join(train_seq_data_path, "AA_train_mean.npy"))
         train_std = np.load(os.path.join(train_seq_data_path, "AA_train_std.npy"))
     
-        # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
+        # train_mean and train_std are only 2 dimensions for 3 properties x number of unique genes. So need to duplicate the arrays to make the full dataset and protein sequence lengths
         # scale all 3 matrices
-        X_AA = (X_AA - expand_dims_for_rescaling(train_mean, (0, 2), X_AA)) / expand_dims_for_rescaling(train_std, (0, 2), X_AA)
-        
-        X_AA_reg = get_single_matrix_regression_input(X_AA, keep_idx=None, num_keep_channels=len(genes_list))
+        X_reg_AA = (X_reg_AA - expand_dims_for_rescaling(train_mean, (0, 2), X_reg_AA)) / expand_dims_for_rescaling(train_std, (0, 2), X_reg_AA)
+
+        # flatten to a two dimensional matrix
+        X_reg_AA = get_single_matrix_regression_input(X_reg_AA, keep_idx=None, num_keep_channels=len(genes_list))
+
+        # keep only the features used for training the models
+        if include_tier2:
+            keep_AA_features = np.load(f"{train_seq_data_path}/regression_train_AA_features_idx_tier2.npy")
+        else:
+            keep_AA_features = np.load(f"{train_seq_data_path}/regression_train_AA_features_idx.npy")
 
         # concatenate nucleotide and AA inputs
-        X_reg = np.concatenate([X_reg, X_AA_reg], axis=1)
+        X_reg = np.concatenate([X_reg, X_reg_AA[:, keep_AA_features]], axis=1)
     
     return X_reg
