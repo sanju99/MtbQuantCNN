@@ -674,14 +674,14 @@ def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
                                              'EMB_midpoint': 'Measured EMB MIC',
                                              'INH_midpoint': 'Measured INH MIC',
                                              'RIF_midpoint': 'Measured RIF MIC',
-                                             'EMB_pred_MIC_high': 'Binarized Predicted EMB MIC',
-                                             'INH_pred_MIC_high': 'Binarized Predicted INH MIC',
-                                             'PZA_pred_MIC_high': 'Binarized Predicted PZA MIC',
-                                             'RIF_pred_MIC_high': 'Binarized Predicted RIF MIC',
-                                             'EMB_midpoint_high': 'Binarized Measured EMB MIC',
-                                             'INH_midpoint_high': 'Binarized Measured INH MIC',
-                                             'PZA_midpoint_high': 'Binarized Measured PZA MIC',
-                                             'RIF_midpoint_high': 'Binarized Measured RIF MIC',
+                                             'EMB_pred_MIC_resistant': 'Resistant Predicted EMB MIC',
+                                             'INH_pred_MIC_resistant': 'Resistant Predicted INH MIC',
+                                             'PZA_pred_MIC_resistant': 'Resistant Predicted PZA MIC',
+                                             'RIF_pred_MIC_resistant': 'Resistant Predicted RIF MIC',
+                                             'EMB_midpoint_resistant': 'Resistant Measured EMB MIC',
+                                             'INH_midpoint_resistant': 'Resistant Measured INH MIC',
+                                             'PZA_midpoint_resistant': 'Resistant Measured PZA MIC',
+                                             'RIF_midpoint_resistant': 'Resistant Measured RIF MIC',
                                              'RIF_AUC': 'Rifampicin PK AUC',
                                              'smear_grade_baseline': 'Smear Grade',
                                              'inh_resistant': 'INH Resistant',
@@ -700,25 +700,25 @@ def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
                                              'smear_grade_1': 'Smear Grade',
                                              'bl_hiv_RIF_midpoint': 'HIV x Measured RIF MIC',
                                              'bl_hiv_INH_midpoint': 'HIV x Measured INH MIC',
-                                             'bl_hiv_RIF_midpoint_high': 'HIV x Binarized Measured RIF MIC',
+                                             'bl_hiv_RIF_midpoint_resistant': 'HIV x Resistant Measured RIF MIC',
                                              'bl_prevtb_RIF_midpoint': 'Previous TB Disease x Measured RIF MIC',
                                              'bl_prevtb_INH_midpoint': 'Previous TB Disease x Measured INH MIC',
                                              'diabetes_RIF_midpoint': 'Diabetes x Measured RIF MIC',
                                              'diabetes_INH_midpoint': 'Diabetes x Measured INH MIC',
-                                             'diabetes_RIF_midpoint_high': 'Diabetes x Binarized Measured RIF MIC',
+                                             'diabetes_RIF_midpoint_resistant': 'Diabetes x Resistant Measured RIF MIC',
                                              'mixed_infect_RIF_midpoint': 'Mixed Infection x Measured RIF MIC',
                                              'mixed_infect_INH_midpoint': 'Mixed Infection x Measured INH MIC',
                                              'bl_hiv_RIF_pred_MIC': 'HIV x Predicted RIF MIC',
-                                             'bl_hiv_RIF_pred_MIC_high': 'HIV x Predicted RIF MIC',
+                                             'bl_hiv_RIF_pred_MIC_resistant': 'HIV x Resistant RIF MIC',
                                              'bl_hiv_INH_pred_MIC': 'HIV x Predicted INH MIC',
                                              'bl_prevtb_RIF_pred_MIC': 'Previous TB Disease x Predicted RIF MIC',
-                                             'bl_prevtb_RIF_pred_MIC_high': 'Previous TB Disease x Predicted RIF MIC',
+                                             'bl_prevtb_RIF_pred_MIC_resistant': 'Previous TB Disease x Resistant Predicted RIF MIC',
                                              'bl_prevtb_INH_pred_MIC': 'Previous TB Disease x Predicted INH MIC',
                                              'diabetes_RIF_pred_MIC': 'Diabetes x Predicted RIF MIC',
-                                             'diabetes_RIF_pred_MIC_high': 'Diabetes x Predicted RIF MIC',
+                                             'diabetes_RIF_pred_MIC_resistant': 'Diabetes x Resistant Predicted RIF MIC',
                                              'diabetes_INH_pred_MIC': 'Diabetes x Predicted INH MIC',
                                              'mixed_infect_RIF_pred_MIC': 'Mixed Infection x Predicted RIF MIC',
-                                             'mixed_infect_RIF_pred_MIC_high': 'Mixed Infection x Predicted RIF MIC',
+                                             'mixed_infect_RIF_pred_MIC_resistant': 'Mixed Infection x Predicted RIF MIC',
                                              'mixed_infect_INH_pred_MIC': 'Mixed Infection x Predicted INH MIC',
                                              'F2': 'F2 Lineage Mixing Metric',
                                              'diabetes_bl_prevtb': 'Diabetes x Previous TB Disease',
@@ -1095,21 +1095,42 @@ def process_input_features_for_model(df, model_cols, MIC_type='none', binarize_M
         
         binarize_cols = []        
     
-    # binarize MICs at the median
+    # binarize MICs at the critical concentration
     elif binarize_MICs and MIC_type != 'none':
         
         if MIC_type == 'predicted':
             binarize_cols = [f"{drug}_pred_MIC" for drug in include_drugs]
-            include_median = False
+            # include_median = False
         
         elif MIC_type == 'measured':
-            binarize_cols = [f"{drug}_midpoint" for drug in include_drugs]
-            include_median = False
+            binarize_cols = [f"{drug}_lower_bound" for drug in include_drugs]
+            # include_median = False
 
         for col in binarize_cols:
-            df_model = determine_MIC_binarization_threshold(df_model, col, include_median=include_median)
 
-        MIC_cols = [f"{col}_high" for col in binarize_cols]
+            # get the critical concentration to binarize each MIC column at
+            drug = col.split('_')[0]
+            full_drug_name = abbr_drug_dict[drug]
+
+            if drug == 'PZA':
+                cc = cc_df.query("Drug==@full_drug_name & Medium=='MGIT'").Value.values[0]
+            else:
+                cc = cc_df.query("Drug==@full_drug_name & Medium=='7H10'").Value.values[0]
+            # df_model = determine_MIC_binarization_threshold(df_model, col, include_median=include_median)
+
+            if '_lower_bound' in col:
+                df_model[f"{col}_resistant"] = (df_model[col] >= cc).astype(int)
+            elif '_midpoint' in col:
+                df_model[f"{col}_resistant"] = (df_model[col] > cc).astype(int)
+            elif 'pred_MIC' in col:
+                df_model[f"{col}_resistant"] = (df_model[col] > cc).astype(int)
+            
+            df_model.loc[pd.isnull(df_model[col]), f"{col}_resistant"] = np.nan
+        
+            # if verbose:
+            #     print(f"Binarized {col} at {cc} µg/mL, {np.round(df_model[f'{col}_resistant'].dropna().mean()*100, 1)}% are resistant")
+
+        MIC_cols = [f"{col}_resistant" for col in binarize_cols]
         
     else:
         if MIC_type == 'predicted':

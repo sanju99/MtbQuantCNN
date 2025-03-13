@@ -337,9 +337,11 @@ def make_noncoding_mutation(df, row, idx, genome_seq, gene_start, gene_end, gene
     
     assert gene_sense in ["+", "-"]
     variant = row["mutation"] # without the gene prefix
+    gene = row['gene']
 
     # this is the numerical part of the variant. If there are multiple, then it returns the smallest position (most upstream)
-    variant_number = get_variant_number(variant, gene_sense, return_start_and_end=False)
+    # Remove the gene name so that if there are numbers in the gene name, they are not included
+    variant_number = get_variant_number(variant.replace(gene, ''), gene_sense, return_start_and_end=False)
 
     # the start of the gene is 0, so if the variant number is negative, then simply add that number (negative) from the start
     # if the variant number is positive, then add variant_number and subtract 1
@@ -398,7 +400,6 @@ def make_noncoding_mutation(df, row, idx, genome_seq, gene_start, gene_end, gene
             # subtract 1 because of 0-indexing in Python 
             ref = str(genome_seq[variant_pos - 1])
     
-            # delins -- these are synonymous variants, where the codon is substituted but the same amino acid
             if "del" in variant:
 
                 # the nucleotides in the name will be in the same sense as the gene. So need to reverse complement if negative sense
@@ -445,7 +446,7 @@ def make_noncoding_mutation(df, row, idx, genome_seq, gene_start, gene_end, gene
 
                     # get the start and end of the deletion, by default above, we only return the earliest
                     # both of these will be 1-indexed, and if they are negative, it will be reflected
-                    deletion_start, deletion_end = get_variant_number(variant, gene_sense, return_start_and_end=True)
+                    deletion_start, deletion_end = get_variant_number(variant.replace(gene, ''), gene_sense, return_start_and_end=True)
 
                     # I think this works for both positive and negative variant numbers
                     deletion_length = deletion_end - deletion_start + 1
@@ -519,13 +520,15 @@ def get_data_for_synthetic_VCF(df):
         df = df.query("effect not in ['stop_lost', 'frameshift', 'LoF', 'feature_ablation']").reset_index(drop=True)
         
     for i, row in df.iterrows():
+
+        gene = row['gene']
         
         # get the start and end coordinates of the gene where the mutation lies
         # this can be done for both coding and non-coding transcripts, so use the full table, not the genes-only table
-        start, end, sense = h37Rv_regions.query(f"Name=='{row['gene']}'")[['Start', 'Stop', 'Strand']].values[0]
+        start, end, sense = h37Rv_regions.query(f"Name==@gene")[['Start', 'Stop', 'Strand']].values[0]
         
-        # this is for checking if it's the first codon
-        variant_number = get_variant_number(row['mutation'], sense)
+        # this is for checking if it's the first codon. Remove the gene name so that if there are numbers in the gene name, they are not included
+        variant_number = get_variant_number(row['mutation'].replace(gene, ''), sense)
     
         df.loc[i, ['sense', 'variant_number']] = [sense, variant_number]
     
@@ -535,7 +538,7 @@ def get_data_for_synthetic_VCF(df):
         
         # mutations in protein-coding regions
         else:            
-            clean_var = row["mutation"].replace("p.", "")
+            clean_var = row["mutation"].replace("p.", "").replace(gene, "")
     
             # separate the mutation before, after, and position
             # get the indices of the position (numeric characters), then everything before or after is the mutation
@@ -730,7 +733,9 @@ def get_data_for_synthetic_VCF(df):
 
     del df["REF_len"]
     del df["ALT_len"]
-    del df["drug"]
+    
+    if 'drug' in df.columns:
+        del df["drug"]
     
     return df
     
@@ -797,18 +802,16 @@ def create_synthetic_VCF_files(df, out_fName, vcf_dir):
             vcf_fName = f"{vcf_dir}/{mutation_str}.vcf"
 
             out_file.write(vcf_fName + "\n")
-            
-            if not os.path.isfile(vcf_fName):
-                
-                # create a VCF file for the mutation
-                with open(vcf_fName, 'w+') as vcf_file:
-    
-                    # write VCF file header
-                    vcf_file.write(header)
-    
-                    # write the variant that causes the mutation
-                    vcf_file.write('\t'.join(['NC_000962.3', str(row["POS"]), '.', row["REF"], row["ALT"], '.', 'PASS', '.', 'GT', '1/1']) + '\n')
-    
+                            
+            # create a VCF file for the mutation
+            with open(vcf_fName, 'w+') as vcf_file:
+
+                # write VCF file header
+                vcf_file.write(header)
+
+                # write the variant that causes the mutation
+                vcf_file.write('\t'.join(['NC_000962.3', str(row["POS"]), '.', row["REF"], row["ALT"], '.', 'PASS', '.', 'GT', '1/1']) + '\n')
+
 
 
 

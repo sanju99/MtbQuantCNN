@@ -330,7 +330,7 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END, qualThresh
             # frameshifts
             if length_diff % 3 != 0:
 
-                # inframe indels can be left as missing, but frameshift indels must be reverted to reference
+                # low-QC inframe indels can be left as missing, but low-QC frameshifts must be reverted to reference because there's no good way to encode them when missing
                 if single_allele_type == 'missing': 
                     
                     print(os.path.basename(fName).replace(".eff", "").replace(".vcf", "").replace("_variants", ""), record, 'REF!')

@@ -38,10 +38,6 @@ def create_MSA_script(locus, drug, AF_thresh=0.75, TRUST_data=False, insilico_mu
             cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/fastas/{locus}.fasta --save-fasta"
             
         if TRUST_data:
-            # if drug == 'PZA':
-            #     cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths_filtered.txt"
-            # else:
-            #     cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths.txt"
             cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths.txt"
 
         if insilico_muts:
@@ -136,14 +132,14 @@ for locus in locus_list:
 ###################################### STEP 2: RUN MSA OR SNP CONCATENATOR SCRIPT ###################################### 
 
     
-    # don't rerun if the FASTA file already exists
     if insilico_muts:
         out_file = f"{out_dir}/{locus}/fastas/{locus}.fasta"
     elif saturation_muts:
         out_file = f"{out_dir}/{gene}/fastas/{locus}.fasta"
     else:
         out_file = f"{out_dir}/fastas/{locus}.fasta"
-        
+
+    # don't rerun if the FASTA file already exists to save time
     if not os.path.isfile(out_file):
         subprocess.run(f"bash {out_dir}/bash_scripts/{locus}.sh", shell=True)
 
