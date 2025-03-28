@@ -70,11 +70,18 @@ parser.add_argument('--saturation-muts', dest='saturation_muts', action='store_t
 # Add an optional string argument for the locus for which to perform site-saturation mutagenesis. Because there are so many variants, don't do it by default for all genes
 parser.add_argument("--gene", type=str, help='Specify the gene (not locus) for which to perform site-saturation mutagenesis. This is only used if --saturation-muts is specified')
 
+parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+
+parser.add_argument('--nonsense', dest='nonsense_only', action='store_true', help='If True, only generate synthetic sequences for nonsense mutations')
+
+
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 include_tier2 = cmd_line_args.tier2
 gene = cmd_line_args.gene
 saturation_muts = cmd_line_args.saturation_muts
+augment = cmd_line_args.augment
+nonsense_only = cmd_line_args.nonsense_only
 
 
 
@@ -113,12 +120,15 @@ def create_WHO_catalog_insilico_files(drug, out_dir, include_tier2=False):
 
 
 
-def create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir):
+def create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir, nonsense_only=False):
     '''
     This creates synthetic VCF files for all possible amino acid substitutions at each site, including eacrly stop codons
     '''
 
-    print(f"Creating all possible amino acid substitutions in {gene}")
+    if nonsense_only:
+        print(f"Creating nonsense mutations at every codon in {gene}")
+    else:
+        print(f"Creating all possible amino acid substitutions in {gene}")
 
     # this can only be done for protein-coding genes, so use the genes-only table
     gene_start, gene_end, gene_sense = h37Rv_genes.query("Symbol==@gene")[['Start', 'End', 'Strand']].values[0]
@@ -151,10 +161,20 @@ def create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir):
         assert len(remaining_aa) == 20
         
         for mut_aa in remaining_aa:
-            df_site_saturation_mutagenesis.loc[i, :] = [gene, f"p.{aa_three_letter}{aa_pos+1}{mut_aa}"]
-            i += 1
-    
-    assert len(df_site_saturation_mutagenesis) == 20*len(protein_seq)
+
+            if nonsense_only:
+                if mut_aa == '*':
+                    df_site_saturation_mutagenesis.loc[i, :] = [gene, f"p.{aa_three_letter}{aa_pos+1}{mut_aa}"]
+                    i += 1
+            else:
+                df_site_saturation_mutagenesis.loc[i, :] = [gene, f"p.{aa_three_letter}{aa_pos+1}{mut_aa}"]
+                i += 1
+
+    if nonsense_only:
+        assert len(df_site_saturation_mutagenesis) == len(protein_seq)
+    else:
+        assert len(df_site_saturation_mutagenesis) == 20*len(protein_seq)
+        
     df_site_saturation_mutagenesis['variant'] = df_site_saturation_mutagenesis['gene'] + '_' + df_site_saturation_mutagenesis['mutation']
     df_site_saturation_mutagenesis['drug'] = drug
     
@@ -207,7 +227,7 @@ def remove_mutations_to_preserve_aln(model_aln_df, full_aln_df, START, vcf_df):
     
     
     
-def remove_mutations_to_preserve_aln_create_new_files(drug, locus):
+def remove_mutations_to_preserve_aln_create_new_files(drug, locus, out_dir, augment=False):
 
     START = drug_loci.query("Locus==@locus")['Start'].values[0]
 
@@ -218,14 +238,24 @@ def remove_mutations_to_preserve_aln_create_new_files(drug, locus):
     nucleotide_vars_fName = f"{out_dir}/WHO_nucleotide_variants.csv"
     nucleotide_vars_fName_original = f"{out_dir}/WHO_nucleotide_variants_original.csv"
 
+    # this is the name of the final file, but currently it is the original file. It will be renamed
     insertion_sites_fName = f"{fasta_dir}/{locus}_insertion_sites.csv"
+
+    # original file when all variants were included
     insertion_sites_fName_original = f"{fasta_dir}/{locus}_insertion_sites_original.csv"
     
-    # original dataframe of insertions when the original data were aligned
-    model_aln_df = pd.read_csv(os.path.join(data_dir, drug, "fastas", f"{locus}_insertion_sites.csv"))
+    # original dataframe of insertions when the original data were aligned before training
+    model_aln_fName = os.path.join(drug_data_dir, "fastas", f"{locus}_insertion_sites.csv")
+
+    print(f"insertion_sites_fName: {insertion_sites_fName}")
+    print(f"insertion_sites_fName_original: {insertion_sites_fName_original}")
+    print(f"insertion_sites_fName_original_training: {model_aln_fName}")
+
+    model_aln_df = pd.read_csv(model_aln_fName)
 
     # isolates above + WHO mutations for insilico validation
-    insilico_aln_df = pd.read_csv(os.path.join(data_dir, drug, "inSilico_analysis", locus, "fastas", f"{locus}_insertion_sites.csv"))
+    # insilico_aln_df = pd.read_csv(os.path.join(data_dir, drug, "inSilico_analysis", locus, "fastas", f"{locus}_insertion_sites.csv"))
+    insilico_aln_df = pd.read_csv(insertion_sites_fName)
 
     # change the name of the insertion sites file so that the new one will appear when make_MSA.py is rerun
     if os.path.isfile(insertion_sites_fName) and not os.path.isfile(insertion_sites_fName_original):
@@ -281,7 +311,10 @@ def write_ref_seqs_for_constant_loci(drug, variable_locus, constant_loci_list, o
     for constant_locus in constant_loci_list:
     
         # get the reference sequence for the locus
-        locus_seq = [(seq.id, seq.seq) for seq in SeqIO.parse(f"{data_dir}/{drug}/fastas/{constant_locus}.fasta", "fasta")]
+        original_fasta_fName = f"{drug_data_dir}/fastas/{constant_locus}.fasta"
+        print(f"original_fasta_fName: {original_fasta_fName}")
+            
+        locus_seq = [(seq.id, seq.seq) for seq in SeqIO.parse(original_fasta_fName, "fasta")]
         ref_seq = str(locus_seq[-1][1])
         print(constant_locus, len(ref_seq))
         
@@ -328,20 +361,29 @@ kwargs = yaml.safe_load(open(config_file, "r"))
 
 drug = kwargs['drug']
 
+if augment:
+    out_dir = f"{data_dir}/{drug}_augment"
+else:
+    out_dir = f"{data_dir}/{drug}"
+
+# this is for the original data used for training, not the source of the additional predictions files
+drug_data_dir = out_dir
+print(f"drug_data_dir: {drug_data_dir}")
+
 if saturation_muts:
-    out_dir = f"{data_dir}/{drug}/inSilico_analysis/saturation_mutagenesis"
+    out_dir = f"{out_dir}/inSilico_analysis/saturation_mutagenesis"
     assert gene is not None # must be specified
 else:
-    out_dir = f"{data_dir}/{drug}/inSilico_analysis"
+    out_dir = f"{out_dir}/inSilico_analysis"
 
     # if it exists, delete and make a new one. But only for insilico-muts because all loci are done together.
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)
 
     for fName in ['WHO_mutations.txt', 'WHO_nucleotide_variants.csv', 'WHO_nucleotide_variants_original.csv']:
-        if os.path.isfile(f"{data_dir}/{drug}/inSilico_analysis/{fName}"):
-            print(f"Deleting {data_dir}/{drug}/inSilico_analysis/{fName}")
-            os.remove(f"{data_dir}/{drug}/inSilico_analysis/{fName}")
+        if os.path.isfile(f"{drug_data_dir}/inSilico_analysis/{fName}"):
+            print(f"Deleting {drug_data_dir}/inSilico_analysis/{fName}")
+            os.remove(f"{drug_data_dir}/inSilico_analysis/{fName}")
 
 vcf_dir = f"{out_dir}/synthetic_VCF"
 
@@ -377,10 +419,10 @@ if saturation_muts:
 
     # this will print a command to run snpEff on the VCF files to check annotations
     if locus_list[0] == 'mmpLS5':
-        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpS5', locus_list[0], out_dir)
-        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpL5', locus_list[0], out_dir)
+        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpS5', locus_list[0], out_dir, nonsense_only=nonsense_only)
+        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, 'mmpL5', locus_list[0], out_dir, nonsense_only=nonsense_only)
     else:
-        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir)
+        df_variants = create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir, nonsense_only=nonsense_only)
 
     df_variants = pd.read_csv(f"{out_dir}/{gene}_nucleotide_variants.csv")
 
@@ -477,6 +519,8 @@ for locus in locus_list:
     else:
         fasta_dir = f"{out_dir}/{locus}/fastas"
 
+    print(f"fasta_dir: {fasta_dir}")
+
     # check if there are in silico mutations in the locus region
     if len(df_variants.query("POS > @locus_start & POS <= @locus_end")) > 0:
 
@@ -490,7 +534,10 @@ for locus in locus_list:
         if saturation_muts:
 
             # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
-            subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene}", shell=True)
+            if augment:
+                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene} --augment", shell=True)
+            else:
+                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene}", shell=True)
         
         else:
             
@@ -502,8 +549,11 @@ for locus in locus_list:
                     assert os.path.isfile(fName)
                     file.write(f"{fName}\n")
 
-            # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
-            subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus}", shell=True)
+            if augment:
+                # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
+                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus} --augment", shell=True)
+            else:
+                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus}", shell=True)
 
 
 ##################################################### STEP 4: REMOVE MUTATIONS THAT INCREASE THE ALIGNMENT LENGTH #####################################################
@@ -512,7 +562,7 @@ for locus in locus_list:
         # this is not needed for site-saturation mutagenesis because there are no indels
         if not saturation_muts:
             # yes, this works iteratively on multiple loci!!!
-            remove_mutations_to_preserve_aln_create_new_files(drug, locus)
+            remove_mutations_to_preserve_aln_create_new_files(drug, locus, out_dir, augment=augment)
 
 
 ##################################################### STEP 5: CREATE INPUT FILES (ALL SAME SEQUENCES) FOR THE REMAINING MODEL LOCI #####################################################

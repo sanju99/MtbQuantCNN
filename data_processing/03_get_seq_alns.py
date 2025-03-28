@@ -31,11 +31,11 @@ def create_MSA_script(locus, drug, AF_thresh=0.75, TRUST_data=False, insilico_mu
 
         # for these, need to make an additional subdirectory for the variable locus, and the other loci FASTAs (all H37Rv ref seqs) will be in that subdirectory
         if insilico_muts:
-            cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{locus}/fastas/{locus}.fasta --save-fasta"
+            cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {drug_data_dir}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{locus}/fastas/{locus}.fasta --save-fasta"
         elif saturation_muts:
-            cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{gene}/fastas/{locus}.fasta --save-fasta"
+            cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {drug_data_dir}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/{gene}/fastas/{locus}.fasta --save-fasta"
         else:
-            cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {data_dir}/{drug}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/fastas/{locus}.fasta --save-fasta"
+            cmd = f"python3 -u ~/MtbQuantCNN/data_processing/make_MSA.py -f {drug_data_dir}/combined_paths_for_aln.txt -start {start} -end {end} -sense {sense} -o {out_dir}/fastas/{locus}.fasta --save-fasta"
             
         if TRUST_data:
             cmd += " --f2 /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths.txt"
@@ -55,6 +55,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 
+parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+
 parser.add_argument('--TRUST', dest='TRUST_data', action='store_true', help='Flag to add TRUST samples paths to the scripts')
 
 parser.add_argument('--insilico-muts', dest='insilico_muts', action='store_true', help='Flag to add insilico mutation VCF paths to the scripts')
@@ -69,6 +71,7 @@ parser.add_argument('--AF-thresh', dest='AF_thresh', type=float, default=0.75, h
 
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
+augment = cmd_line_args.augment
 TRUST_data = cmd_line_args.TRUST_data
 insilico_muts = cmd_line_args.insilico_muts
 saturation_muts = cmd_line_args.saturation_muts
@@ -94,23 +97,29 @@ if insilico_muts or saturation_muts:
 if saturation_muts:
     assert gene is not None
 
+if augment:
+    drug_data_dir = os.path.join(data_dir, f"{drug}_augment")
+else:
+    drug_data_dir = os.path.join(data_dir, drug)
+
 # this is to remove training/validation/testing data from the alignments if we're only interested in TRUST data to save space and avoid having to re-encode nucleotide sequences for this data
-df_phenos = pd.read_csv(os.path.join(data_dir, drug, "data_for_model.csv")) 
+print(drug_data_dir)
+df_phenos = pd.read_csv(os.path.join(drug_data_dir, "data_for_model.csv")) 
 
 # create output directories
-out_dir = f"{data_dir}/{drug}"
+out_dir = drug_data_dir
 
 if AF_thresh != 0.75:
-    out_dir = f"{data_dir}/{drug}/AF_thresh_{int(AF_thresh*100)}"
+    out_dir = f"{drug_data_dir}/AF_thresh_{int(AF_thresh*100)}"
 
 if TRUST_data:
-    out_dir = f"{data_dir}/{drug}/TRUST"
+    out_dir = f"{drug_data_dir}/TRUST"
 
 if insilico_muts:
-    out_dir = f"{data_dir}/{drug}/inSilico_analysis"
+    out_dir = f"{drug_data_dir}/inSilico_analysis"
 
 if saturation_muts:
-    out_dir = f"{data_dir}/{drug}/inSilico_analysis/saturation_mutagenesis"
+    out_dir = f"{drug_data_dir}/inSilico_analysis/saturation_mutagenesis"
     
 if TRUST_data:
     if not os.path.isdir(os.path.join(out_dir, "fastas")):

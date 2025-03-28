@@ -17,6 +17,7 @@ BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
 
 model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
+results_dir = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
 
 
 # starting the memory monitoring
@@ -41,6 +42,9 @@ parser.add_argument('--amino-acid', dest='amino_acid', action='store_true', help
 
 parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
 
+parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+
+
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
@@ -49,6 +53,7 @@ include_peptide_lengths = cmd_line_args.peptide_lengths
 include_tier2 = cmd_line_args.tier2
 include_amino_acid_properties = cmd_line_args.amino_acid
 AF_thresh = cmd_line_args.AF_thresh
+augment = cmd_line_args.augment
 
 # use the non-75% AF thresh for the test data generator if specified
 if AF_thresh > 1:
@@ -68,13 +73,15 @@ locus_list = tier1_loci + tier2_loci
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
 phenotype_file = kwargs["phenotype_file"]
-genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
 
-if 'output_path' in kwargs.keys():
-    output_path = kwargs["output_path"]
-else:
-    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+output_path = f"{results_dir}/{drug}"
+
+if augment:
+    output_path += "_augment"
+
+    # same thing for the phenotypes file
+    phenotype_file = os.path.join(os.path.dirname(phenotype_file) + "_augment", os.path.basename(phenotype_file))
     
 loss_type = "L1"
 binary = False
@@ -101,9 +108,6 @@ if include_amino_acid_properties:
 if AF_thresh != 0.75:
     # separate input and output paths for different AF
     test_seq_data_path = f"{seq_data_path}_AF{int(AF_thresh*100)}"
-
-    genotype_input_directory = f"{genotype_input_directory.replace('fastas', 'AF_thresh_25/fastas')}"
-
     output_path = f"{output_path}_AF{int(AF_thresh*100)}"
 
 else:

@@ -57,8 +57,8 @@ class MtbGeneDataset(Sequence):
         if data_subset is not None:
 
             # get indices to subset the pickle file, then reset the index
-            keep_idx = df_phenos.query("category==@data_subset").index.values
-            X = X[keep_idx, :]            
+            data_subset_idx = df_phenos.query("category==@data_subset").index.values
+            X = X[data_subset_idx, :]            
             df_phenos = df_phenos.query("category==@data_subset").reset_index(drop=True)
 
         ids = df_phenos["ROLLINGDB_ID"].values
@@ -134,32 +134,8 @@ class MtbGeneDataset(Sequence):
             # read in AA property matrix
             X_amino_acid = np.load(aa_property_file)
 
-            # compute the mean and SD of the training set to scale validation and test data later
-            # scale across the sample axis (0) and the length of the amino acid sequence (2). Don't scale different biophysical properties together (1), or different genes together (3)
-            train_mean_fName = os.path.join(seq_data_path, "AA_train_mean.npy")
-            train_std_fName = os.path.join(seq_data_path, "AA_train_std.npy")
-            
-            if not os.path.isfile(train_mean_fName) or not os.path.isfile(train_std_fName):
-
-                df_train = pd.read_csv(os.path.join(data_dir, drug, "data_for_model.csv")).query("category in ['train_set', 'validation_set']").reset_index(drop=True)
-                train_idx = df_train.query("category=='train_set'").index.values
-                del df_train
-
-                # need to generalize this. Doesn't work for both AF = 25% and TRUST/in silico muts
-                # X_amino_acid_train = np.load(os.path.join(seq_data_path, "pkl_AA_train_val.npy"))
-                X_amino_acid_train = np.load(os.path.join(results_dir, drug, "pkl_AA_train_val.npy"))
-                X_amino_acid_train = X_amino_acid_train[train_idx, :]
-                
-                train_mean = X_amino_acid_train.mean(axis=(0, 2))
-                train_std = X_amino_acid_train.std(axis=(0, 2))
-                del X_amino_acid_train
-
-                np.save(train_mean_fName, train_mean)
-                np.save(train_std_fName, train_std)
-
-            else:
-                train_mean = np.load(train_mean_fName)
-                train_std = np.load(train_std_fName)
+            train_mean = np.load(os.path.join(seq_data_path, "AA_train_mean.npy"))
+            train_std = np.load(os.path.join(seq_data_path, "AA_train_std.npy"))
 
             # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
             train_mean = expand_dims_for_rescaling(train_mean, (0, 2), X_amino_acid)
@@ -180,7 +156,7 @@ class MtbGeneDataset(Sequence):
             
             # this can be done after the rescaling because rescaling uses the full training set to compute mean and std
             if data_subset is not None:
-                X_amino_acid_rescaled = X_amino_acid_rescaled[keep_idx, :]
+                X_amino_acid_rescaled = X_amino_acid_rescaled[data_subset_idx, :]
                 
             if data_idx is not None:
                 X_amino_acid_rescaled = X_amino_acid_rescaled[data_idx, :]

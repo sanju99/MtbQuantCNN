@@ -59,7 +59,6 @@ def boundedLoss_CNN(lower_bounds, upper_bounds, loss_type):
     lower_bounds = tf.squeeze(K.log(lower_bounds) / K.log(K.constant(2, shape=len(lower_bounds), dtype=tf.float64)))
     upper_bounds = tf.squeeze(K.log(upper_bounds) / K.log(K.constant(2, shape=len(upper_bounds), dtype=tf.float64)))
 
-
     def boundedLoss_CNN_helper(y_true, y_pred):
 
         # ensure same types of everything -- also remove extra dimension of 1
@@ -298,6 +297,9 @@ def train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator,
                     
             # compute loss and error. These are sums over the points in the batch
             loss, error = train_step(model, optimizer, loss_type, x_batch_train, y_batch_train)
+
+            if pd.isnull(loss) or pd.isnull(error):
+                raise ValueError("Losses are NA. Please check!!!")
             
             train_epoch_loss.append(loss)
             train_epoch_error.append(error)

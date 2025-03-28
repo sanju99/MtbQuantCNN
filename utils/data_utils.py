@@ -86,18 +86,21 @@ def split_mic_ranges(df, drug):
 
 
 
-def extract_kraken_reports(df, sample_id_col, run_id_col):
+def extract_kraken_reports(df, sample_id_col, run_id_col, out_dir=None):
 
     df_add = pd.DataFrame(columns = [sample_id_col, run_id_col, 'Kraken_Unclassified_Percent'])
     k = 0
 
+    if out_dir is None:
+        out_dir = "/n/data1/hms/dbmi/farhat/rollingDB/genomic_data"
+    
     for i, name in enumerate(df[sample_id_col].values):
 
         for run_id in np.sort(df.query(f"{sample_id_col}==@name")[run_id_col].values):
     
-            if os.path.isfile(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/{run_id}/kraken/kraken_report"):
+            if os.path.isfile(f"{out_dir}/{name}/{run_id}/kraken/kraken_report"):
         
-                df_kraken = pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/{run_id}/kraken/kraken_report", sep='\t', header=None)
+                df_kraken = pd.read_csv(f"{out_dir}/{name}/{run_id}/kraken/kraken_report", sep='\t', header=None)
 
                 kraken_unclassified = df_kraken.loc[df_kraken[3]=='U'][0].values[0]
 
@@ -109,18 +112,21 @@ def extract_kraken_reports(df, sample_id_col, run_id_col):
     
     
     
-def compute_BAM_depth_metrics(df, sample_id_col, run_id_col):
+def compute_BAM_depth_metrics(df, sample_id_col, run_id_col, out_dir=None):
 
     df_BAM_depths = pd.DataFrame(columns = [sample_id_col, run_id_col, 'Mean_Depth', 'Median_Depth', 'Prop_20x', 'Prop_10x'])
     idx = 0
+
+    if out_dir is None:
+        out_dir = "/n/data1/hms/dbmi/farhat/rollingDB/genomic_data"
     
     for i, name in enumerate(df[sample_id_col].values):
 
         run_ids = np.sort(df.query(f"{sample_id_col}==@name")[run_id_col].values)
     
-        if os.path.isfile(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/bam/{name}.depth.tsv.gz"):
+        if os.path.isfile(f"{out_dir}/{name}/bam/{name}.depth.tsv.gz"):
     
-            df_depth = pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{name}/bam/{name}.depth.tsv.gz", compression='gzip', header=None, sep='\t')
+            df_depth = pd.read_csv(f"{out_dir}/{name}/bam/{name}.depth.tsv.gz", compression='gzip', header=None, sep='\t')
         
             pass_props = []
             
@@ -144,13 +150,16 @@ def compute_BAM_depth_metrics(df, sample_id_col, run_id_col):
 
 
 
-def extract_WHO_variant_annotations(df, name_col):
+def extract_WHO_variant_annotations(df, name_col, out_dir=None):
 
     df_add = []
+
+    if out_dir is None:
+        out_dir = "/n/data1/hms/dbmi/farhat/rollingDB/genomic_data"
     
     for sample in df[name_col].unique():
 
-        fName = f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/WHO_resistance/{sample}_variants_annot.tsv"
+        fName = f"{out_dir}/{sample}/WHO_resistance/{sample}_variants_annot.tsv"
 
         if os.path.isfile(fName):
         
@@ -164,13 +173,16 @@ def extract_WHO_variant_annotations(df, name_col):
 
 
 
-def extract_WHO_resistance_predictions(df, name_col):
+def extract_WHO_resistance_predictions(df, name_col, out_dir=None):
 
     df_add = []
+
+    if out_dir is None:
+        out_dir = "/n/data1/hms/dbmi/farhat/rollingDB/genomic_data"
     
     for sample in df[name_col].unique():
 
-        fName = f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/WHO_resistance/{sample}_pred_AF_thresh_75.csv"
+        fName = f"{out_dir}/{sample}/WHO_resistance/{sample}_pred_AF_thresh_75.csv"
 
         if os.path.isfile(fName):
         
@@ -184,17 +196,20 @@ def extract_WHO_resistance_predictions(df, name_col):
 
 
 
-def extract_lineages(df, name_col):
+def extract_lineages(df, name_col, out_dir=None):
 
     df_add = []
+
+    if out_dir is None:
+        out_dir = "/n/data1/hms/dbmi/farhat/rollingDB/genomic_data"
     
     for sample in df[name_col].unique():
 
-        if os.path.isfile(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/lineage/fast_lineage_caller_output.txt"):
+        if os.path.isfile(f"{out_dir}/{sample}/lineage/fast_lineage_caller_output.txt"):
         
-            F2 = float(pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/lineage/F2_Coll2014.txt", sep='\t', header=None)[0].values[0])
+            F2 = float(pd.read_csv(f"{out_dir}/{sample}/lineage/F2_Coll2014.txt", sep='\t', header=None)[0].values[0])
     
-            df_flc = pd.read_csv(f"/n/data1/hms/dbmi/farhat/rollingDB/genomic_data/{sample}/lineage/fast_lineage_caller_output.txt", sep='\t')
+            df_flc = pd.read_csv(f"{out_dir}/{sample}/lineage/fast_lineage_caller_output.txt", sep='\t')
     
             df_flc['ROLLINGDB_ID'] = df_flc['Isolate'].str.split('_').str[0]
             
@@ -592,25 +607,16 @@ def make_AA_property_matrices(drug, genes_lst, seq_data_path, df_phenos, genotyp
 
 
 
-def create_all_loci_matrices(config_file, fasta_dir=None, isolates_lst=None):
+def create_all_loci_matrices(locus_list, genotype_input_directory, isolates_lst):
     '''
     Creates a dictionary of matrices with every nucleotide for every isolate in the given loci. This is so that we can get the CDS in the next function and compute the lengths of the translated proteins for each sample.
     '''
 
-    kwargs = yaml.safe_load(open(config_file, "r"))
-    locus_list = kwargs["tier1_loci"] + kwargs['tier2_loci']
-
-    if fasta_dir is None:
-        fasta_dir = kwargs['genotype_input_directory']
-    
-    if isolates_lst is None:
-        isolates_lst = pd.read_csv(kwargs["phenotype_file"])['ROLLINGDB_ID'].values
-
     if "MT_H37Rv" not in isolates_lst:
         isolates_lst = list(isolates_lst) + ["MT_H37Rv"]            
 
-    gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
-    X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
+    gene_coords, sense_dict = get_gene_coords(locus_list, genotype_input_directory)
+    X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, genotype_input_directory)
 
     seq_all_loci = {}
     
@@ -619,7 +625,7 @@ def create_all_loci_matrices(config_file, fasta_dir=None, isolates_lst=None):
         locus_idx = locus_list.index(locus)
         locus_pos_lst = []
 
-        seq_lst = [(seq.id, str(seq.seq)) for seq in SeqIO.parse(os.path.join(fasta_dir, f"{locus}.fasta"), "fasta")]        
+        seq_lst = [(seq.id, str(seq.seq)) for seq in SeqIO.parse(os.path.join(genotype_input_directory, f"{locus}.fasta"), "fasta")]        
         aln_len = len(seq_lst[0][1])
         seq_df = pd.DataFrame(seq_lst)
         seq_df.columns = ["Isolate", "Seq"]
@@ -646,12 +652,13 @@ def create_all_loci_matrices(config_file, fasta_dir=None, isolates_lst=None):
         assert sum(pd.isnull(locus_pos_lst)) == 0
         nuc_matrix.columns = locus_pos_lst
         seq_all_loci[locus] = nuc_matrix
+        print(f"{len(nuc_matrix)} isolates in {locus} of seqDict.pkl")
 
     return seq_all_loci
 
 
 
-def make_CDS_length_df(drug, locus_list, fasta_dir, seqDict_fName):
+def make_CDS_length_df(drug, locus_list, genotype_input_directory, seqDict_fName):
     '''
     Returns: dataframe with shape N_samples x N_loci. Each value is the length of the corresponding CDS
     '''
@@ -746,7 +753,7 @@ def make_CDS_length_df(drug, locus_list, fasta_dir, seqDict_fName):
 
 
 
-def create_AA_alns(drug, locus_list, fasta_dir, seqDict_fName):
+def create_AA_alns(drug, locus_list, genotype_input_directory, seqDict_fName):
     '''
     Writes FASTA files for the individual protein sequences associated with the model loci. 
 
@@ -842,7 +849,7 @@ def create_AA_alns(drug, locus_list, fasta_dir, seqDict_fName):
             del lengths
 
             # write to a new FASTA file for amino acid sequences. Put quotes around the name for special characters like in oxyR'
-            with open(f"{fasta_dir}/{gene}_AA.fasta", "w+") as file:
+            with open(f"{genotype_input_directory}/{gene}_AA.fasta", "w+") as file:
                 for isolate, seq in translated_sequences:
                     file.write(f">{isolate}\n")
                     file.write(seq + '-' * (longest_protein_length - len(seq)) + '\n')
@@ -1055,7 +1062,7 @@ def boundedLoss_predict(pred_df, y_pred_col="y_pred", lower_bounds_col="lower", 
 
 
 
-def get_gene_coords(locus_list, fasta_dir):
+def get_gene_coords(locus_list, genotype_input_directory):
     '''
     Use this function to get a dataframe of coordinates from the bash scripts used to generate the alignment FASTA files for every locus.
     
@@ -1089,17 +1096,17 @@ def get_gene_coords(locus_list, fasta_dir):
     
 
 
-def make_h37rv_coordinates(gene_coords, locus_list, fasta_dir):
+def make_h37rv_coordinates(gene_coords, locus_list, genotype_input_directory):
     '''
     gene_coords is 1-indexed, and for negative sense genes, start position is downstream of end position.
     '''
 
     dfs_list = []
-    
+
     for locus in locus_list:
                 
         # read in the sequences for the fasta file
-        seqs = [(seq.id, seq.seq) for seq in SeqIO.parse(os.path.join(fasta_dir, f"{locus}.fasta"), "fasta")]
+        seqs = [(seq.id, seq.seq) for seq in SeqIO.parse(os.path.join(genotype_input_directory, f"{locus}.fasta"), "fasta")]
                 
         # H37Rv is the last one
         H37Rv = list(seqs[-1][1])

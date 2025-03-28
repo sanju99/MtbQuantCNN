@@ -131,6 +131,30 @@ def get_percent_long_involvement_predictions():
 
 
 
+
+def get_timika_score_predictions():
+
+    timika_score_predictions = pd.read_csv("/n/data1/hms/dbmi/farhat/rs527/trust_project/CXR/timika/regression/trust_normal_imgs_ensemble_model_timika_predicted_labels.csv")
+    timika_score_predictions['outlier'] = 0
+    
+    timika_score_outlier_predictions = pd.read_csv("/n/data1/hms/dbmi/farhat/rs527/trust_project/CXR/timika/regression/trust_outlier_imgs_ensemble_model_timika_predicted_labels.csv")
+    timika_score_outlier_predictions['outlier'] = 1
+    
+    timika_score_predictions['pid'] = timika_score_predictions['patient_id'].str.split('_').str[0]
+    timika_score_outlier_predictions['pid'] = timika_score_outlier_predictions['patient_id'].str.split('_').str[0]
+    
+    print(f"{len(set(timika_score_outlier_predictions.pid).union(timika_score_predictions.pid))} total pids")
+
+    # preferentially keep 1B over 2B and non-outliers over outliers, in that order
+    timika_score_predictions_combined = pd.concat([timika_score_predictions, timika_score_outlier_predictions]).sort_values(['pid', 'patient_id', 'outlier'], ascending=True).drop_duplicates('pid', keep='first').reset_index(drop=True)
+    
+    timika_score_predictions_combined['sample'] = timika_score_predictions_combined['patient_id'].str.split('_').str[-1]
+        
+    return timika_score_predictions_combined[['pid', 'predicted_label', 'outlier']]
+
+
+
+
 def process_patient_metadata_better_encodings(df, TRUST_phenos, df_TTP_smear=None, include_TTP=False):
     '''
     This function makes better encodings for some columns of interest. 
@@ -740,7 +764,8 @@ def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
                                              'Lineage_3': 'Lineage 3',
                                              'Lineage_4': 'Lineage 4',
                                              'RIF_pred_MIC_ordinal': 'Predicted Rifampicin MIC, Ordinal',
-                                             'high_lung_involvement': '>20% Lung Affected'
+                                             'high_lung_involvement': '>20% Lung Affected',
+                                             'INH_lower_bound_resistant': 'INH Binary Resistance',
                                           })
 
     if sum(pd.isnull(df['plot_column'])) > 0:
@@ -803,8 +828,7 @@ def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
 
 
 
-
-def read_combine_all_TRUST_data(patient_WGS_data_fName, CNN_results_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results", F2_thresh=0.03, baseline_only=True):
+def read_combine_all_TRUST_data(patient_WGS_data_fName, drug_lineage_inclusion_dict, CNN_results_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results", F2_thresh=0.03, baseline_only=True):
     '''
     This function keeps only measured MICs and WGS samples taken in the first two weeks of treatment because we are interested in associating baseline characteristics with outcome.
     '''
@@ -911,11 +935,10 @@ def read_combine_all_TRUST_data(patient_WGS_data_fName, CNN_results_dir="/n/data
     
     for drug in drugs_lst:
 
-        if drug == 'PZA':
-            df_pred = pd.read_csv(os.path.join(CNN_results_dir, f"{drug}_amino_acid", "TRUST", "test_predictions.csv")).rename(columns={'ROLLINGDB_ID': 'SampleID', 'pred_MIC': f'{drug}_pred_MIC'})
-        else:
-            df_pred = pd.read_csv(os.path.join(CNN_results_dir, f"{drug}_lineage_amino_acid", "TRUST", "test_predictions.csv")).rename(columns={'ROLLINGDB_ID': 'SampleID', 'pred_MIC': f'{drug}_pred_MIC'})
-        
+        # which models to use for each drug
+        assert drug_lineage_inclusion_dict[drug] in ['lineage_amino_acid', 'amino_acid']
+        df_pred = pd.read_csv(os.path.join(CNN_results_dir, f"{drug}_{drug_lineage_inclusion_dict[drug]}", "TRUST", "test_predictions.csv")).rename(columns={'ROLLINGDB_ID': 'SampleID', 'pred_MIC': f'{drug}_pred_MIC'})
+
         # drop patient duplicates (because multiple WGS samples per pid)
         df_pred = df_pred.merge(df_trust_patients[['SampleID', 'Original_ID', 'pid']]).sort_values(['pid', 'Original_ID']).drop_duplicates('pid', keep='first').reset_index(drop=True)
     

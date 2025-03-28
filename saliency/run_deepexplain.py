@@ -47,6 +47,8 @@ parser.add_argument('--permutation', action='store_true', help='If provided, com
 
 parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
 
+parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
@@ -57,6 +59,7 @@ include_amino_acid_properties = cmd_line_args.amino_acid
 binary = cmd_line_args.binary
 compute_permuted_models = cmd_line_args.permutation
 AF_thresh = cmd_line_args.AF_thresh
+augment = cmd_line_args.augment
 
 # use the non-75% AF thresh for the test data generator if specified
 if AF_thresh > 1:
@@ -79,10 +82,10 @@ genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
 bounded_loss = False # for all models, set bounded_loss = False so that the bounds are not returned
 
-if 'output_path' in kwargs.keys():
-    output_path = kwargs["output_path"]
-else:
-    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+
+if augment:
+    output_path += '_augment'
     
 if drug == 'PZA':
     patience_epochs = 150

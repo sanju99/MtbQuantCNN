@@ -35,15 +35,15 @@ freschi_2020["position"] = freschi_2020["position"].astype(int)
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
                   "Clofazimine": "CFZ",
-                  "Ethionamide": "ETH",
+                  "Ethionamide": "ETO",
                   "Linezolid": "LZD",
                   "Moxifloxacin": "MXF",
                   "Capreomycin": "CAP",
-                  "Amikacin": "AMI",
+                  "Amikacin": "AMK",
                   "Pretomanid": "PTM",
                   "Pyrazinamide": "PZA",
                   "Kanamycin": "KAN",
-                  "Levofloxacin": "LEV",
+                  "Levofloxacin": "LFX",
                   "Streptomycin": "STM",
                   "Ethambutol": "EMB",
                   "Isoniazid": "INH",
@@ -127,7 +127,7 @@ def compute_saliency_score_significance(locus_idx, locus, scores_max, scores_min
             
     
 
-def multi_locus_saliency(out_dir, locus_list, sense_dict, gene_coords, fasta_dir, save=False, significance=True, sig_thresh=0.05, suffix=""):
+def multi_locus_saliency(drug, out_dir, locus_list, sense_dict, gene_coords, fasta_dir, save=False, significance=True, sig_thresh=0.05, suffix=""):
     
     # this is 1-indexed and in reverse order for negative sense genes
     X_matrix_H37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)
@@ -264,7 +264,8 @@ def multi_locus_saliency(out_dir, locus_list, sense_dict, gene_coords, fasta_dir
     if not save:
         plt.show()
     else:
-        plt.savefig(os.path.join(saliency_dir, "saliency_plots.svg"))
+        plt.savefig(f"/home/sak0914/MtbQuantCNN/results/{abbr_drug_dict[drug]}/saliency_plots.svg")
+        plt.close()
     
     return res_df
 
@@ -301,7 +302,7 @@ def did_cnn_find_pos(cnn_saliency_df, drug, cat_to_check=["1", "2"], significanc
 
 
 
-def create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos):
+def create_all_loci_matrices_for_saliency(locus_list, fasta_dir, saliency_df, df_phenos):
     '''
     Creates a dictionary of matrices with every nucleotide for every isolate in the given loci. This is to determine the variants at each site and see which are
     associated with resistance. 
@@ -342,13 +343,17 @@ def generate_saliency_plots(drug, out_dir, locus_list, fasta_dir="/n/data1/hms/d
     
     # make the genetic coordinates dataframe. Includes strand sense and locus length
     gene_coords, sense_dict = get_gene_coords(locus_list, fasta_dir)
-    saliency_df = multi_locus_saliency(out_dir, locus_list, sense_dict, gene_coords, fasta_dir, save, significance, sig_thresh, suffix)
+    saliency_df = multi_locus_saliency(drug, out_dir, locus_list, sense_dict, gene_coords, fasta_dir, save, significance, sig_thresh, suffix)
     
     # update with WHO and lineage SNP annotations (crude because only the positions are checked, not the actual SNPs)
     # saliency_df = did_cnn_find_pos(saliency_df, drug, cat_to_check, significance)
-    
-    df_phenos = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/data_for_model.csv")
-    seq_mat_all_loci = create_all_loci_matrices(locus_list, fasta_dir, saliency_df, df_phenos)
+
+    if 'augment' in out_dir:
+        df_phenos = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}_augment/data_for_model.csv").query("Span_CC==0 & category=='train_set'")
+    else:
+        df_phenos = pd.read_csv(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/{drug}/data_for_model.csv").query("Span_CC==0 & category=='train_set'")
+        
+    seq_mat_all_loci = create_all_loci_matrices_for_saliency(locus_list, fasta_dir, saliency_df, df_phenos)
     
     return saliency_df, seq_mat_all_loci
 

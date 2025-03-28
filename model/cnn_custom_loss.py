@@ -10,6 +10,7 @@ from tensorflow.keras.optimizers import Adam
 tf.config.run_functions_eagerly(True)
 
 model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
+results_dir = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
 
 # utils files are in the utils directory
 sys.path.append("utils")
@@ -49,10 +50,13 @@ parser.add_argument('--train', dest='train_model', action='store_true', help='If
 
 parser.add_argument('--CV', dest='perform_cross_validation', action='store_true', help="If true, perform 5-fold cross-validation. It false, don't.")
 
+parser.add_argument('--epochs', default=10000, type=int, help='Maximum number of epochs to train the model')
+
 parser.add_argument('--patience', default=200, type=int, help='Number of patience epochs for model training')
 
 parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
 
+parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
 
 cmd_line_args = parser.parse_args()
 
@@ -64,7 +68,9 @@ include_amino_acid_properties = cmd_line_args.amino_acid
 train_model = cmd_line_args.train_model
 perform_cross_validation = cmd_line_args.perform_cross_validation
 patience_epochs = cmd_line_args.patience
+N_epochs = cmd_line_args.epochs
 AF_thresh = cmd_line_args.AF_thresh
+augment = cmd_line_args.augment
 
 # use the non-75% AF thresh for the test data generator if specified
 if AF_thresh > 1:
@@ -85,21 +91,25 @@ BATCH_SIZE = kwargs["batch_size"]
 phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
-
-if 'output_path' in kwargs.keys():
-    output_path = kwargs["output_path"]
-else:
-    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
-
 loss_type = "L1"
 binary = False
 bounded_loss = True
-N_epochs = 10000
+
+output_path = f"{results_dir}/{drug}"
+
+if augment:
+    output_path += "_augment"
+
+    # the last folder in the directory name is "fastas", and we need to append "augment" to the second to last level
+    genotype_input_directory = os.path.join(os.path.dirname(genotype_input_directory) + "_augment", os.path.basename(genotype_input_directory))
+
+    # same thing for the phenotypes file
+    phenotype_file = os.path.join(os.path.dirname(phenotype_file) + "_augment", os.path.basename(phenotype_file))
 
 df_phenos = pd.read_csv(phenotype_file)
 df_train_val = df_phenos.query("category in ['train_set', 'validation_set']").reset_index(drop=True)
 df_test = df_phenos.query("category == 'test_set'").reset_index(drop=True)
-
+    
 seq_data_path = output_path
 
 if include_peptide_lengths:
@@ -147,20 +157,20 @@ if not os.path.isfile(os.path.join(seq_data_path, "pkl_sparse_train_val.npz")) o
                              split_groups=True
                             )
 
-# make peptide lengths dataframe if it has not already been created
-if include_peptide_lengths and not os.path.isfile(os.path.join(seq_data_path, "gene_peptide_lengths.csv")):
+# # make peptide lengths dataframe if it has not already been created
+# if include_peptide_lengths and not os.path.isfile(os.path.join(seq_data_path, "gene_peptide_lengths.csv")):
 
-    print("Creating gene peptide lengths dataframe")
+#     print("Creating gene peptide lengths dataframe")
 
-    if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-        all_loci_seq = create_all_loci_matrices(config_file)
-        pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
+#     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
+#         all_loci_seq = create_all_loci_matrices(config_file, genotype_input_directory)
+#         pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
 
-    # make dataframe for both tiers of genes, then subset them appropriately
-    locus_peptide_lengths = make_CDS_length_df(drug, kwargs["tier1_loci"] + kwargs["tier2_loci"], genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
+#     # make dataframe for both tiers of genes, then subset them appropriately
+#     locus_peptide_lengths = make_CDS_length_df(drug, kwargs["tier1_loci"] + kwargs["tier2_loci"], genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
     
-    # keep index because that's the samples column
-    locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"))
+#     # keep index because that's the samples column
+#     locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"))
 
 
 if include_amino_acid_properties:
@@ -173,7 +183,14 @@ if include_amino_acid_properties:
 
         # need to make the full pickle file of all sequences to translate, then get the amino acid properties
         if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-            all_loci_seq = create_all_loci_matrices(config_file)
+
+            print(f"{len(df_phenos['ROLLINGDB_ID'].values)} isolates")
+            print(f"genotype input directory: {genotype_input_directory}")
+            
+            all_loci_seq = create_all_loci_matrices(kwargs['tier1_loci'] + kwargs['tier2_loci'], 
+                                                    genotype_input_directory, 
+                                                    df_phenos['ROLLINGDB_ID'].values
+                                                   )
             pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
 
         # make protein FASTA files for all loci, both tiers
@@ -185,7 +202,29 @@ if include_amino_acid_properties:
                                   df_phenos, 
                                   genotype_input_directory,
                                   split_groups=True
-                                 )        
+                                 )   
+
+
+    # compute the mean and SD of the training set to scale validation and test data later
+    # scale across the sample axis (0) and the length of the amino acid sequence (2). Don't scale different biophysical properties together (1), or different genes together (3)
+    train_mean_fName = os.path.join(seq_data_path, "AA_train_mean.npy")
+    train_std_fName = os.path.join(seq_data_path, "AA_train_std.npy")
+
+    if not os.path.isfile(train_mean_fName) or not os.path.isfile(train_std_fName):
+    
+        train_idx = df_train_val.index.values
+    
+        # this is the training matrix, which was just made above by the make_AA_property_matrices function
+        X_amino_acid_train = np.load(os.path.join(seq_data_path, "pkl_AA_train_val.npy"))
+        X_amino_acid_train = X_amino_acid_train[train_idx, :]
+        
+        train_mean = X_amino_acid_train.mean(axis=(0, 2))
+        train_std = X_amino_acid_train.std(axis=(0, 2))
+        del X_amino_acid_train
+    
+        np.save(train_mean_fName, train_mean)
+        np.save(train_std_fName, train_std)
+        
 
 test_generator = MtbGeneDataset(
     drug,
@@ -247,7 +286,7 @@ if train_model:
                 bounded_loss=bounded_loss, 
                 shuffle_batches=True
             )
-          
+            
             val_generator = MtbGeneDataset(
                 drug,
                 df_train_val,
@@ -304,7 +343,7 @@ if train_model:
                         
             del train_generator
             del val_generator
-    
+        
         # save the cross-validation model results
         pd.concat(cv_model_results).to_csv(os.path.join(output_path, "results.csv"), index=False)
 
@@ -365,7 +404,7 @@ if os.path.isfile(os.path.join(output_path, "best_model.h5")):
         
     # load in the weights of the best model
     model.load_weights(os.path.join(output_path, "best_model.h5"))
-    
+
     y_pred = model.predict(
                             x=test_generator,
                             workers=4,

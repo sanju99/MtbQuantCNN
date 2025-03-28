@@ -55,6 +55,8 @@ parser.add_argument("--gene", type=str, help='For saturation mutagenesis, specif
 # use the model trained on variants with presence at an AF threshold different from the default
 parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
 
+parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+
 parser.add_argument('--permutation', action='store_true', help='If specified, get predictions using the permuted models')
 
 parser.add_argument('--predict', action='store_true', help='Get MIC predictions. If not specified, just create input data for the additional samples')
@@ -71,6 +73,7 @@ saturation_muts = cmd_line_args.saturation_muts
 locus = cmd_line_args.locus
 gene = cmd_line_args.gene
 AF_thresh = cmd_line_args.AF_thresh
+augment = cmd_line_args.augment
 permutation = cmd_line_args.permutation
 get_predictions = cmd_line_args.predict
 
@@ -97,17 +100,23 @@ if include_tier2:
 else:
     tier2_loci = []
 
+full_locus_list = kwargs["tier1_loci"] + kwargs["tier2_loci"]
+
 filter_size = kwargs["filter_size"]
 BATCH_SIZE = kwargs["batch_size"]
 phenotype_file = kwargs["phenotype_file"]
 binary_thresh = kwargs["binary_thresh"]
+genotype_input_directory = os.path.dirname(kwargs["genotype_input_directory"])
 
-if 'output_path' in kwargs.keys():
-    output_path = kwargs["output_path"]
-else:
-    output_path = f"{results_path}/{drug}"
-    
-seq_data_path = f"{results_path}/{drug}"
+output_path = f"{results_path}/{drug}"
+
+if augment:
+    output_path += "_augment"
+
+    # the last folder in the directory name is "fastas", and we need to append "augment" to the second to last level
+    genotype_input_directory += "_augment"
+
+seq_data_path = output_path
 training_data_path = output_path
 
 binary = False
@@ -124,7 +133,7 @@ if include_amino_acid_properties:
 
 if AF_thresh != 0.75:
     output_path += f"_AF{int(AF_thresh * 100)}"
-    
+
 # add an additional subdirectory for the additional dataset
 if TRUST_data:
     subdir = "TRUST"
@@ -171,7 +180,8 @@ if saturation_muts:
     no_lineage_SNPs = True
 
 data_dir = os.path.join(data_dir, drug, subdir)
-genotype_input_directory = f"{data_dir}/fastas"
+genotype_input_directory = os.path.join(genotype_input_directory, subdir, "fastas")
+print(f"genotype_input_directory: {genotype_input_directory}")
 
 seq_data_path =  os.path.join(seq_data_path, subdir)
 output_path = os.path.join(output_path, subdir)
@@ -179,8 +189,6 @@ print(f"Saving prediction results to {output_path}")
 
 if not os.path.isdir(seq_data_path):
     os.makedirs(seq_data_path)
-
-print(f"seq data path: {seq_data_path}")
 
 if not os.path.isdir(output_path):
     os.makedirs(output_path)
@@ -229,7 +237,7 @@ if not os.path.isfile(pkl_fName):
     print(f"Creating nucleotide matrices and saving to {pkl_fName}")
 
     make_nucleotide_matrices(drug, 
-                             kwargs["tier1_loci"] + kwargs['tier2_loci'],
+                             full_locus_list,
                              seq_data_path,
                              df_samples,
                              genotype_input_directory,
@@ -243,7 +251,7 @@ if not os.path.isfile(pkl_fName):
 #     print("Creating gene peptide lengths dataframe")
 
 #     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-#         all_loci_seq = create_all_loci_matrices(config_file, fasta_dir=genotype_input_directory, isolates_lst=df_samples['ROLLINGDB_ID'].values)
+#         all_loci_seq = create_all_loci_matices(config_file, genotype_input_directory, df_samples['ROLLINGDB_ID'].values)
         
 #         pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
 
@@ -261,19 +269,19 @@ if include_amino_acid_properties and not os.path.isfile(pkl_AA_fName):
     # need to make the full pickle file of all sequences to translate, then get the amino acid properties
     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
         
-        all_loci_seq = create_all_loci_matrices(config_file, fasta_dir=genotype_input_directory, isolates_lst=df_samples['ROLLINGDB_ID'].values)
+        all_loci_seq = create_all_loci_matrices(full_locus_list, genotype_input_directory, df_samples['ROLLINGDB_ID'].values)
         
         pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
 
     # make protein FASTA files for all loci, both tiers
-    create_AA_alns(drug, kwargs["tier1_loci"] + kwargs["tier2_loci"], genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
+    create_AA_alns(drug, full_locus_list, genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
 
     # because the protein left-aln length may be shorter than for the training data, get the longest protein from the training data
     df_protein_seqs = pd.read_csv(f"{training_data_path}/df_protein_seqs.csv", index_col=[0])
     
     L_longest = np.max([df_protein_seqs[col_name].apply(lambda x: len(x)).max() for col_name in df_protein_seqs.columns])
 
-    genes_lst = get_genes_lst(kwargs["tier1_loci"] + kwargs['tier2_loci'])
+    genes_lst = get_genes_lst(full_locus_list)
 
     make_AA_property_matrices(drug, 
                               genes_lst,
@@ -284,12 +292,13 @@ if include_amino_acid_properties and not os.path.isfile(pkl_AA_fName):
                               split_groups=False
                              )
 
+
 data_generator = MtbGeneDataset(
         drug,
         df_samples,
         pkl_fName,
         pkl_AA_fName,
-        seq_data_path=seq_data_path,
+        seq_data_path=training_data_path,
         binary=binary,
         cc=binary_thresh,
         tier1_loci=tier1_loci,
@@ -407,8 +416,8 @@ def get_predictions_single_model(model_architecture, model_weights_file, data_ge
 
             # scale across the sample axis (0) and the length of the amino acid sequence (2). Don't scale different biophysical properties together (1), or different genes together (3)
             # load in mean and std of the training data
-            train_mean = np.load(os.path.join(seq_data_path, "AA_train_mean.npy"))
-            train_std = np.load(os.path.join(seq_data_path, "AA_train_std.npy"))
+            train_mean = np.load(os.path.join(training_data_path, "AA_train_mean.npy"))
+            train_std = np.load(os.path.join(training_data_path, "AA_train_std.npy"))
 
             # train_mean and train_std are only 2 dimensions. So need to duplicate the arrays to make the full dataset and protein sequence lengths
             train_mean = expand_dims_for_rescaling(train_mean, (0, 2), X_ref)

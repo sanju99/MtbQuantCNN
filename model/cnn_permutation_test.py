@@ -45,6 +45,8 @@ parser.add_argument('--patience', default=100, type=int, help='Number of patienc
 
 parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, help='Allele fraction threshold. Default = 0.75')
 
+parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
@@ -54,6 +56,7 @@ include_tier2 = cmd_line_args.tier2
 include_amino_acid_properties = cmd_line_args.amino_acid
 patience_epochs = cmd_line_args.patience
 AF_thresh = cmd_line_args.AF_thresh
+augment = cmd_line_args.augment
 
 # use the non-75% AF thresh for the test data generator if specified
 if AF_thresh > 1:
@@ -75,10 +78,10 @@ phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
 
-if 'output_path' in kwargs.keys():
-    output_path = kwargs["output_path"]
-else:
-    output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
+
+if augment:
+    output_path += '_augment'
     
 loss_type = "L1"
 binary = False

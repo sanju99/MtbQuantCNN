@@ -36,9 +36,9 @@ def combine_TRUST_patient_samples(df_trust_patient_data, WGS_metadata):
     
     # rename some columns that have spaces in them
     WGS_metadata = WGS_metadata.rename(columns={"Cov Any Mean": "Cov_Any_Mean",
-                                        "Cov Unam Perc": "Cov_Unam_Perc",
-                                        "Perc. Reads Mapped": "Perc_Reads_Mapped",
-                                        "phylogenetic classification (Coll et al., 2014)": "Coll2014_Annotated"
+                                                "Cov Unam Perc": "Cov_Unam_Perc",
+                                                "Perc. Reads Mapped": "Perc_Reads_Mapped",
+                                                "phylogenetic classification (Coll et al., 2014)": "Coll2014_Annotated"
                                        })
 
     return WGS_metadata
@@ -48,7 +48,6 @@ def combine_TRUST_patient_samples(df_trust_patient_data, WGS_metadata):
 
 parser = argparse.ArgumentParser()
 
-# "./raw_data/20240826_metadata_MIC_method_updates.csv"
 parser.add_argument("-i", "--input", dest='in_fName', type=str, required=True, help='Full path to a filename for the RedCap data from the TRUST study. This has had some data cleaning done on it')
 parser.add_argument("-o", "--output", dest='out_fName', type=str, required=True, help='Full path to a file name where to store the final catalog results')
 
@@ -80,10 +79,9 @@ for fName in np.sort(trust_report_fNames)[::-1]:
     df_trust_WGS_metadata.append(df)
 
 # the Excel files above are running totals, so the most recent file has data that is also in the older files. So drop duplicates, keeping the most recent (last) one
-# also exclude WGS samples that failed
 df_trust_WGS_metadata = pd.concat(df_trust_WGS_metadata).drop_duplicates('SampleID', keep='last')#.query("status!='failed'")
 
-# combine different ID schemes (pid = patient, Original_ID and SampleID = WGS)
+# combine patient and sample IDs (pid = patient, Original_ID and SampleID = WGS)
 df_trust_combined = combine_TRUST_patient_samples(df_trust_patient_data, df_trust_WGS_metadata.reset_index(drop=True))
 
 # combine with additional WGS QC data
@@ -94,8 +92,6 @@ df_trust_combined = df_trust_combined.merge(df_geno[['SampleID', 'F2', 'Coll2014
 # Remove columns that are NaN everywhere to clean the dataframe
 df_trust_combined = df_trust_combined.dropna(how='all', axis=1)
 
-# put the IDs at the front
-# df_trust_combined.set_index(['pid', 'Original_ID', 'SampleID']).to_csv("/n/data1/hms/dbmi/farhat/rollingDB/TRUST/clinical_data/20240917_combined_patients_WGS_samples.csv")
-# "processed_data/20241122_combined_patients_WGS_samples.csv"
+# put the IDs at the front, then save
 print(f"{df_trust_combined.pid.nunique()} patients with sequencing data")
 df_trust_combined.set_index(['pid', 'Original_ID', 'SampleID']).to_csv(out_fName)

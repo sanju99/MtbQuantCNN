@@ -454,6 +454,7 @@ do
                         # merge them using samtools. -f means to overwrite file if it already exists, which is not enabled by default
                         # original bam files were sorted prior to running picard and dropping duplicates (after which they remain sorted), so samtools merge will work (required sorted bam files)
                         if [ ! -f $bam_file ]; then
+                            # -b is to specify a list of BAM files. -f is to force overwrite
                             samtools merge -f -b "$sample_bam_dir/pass_run_IDs.txt" $bam_file
                             samtools index $bam_file
                             
