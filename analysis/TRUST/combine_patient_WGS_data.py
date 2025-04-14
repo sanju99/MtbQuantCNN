@@ -48,20 +48,24 @@ def combine_TRUST_patient_samples(df_trust_patient_data, WGS_metadata):
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-i", "--input", dest='in_fName', type=str, required=True, help='Full path to a filename for the RedCap data from the TRUST study. This has had some data cleaning done on it')
-parser.add_argument("-o", "--output", dest='out_fName', type=str, required=True, help='Full path to a file name where to store the final catalog results')
+parser.add_argument("-i", "--patient_input", dest='patient_data_fName', type=str, required=True, help='Full path to a filename for the RedCap data from the TRUST study. This has had some data cleaning done on it')
+parser.add_argument("-I", "--WGS_input", dest='WGS_data_fName', type=str, default="/n/data1/hms/dbmi/farhat/rollingDB/TRUST/Illumina_culture_WGS_summary.csv", help='Full path to a filename with all WGS data and QC. Created by add_WGS_metadata_DB.py')
+parser.add_argument("-o", "--output", dest='out_fName', type=str, required=True, help='Full path to a file name of the combined WGS and patient data results')
+parser.add_argument("-d", "--dir", dest='WGS_report_directory', default="/n/data1/hms/dbmi/farhat/rollingDB/TRUST/WGS_metadata_reports", type=str, help='Directory where the Excel files of WGS metadata reports are')
 
 cmd_line_args = parser.parse_args()
-in_fName = cmd_line_args.in_fName
+patient_data_fName = cmd_line_args.patient_data_fName
+WGS_data_fName = cmd_line_args.WGS_data_fName
 out_fName = cmd_line_args.out_fName
+WGS_report_directory = cmd_line_args.WGS_report_directory
 
-df_trust_patient_data = pd.read_csv(in_fName, low_memory=False)
+df_trust_patient_data = pd.read_csv(patient_data_fName, low_memory=False)
 
 # get the patient number to match WGS IDs and pids
 df_trust_patient_data["patient_num"] = [int(patient_id.replace("T0", "")) for patient_id in df_trust_patient_data["pid"].values]
 
 # get all Excel files from this directory
-trust_report_fNames = glob.glob("/n/data1/hms/dbmi/farhat/rollingDB/TRUST/WGS_metadata_reports/*.xlsx")
+trust_report_fNames = glob.glob(f"{WGS_report_directory}/*.xlsx")
 print(f"{len(trust_report_fNames)} WGS metadata Excel files")
 
 df_trust_WGS_metadata = []
@@ -84,8 +88,8 @@ df_trust_WGS_metadata = pd.concat(df_trust_WGS_metadata).drop_duplicates('Sample
 # combine patient and sample IDs (pid = patient, Original_ID and SampleID = WGS)
 df_trust_combined = combine_TRUST_patient_samples(df_trust_patient_data, df_trust_WGS_metadata.reset_index(drop=True))
 
-# combine with additional WGS QC data
-df_geno = pd.read_csv("/n/data1/hms/dbmi/farhat/rollingDB/TRUST/WGS_data_summary.csv").dropna(subset='Lineage')
+# combine with additional WGS QC data. Drop samples that filed QC (no VCF, so they have nothing in the Lineage column)
+df_geno = pd.read_csv(WGS_data_fName).dropna(subset='Lineage')
 
 df_trust_combined = df_trust_combined.merge(df_geno[['SampleID', 'F2', 'Coll2014', 'Freschi2020', 'Lineage']], on='SampleID', how='left').reset_index(drop=True)
 

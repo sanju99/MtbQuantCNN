@@ -289,9 +289,9 @@ def introduce_snps_indels_single_seq(fName, h37Rv_region, START, END, qualThresh
                 subprocess.run(f'bgzip -c "{fName}" > "{fName}".bgz', shell=True)
     
             # tabix the bgzipped file, which will create fName.bgz.tbi
-            subprocess.run(f'tabix -0 -p vcf "{fName}".bgz -f', shell=True)
+            subprocess.run(f'tabix -p vcf "{fName}".bgz -f', shell=True)
     
-        # VCF file was indexed using 0-indexed half-open scheme, so keep START and END coords as they are
+        # vcf reader fetch uses 0-indexed half-open intervals, so leave the START and END coords as they are
         vcf_reader = vcf.Reader(filename=f"{fName}.bgz", compressed=True)
     
         # need to read in the bgzipped file in order to use fetch

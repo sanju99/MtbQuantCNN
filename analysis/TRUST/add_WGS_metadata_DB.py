@@ -1,21 +1,25 @@
 import numpy as np
-import pandas as
+import pandas as pd
 import glob, os, argparse
 
+parser = argparse.ArgumentParser()
+
 # "/n/data1/hms/dbmi/farhat/rollingDB/TRUST/clinical_data/20240826_raw_data.csv"
-parser.add_argument("-d", "--dir", dest='WGS_directory', type=str, required=True, help='Directory where the processed WGS data for the TRUST isolates is stored')
-parser.add_argument("-o", "--output", dest='out_fName', type=str, required=True, help='Full path to a file name where to store the final catalog results')
+parser.add_argument("-d", "--dir", dest='WGS_directory', type=str, default="/n/data1/hms/dbmi/farhat/rollingDB/TRUST/Illumina_culture_WGS_processed", help='Directory where the processed WGS data for the TRUST isolates is stored')
+parser.add_argument("-o", "--output", dest='out_fName', type=str, default="/n/data1/hms/dbmi/farhat/rollingDB/TRUST/Illumina_culture_WGS_summary.csv", help='Full path to a CSV file for the WGS summary')
 
 cmd_line_args = parser.parse_args()
 WGS_directory = cmd_line_args.WGS_directory
 out_fName = cmd_line_args.out_fName
 
-# "/n/data1/hms/dbmi/farhat/rollingDB/TRUST/WGS_data.csv"
-df_WGS = pd.read_csv(out_fName)
+# append to existing dataframe
+if os.path.isfile(out_fName):
+    df_WGS = pd.read_csv(out_fName)
+else:
+    df_WGS = pd.DataFrame(columns=['SampleID'])
 
-# "/n/scratch/users/s/sak0914/TRUST_variant_calling"
 all_WGS_samples = os.listdir(WGS_directory)
-df_add = pd.DataFrame(columns = ['SampleID', 'Kraken_Unclassified_Percent', 'Median_Depth', 'Prop_Sites_10x', 'Prop_Sites_20x', 'F2']).set_index('SampleID')
+df_add = pd.DataFrame(columns = ['SampleID', 'Kraken_Unclassified_Percent', 'Mean_Depth', 'Median_Depth', 'Perc_Sites_10x', 'Perc_Sites_20x', 'F2']).set_index('SampleID')
 
 df_add_flc = []
 
@@ -23,32 +27,35 @@ for i, name in enumerate(all_WGS_samples):
 
     if name not in df_WGS.SampleID.values:
         
-        kraken_report = pd.read_csv(f"/n/scratch/users/s/sak0914/TRUST_variant_calling/{name}/{name}/kraken/kraken_report", sep='\t', header=None)
+        kraken_report = pd.read_csv(f"{WGS_directory}/{name}/{name}/kraken/kraken_report", sep='\t', header=None)
     
         if 'unclassified' in kraken_report[5].values:
             kraken_unclassified = float(kraken_report.loc[kraken_report[5]=='unclassified'][0].values[0])
         else:
             kraken_unclassified = 0
     
-        if os.path.isfile(f"/n/scratch/users/s/sak0914/TRUST_variant_calling/{name}/bam/{name}.dedup.bam"):
+        if os.path.isfile(f"{WGS_directory}/{name}/bam/{name}.dedup.bam"):
     
-            df_depth = pd.read_csv(f"/n/scratch/users/s/sak0914/TRUST_variant_calling/{name}/bam/{name}.depth.tsv.gz", compression='gzip', sep='\t', header=None)
+            df_depth = pd.read_csv(f"{WGS_directory}/{name}/bam/{name}.depth.tsv.gz", compression='gzip', sep='\t', header=None)
             assert len(df_depth) == 4411532
-    
+
+            mean_depth = df_depth[2].mean()
             median_depth = df_depth[2].median()
             prop_10x = len(df_depth.loc[df_depth[2] >= 10]) / len(df_depth)
             prop_20x = len(df_depth.loc[df_depth[2] >= 20]) / len(df_depth)
     
         else:
+
+            mean_depth = np.nan
             median_depth = np.nan
             prop_10x = np.nan
             prop_20x = np.nan
     
-        if os.path.isfile(f"/n/scratch/users/s/sak0914/TRUST_variant_calling/{name}/lineage/F2_Coll2014.txt"):
+        if os.path.isfile(f"{WGS_directory}/{name}/lineage/F2_Coll2014.txt"):
             
-            F2 = pd.read_csv(f"/n/scratch/users/s/sak0914/TRUST_variant_calling/{name}/lineage/F2_Coll2014.txt", sep='\t', header=None)[0].values[0]
+            F2 = pd.read_csv(f"{WGS_directory}/{name}/lineage/F2_Coll2014.txt", sep='\t', header=None)[0].values[0]
     
-            flc = pd.read_csv(f"/n/scratch/users/s/sak0914/TRUST_variant_calling/{name}/lineage/fast_lineage_caller_output.txt", sep='\t')
+            flc = pd.read_csv(f"{WGS_directory}/{name}/lineage/fast_lineage_caller_output.txt", sep='\t')
             flc.columns = ['SampleID', 'Coll2014', 'Freschi2020', 'Lipworth2019', 'Shitikov2017', 'Stucki2016']
             
             df_add_flc.append(flc)
@@ -56,7 +63,7 @@ for i, name in enumerate(all_WGS_samples):
         else:
             F2 = np.nan
     
-        df_add.loc[name, :] = [kraken_unclassified, median_depth, prop_10x, prop_20x, F2]
+        df_add.loc[name, :] = [kraken_unclassified, mean_depth, median_depth, prop_10x*100, prop_20x*100, F2]
     
     if i % 100 == 0:
         print(i)
@@ -98,5 +105,8 @@ print(df_final.Lineage.value_counts())
 # checks
 assert len(df_final.query("Kraken_Unclassified_Percent > 20").dropna(subset='Median_Depth')) == 0
 assert len(df_final.loc[pd.isnull(df_final['F2'])].query("Kraken_Unclassified_Percent <= 20")) == 0
+
+df_final[['Freschi_Lineage_1', 'Freschi_Lineage_2']] = df_final['Freschi2020'].str.split(',', expand=True)
+df_final['Culture_Mixed_Infection'] = (df_final['Freschi2020'].str.contains(',') | df_final['Coll2014'].str.contains(',')).astype(int)
 
 df_final.to_csv(out_fName, index=False)
