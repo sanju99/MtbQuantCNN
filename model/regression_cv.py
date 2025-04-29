@@ -144,8 +144,7 @@ print(f"    Minimizing {loss_type} loss")
 
 num_cv_splits = 5
 
-# don't need to shuffle because samples within a batch are shuffled by the dataloader
-kfold_splits = StratifiedKFold(n_splits=num_cv_splits, shuffle=False)
+kfold_splits = StratifiedKFold(n_splits=num_cv_splits, shuffle=True)
 
 results = []
 

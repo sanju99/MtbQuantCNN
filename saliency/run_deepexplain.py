@@ -86,9 +86,6 @@ output_path = f"/n/data1/hms/dbmi/farhat/Sanjana/CNN_results/{drug}"
 
 if augment:
     output_path += '_augment'
-    
-if drug == 'PZA':
-    patience_epochs = 150
 
 df_phenos = pd.read_csv(phenotype_file)
 df_train_val = df_phenos.query("category in ['train_set', 'validation_set']").reset_index(drop=True)
@@ -133,7 +130,7 @@ data_generator = MtbGeneDataset(
     include_peptide_lengths=include_peptide_lengths,
     include_amino_acid_properties=include_amino_acid_properties,
     bounded_loss=bounded_loss, # don't need bounded loss for this, so don't load the bounds in
-    batch_size=BATCH_SIZE*2, # increase the batch size so that it runs faster. Memory requirements should be lower because no models are being trained here
+    batch_size=BATCH_SIZE,
     shuffle_batches=False, # don't need to shuffle test data because order doesn't matter
 )
 
@@ -157,6 +154,7 @@ X_ref_nuc = sparse.load_npz(os.path.join(seq_data_path, 'pkl_sparse_ref.npz')).t
 # keep only the number of loci specified, which is the last dimension
 X_ref_nuc = X_ref_nuc[:, :, :, :num_loci]
 
+# put in list that will hold all the NT, AA, and lineage inputs
 ref_data = [X_ref_nuc]
 
 # gene_peptide_lengths = pd.read_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"), index_col=[0])
@@ -176,7 +174,7 @@ if include_lineage:
     
     # no lineage SNPs in H37Rv, must be of shape 1 x num_lineages
     ref_lineages = np.zeros((1, lineages.shape[1]))
-    
+
     if include_peptide_lengths:
 
         # both
@@ -187,6 +185,7 @@ if include_lineage:
     else:
         # lineage only
         ref_mlp_input = ref_lineages
+        
 else:
     # peptide lengths only
     if include_peptide_lengths:
@@ -223,7 +222,7 @@ def get_saliency_scores(weights_path, data_generator, ref_data, saliency_dir, fi
         model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
 
     model.load_weights(weights_path)
-    
+
     with DeepExplain(session=tf.compat.v1.keras.backend.get_session()) as de:
 
         # initialize a DeepExplain model using the same inputs and outputs as the original model
@@ -244,6 +243,9 @@ def get_saliency_scores(weights_path, data_generator, ref_data, saliency_dir, fi
         else:
             assert np.abs(np.max(de_model.predict(ref_data)-model.predict(ref_data))) < 1e-5
 
+        print(ref_data[0].shape)
+        print(f"Reference prediction: {de_model.predict(ref_data)}, {model.predict(ref_data)}")
+
         for idx, batch in enumerate(data_generator):
 
             print(f"Working on batch {idx+1} of {len(data_generator)}")
@@ -256,12 +258,13 @@ def get_saliency_scores(weights_path, data_generator, ref_data, saliency_dir, fi
             # the data generator class always puts the inputs in a list, even if the length of the list is 1
             if len(X_train) == 1:
                 X_train = np.squeeze(X_train[0])
-        
+                                
+            # (1, 5, 4833) for Tensor nt_seq_input:0, which has shape (?, 5, 4833, 1)
             # compute attributions for the training set
             attributions = de.explain(method='deeplift', 
                                       T=target_layer, # target tensor to get attributions for
                                       X=model.inputs, # symbolic input to the network
-                                      xs=X_train, 
+                                      xs=X_train,
                                       baseline=ref_data, # if method_name == deeplift, then provide the reference data as the baseline
                                      )
 

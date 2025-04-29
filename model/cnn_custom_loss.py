@@ -258,8 +258,7 @@ if train_model:
 
     if perform_cross_validation:
 
-        # don't need to shuffle because samples within a batch are shuffled by the dataloader
-        kfold_splits = StratifiedKFold(n_splits=num_cv_splits, shuffle=False)
+        kfold_splits = StratifiedKFold(n_splits=num_cv_splits, shuffle=True)
     
         # stratify by the binary resistance phenotype only. You can pass in a dummy variable for X, which is np.zeros(len(df_train_val)) here
         for split, (train_idx, val_idx) in enumerate(kfold_splits.split(np.zeros(len(df_train_val)), df_train_val["Binary"])): 

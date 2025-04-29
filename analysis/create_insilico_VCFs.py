@@ -111,9 +111,9 @@ def create_WHO_catalog_insilico_files(drug, out_dir, include_tier2=False):
     print(f"{len(df_variants)} total WHO catalog mutations")
 
     # then run this for annotation
-    print(f"\nPlease run\n    snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList -no-downstream -no-upstream {os.path.join(out_dir, 'WHO_mutations.txt')}\n")
+    print(f"\nPlease run\n    snpEff eff Mycobacterium_tuberculosis_h37rv -noStats -fileList -no-downstream -no-upstream {os.path.join(out_dir, 'WHO_mutations.txt')}\n")
 
-    # subprocess.run(f"snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList -no-downstream -no-upstream {os.path.join(out_dir, 'WHO_mutations.txt')}", shell=True, executable='/bin/bash')
+    # subprocess.run(f"snpEff eff Mycobacterium_tuberculosis_h37rv -noStats -fileList -no-downstream -no-upstream {os.path.join(out_dir, 'WHO_mutations.txt')}", shell=True, executable='/bin/bash')
     
     return df_variants
 
@@ -191,7 +191,7 @@ def create_synthetic_VCF_saturation_mutagenesis(drug, gene, out_dir, nonsense_on
                                vcf_dir,
                               )
 
-    print(f"\nPlease run\n    snpEff eff Mycobacterium_tuberculosis_gca_000195955 -noStats -fileList -no-downstream -no-upstream {out_dir}/{gene}/{gene}_mutations.txt\n")
+    print(f"\nPlease run\n    snpEff eff Mycobacterium_tuberculosis_h37rv -noStats -fileList -no-downstream -no-upstream {out_dir}/{gene}/{gene}_mutations.txt\n")
 
     return df_site_saturation_mutagenesis_variants
 

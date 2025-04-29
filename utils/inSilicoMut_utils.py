@@ -784,7 +784,7 @@ def create_synthetic_VCF_files(df, out_fName, vcf_dir):
     
     # create a header section
     header = '##fileformat=VCFv4.1\n'
-    header += "##contig=<ID=NC_000962.3,length=4411532>\n"
+    header += "##contig=<ID=Chromosome,length=4411532>\n"
     header += '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSample\n'
 
     print(f"Creating synthetic VCF files for {df['mutation'].nunique()} mutations")
@@ -810,7 +810,7 @@ def create_synthetic_VCF_files(df, out_fName, vcf_dir):
                 vcf_file.write(header)
 
                 # write the variant that causes the mutation
-                vcf_file.write('\t'.join(['NC_000962.3', str(row["POS"]), '.', row["REF"], row["ALT"], '.', 'PASS', '.', 'GT', '1/1']) + '\n')
+                vcf_file.write('\t'.join(['Chromosome', str(row["POS"]), '.', row["REF"], row["ALT"], '.', 'PASS', '.', 'GT', '1/1']) + '\n')
 
 
 

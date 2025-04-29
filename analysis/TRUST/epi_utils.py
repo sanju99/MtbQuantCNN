@@ -666,7 +666,7 @@ def pool_imputation_results(df, num_samples, coef_col, se_col, alpha=0.05, inver
 
 
 
-def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
+def forest_plot(df, labels_dict, val_col='OR', alpha=0.05, saveName=None):
     
     # Filter out the intercept and add a "significant" column if it doesn't exist
     df = df.query("covariate != 'intercept'")
@@ -675,101 +675,7 @@ def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
     df['significant'] = df['significant'].fillna(0).astype(int)
 
     # improve the names for tick labels
-    df['plot_column'] = df['covariate'].map({'INH_monoresistant': 'Isoniazid Resistant',
-                                           'L1_L3': 'Lineages 1 or 3',
-                                           'bilateral_infiltrates': 'Bilateral Disease',
-                                           'bl_hiv': 'HIV',
-                                           'bl_prevtb': 'Previous TB Disease',
-                                           'bl_inh_monoresistant': 'INH Monoresistant',
-                                           'cxr_cavity_chest_radiograph_1': 'Cavitation',
-                                           'diabetes': 'Diabetes',
-                                           'fstrom1_baseline': 'Smoking',
-                                           'mixed_infect': 'Mixed Infection',
-                                           'screen_sex': 'Male Sex',
-                                           'screen_years': 'Age',
-                                           'smear_pos_no_contam_sputum_specimen_1': 'Smear Positivity',
-                                             'smear_positivity_baseline': 'Smear Positivity',
-                                           'total_adherence': 'Adherence Rate',
-                                           'underweight': 'Underweight',
-                                           'EMB_pred_MIC': 'Predicted EMB MIC',
-                                             'INH_pred_MIC': 'Predicted INH MIC',
-                                             'PZA_pred_MIC': 'Predicted PZA MIC',
-                                             'RIF_pred_MIC': 'Predicted RIF MIC',
-                                             'EMB_midpoint': 'Measured EMB MIC',
-                                             'INH_midpoint': 'Measured INH MIC',
-                                             'RIF_midpoint': 'Measured RIF MIC',
-                                             'EMB_pred_MIC_resistant': 'Resistant Predicted EMB MIC',
-                                             'INH_pred_MIC_resistant': 'Resistant Predicted INH MIC',
-                                             'PZA_pred_MIC_resistant': 'Resistant Predicted PZA MIC',
-                                             'RIF_pred_MIC_resistant': 'Resistant Predicted RIF MIC',
-                                             'EMB_midpoint_resistant': 'Resistant Measured EMB MIC',
-                                             'INH_midpoint_resistant': 'Resistant Measured INH MIC',
-                                             'PZA_midpoint_resistant': 'Resistant Measured PZA MIC',
-                                             'RIF_midpoint_resistant': 'Resistant Measured RIF MIC',
-                                             'RIF_AUC': 'Rifampicin PK AUC',
-                                             'INH_AUC': 'Isoniazid PK AUC',
-                                             'EMB_AUC': 'Ethambutol PK AUC',
-                                             'PZA_AUC': 'Pyrazinamide PK AUC',
-                                             'smear_grade_baseline': 'Smear Grade',
-                                             'inh_resistant': 'INH Resistant',
-                                             'cxr_miliary_chest_radiograph_1': 'Miliary TB',
-                                             'cxr_finding_chest_radiograph_1': 'Abnormal Chest X-Ray Findings',
-                                             'espR_indel': 'espR Indel',
-                                             'adherence_12week': '12-Week Adherence Rate',
-                                             'peth_value_baseline': 'PEth Value',
-                                             'HIV_High_CD4': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$',
-                                             'HIV_Low_CD4': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$',
-                                             'bl_bmi': 'BMI',
-                                             'TTP_baseline': 'TTP (Hours)',
-                                             'smoked_substance_use': 'Smoked Substance Use',
-                                             'predicted_label': '% Lung Involvement',
-                                             'high_bacterial_burden': 'High Bacterial Burden',
-                                             'smear_grade_1': 'Smear Grade',
-                                             'bl_hiv_RIF_midpoint': 'HIV x Measured RIF MIC',
-                                             'bl_hiv_INH_midpoint': 'HIV x Measured INH MIC',
-                                             'bl_hiv_RIF_midpoint_resistant': 'HIV x Resistant Measured RIF MIC',
-                                             'bl_prevtb_RIF_midpoint': 'Previous TB Disease x Measured RIF MIC',
-                                             'bl_prevtb_INH_midpoint': 'Previous TB Disease x Measured INH MIC',
-                                             'diabetes_RIF_midpoint': 'Diabetes x Measured RIF MIC',
-                                             'diabetes_INH_midpoint': 'Diabetes x Measured INH MIC',
-                                             'diabetes_RIF_midpoint_resistant': 'Diabetes x Resistant Measured RIF MIC',
-                                             'mixed_infect_RIF_midpoint': 'Mixed Infection x Measured RIF MIC',
-                                             'mixed_infect_INH_midpoint': 'Mixed Infection x Measured INH MIC',
-                                             'bl_hiv_RIF_pred_MIC': 'HIV x Predicted RIF MIC',
-                                             'bl_hiv_RIF_pred_MIC_resistant': 'HIV x Resistant RIF MIC',
-                                             'bl_hiv_INH_pred_MIC': 'HIV x Predicted INH MIC',
-                                             'bl_prevtb_RIF_pred_MIC': 'Previous TB Disease x Predicted RIF MIC',
-                                             'bl_prevtb_RIF_pred_MIC_resistant': 'Previous TB Disease x Resistant Predicted RIF MIC',
-                                             'bl_prevtb_INH_pred_MIC': 'Previous TB Disease x Predicted INH MIC',
-                                             'diabetes_RIF_pred_MIC': 'Diabetes x Predicted RIF MIC',
-                                             'diabetes_RIF_pred_MIC_resistant': 'Diabetes x Resistant Predicted RIF MIC',
-                                             'diabetes_INH_pred_MIC': 'Diabetes x Predicted INH MIC',
-                                             'mixed_infect_RIF_pred_MIC': 'Mixed Infection x Predicted RIF MIC',
-                                             'mixed_infect_RIF_pred_MIC_resistant': 'Mixed Infection x Predicted RIF MIC',
-                                             'mixed_infect_INH_pred_MIC': 'Mixed Infection x Predicted INH MIC',
-                                             'F2': 'F2 Lineage Mixing Metric',
-                                             'diabetes_bl_prevtb': 'Diabetes x Previous TB Disease',
-                                             'HIV_High_CD4_INH_pred_MIC': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$ x Predicted INH MIC',
-                                             'HIV_High_CD4_RIF_pred_MIC_high': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$ x Binarized Predicted RIF MIC',
-                                             'HIV_High_CD4_bl_prevtb': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$ x Previous TB Disease',
-                                             'HIV_High_CD4_diabetes': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$ x Diabetes',
-                                             'HIV_Low_CD4_INH_pred_MIC': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$ x Predicted INH MIC',
-                                             'HIV_Low_CD4_RIF_pred_MIC_high': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$ x Binarized Predicted RIF MIC',
-                                             'HIV_Low_CD4_bl_prevtb': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$ x Previous TB Disease',
-                                             'HIV_Low_CD4_diabetes': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$ x Diabetes',
-                                             'HIV_High_CD4_INH_midpoint': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$ x Measured INH MIC',
-                                             'HIV_High_CD4_RIF_midpoint': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$ x Measured RIF MIC',
-                                             'HIV_Low_CD4_INH_midpoint': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$ x Measured INH MIC',
-                                             'HIV_Low_CD4_RIF_midpoint': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$ x Measured RIF MIC',
-                                             'HIV_High_CD4_RIF_pred_MIC': 'HIV, CD4 ≥ 200 cells/$\mathregular{mm^3}$ x Predicted RIF MIC',
-                                             'HIV_Low_CD4_RIF_pred_MIC': 'HIV, CD4 < 200 cells/$\mathregular{mm^3}$ x Predicted RIF MIC',
-                                             'Lineage_2': 'Lineage 2',
-                                             'Lineage_3': 'Lineage 3',
-                                             'Lineage_4': 'Lineage 4',
-                                             'RIF_pred_MIC_ordinal': 'Predicted Rifampicin MIC, Ordinal',
-                                             'high_lung_involvement': '>20% Lung Affected',
-                                             'INH_lower_bound_resistant': 'INH Binary Resistance',
-                                          })
+    df['plot_column'] = df['covariate'].map(labels_dict)
 
     if sum(pd.isnull(df['plot_column'])) > 0:
         raise ValueError(f"{df.loc[pd.isnull(df['plot_column'])].covariate.values} don't have label mappings")
@@ -787,11 +693,11 @@ def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
     conf_lower_col = f"{val_col}_lower"
     conf_upper_col = f"{val_col}_upper"
     
-    # Plot significant predictors in blue
+    # Plot significant predictors in orange
     ax.errorbar(
         significant_df[val_col], range(len(significant_df)),
         xerr=[significant_df[val_col] - significant_df[conf_lower_col], significant_df[conf_upper_col] - significant_df[val_col]],
-        fmt='o', color='blue', ecolor='lightblue', capsize=3, label='Significant'
+        fmt='o', color='darkorange', ecolor='darkorange', markeredgewidth=0.7, markeredgecolor='black', capsize=3, label='Significant'
     )
 
     # Plot non-significant predictors in gray
@@ -828,8 +734,9 @@ def forest_plot(df, val_col='OR', alpha=0.05, saveName=None):
     else:
         plt.savefig(saveName, bbox_inches='tight')
         plt.close()
-
-
+        
+        
+        
 
 def read_combine_all_TRUST_data(patient_WGS_data_fName, drug_lineage_inclusion_dict, CNN_results_dir="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results", F2_thresh=0.03, baseline_only=True):
     '''
@@ -1073,8 +980,8 @@ def dummy_encode_lineages(df, lineage_col):
     # remove extra columns
     df_lineage = df_lineage.reset_index()[['pid'] + list(unique_lineages)]
     
-    # remove the column with the most 0s to consider that the baseline
-    baseline_lineage = df_lineage[unique_lineages].sum(axis=0).sort_values().index.values[0]
+    # consider the baseline to be the majority lineage (most 1s). So when you sort by the sum, take the last one
+    baseline_lineage = df_lineage[unique_lineages].sum(axis=0).sort_values().index.values[-1]
     
     del df_lineage[baseline_lineage]
     
@@ -1144,6 +1051,7 @@ def process_input_features_for_model(df, model_cols, MIC_type='none', binarize_M
                 cc = cc_df.query("Drug==@full_drug_name & Medium=='7H10'").Value.values[0]
             # df_model = determine_MIC_binarization_threshold(df_model, col, include_median=include_median)
 
+            # include bound for lower bound, not if upper bound or midpoint
             if '_lower_bound' in col:
                 df_model[f"{col}_resistant"] = (df_model[col] >= cc).astype(int)
             elif '_midpoint' in col:
@@ -1243,10 +1151,8 @@ def process_input_features_for_model(df, model_cols, MIC_type='none', binarize_M
     # print(df_model.pid.nunique())
     
     # log transform age, BMI, TTP, PETH, and MICs. Also get all columns from model_features_lst (MICs and interactions of them) with the proper suffixes. The binarized variables will end with "_high"
-    # log_transform_cols = np.unique(['screen_years', 'bl_bmi', 'peth_value_baseline', 'F2', 'RIF_AUC', 'TTP_baseline', 'predicted_label'] + [col for col in model_features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
-
     # variables with a skew coef wth an absolute values >= 2
-    log_transform_cols = np.unique(['F2', 'total_adherence', 'adherence_12week', 'RIF_AUC'] + [col for col in model_features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
+    log_transform_cols = np.unique(['peth_value_baseline', 'F2'] + [col for col in model_features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
     
     for col in log_transform_cols:
 
@@ -1347,8 +1253,7 @@ def fit_cox_hazard_ratio_model(df, df_outcome, cols_lst, event_col, time_col, MI
 
     # 2) Undo the log2-transform for the variables that were log2-transformed
     # To do this, exponentiate the coefficients, so 2**coef. SE is approximately ln(2) * 2**coef * SE(coef)
-    # log_transform_cols = np.unique(['screen_years', 'bl_bmi', 'peth_value_baseline', 'F2', 'RIF_AUC', 'TTP_baseline', 'predicted_label'] + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
-    log_transform_cols = np.unique(['F2', 'total_adherence', 'adherence_12week', 'RIF_AUC'] + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
+    log_transform_cols = np.unique(['peth_value_baseline', 'F2'] + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
     
     # the current coefficient is the factor increase if the value is multiplied by the base. i.e. if log2-transformed with beta = 2, then a doubling of x leads to a 2 * 2 = 4 multiplier on the log HR
     # so to scale it to the original scale, you would multiply by the base of the logarithm you took
@@ -1698,7 +1603,7 @@ def fit_cox_hazard_ratio_model_with_penalty(df, df_outcome, cols_lst, event_col,
     df_model_results = cph.summary
 
     # have to un-log-transform the variables that were log2-transformed
-    log_transform_cols = np.unique(['bl_bmi', 'peth_value_baseline', 'F2', 'RIF_AUC', 'TTP_baseline', 'predicted_label'] + [col for col in model_features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
+    log_transform_cols = np.unique(['peth_value_baseline', 'F2'] + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
     
     # Transform coefficients to original scale
     df_model_results['original_mean'] = df_model_results.index.map(means_dict)
