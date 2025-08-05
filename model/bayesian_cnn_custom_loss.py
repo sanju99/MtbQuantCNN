@@ -15,7 +15,6 @@ model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
 # utils files are in the utils directory
 sys.path.append("utils")
 from data_utils import *
-from analysis_utils import *
 from bayesian_model_utils import *
 from dataloader import MtbGeneDataset
 

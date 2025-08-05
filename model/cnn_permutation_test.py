@@ -10,7 +10,6 @@ tf.config.run_functions_eagerly(True)
 # utils files are in the utils_files directory
 sys.path.append("utils")
 from data_utils import *
-from analysis_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 

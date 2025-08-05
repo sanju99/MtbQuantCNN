@@ -11,7 +11,6 @@ warnings.filterwarnings("ignore")
 # sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "utils"))
 sys.path.append("utils")
 from data_utils import *
-from analysis_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
@@ -57,6 +56,8 @@ parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, h
 
 parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
 
+parser.add_argument('--binary', dest='binary', action='store_true', help='If True, use the {drug}_binary directory')
+
 parser.add_argument('--permutation', action='store_true', help='If specified, get predictions using the permuted models')
 
 parser.add_argument('--predict', action='store_true', help='Get MIC predictions. If not specified, just create input data for the additional samples')
@@ -74,6 +75,7 @@ locus = cmd_line_args.locus
 gene = cmd_line_args.gene
 AF_thresh = cmd_line_args.AF_thresh
 augment = cmd_line_args.augment
+binary = cmd_line_args.binary
 permutation = cmd_line_args.permutation
 get_predictions = cmd_line_args.predict
 
@@ -115,11 +117,16 @@ if augment:
 
     # the last folder in the directory name is "fastas", and we need to append "augment" to the second to last level
     genotype_input_directory += "_augment"
+    
+if binary:
+    output_path += "_binary"
+
+    # the last folder in the directory name is "fastas", and we need to append "augment" to the second to last level
+    genotype_input_directory += "_binary"
 
 seq_data_path = output_path
 training_data_path = output_path
 
-binary = False
 bounded_loss = False # only need predictions here, no training, so it will save on memory
     
 if include_lineage:
@@ -179,7 +186,13 @@ if saturation_muts:
     # set True so that lineage SNPs are excluded and all SNPs are 0
     no_lineage_SNPs = True
 
-data_dir = os.path.join(data_dir, drug, subdir)
+    
+if augment:
+    data_dir = os.path.join(data_dir, f"{drug}_augment", subdir)
+
+if binary:
+    data_dir = os.path.join(data_dir, f"{drug}_binary", subdir)
+
 genotype_input_directory = os.path.join(genotype_input_directory, subdir, "fastas")
 print(f"genotype_input_directory: {genotype_input_directory}")
 
@@ -202,9 +215,6 @@ if TRUST_data:
     # rename the column to ROLLINGDB_ID for consistency with the TRUST dataframe
     df_samples.columns = ['ROLLINGDB_ID']
 
-    # # increased the size of the alignment for Rv3236c
-    # if drug == 'PZA':
-    #     df_samples = df_samples.query("ROLLINGDB_ID not in ['MFS-370', 'MFS-371']")
 
 elif insilico_muts:
 
@@ -268,7 +278,7 @@ if include_amino_acid_properties and not os.path.isfile(pkl_AA_fName):
 
     # need to make the full pickle file of all sequences to translate, then get the amino acid properties
     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-        
+
         all_loci_seq = create_all_loci_matrices(full_locus_list, genotype_input_directory, df_samples['ROLLINGDB_ID'].values)
         
         pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
@@ -343,7 +353,7 @@ def get_all_sublineages_from_single_lineage(lineage_str):
 
 
 
-def get_predictions_single_model(model_architecture, model_weights_file, data_generator, df_samples, output_path, coll_2014, fName_suffix='', insilico_muts=True, include_lineage=False, include_amino_acid_properties=False):
+def get_predictions_single_model(model_architecture, model_weights_file, data_generator, df_samples, output_path, coll_2014, fName_suffix='', insilico_muts=True, include_lineage=False, include_amino_acid_properties=False, binary=False):
 
     model_architecture.load_weights(model_weights_file)
     
@@ -353,8 +363,17 @@ def get_predictions_single_model(model_architecture, model_weights_file, data_ge
         use_multiprocessing=True,
     )
     
-    df_samples["log2_pred_MIC"] = y_pred
-    df_samples["pred_MIC"] = np.exp2(y_pred)
+    if binary:
+        df_samples["pred_probability"] = y_pred
+        
+        # get the saved binarization_threshold to get the predicted labels
+        threshold_val = np.load(os.path.join(os.path.dirname(model_weights_file), "binarization_threshold.npy"))[0]
+        
+        df_samples['pred_label'] = (df_samples['pred_probability'] > threshold_val).astype(int)
+    
+    else:
+        df_samples["log2_pred_MIC"] = y_pred
+        df_samples["pred_MIC"] = np.exp2(y_pred)
 
     df_samples['ROLLINGDB_ID'] = df_samples['ROLLINGDB_ID'].str.replace('_p_', '_p.').str.replace('_c_', '_c.').str.replace('+', '*')
     df_samples.to_csv(os.path.join(output_path, f"test_predictions{fName_suffix}.csv"), index=False)
@@ -454,8 +473,12 @@ def get_predictions_single_model(model_architecture, model_weights_file, data_ge
         # else:
         #     inputs_lst.append(lineages.values)
         
-        df_lineage_pred["log2_pred_MIC"] = model_architecture.predict(inputs_lst, batch_size=BATCH_SIZE).flatten()
-        df_lineage_pred["pred_MIC"] = np.exp2(df_lineage_pred['log2_pred_MIC'])
+        if binary:
+            df_lineage_pred["pred_probability"] = model_architecture.predict(inputs_lst, batch_size=BATCH_SIZE).flatten()
+            df_lineage_pred['pred_label'] = (df_lineage_pred['pred_probability'] > threshold_val).astype(int)
+        else:
+            df_lineage_pred["log2_pred_MIC"] = model_architecture.predict(inputs_lst, batch_size=BATCH_SIZE).flatten()
+            df_lineage_pred["pred_MIC"] = np.exp2(df_lineage_pred['log2_pred_MIC'])
 
         # save one directory up because it's not locus-dependent
         df_lineage_pred.to_csv(os.path.join(os.path.dirname(output_path), f"lineage_SNP_predictions{fName_suffix}.csv"), index=False)
@@ -493,7 +516,8 @@ if get_predictions:
                                          fName_suffix=fName_suffix, 
                                          insilico_muts=insilico_muts, 
                                          include_lineage=include_lineage, 
-                                         include_amino_acid_properties=include_amino_acid_properties
+                                         include_amino_acid_properties=include_amino_acid_properties,
+                                         binary=binary
                                         )
     else:
         print(f"\nLoading model {model_weights_file}")
@@ -507,7 +531,8 @@ if get_predictions:
                                      fName_suffix='', 
                                      insilico_muts=insilico_muts, 
                                      include_lineage=include_lineage, 
-                                     include_amino_acid_properties=include_amino_acid_properties
+                                     include_amino_acid_properties=include_amino_acid_properties,
+                                     binary=binary
                                     )
 
 # returns a tuple: current, peak memory in bytes 

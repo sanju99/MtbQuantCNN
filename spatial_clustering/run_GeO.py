@@ -38,39 +38,6 @@ def compute_weight_matrix(dist_matrix):
 
 
 
-def create_X(feature_df, positions_in_distmap, column="total_mutations"):
-    """
-    Parameters:
-    feature_df: pd.DataFrame
-     with columns aa for amino acid position and total_mutations for number of mutations in that site
-    
-    positions_in_distmap: pd.Series
-        list of L positions in the distance map
-        
-    column: str, optional (default="total_mutations")
-        override use of total_mutations column for different string
-        
-    Returns:
-    np.array: an Lx1 matrix counting the number of mutations in each position of the distance map
-    
-    """
-    # initialize X with all zeros
-    X = np.zeros(shape=(len(positions_in_distmap.id), 1), dtype=float)
-    
-    # Get the index of each position
-    # note that pandas 
-    id_to_index = {int(x):int(idx) for idx,x in enumerate(positions_in_distmap.id)}
-    
-    # For positions with mutations, replace the value in the X matrix
-    for _, row in feature_df.iterrows():
-        
-        x_index = id_to_index[row.residue.astype(int)]
-        X[x_index,0] = float(row[column])
-        
-    return X
-
-
-
 def calculate_G_scores(X, w):
     """
     Calculates the Getis-Ord statistic for all L positions in the structure
@@ -136,18 +103,23 @@ def compute_GeO_score_with_permutation(values_fName):
     to_analyze = pd.read_csv(values_fName)
     
     # not all residues may have been resolved in the crystal structure, so keep only those in the test statistic dataframe
-    keep_residues = dm.residues_i.id.values.astype(int)
+    keep_residues = dm.residues_i.id.values
     to_analyze = to_analyze.query("residue in @keep_residues").reset_index(drop=True)
     
     print(f"Computing GeO scores for {len(to_analyze)} residues with {NUM_SHUFFLES} permutations")
     
     w = compute_weight_matrix(dm.dist_matrix)
     
-    X = create_X(to_analyze, dm.residues_i, column="average")
+    # X = create_X(to_analyze, dm.residues_i, column="average")
+    X = to_analyze[['average']].values
     G_scores = calculate_G_scores(X, w)
     
-    df = pd.DataFrame([dm.residues_i.id.values, G_scores.flatten()]).T
-    df.columns = ["residue", "G_score"]
+    df = pd.DataFrame([dm.residues_i.id.values, # full name (chain_residue)
+                       [res.split('_')[0] for res in dm.residues_i.id.values], # chain name
+                       dm.residues_i.coord_id.values, # within-chain residue name 
+                       G_scores.flatten()]).T
+    
+    df.columns = ["residue", "chain", "coordinate", "G_score"]
     df.to_csv(f"{absolute_path}/{output_path}/G_scores.csv", index=False)
     G_score_df = df
 

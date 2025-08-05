@@ -70,7 +70,7 @@ parser.add_argument('--saturation-muts', dest='saturation_muts', action='store_t
 # Add an optional string argument for the locus for which to perform site-saturation mutagenesis. Because there are so many variants, don't do it by default for all genes
 parser.add_argument("--gene", type=str, help='Specify the gene (not locus) for which to perform site-saturation mutagenesis. This is only used if --saturation-muts is specified')
 
-parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+parser.add_argument('--model_suffix', dest='model_suffix', help='If specified, use the {drug}_{model_suffix} directory. Must be one of "binary" or "augment" if specified.')
 
 parser.add_argument('--nonsense', dest='nonsense_only', action='store_true', help='If True, only generate synthetic sequences for nonsense mutations')
 
@@ -80,7 +80,8 @@ config_file = cmd_line_args.config_file
 include_tier2 = cmd_line_args.tier2
 gene = cmd_line_args.gene
 saturation_muts = cmd_line_args.saturation_muts
-augment = cmd_line_args.augment
+model_suffix = cmd_line_args.model_suffix
+assert model_suffix in ['binary', 'augment', None]
 nonsense_only = cmd_line_args.nonsense_only
 
 
@@ -227,7 +228,7 @@ def remove_mutations_to_preserve_aln(model_aln_df, full_aln_df, START, vcf_df):
     
     
     
-def remove_mutations_to_preserve_aln_create_new_files(drug, locus, out_dir, augment=False):
+def remove_mutations_to_preserve_aln_create_new_files(drug, locus, out_dir):
 
     START = drug_loci.query("Locus==@locus")['Start'].values[0]
 
@@ -361,8 +362,8 @@ kwargs = yaml.safe_load(open(config_file, "r"))
 
 drug = kwargs['drug']
 
-if augment:
-    out_dir = f"{data_dir}/{drug}_augment"
+if model_suffix is not None:
+    out_dir = f"{data_dir}/{drug}_{model_suffix}"
 else:
     out_dir = f"{data_dir}/{drug}"
 
@@ -534,8 +535,8 @@ for locus in locus_list:
         if saturation_muts:
 
             # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
-            if augment:
-                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene} --augment", shell=True)
+            if model_suffix is not None:
+                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene} --model_suffix {model_suffix}", shell=True)
             else:
                 subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --saturation-muts --locus {locus} --gene {gene}", shell=True)
         
@@ -549,9 +550,9 @@ for locus in locus_list:
                     assert os.path.isfile(fName)
                     file.write(f"{fName}\n")
 
-            if augment:
+            if model_suffix is not None:
                 # all mutations will be aligned, but only those with variants in the region of interest will have any changes to the alignment (the others will just be MT_H37Rv ref seq)
-                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus} --augment", shell=True)
+                subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus} --model_suffix {model_suffix}", shell=True)
             else:
                 subprocess.run(f"python3 data_processing/03_get_seq_alns.py -c config_files/config_{drug.lower()}.yaml --insilico-muts --locus {locus}", shell=True)
 
@@ -561,8 +562,8 @@ for locus in locus_list:
 
         # this is not needed for site-saturation mutagenesis because there are no indels
         if not saturation_muts:
-            # yes, this works iteratively on multiple loci!!!
-            remove_mutations_to_preserve_aln_create_new_files(drug, locus, out_dir, augment=augment)
+            # this works iteratively on multiple loci
+            remove_mutations_to_preserve_aln_create_new_files(drug, locus, out_dir)
 
 
 ##################################################### STEP 5: CREATE INPUT FILES (ALL SAME SEQUENCES) FOR THE REMAINING MODEL LOCI #####################################################

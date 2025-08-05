@@ -1,0 +1,1157 @@
+variant,pred_probability,pred_label,Locus,confidence
+pncA_p.Asp63Ala,0.938671,1,pncA,1) Assoc w R
+pncA_p.Ile133Thr,0.78258324,1,pncA,1) Assoc w R
+pncA_p.Val180Phe,0.87577677,1,pncA,1) Assoc w R
+pncA_p.Ile31Ser,0.7378951,1,pncA,1) Assoc w R
+pncA_p.Val180Gly,0.9068296,1,pncA,1) Assoc w R
+pncA_p.Val180Ala,0.95455724,1,pncA,1) Assoc w R
+pncA_p.Ile5Ser,0.93513477,1,pncA,1) Assoc w R
+pncA_p.Ile6Thr,0.9653899,1,pncA,1) Assoc w R
+pncA_p.Val155Met,0.7427484,1,pncA,1) Assoc w R
+pncA_p.Val155Gly,0.94739866,1,pncA,1) Assoc w R
+pncA_p.Val139Met,0.9843409,1,pncA,1) Assoc w R
+pncA_p.Val139Gly,0.97411203,1,pncA,1) Assoc w R
+pncA_p.Val139Ala,0.9781761,1,pncA,1) Assoc w R
+pncA_p.Ile90Ser,0.7847747,1,pncA,1) Assoc w R
+pncA_p.Val128Gly,0.9234889,1,pncA,1) Assoc w R
+pncA_p.Val125Gly,0.9468855,1,pncA,1) Assoc w R
+pncA_p.Tyr64*,0.9858949,1,pncA,1) Assoc w R
+pncA_p.Leu120Arg,0.9998493,1,pncA,1) Assoc w R
+pncA_p.Tyr34Asp,0.96916485,1,pncA,1) Assoc w R
+pncA_p.Tyr103*,0.99263835,1,pncA,1) Assoc w R
+pncA_p.His82Arg,0.9577678,1,pncA,1) Assoc w R
+pncA_p.Val7Gly,0.9763031,1,pncA,1) Assoc w R
+pncA_p.His71Tyr,0.99705446,1,pncA,1) Assoc w R
+pncA_p.Val7Leu,0.9810373,1,pncA,1) Assoc w R
+pncA_p.Gly105Asp,0.87215966,1,pncA,1) Assoc w R
+pncA_p.Gly108Arg,0.9493364,1,pncA,1) Assoc w R
+pncA_p.Gly132Ala,0.99459213,1,pncA,1) Assoc w R
+pncA_p.Gly132Ser,0.989853,1,pncA,1) Assoc w R
+pncA_p.Gly24Asp,0.3848552,1,pncA,1) Assoc w R
+pncA_p.Gly97Arg,0.99542916,1,pncA,1) Assoc w R
+pncA_p.Gly97Asp,0.98288894,1,pncA,1) Assoc w R
+pncA_p.Gly97Cys,0.9876554,1,pncA,1) Assoc w R
+pncA_p.Gly97Ser,0.9891548,1,pncA,1) Assoc w R
+pncA_p.Tyr103His,0.87012887,1,pncA,1) Assoc w R
+pncA_p.His51Arg,0.97443473,1,pncA,1) Assoc w R
+pncA_p.His51Gln,0.17662898,0,pncA,1) Assoc w R
+pncA_p.His51Pro,0.986948,1,pncA,1) Assoc w R
+pncA_p.His51Tyr,0.47218606,1,pncA,1) Assoc w R
+pncA_p.His57Arg,0.9995692,1,pncA,1) Assoc w R
+pncA_p.His57Asp,0.99373245,1,pncA,1) Assoc w R
+pncA_p.His57Tyr,0.99386036,1,pncA,1) Assoc w R
+pncA_p.Val9Gly,0.97917813,1,pncA,1) Assoc w R
+pncA_p.His71Arg,0.98208797,1,pncA,1) Assoc w R
+pncA_p.His71Pro,0.9901668,1,pncA,1) Assoc w R
+pncA_p.His51Asp,0.98571527,1,pncA,1) Assoc w R
+pncA_p.Tyr103Cys,0.6220995,1,pncA,1) Assoc w R
+pncA_p.Trp68*,0.9945502,1,pncA,1) Assoc w R
+pncA_p.Leu120Pro,0.99721646,1,pncA,1) Assoc w R
+pncA_p.Leu4Trp,0.97049916,1,pncA,1) Assoc w R
+pncA_p.Leu85Arg,0.9990375,1,pncA,1) Assoc w R
+pncA_p.Leu85Pro,0.966792,1,pncA,1) Assoc w R
+pncA_p.Ser164Pro,0.91589594,1,pncA,1) Assoc w R
+pncA_p.Ser104Arg,0.98490316,1,pncA,1) Assoc w R
+pncA_p.Pro69Leu,0.7169481,1,pncA,1) Assoc w R
+pncA_p.Lys96Arg,0.7841924,1,pncA,1) Assoc w R
+pncA_p.Pro62Leu,0.9290428,1,pncA,1) Assoc w R
+pncA_p.Pro54Leu,0.98521864,1,pncA,1) Assoc w R
+pncA_p.Leu4Ser,0.9691892,1,pncA,1) Assoc w R
+pncA_p.Pro54Arg,0.9956036,1,pncA,1) Assoc w R
+pncA_p.Lys96Glu,0.9764626,1,pncA,1) Assoc w R
+pncA_p.Lys96Thr,0.9899675,1,pncA,1) Assoc w R
+pncA_p.Met1?,0.9522466,1,pncA,1) Assoc w R
+pncA_p.Phe94Leu,0.09434396,0,pncA,1) Assoc w R
+pncA_p.Phe94Cys,0.8479041,1,pncA,1) Assoc w R
+pncA_p.Met175Arg,0.99090946,1,pncA,1) Assoc w R
+pncA_p.Phe58Leu,0.8015598,1,pncA,1) Assoc w R
+pncA_p.Phe13Ser,0.9502559,1,pncA,1) Assoc w R
+pncA_p.Phe13Ile,0.64694023,1,pncA,1) Assoc w R
+pncA_p.Lys96Gln,0.87024236,1,pncA,1) Assoc w R
+pncA_c.-11A>C,0.98118365,1,pncA,1) Assoc w R
+pncA_p.Ser59Pro,0.9947677,1,pncA,1) Assoc w R
+pncA_p.Ser66Pro,0.16691801,0,pncA,1) Assoc w R
+pncA_p.Trp68Gly,0.97332275,1,pncA,1) Assoc w R
+pncA_p.Trp68Cys,0.9105617,1,pncA,1) Assoc w R
+pncA_p.Trp68Arg,0.99441206,1,pncA,1) Assoc w R
+pncA_p.Trp119*,0.996023,1,pncA,1) Assoc w R
+pncA_p.Thr76Pro,0.983999,1,pncA,1) Assoc w R
+pncA_p.Thr76Ile,0.7283942,1,pncA,1) Assoc w R
+pncA_p.Leu151Ser,0.809654,1,pncA,1) Assoc w R
+pncA_p.Thr47Pro,0.4531919,1,pncA,1) Assoc w R
+pncA_p.Thr47Ala,0.101460606,0,pncA,1) Assoc w R
+pncA_p.Leu27Pro,0.91512275,1,pncA,1) Assoc w R
+pncA_p.Thr177Pro,0.95227134,1,pncA,1) Assoc w R
+pncA_p.Thr160Pro,0.96744245,1,pncA,1) Assoc w R
+pncA_p.Leu172Pro,0.9939356,1,pncA,1) Assoc w R
+pncA_p.Thr142Met,0.98025864,1,pncA,1) Assoc w R
+pncA_p.Thr142Ala,0.94809985,1,pncA,1) Assoc w R
+pncA_p.Thr135Pro,0.9857544,1,pncA,1) Assoc w R
+pncA_p.Leu182Ser,0.9193574,1,pncA,1) Assoc w R
+pncA_p.Leu182Trp,0.27535886,1,pncA,1) Assoc w R
+pncA_p.Leu19Pro,0.57444626,1,pncA,1) Assoc w R
+pncA_p.Ser67Pro,0.9343315,1,pncA,1) Assoc w R
+pncA_p.Leu159Arg,0.994248,1,pncA,1) Assoc w R
+pncA_c.-11A>G,0.98335874,1,pncA,1) Assoc w R
+pncA_p.Met175Val,0.9292138,1,pncA,1) Assoc w R
+pncA_c.-12T>C,0.8760643,1,pncA,1) Assoc w R
+pncA_p.Ala102Pro,0.6266763,1,pncA,1) Assoc w R
+pncA_p.Asp49Ala,0.95396346,1,pncA,1) Assoc w R
+pncA_p.Asp49Gly,0.9873924,1,pncA,1) Assoc w R
+pncA_p.Gln141*,0.9917935,1,pncA,1) Assoc w R
+pncA_p.Asp8Glu,0.9783503,1,pncA,1) Assoc w R
+pncA_p.Gln122*,0.99696577,1,pncA,1) Assoc w R
+pncA_p.Gln10*,0.9553101,1,pncA,1) Assoc w R
+pncA_p.Gln10Pro,0.99034584,1,pncA,1) Assoc w R
+pncA_p.Asp12Gly,0.85070544,1,pncA,1) Assoc w R
+pncA_p.Gln10His,0.9715812,1,pncA,1) Assoc w R
+pncA_p.Asp12Glu,0.100126326,0,pncA,1) Assoc w R
+pncA_p.Asp129_Val131del,0.99127126,1,pncA,1) Assoc w R
+pncA_p.Cys72Arg,0.9843664,1,pncA,1) Assoc w R
+pncA_c.-5delG,0.22717836,1,pncA,1) Assoc w R
+pncA_p.Cys14Arg,0.9784277,1,pncA,1) Assoc w R
+pncA_p.Asp12Ala,0.7150761,1,pncA,1) Assoc w R
+pncA_p.Asp8Asn,0.97197044,1,pncA,1) Assoc w R
+pncA_p.Cys138Arg,0.9848536,1,pncA,1) Assoc w R
+pncA_p.Gln10Arg,0.98357284,1,pncA,1) Assoc w R
+pncA_p.Ala134Val,0.69313085,1,pncA,1) Assoc w R
+pncA_p.Gln141Pro,0.99005294,1,pncA,1) Assoc w R
+pncA_p.Asp8Gly,0.965809,1,pncA,1) Assoc w R
+pncA_p.Ala146Thr,0.6932927,1,pncA,1) Assoc w R
+pncA_p.Arg154Met,0.89605826,1,pncA,1) Assoc w R
+pncA_p.Arg154Gly,0.8687984,1,pncA,1) Assoc w R
+pncA_p.Ala146Val,0.9503199,1,pncA,1) Assoc w R
+pncA_p.Asp136Gly,0.7938444,1,pncA,1) Assoc w R
+pncA_p.Glu127_Asp129del,0.9982827,1,pncA,1) Assoc w R
+pncA_p.Leu116Pro,0.32663342,1,pncA,2) Assoc w R - Interim
+pncA_p.Leu116Arg,0.99697644,1,pncA,2) Assoc w R - Interim
+pncA_p.Thr160Lys,0.59089184,1,pncA,2) Assoc w R - Interim
+pncA_p.Ile90Thr,0.77572024,1,pncA,2) Assoc w R - Interim
+pncA_p.Val125Phe,0.36640996,1,pncA,2) Assoc w R - Interim
+pncA_p.Thr142Pro,0.8759208,1,pncA,2) Assoc w R - Interim
+pncA_p.Ser18*,0.95435774,1,pncA,2) Assoc w R - Interim
+pncA_p.Val130Gly,0.22963095,1,pncA,2) Assoc w R - Interim
+pncA_p.Val130Met,0.6192676,1,pncA,2) Assoc w R - Interim
+pncA_p.Val131Gly,0.9247544,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp63Gly,0.84446216,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp12Asn,0.4691783,1,pncA,2) Assoc w R - Interim
+pncA_p.Val139Leu,0.792328,1,pncA,2) Assoc w R - Interim
+pncA_p.Thr142Lys,0.9805681,1,pncA,2) Assoc w R - Interim
+pncA_p.Val155Ala,0.92124355,1,pncA,2) Assoc w R - Interim
+pncA_p.Ile90Asn,0.9673891,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp8Ala,0.8163432,1,pncA,2) Assoc w R - Interim
+pncA_p.Ser164*,0.9798591,1,pncA,2) Assoc w R - Interim
+pncA_p.Thr100Pro,0.8384049,1,pncA,2) Assoc w R - Interim
+pncA_p.Val163Ala,0.073109716,0,pncA,2) Assoc w R - Interim
+pncA_p.Thr114Pro,0.031281173,0,pncA,2) Assoc w R - Interim
+pncA_p.Ser104Ile,0.124690294,0,pncA,2) Assoc w R - Interim
+pncA_p.Val131Phe,0.74909556,1,pncA,2) Assoc w R - Interim
+pncA_p.Leu159Val,0.07684851,0,pncA,2) Assoc w R - Interim
+pncA_p.Asp136Val,0.73588985,1,pncA,2) Assoc w R - Interim
+pncA_p.Thr61Pro,0.10540941,0,pncA,2) Assoc w R - Interim
+pncA_p.Trp119Arg,0.9993377,1,pncA,2) Assoc w R - Interim
+pncA_p.Trp119Cys,0.28146732,1,pncA,2) Assoc w R - Interim
+pncA_p.Trp119Gly,0.6580966,1,pncA,2) Assoc w R - Interim
+pncA_p.Trp119Leu,0.1957267,0,pncA,2) Assoc w R - Interim
+pncA_p.Ala143Gly,0.1487658,0,pncA,2) Assoc w R - Interim
+pncA_p.Ala102Thr,0.44477192,1,pncA,2) Assoc w R - Interim
+pncA_p.Ser66*,0.98834527,1,pncA,2) Assoc w R - Interim
+pncA_p.Leu35Pro,0.17834187,0,pncA,2) Assoc w R - Interim
+pncA_p.Trp68Leu,0.7424412,1,pncA,2) Assoc w R - Interim
+pncA_p.Ala171Pro,0.095216304,0,pncA,2) Assoc w R - Interim
+pncA_p.Asp49Asn,0.93742335,1,pncA,2) Assoc w R - Interim
+pncA_p.Tyr103Asp,0.81034446,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp49Glu,0.12234312,0,pncA,2) Assoc w R - Interim
+pncA_c.-7T>C,0.8736486,1,pncA,2) Assoc w R - Interim
+pncA_p.Leu120Gln,0.99577683,1,pncA,2) Assoc w R - Interim
+pncA_p.Ser67*,0.9861467,1,pncA,2) Assoc w R - Interim
+pncA_p.Ala178_Ser179del,0.28438434,1,pncA,2) Assoc w R - Interim
+pncA_p.Thr168Pro,0.5486665,1,pncA,2) Assoc w R - Interim
+pncA_p.Ala146Glu,0.92469287,1,pncA,2) Assoc w R - Interim
+pncA_p.Leu159Pro,0.56610715,1,pncA,2) Assoc w R - Interim
+pncA_p.Tyr34Ser,0.17550683,0,pncA,2) Assoc w R - Interim
+pncA_p.Tyr34*,0.9853418,1,pncA,2) Assoc w R - Interim
+pncA_p.Tyr41*,0.98935133,1,pncA,2) Assoc w R - Interim
+pncA_p.Tyr64Asp,0.5455569,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp63_Ser67delinsGlu,0.098382294,0,pncA,2) Assoc w R - Interim
+pncA_p.Tyr95Asp,0.10482529,0,pncA,2) Assoc w R - Interim
+pncA_p.Tyr95*,0.99869156,1,pncA,2) Assoc w R - Interim
+pncA_p.Tyr99*,0.987921,1,pncA,2) Assoc w R - Interim
+pncA_c.-11A>T,0.93689483,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp8Tyr,0.7554196,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp8His,0.64743155,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly78Val,0.2688334,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly78Ser,0.407931,1,pncA,2) Assoc w R - Interim
+pncA_p.Pro54Gln,0.90496194,1,pncA,2) Assoc w R - Interim
+pncA_p.Ile31Thr,0.3726911,1,pncA,2) Assoc w R - Interim
+pncA_p.Ala46Val,0.6583052,1,pncA,2) Assoc w R - Interim
+pncA_p.Arg121Pro,0.50764376,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly17Asp,0.20295477,0,pncA,2) Assoc w R - Interim
+pncA_p.Phe94Ser,0.92113763,1,pncA,2) Assoc w R - Interim
+pncA_p.Arg140Pro,0.9122634,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly162Asp,0.9791873,1,pncA,2) Assoc w R - Interim
+pncA_p.Met175Ile,0.07437533,0,pncA,2) Assoc w R - Interim
+pncA_p.Met175Thr,0.88578415,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly132Cys,0.909655,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly132Asp,0.9805608,1,pncA,2) Assoc w R - Interim
+pncA_p.Phe58Ser,0.954355,1,pncA,2) Assoc w R - Interim
+pncA_p.Glu107*,0.9875648,1,pncA,2) Assoc w R - Interim
+pncA_p.Phe58Cys,0.9000089,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly108Glu,0.85523486,1,pncA,2) Assoc w R - Interim
+pncA_p.Glu111*,0.99152374,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly105Val,0.33079076,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly101*,0.9873303,1,pncA,2) Assoc w R - Interim
+pncA_p.Glu91*,0.99586296,1,pncA,2) Assoc w R - Interim
+pncA_p.Phe13Leu,0.15216017,0,pncA,2) Assoc w R - Interim
+pncA_p.Glu181*,0.08436629,0,pncA,2) Assoc w R - Interim
+pncA_p.Glu174*,0.9276366,1,pncA,2) Assoc w R - Interim
+pncA_p.Phe106Ser,0.6852313,1,pncA,2) Assoc w R - Interim
+pncA_p.Glu173*,0.98969734,1,pncA,2) Assoc w R - Interim
+pncA_p.Glu15*,0.9459337,1,pncA,2) Assoc w R - Interim
+pncA_p.Glu144*,0.97428274,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly97Val,0.06871009,0,pncA,2) Assoc w R - Interim
+pncA_p.Asp126_Val130del,0.9990531,1,pncA,2) Assoc w R - Interim
+pncA_p.Gly78Asp,0.94420666,1,pncA,2) Assoc w R - Interim
+pncA_p.Cys14Trp,0.3340395,1,pncA,2) Assoc w R - Interim
+pncA_p.Val93Leu,0.9086064,1,pncA,2) Assoc w R - Interim
+pncA_p.Pro54Ser,0.54559696,1,pncA,2) Assoc w R - Interim
+pncA_p.Val93Ala,0.09899536,0,pncA,2) Assoc w R - Interim
+pncA_p.Val7Phe,0.8207989,1,pncA,2) Assoc w R - Interim
+pncA_p.Cys14*,0.9550979,1,pncA,2) Assoc w R - Interim
+pncA_p.Lys48Thr,0.4695327,1,pncA,2) Assoc w R - Interim
+pncA_p.Phe106Leu,0.07436544,0,pncA,2) Assoc w R - Interim
+pncA_p.Lys48Glu,0.7267269,1,pncA,2) Assoc w R - Interim
+pncA_p.Ser104_Gly108delinsArg,0.2224611,1,pncA,2) Assoc w R - Interim
+pncA_p.Asp129Asn,0.2547574,1,pncA,2) Assoc w R - Interim
+pncA_p.Val44Gly,0.2702359,1,pncA,2) Assoc w R - Interim
+pncA_p.Val21Gly,0.15421692,0,pncA,2) Assoc w R - Interim
+pncA_p.Ser104Gly,0.4647623,1,pncA,2) Assoc w R - Interim
+pncA_p.Thr135Asn,0.06647092,0,pncA,2) Assoc w R - Interim
+pncA_p.Val7Ala,0.7153603,1,pncA,2) Assoc w R - Interim
+pncA_p.Ala3Glu,0.07861662,0,pncA,2) Assoc w R - Interim
+pncA_p.Ala171Glu,0.8172455,1,pncA,2) Assoc w R - Interim
+pncA_p.Pro62Thr,0.119689226,0,pncA,2) Assoc w R - Interim
+pncA_p.His137Pro,0.1469655,0,pncA,2) Assoc w R - Interim
+pncA_p.His57Leu,0.94457567,1,pncA,2) Assoc w R - Interim
+pncA_p.His57Gln,0.09070039,0,pncA,2) Assoc w R - Interim
+pncA_p.Pro62Ser,0.10840309,0,pncA,2) Assoc w R - Interim
+pncA_p.Pro54Thr,0.0908533,0,pncA,2) Assoc w R - Interim
+pncA_p.His43Pro,0.7014761,1,pncA,2) Assoc w R - Interim
+pncA_p.Pro62Arg,0.99018395,1,pncA,2) Assoc w R - Interim
+pncA_p.Cys72Tyr,0.7751557,1,pncA,2) Assoc w R - Interim
+pncA_p.Lys96Asn,0.9042468,1,pncA,2) Assoc w R - Interim
+pncA_p.Ala46Glu,0.9236637,1,pncA,2) Assoc w R - Interim
+pncA_p.Lys48_Val155delinsMet,0.99999964,1,pncA,3) Uncertain significance
+pncA_p.Leu19_Val21del,0.9917301,1,pncA,3) Uncertain significance
+pncA_p.Asp129del,0.98899794,1,pncA,3) Uncertain significance
+pncA_p.Leu19Arg,0.2657534,1,pncA,3) Uncertain significance
+pncA_p.Asp136_Leu156del,0.99104726,1,pncA,3) Uncertain significance
+pncA_p.Lys48Asn,0.08721045,0,pncA,3) Uncertain significance
+pncA_p.Asn11His,0.08285177,0,pncA,3) Uncertain significance
+pncA_p.Asp110Gly,0.085489094,0,pncA,3) Uncertain significance
+pncA_p.Asp110_Asn112del,0.92178106,1,pncA,3) Uncertain significance
+pncA_p.Arg2Trp,0.13558772,0,pncA,3) Uncertain significance
+pncA_p.Lys96Met,0.980572,1,pncA,3) Uncertain significance
+pncA_p.Asp12His,0.17506832,0,pncA,3) Uncertain significance
+pncA_p.Asn149Asp,0.063798904,0,pncA,3) Uncertain significance
+pncA_p.Leu27Gln,0.9591937,1,pncA,3) Uncertain significance
+pncA_p.Asn11Ser,0.080289274,0,pncA,3) Uncertain significance
+pncA_p.Asp129Gly,0.11021054,0,pncA,3) Uncertain significance
+pncA_p.Leu4Phe,0.095243156,0,pncA,3) Uncertain significance
+pncA_p.Leu116Val,0.05627796,0,pncA,3) Uncertain significance
+pncA_p.Asp136Asn,0.0929299,0,pncA,3) Uncertain significance
+pncA_p.Gln10Leu,0.91185546,1,pncA,3) Uncertain significance
+pncA_p.Gln10Lys,0.08691734,0,pncA,3) Uncertain significance
+pncA_p.His43Tyr,0.0757547,0,pncA,3) Uncertain significance
+pncA_p.His137Tyr,0.12078178,0,pncA,3) Uncertain significance
+pncA_p.His137Gln,0.07293379,0,pncA,3) Uncertain significance
+pncA_p.His137Asn,0.12535086,0,pncA,3) Uncertain significance
+pncA_p.Gly78Cys,0.2150088,1,pncA,3) Uncertain significance
+pncA_p.Gly60_Thr61del,0.99921036,1,pncA,3) Uncertain significance
+pncA_p.Gly55del,0.9990965,1,pncA,3) Uncertain significance
+pncA_p.Gly24Val,0.09093556,0,pncA,3) Uncertain significance
+pncA_p.Glu107del,0.99159575,1,pncA,3) Uncertain significance
+pncA_p.Gly17Val,0.09473041,0,pncA,3) Uncertain significance
+pncA_p.Cys72Trp,0.07199639,0,pncA,3) Uncertain significance
+pncA_p.Gly17Ser,0.093978405,0,pncA,3) Uncertain significance
+pncA_p.Gly17Ala,0.122829676,0,pncA,3) Uncertain significance
+pncA_p.Gly17_Ala25del,0.9982314,1,pncA,3) Uncertain significance
+pncA_p.Gly162Ser,0.11791405,0,pncA,3) Uncertain significance
+pncA_p.Gly162Arg,0.98977786,1,pncA,3) Uncertain significance
+pncA_p.Glu107Gly,0.09729919,0,pncA,3) Uncertain significance
+pncA_p.Gly132Arg,0.92407334,1,pncA,3) Uncertain significance
+pncA_p.Gly132_Thr135del,0.48343247,1,pncA,3) Uncertain significance
+pncA_p.Gly124Ser,0.07407296,0,pncA,3) Uncertain significance
+pncA_p.Gly105Ser,0.098006904,0,pncA,3) Uncertain significance
+pncA_p.Glu37Val,0.09503481,0,pncA,3) Uncertain significance
+pncA_p.Glu37Ala,0.07981649,0,pncA,3) Uncertain significance
+pncA_p.Glu174Asp,0.08278102,0,pncA,3) Uncertain significance
+pncA_p.Gly17Arg,0.22021082,1,pncA,3) Uncertain significance
+pncA_p.His57Pro,0.9906324,1,pncA,3) Uncertain significance
+pncA_p.Cys72Phe,0.88926834,1,pncA,3) Uncertain significance
+pncA_p.Cys14Tyr,0.086112946,0,pncA,3) Uncertain significance
+pncA_p.Asp136Glu,0.07287958,0,pncA,3) Uncertain significance
+pncA_p.Leu182Phe,0.09639329,0,pncA,3) Uncertain significance
+pncA_p.Leu172Arg,0.98610926,1,pncA,3) Uncertain significance
+pncA_p.Asp136His,0.12629789,0,pncA,3) Uncertain significance
+pncA_p.Asp136Tyr,0.21543643,1,pncA,3) Uncertain significance
+pncA_p.Leu156Pro,0.2320916,1,pncA,3) Uncertain significance
+pncA_p.Leu151Trp,0.07526836,0,pncA,3) Uncertain significance
+pncA_p.Asp145Glu,0.08286083,0,pncA,3) Uncertain significance
+pncA_p.Asp145Tyr,0.07621613,0,pncA,3) Uncertain significance
+pncA_p.Asp158Asn,0.07776159,0,pncA,3) Uncertain significance
+pncA_p.Asp49Tyr,0.8434146,1,pncA,3) Uncertain significance
+pncA_p.Asp56His,0.10510787,0,pncA,3) Uncertain significance
+rpsA_p.Val80Phe,0.065988034,0,rpsA,3) Uncertain significance
+pncA_p.Asp63Glu,0.074270576,0,pncA,3) Uncertain significance
+pncA_p.Asp63Val,0.915776,1,pncA,3) Uncertain significance
+pncA_p.Asp80Val,0.101312846,0,pncA,3) Uncertain significance
+pncA_p.Asp86Gly,0.080109894,0,pncA,3) Uncertain significance
+pncA_p.Ile6Val,0.08176789,0,pncA,3) Uncertain significance
+pncA_p.Ile6Ser,0.4349208,1,pncA,3) Uncertain significance
+pncA_p.Ile6_Val7del,0.99985445,1,pncA,3) Uncertain significance
+pncA_p.Ile5Thr,0.33467,1,pncA,3) Uncertain significance
+pncA_p.Cys138Ser,0.07452783,0,pncA,3) Uncertain significance
+pncA_p.Ile133Ser,0.5550803,1,pncA,3) Uncertain significance
+pncA_p.Ile133Asn,0.6815954,1,pncA,3) Uncertain significance
+pncA_p.His82Asp,0.07561374,0,pncA,3) Uncertain significance
+pncA_p.Cys14Gly,0.40446556,1,pncA,3) Uncertain significance
+pncA_p.Cys14Phe,0.08757725,0,pncA,3) Uncertain significance
+pncA_p.Asp136Ala,0.8182926,1,pncA,3) Uncertain significance
+pncA_p.His71Gln,0.14884928,0,pncA,3) Uncertain significance
+pncA_p.Ser65Pro,0.06997743,0,pncA,3) Uncertain significance
+pncA_p.Phe81_His82del,0.9989234,1,pncA,3) Uncertain significance
+rpsA_p.Glu394Gly,0.06853184,0,rpsA,3) Uncertain significance
+rpsA_p.Glu408Lys,0.06814301,0,rpsA,3) Uncertain significance
+rpsA_p.Glu415Asp,0.0678744,0,rpsA,3) Uncertain significance
+rpsA_p.Glu422Ala,0.06882444,0,rpsA,3) Uncertain significance
+rpsA_p.Glu60Gln,0.07323372,0,rpsA,3) Uncertain significance
+rpsA_p.Glu67Asp,0.10697922,0,rpsA,3) Uncertain significance
+rpsA_p.Gly17Ala,0.07153368,0,rpsA,3) Uncertain significance
+rpsA_p.Gly229Cys,0.07367885,0,rpsA,3) Uncertain significance
+rpsA_p.Gly316Val,0.06809807,0,rpsA,3) Uncertain significance
+rpsA_p.Gly36Ala,0.069500804,0,rpsA,3) Uncertain significance
+rpsA_p.His247Leu,0.07616606,0,rpsA,3) Uncertain significance
+rpsA_p.His322Tyr,0.06902036,0,rpsA,3) Uncertain significance
+rpsA_p.His425Arg,0.06710163,0,rpsA,3) Uncertain significance
+rpsA_p.Ile165Leu,0.06793612,0,rpsA,3) Uncertain significance
+rpsA_p.Ile173Thr,0.08068225,0,rpsA,3) Uncertain significance
+rpsA_p.Ile26Met,0.07206261,0,rpsA,3) Uncertain significance
+rpsA_p.Ile296Val,0.06618881,0,rpsA,3) Uncertain significance
+rpsA_p.Ile30Val,0.06761408,0,rpsA,3) Uncertain significance
+rpsA_p.Ile391Val,0.06841245,0,rpsA,3) Uncertain significance
+rpsA_p.Ile55Val,0.07045612,0,rpsA,3) Uncertain significance
+rpsA_p.Ile70Thr,0.085286975,0,rpsA,3) Uncertain significance
+rpsA_p.Leu102Val,0.069462955,0,rpsA,3) Uncertain significance
+rpsA_p.Leu144Pro,0.06768146,0,rpsA,3) Uncertain significance
+rpsA_p.Glu394Ala,0.0682804,0,rpsA,3) Uncertain significance
+rpsA_p.Glu386Lys,0.068701,0,rpsA,3) Uncertain significance
+rpsA_p.Glu386Ala,0.06865135,0,rpsA,3) Uncertain significance
+rpsA_p.Glu372Lys,0.06866285,0,rpsA,3) Uncertain significance
+rpsA_p.Asp15Gly,0.07495859,0,rpsA,3) Uncertain significance
+rpsA_p.Asp15Tyr,0.07453883,0,rpsA,3) Uncertain significance
+rpsA_p.Asp160Ala,0.08241722,0,rpsA,3) Uncertain significance
+rpsA_p.Asp256Gly,0.071026295,0,rpsA,3) Uncertain significance
+rpsA_p.Asp27Asn,0.07082477,0,rpsA,3) Uncertain significance
+rpsA_p.Asp27Gly,0.070189506,0,rpsA,3) Uncertain significance
+rpsA_p.Asp368Asn,0.06790054,0,rpsA,3) Uncertain significance
+rpsA_p.Asp368Glu,0.068093,0,rpsA,3) Uncertain significance
+rpsA_p.Asp374Asn,0.06860685,0,rpsA,3) Uncertain significance
+rpsA_p.Asp37Gly,0.074255764,0,rpsA,3) Uncertain significance
+rpsA_p.Asp385Gly,0.06878719,0,rpsA,3) Uncertain significance
+rpsA_p.Leu161Met,0.06868085,0,rpsA,3) Uncertain significance
+rpsA_p.Asp447Gly,0.06745675,0,rpsA,3) Uncertain significance
+rpsA_p.Asp75Gly,0.07686901,0,rpsA,3) Uncertain significance
+rpsA_p.Asp84Asn,0.06985018,0,rpsA,3) Uncertain significance
+rpsA_p.Gln162Pro,0.06869492,0,rpsA,3) Uncertain significance
+rpsA_p.Gln207Lys,0.07077089,0,rpsA,3) Uncertain significance
+rpsA_p.Gln410Arg,0.06775886,0,rpsA,3) Uncertain significance
+rpsA_p.Gln431Arg,0.06774816,0,rpsA,3) Uncertain significance
+rpsA_p.Gln469Glu,0.06890693,0,rpsA,3) Uncertain significance
+rpsA_p.Glu121Asp,0.068520606,0,rpsA,3) Uncertain significance
+rpsA_p.Glu154Gly,0.074623734,0,rpsA,3) Uncertain significance
+rpsA_p.Glu197Lys,0.08082682,0,rpsA,3) Uncertain significance
+rpsA_p.Glu367Lys,0.06871271,0,rpsA,3) Uncertain significance
+rpsA_p.Asp54Ala,0.07079682,0,rpsA,3) Uncertain significance
+rpsA_p.Asp15Ala,0.07713276,0,rpsA,3) Uncertain significance
+rpsA_p.Leu161Val,0.068159014,0,rpsA,3) Uncertain significance
+rpsA_p.Leu89Arg,0.10428855,0,rpsA,3) Uncertain significance
+rpsA_p.Thr194Ala,0.07469487,0,rpsA,3) Uncertain significance
+rpsA_p.Thr210Ala,0.066895366,0,rpsA,3) Uncertain significance
+rpsA_p.Thr259Ile,0.06878951,0,rpsA,3) Uncertain significance
+rpsA_p.Thr42Ala,0.0703097,0,rpsA,3) Uncertain significance
+rpsA_p.Thr59Ala,0.07912329,0,rpsA,3) Uncertain significance
+rpsA_p.Thr5Ala,0.07305327,0,rpsA,3) Uncertain significance
+rpsA_p.Thr5Pro,0.07576692,0,rpsA,3) Uncertain significance
+rpsA_p.Thr92Ile,0.06984922,0,rpsA,3) Uncertain significance
+rpsA_p.Trp113Leu,0.06735811,0,rpsA,3) Uncertain significance
+rpsA_p.Trp190Arg,0.07877076,0,rpsA,3) Uncertain significance
+rpsA_p.Tyr369Cys,0.06857559,0,rpsA,3) Uncertain significance
+rpsA_p.Tyr390Cys,0.06762561,0,rpsA,3) Uncertain significance
+rpsA_p.Val126Phe,0.06954762,0,rpsA,3) Uncertain significance
+rpsA_p.Val183Met,0.12673181,0,rpsA,3) Uncertain significance
+rpsA_p.Val215Ile,0.06836942,0,rpsA,3) Uncertain significance
+rpsA_p.Val226Ala,0.06778774,0,rpsA,3) Uncertain significance
+rpsA_p.Val254Gly,0.07203245,0,rpsA,3) Uncertain significance
+rpsA_p.Val258Ile,0.069986224,0,rpsA,3) Uncertain significance
+rpsA_p.Val260Ile,0.07627383,0,rpsA,3) Uncertain significance
+rpsA_p.Val265Ile,0.07081872,0,rpsA,3) Uncertain significance
+rpsA_p.Val297Ala,0.06892574,0,rpsA,3) Uncertain significance
+rpsA_p.Val321Met,0.06912622,0,rpsA,3) Uncertain significance
+rpsA_p.Val62Leu,0.07482779,0,rpsA,3) Uncertain significance
+rpsA_p.Thr115Ala,0.06834605,0,rpsA,3) Uncertain significance
+rpsA_p.Ser8Leu,0.080504745,0,rpsA,3) Uncertain significance
+rpsA_p.Ser81Tyr,0.07157281,0,rpsA,3) Uncertain significance
+rpsA_p.Ser452Asn,0.06840742,0,rpsA,3) Uncertain significance
+rpsA_p.Lys122Met,0.069921315,0,rpsA,3) Uncertain significance
+rpsA_p.Lys127Asn,0.06823403,0,rpsA,3) Uncertain significance
+rpsA_p.Lys167Asn,0.06558573,0,rpsA,3) Uncertain significance
+rpsA_p.Lys167Glu,0.06435108,0,rpsA,3) Uncertain significance
+rpsA_p.Lys300Glu,0.0666787,0,rpsA,3) Uncertain significance
+rpsA_p.Lys409Arg,0.0680781,0,rpsA,3) Uncertain significance
+rpsA_p.Lys409Asn,0.068092644,0,rpsA,3) Uncertain significance
+rpsA_p.Lys434Glu,0.066777825,0,rpsA,3) Uncertain significance
+rpsA_p.Lys458Thr,0.068782,0,rpsA,3) Uncertain significance
+rpsA_p.Lys45Gln,0.067062646,0,rpsA,3) Uncertain significance
+rpsA_p.Lys45Glu,0.0694454,0,rpsA,3) Uncertain significance
+rpsA_p.Leu404Phe,0.06841478,0,rpsA,3) Uncertain significance
+rpsA_p.Lys476*,0.16964856,0,rpsA,3) Uncertain significance
+rpsA_p.Met267Leu,0.06783575,0,rpsA,3) Uncertain significance
+rpsA_p.Met432_Ala438delinsThr,0.03944984,0,rpsA,3) Uncertain significance
+rpsA_p.Pro163Ser,0.068145424,0,rpsA,3) Uncertain significance
+rpsA_p.Pro298Ser,0.0682396,0,rpsA,3) Uncertain significance
+rpsA_p.Pro306Ser,0.06872448,0,rpsA,3) Uncertain significance
+rpsA_p.Pro375Ser,0.06934905,0,rpsA,3) Uncertain significance
+rpsA_p.Pro4Leu,0.07710773,0,rpsA,3) Uncertain significance
+rpsA_p.Pro76Leu,0.08224028,0,rpsA,3) Uncertain significance
+rpsA_p.Ser18Tyr,0.0688442,0,rpsA,3) Uncertain significance
+rpsA_p.Ser19Arg,0.073860735,0,rpsA,3) Uncertain significance
+rpsA_p.Ser249Ala,0.07011485,0,rpsA,3) Uncertain significance
+rpsA_p.Lys71Thr,0.07665473,0,rpsA,3) Uncertain significance
+rpsA_p.Asp123Glu,0.06921592,0,rpsA,3) Uncertain significance
+rpsA_p.Asp123Ala,0.06748596,0,rpsA,3) Uncertain significance
+rpsA_p.Asn77Lys,0.069766134,0,rpsA,3) Uncertain significance
+pncA_p.Thr160Arg,0.95771056,1,pncA,3) Uncertain significance
+pncA_p.Thr167Ile,0.106021374,0,pncA,3) Uncertain significance
+pncA_p.Thr167Pro,0.09308487,0,pncA,3) Uncertain significance
+pncA_p.Thr168_Val169del,0.13956338,0,pncA,3) Uncertain significance
+pncA_p.Thr47Asn,0.55059326,1,pncA,3) Uncertain significance
+pncA_p.Thr47Ile,0.13420644,0,pncA,3) Uncertain significance
+pncA_p.Thr76Ala,0.9479652,1,pncA,3) Uncertain significance
+pncA_p.Trp68Ser,0.6191701,1,pncA,3) Uncertain significance
+pncA_p.Tyr103Ser,0.6319016,1,pncA,3) Uncertain significance
+pncA_p.Tyr41Cys,0.06958315,0,pncA,3) Uncertain significance
+pncA_p.Tyr99Cys,0.0711928,0,pncA,3) Uncertain significance
+pncA_p.Val109Gly,0.067521244,0,pncA,3) Uncertain significance
+pncA_p.Val125Asp,0.25563565,1,pncA,3) Uncertain significance
+pncA_p.Val125Ile,0.11568612,0,pncA,3) Uncertain significance
+pncA_p.Val128Ile,0.094284415,0,pncA,3) Uncertain significance
+pncA_p.Val155Leu,0.26441026,1,pncA,3) Uncertain significance
+pncA_p.Val157Ala,0.09100029,0,pncA,3) Uncertain significance
+pncA_p.Val157Gly,0.07731724,0,pncA,3) Uncertain significance
+pncA_p.Val157Leu,0.07462171,0,pncA,3) Uncertain significance
+pncA_p.Val163Gly,0.08287686,0,pncA,3) Uncertain significance
+pncA_p.Val163Leu,0.12398291,0,pncA,3) Uncertain significance
+pncA_p.Val163Met,0.10539946,0,pncA,3) Uncertain significance
+pncA_p.Val180Asp,0.6699839,1,pncA,3) Uncertain significance
+pncA_p.Thr160_Ala171del,0.96197814,1,pncA,3) Uncertain significance
+pncA_p.Thr153Pro,0.05957493,0,pncA,3) Uncertain significance
+pncA_p.Thr135Ile,0.08346915,0,pncA,3) Uncertain significance
+pncA_p.Thr135Ala,0.9468312,1,pncA,3) Uncertain significance
+pncA_p.Phe81Ser,0.07331759,0,pncA,3) Uncertain significance
+pncA_p.Phe81Val,0.06985873,0,pncA,3) Uncertain significance
+pncA_p.Phe94Tyr,0.38297153,1,pncA,3) Uncertain significance
+pncA_p.Pro115Leu,0.06597012,0,pncA,3) Uncertain significance
+pncA_p.Pro115Ser,0.06781435,0,pncA,3) Uncertain significance
+pncA_p.Pro54_Asp56del,0.99428356,1,pncA,3) Uncertain significance
+pncA_p.Pro54Ala,0.10898155,0,pncA,3) Uncertain significance
+pncA_p.Pro62Gln,0.24875644,1,pncA,3) Uncertain significance
+pncA_p.Pro69Arg,0.95634043,1,pncA,3) Uncertain significance
+pncA_p.Pro69Ser,0.081630826,0,pncA,3) Uncertain significance
+pncA_p.Pro69Thr,0.10004011,0,pncA,3) Uncertain significance
+pncA_p.Val180Leu,0.20510682,0,pncA,3) Uncertain significance
+pncA_p.Pro77Leu,0.08456662,0,pncA,3) Uncertain significance
+pncA_p.Ser179Ile,0.06626555,0,pncA,3) Uncertain significance
+pncA_p.Ser18_Val44del,0.999965,1,pncA,3) Uncertain significance
+pncA_p.Ser18Pro,0.09793496,0,pncA,3) Uncertain significance
+pncA_p.Ser32Ile,0.10579538,0,pncA,3) Uncertain significance
+pncA_p.Ser59Phe,0.5701664,1,pncA,3) Uncertain significance
+pncA_p.Arg2Pro,0.07227528,0,pncA,3) Uncertain significance
+pncA_p.Ser66Ala,0.09117961,0,pncA,3) Uncertain significance
+pncA_p.Ser66del,0.99876755,1,pncA,3) Uncertain significance
+pncA_p.Ser67Trp,0.11875728,0,pncA,3) Uncertain significance
+pncA_p.Ser74_Pro77del,0.09625572,0,pncA,3) Uncertain significance
+pncA_p.Thr100Ile,0.11682686,0,pncA,3) Uncertain significance
+pncA_p.Ser104Thr,0.10607809,0,pncA,3) Uncertain significance
+pncA_p.Val183Leu,0.076788455,0,pncA,3) Uncertain significance
+pncA_p.Val45Ala,0.28734374,1,pncA,3) Uncertain significance
+pncA_p.Val45Gly,0.28093213,1,pncA,3) Uncertain significance
+rpsA_p.Ala278Glu,0.06921783,0,rpsA,3) Uncertain significance
+rpsA_p.Ala339Thr,0.068774104,0,rpsA,3) Uncertain significance
+rpsA_p.Ala365Val,0.06902656,0,rpsA,3) Uncertain significance
+rpsA_p.Ala376Val,0.06852859,0,rpsA,3) Uncertain significance
+rpsA_p.Ala381Val,0.09772122,0,rpsA,3) Uncertain significance
+rpsA_p.Ala412Val,0.07442495,0,rpsA,3) Uncertain significance
+rpsA_p.Ala436Gly,0.06951654,0,rpsA,3) Uncertain significance
+rpsA_p.Ala437Thr,0.06895748,0,rpsA,3) Uncertain significance
+rpsA_p.Ala438del,0.010383278,0,rpsA,3) Uncertain significance
+rpsA_p.Ala440Thr,0.0696412,0,rpsA,3) Uncertain significance
+rpsA_p.Ala460Thr,0.06819183,0,rpsA,3) Uncertain significance
+rpsA_p.Ala25Thr,0.06794116,0,rpsA,3) Uncertain significance
+rpsA_p.Ala460Val,0.06889674,0,rpsA,3) Uncertain significance
+rpsA_p.Ala472Thr,0.068876565,0,rpsA,3) Uncertain significance
+rpsA_p.Ala478Val,0.069892764,0,rpsA,3) Uncertain significance
+rpsA_p.Ala65Pro,0.07601583,0,rpsA,3) Uncertain significance
+rpsA_p.Arg111His,0.06746909,0,rpsA,3) Uncertain significance
+rpsA_p.Arg187Cys,0.07605451,0,rpsA,3) Uncertain significance
+rpsA_p.Arg329Leu,0.06819835,0,rpsA,3) Uncertain significance
+rpsA_p.Arg356Cys,0.06878984,0,rpsA,3) Uncertain significance
+rpsA_p.Arg443Cys,0.065781236,0,rpsA,3) Uncertain significance
+rpsA_p.Asn221Asp,0.068345785,0,rpsA,3) Uncertain significance
+rpsA_p.Asn34Thr,0.07065159,0,rpsA,3) Uncertain significance
+rpsA_p.Asn389Thr,0.06853497,0,rpsA,3) Uncertain significance
+rpsA_p.Ala468Ser,0.06897166,0,rpsA,3) Uncertain significance
+pncA_p.Phe106Ile,0.07838011,0,pncA,3) Uncertain significance
+rpsA_p.Ala24Gly,0.06606802,0,rpsA,3) Uncertain significance
+rpsA_p.Ala189Thr,0.067935854,0,rpsA,3) Uncertain significance
+pncA_p.Val45Met,0.09121072,0,pncA,3) Uncertain significance
+pncA_p.Val7del,0.9997534,1,pncA,3) Uncertain significance
+pncA_p.Val7Ile,0.8389212,1,pncA,3) Uncertain significance
+pncA_p.Val93Gly,0.07382855,0,pncA,3) Uncertain significance
+pncA_p.Val93Met,0.78482527,1,pncA,3) Uncertain significance
+pncA_p.Val9Ala,0.96809137,1,pncA,3) Uncertain significance
+rpsA_c.-10A>G,0.06912652,0,rpsA,3) Uncertain significance
+rpsA_c.-14A>T,0.06916851,0,rpsA,3) Uncertain significance
+rpsA_c.-21T>C,0.06861481,0,rpsA,3) Uncertain significance
+rpsA_c.-25A>G,0.069187194,0,rpsA,3) Uncertain significance
+rpsA_c.-2A>G,0.06978279,0,rpsA,3) Uncertain significance
+rpsA_p.Ala224Gly,0.06914249,0,rpsA,3) Uncertain significance
+rpsA_c.-31delG,0.06750414,0,rpsA,3) Uncertain significance
+rpsA_c.-47A>G,0.06903124,0,rpsA,3) Uncertain significance
+rpsA_c.-48T>C,0.06904063,0,rpsA,3) Uncertain significance
+rpsA_c.-49G>T,0.06901848,0,rpsA,3) Uncertain significance
+rpsA_c.-4C>T,0.06943181,0,rpsA,3) Uncertain significance
+rpsA_p.Ala112Ser,0.06751695,0,rpsA,3) Uncertain significance
+rpsA_p.Ala118Ser,0.06888485,0,rpsA,3) Uncertain significance
+rpsA_p.Ala125Val,0.07006365,0,rpsA,3) Uncertain significance
+rpsA_p.Ala150Ser,0.06790215,0,rpsA,3) Uncertain significance
+rpsA_p.Ala171Thr,0.072096735,0,rpsA,3) Uncertain significance
+rpsA_p.Ala189Pro,0.06702384,0,rpsA,3) Uncertain significance
+rpsA_p.Ala189Ser,0.06920296,0,rpsA,3) Uncertain significance
+rpsA_c.-32C>T,0.06891483,0,rpsA,3) Uncertain significance
+pncA_p.Arg2Leu,0.06867853,0,pncA,3) Uncertain significance
+rpsA_p.Val86Ile,0.07118145,0,rpsA,3) Uncertain significance
+pncA_p.Arg29Ser,0.08894825,0,pncA,3) Uncertain significance
+clpC1_p.Lys195Thr,0.06997657,0,clpC1,3) Uncertain significance
+clpC1_p.Lys270Arg,0.06483111,0,clpC1,3) Uncertain significance
+clpC1_p.Lys360Asn,0.06761411,0,clpC1,3) Uncertain significance
+clpC1_p.Lys694Glu,0.06890765,0,clpC1,3) Uncertain significance
+clpC1_p.Lys743Asn,0.06881952,0,clpC1,3) Uncertain significance
+clpC1_p.Lys743Thr,0.06811887,0,clpC1,3) Uncertain significance
+clpC1_p.Lys825Glu,0.06902489,0,clpC1,3) Uncertain significance
+clpC1_p.Met379Ile,0.06850678,0,clpC1,3) Uncertain significance
+clpC1_p.Met379Leu,0.0684275,0,clpC1,3) Uncertain significance
+clpC1_p.Met693Ile,0.06873053,0,clpC1,3) Uncertain significance
+clpC1_p.Met734Ile,0.06894985,0,clpC1,3) Uncertain significance
+clpC1_p.Phe342Leu,0.06890091,0,clpC1,3) Uncertain significance
+clpC1_p.Phe595Cys,0.06900349,0,clpC1,3) Uncertain significance
+clpC1_p.Phe657Val,0.068300575,0,clpC1,3) Uncertain significance
+clpC1_p.Pro419Leu,0.06840372,0,clpC1,3) Uncertain significance
+clpC1_p.Lys186Asn,0.079628706,0,clpC1,3) Uncertain significance
+clpC1_p.Leu566Val,0.06890398,0,clpC1,3) Uncertain significance
+clpC1_p.Leu473Val,0.0687342,0,clpC1,3) Uncertain significance
+clpC1_p.Leu402Val,0.06742436,0,clpC1,3) Uncertain significance
+clpC1_p.Ile139Val,0.0676471,0,clpC1,3) Uncertain significance
+clpC1_p.Ile215Val,0.069818825,0,clpC1,3) Uncertain significance
+clpC1_p.Ile286Val,0.06829712,0,clpC1,3) Uncertain significance
+clpC1_p.Ile320Val,0.06869444,0,clpC1,3) Uncertain significance
+clpC1_p.Ile403Val,0.0682632,0,clpC1,3) Uncertain significance
+clpC1_p.Ile412Leu,0.06836659,0,clpC1,3) Uncertain significance
+clpC1_p.Ile412Ser,0.06753081,0,clpC1,3) Uncertain significance
+clpC1_p.Pro74Leu,0.074671865,0,clpC1,3) Uncertain significance
+clpC1_p.Ile550Val,0.06905872,0,clpC1,3) Uncertain significance
+clpC1_p.Ile634Val,0.06891999,0,clpC1,3) Uncertain significance
+clpC1_p.Ile673Val,0.06894109,0,clpC1,3) Uncertain significance
+clpC1_p.Ile727Thr,0.06870091,0,clpC1,3) Uncertain significance
+clpC1_p.Ile78Met,0.07055622,0,clpC1,3) Uncertain significance
+clpC1_p.Leu204Val,0.08260611,0,clpC1,3) Uncertain significance
+clpC1_p.Leu273Ile,0.06832236,0,clpC1,3) Uncertain significance
+clpC1_p.Leu273Val,0.068124205,0,clpC1,3) Uncertain significance
+clpC1_p.Ile627Leu,0.06887618,0,clpC1,3) Uncertain significance
+clpC1_p.His631Asn,0.0688979,0,clpC1,3) Uncertain significance
+clpC1_p.Pro766Leu,0.06885928,0,clpC1,3) Uncertain significance
+clpC1_p.Pro796Gln,0.0684903,0,clpC1,3) Uncertain significance
+panD_c.-1853T>C,0.06887415,0,panD,3) Uncertain significance
+panD_c.-1854C>T,0.069717586,0,panD,3) Uncertain significance
+panD_c.-1855C>A,0.07054296,0,panD,3) Uncertain significance
+panD_c.-1856A>G,0.070282936,0,panD,3) Uncertain significance
+panD_c.-1858A>C,0.06909385,0,panD,3) Uncertain significance
+panD_c.-1864A>G,0.07034567,0,panD,3) Uncertain significance
+panD_c.-1874A>C,0.07016778,0,panD,3) Uncertain significance
+panD_c.-1880C>A,0.070744395,0,panD,3) Uncertain significance
+panD_c.-1880C>T,0.068418205,0,panD,3) Uncertain significance
+panD_c.-1882G>A,0.076562375,0,panD,3) Uncertain significance
+panD_c.-1884C>A,0.06785855,0,panD,3) Uncertain significance
+panD_c.-1889G>T,0.067668796,0,panD,3) Uncertain significance
+panD_c.-1891C>A,0.06711632,0,panD,3) Uncertain significance
+panD_c.-1892C>T,0.07194772,0,panD,3) Uncertain significance
+panD_c.-1894G>A,0.0746924,0,panD,3) Uncertain significance
+panD_c.-1838T>G,0.06828168,0,panD,3) Uncertain significance
+panD_c.-10G>A,0.06566924,0,panD,3) Uncertain significance
+clpC1_p.Val817Met,0.0681119,0,clpC1,3) Uncertain significance
+clpC1_p.Val794Phe,0.068668395,0,clpC1,3) Uncertain significance
+clpC1_p.Pro79Thr,0.07700533,0,clpC1,3) Uncertain significance
+clpC1_p.Thr179Met,0.06942871,0,clpC1,3) Uncertain significance
+clpC1_p.Thr208Ile,0.069693446,0,clpC1,3) Uncertain significance
+clpC1_p.Thr249Met,0.070139885,0,clpC1,3) Uncertain significance
+clpC1_p.Thr278Ser,0.068183035,0,clpC1,3) Uncertain significance
+clpC1_p.Thr654Met,0.0690721,0,clpC1,3) Uncertain significance
+clpC1_p.Thr819Ser,0.06862646,0,clpC1,3) Uncertain significance
+clpC1_p.Pro796Ala,0.068875015,0,clpC1,3) Uncertain significance
+clpC1_p.Tyr248Cys,0.07207057,0,clpC1,3) Uncertain significance
+clpC1_p.Val170Leu,0.071092606,0,clpC1,3) Uncertain significance
+clpC1_p.Val345Leu,0.06917092,0,clpC1,3) Uncertain significance
+clpC1_p.Val44Phe,0.0695422,0,clpC1,3) Uncertain significance
+clpC1_p.Val525Phe,0.068624556,0,clpC1,3) Uncertain significance
+clpC1_p.Val602Ile,0.06894851,0,clpC1,3) Uncertain significance
+clpC1_p.Val677Ile,0.06883341,0,clpC1,3) Uncertain significance
+clpC1_p.Val718Ile,0.06914446,0,clpC1,3) Uncertain significance
+clpC1_p.Tyr690Ser,0.068986624,0,clpC1,3) Uncertain significance
+panD_c.-1895C>A,0.06622428,0,panD,3) Uncertain significance
+clpC1_p.His515Arg,0.069016755,0,clpC1,3) Uncertain significance
+clpC1_p.Gly822Ser,0.06883961,0,clpC1,3) Uncertain significance
+clpC1_p.Ala757Val,0.0690881,0,clpC1,3) Uncertain significance
+clpC1_p.Ala816Val,0.06905836,0,clpC1,3) Uncertain significance
+clpC1_p.Ala828Val,0.068965465,0,clpC1,3) Uncertain significance
+clpC1_p.Arg388Leu,0.06840378,0,clpC1,3) Uncertain significance
+clpC1_p.Arg413Leu,0.06709078,0,clpC1,3) Uncertain significance
+clpC1_p.Arg432Gly,0.06776923,0,clpC1,3) Uncertain significance
+clpC1_p.Arg451His,0.06835854,0,clpC1,3) Uncertain significance
+clpC1_p.Arg453Gln,0.06760338,0,clpC1,3) Uncertain significance
+clpC1_p.Arg506Gly,0.069470406,0,clpC1,3) Uncertain significance
+clpC1_p.Arg509Gly,0.068968505,0,clpC1,3) Uncertain significance
+clpC1_p.Arg536Gln,0.068867564,0,clpC1,3) Uncertain significance
+clpC1_p.Arg60Cys,0.0741522,0,clpC1,3) Uncertain significance
+clpC1_p.Arg724Ser,0.06895521,0,clpC1,3) Uncertain significance
+clpC1_p.Arg729Gly,0.06855714,0,clpC1,3) Uncertain significance
+clpC1_p.Arg737Leu,0.068944305,0,clpC1,3) Uncertain significance
+clpC1_p.Ala755Thr,0.068905026,0,clpC1,3) Uncertain significance
+clpC1_p.Ala591Val,0.06894559,0,clpC1,3) Uncertain significance
+clpC1_p.Ala567Val,0.06849086,0,clpC1,3) Uncertain significance
+pncA_p.Arg2Gln,0.06886068,0,pncA,3) Uncertain significance
+clpC1_c.-15A>G,0.06801328,0,clpC1,3) Uncertain significance
+clpC1_c.-24G>T,0.075353086,0,clpC1,3) Uncertain significance
+clpC1_c.-29C>T,0.069630176,0,clpC1,3) Uncertain significance
+clpC1_c.-46G>C,0.06863478,0,clpC1,3) Uncertain significance
+clpC1_c.-49G>A,0.06905836,0,clpC1,3) Uncertain significance
+clpC1_c.-52T>G,0.06899074,0,clpC1,3) Uncertain significance
+clpC1_c.-7G>T,0.069987744,0,clpC1,3) Uncertain significance
+clpC1_p.Arg737Trp,0.06899685,0,clpC1,3) Uncertain significance
+clpC1_p.Ala151Thr,0.0691863,0,clpC1,3) Uncertain significance
+clpC1_p.Ala232Asp,0.06967127,0,clpC1,3) Uncertain significance
+clpC1_p.Ala232Thr,0.07218808,0,clpC1,3) Uncertain significance
+clpC1_p.Ala232Val,0.070061415,0,clpC1,3) Uncertain significance
+clpC1_p.Ala368Glu,0.06866786,0,clpC1,3) Uncertain significance
+clpC1_p.Ala377Thr,0.06893286,0,clpC1,3) Uncertain significance
+clpC1_p.Ala527Val,0.06888968,0,clpC1,3) Uncertain significance
+clpC1_p.Ala531Ser,0.06832406,0,clpC1,3) Uncertain significance
+clpC1_p.Ala181Ser,0.07121101,0,clpC1,3) Uncertain significance
+clpC1_p.His235Tyr,0.07933295,0,clpC1,3) Uncertain significance
+clpC1_p.Arg848Leu,0.06901908,0,clpC1,3) Uncertain significance
+clpC1_p.Asp326Ala,0.06808454,0,clpC1,3) Uncertain significance
+clpC1_p.Glu426Gly,0.067456394,0,clpC1,3) Uncertain significance
+clpC1_p.Glu430Asp,0.068282396,0,clpC1,3) Uncertain significance
+clpC1_p.Glu434Lys,0.06679496,0,clpC1,3) Uncertain significance
+clpC1_p.Glu463Lys,0.066955835,0,clpC1,3) Uncertain significance
+clpC1_p.Glu478Lys,0.07090184,0,clpC1,3) Uncertain significance
+clpC1_p.Glu612Asp,0.06874943,0,clpC1,3) Uncertain significance
+clpC1_p.Glu792Gly,0.06900865,0,clpC1,3) Uncertain significance
+clpC1_p.Glu793Gln,0.068745434,0,clpC1,3) Uncertain significance
+clpC1_p.Glu793Lys,0.068790615,0,clpC1,3) Uncertain significance
+clpC1_p.Glu810Gly,0.06897256,0,clpC1,3) Uncertain significance
+clpC1_p.Gly159Arg,0.07174146,0,clpC1,3) Uncertain significance
+clpC1_p.Gly471Asp,0.06856018,0,clpC1,3) Uncertain significance
+clpC1_p.Gly58Ala,0.06977689,0,clpC1,3) Uncertain significance
+clpC1_p.Gly686Ser,0.06889245,0,clpC1,3) Uncertain significance
+clpC1_p.Gly813Asp,0.06902152,0,clpC1,3) Uncertain significance
+clpC1_p.Glu405Asp,0.0687232,0,clpC1,3) Uncertain significance
+clpC1_p.Glu367Gln,0.06774187,0,clpC1,3) Uncertain significance
+clpC1_p.Glu327Val,0.068828374,0,clpC1,3) Uncertain significance
+clpC1_p.Glu240Lys,0.07024863,0,clpC1,3) Uncertain significance
+clpC1_p.Asp443Ala,0.06818527,0,clpC1,3) Uncertain significance
+clpC1_p.Asp474Gly,0.064991266,0,clpC1,3) Uncertain significance
+clpC1_p.Asp474His,0.068107754,0,clpC1,3) Uncertain significance
+clpC1_p.Asp656Asn,0.069025666,0,clpC1,3) Uncertain significance
+clpC1_p.Asp656Gly,0.06883064,0,clpC1,3) Uncertain significance
+clpC1_p.Asp699Ala,0.06910208,0,clpC1,3) Uncertain significance
+clpC1_p.Asp753Val,0.06910616,0,clpC1,3) Uncertain significance
+clpC1_p.Asp244Asn,0.0712657,0,clpC1,3) Uncertain significance
+clpC1_p.Asp783His,0.0689961,0,clpC1,3) Uncertain significance
+clpC1_p.Gln246Arg,0.079849035,0,clpC1,3) Uncertain significance
+clpC1_p.Gln346His,0.06945625,0,clpC1,3) Uncertain significance
+clpC1_p.Gln579Arg,0.068900526,0,clpC1,3) Uncertain significance
+clpC1_p.Gln784Pro,0.06884608,0,clpC1,3) Uncertain significance
+clpC1_p.Gln97Arg,0.07000011,0,clpC1,3) Uncertain significance
+clpC1_p.Glu161Asp,0.06870648,0,clpC1,3) Uncertain significance
+clpC1_p.Glu184Lys,0.09779957,0,clpC1,3) Uncertain significance
+clpC1_p.Gln146Arg,0.072954476,0,clpC1,3) Uncertain significance
+panD_c.-1901_-1896delGGTGAC,0.075297415,0,panD,3) Uncertain significance
+clpC1_p.Ala567Thr,0.06887993,0,clpC1,3) Uncertain significance
+panD_c.-1918A>C,0.068569064,0,panD,3) Uncertain significance
+panD_c.-1904C>T,0.075520605,0,panD,3) Uncertain significance
+pncA_c.-19C>T,0.067184985,0,pncA,3) Uncertain significance
+pncA_c.-15A>C,0.06931341,0,pncA,3) Uncertain significance
+pncA_c.-10T>C,0.08175784,0,pncA,3) Uncertain significance
+pncA_c.-10delT,0.07272273,0,pncA,3) Uncertain significance
+panD_p.Val15Ala,0.0697943,0,panD,3) Uncertain significance
+panD_p.Thr4Ala,0.06880212,0,panD,3) Uncertain significance
+panD_p.Thr14Met,0.0698545,0,panD,3) Uncertain significance
+panD_p.Thr100Pro,0.06881446,0,panD,3) Uncertain significance
+panD_p.Ser8Ala,0.06899646,0,panD,3) Uncertain significance
+panD_p.Pro81Leu,0.068173826,0,panD,3) Uncertain significance
+panD_p.Pro134Ser,0.069083065,0,panD,3) Uncertain significance
+pncA_c.-21G>A,0.06853834,0,pncA,3) Uncertain significance
+panD_p.Pro134Ala,0.06875819,0,panD,3) Uncertain significance
+panD_p.Met117Thr,0.0701341,0,panD,3) Uncertain significance
+panD_p.Leu132Pro,0.070860624,0,panD,3) Uncertain significance
+panD_p.Ile60Thr,0.0695191,0,panD,3) Uncertain significance
+panD_p.Ile49Val,0.0686084,0,panD,3) Uncertain significance
+panD_p.Ile115Thr,0.070726246,0,panD,3) Uncertain significance
+panD_p.Gly139*,0.06682649,0,panD,3) Uncertain significance
+panD_p.Gly139Arg,0.074196786,0,panD,3) Uncertain significance
+panD_p.Gly137Val,0.06819633,0,panD,3) Uncertain significance
+panD_p.Gln43Arg,0.06964713,0,panD,3) Uncertain significance
+panD_p.Asp50Glu,0.06891897,0,panD,3) Uncertain significance
+panD_p.Asp50Asn,0.068562925,0,panD,3) Uncertain significance
+panD_p.Asp37Glu,0.06886554,0,panD,3) Uncertain significance
+panD_p.Met5Ile,0.06904861,0,panD,3) Uncertain significance
+panD_p.Asp34Gly,0.06899798,0,panD,3) Uncertain significance
+pncA_p.Arg148Ser,0.090985805,0,pncA,3) Uncertain significance
+pncA_p.Arg123Pro,0.33365393,1,pncA,3) Uncertain significance
+pncA_p.Ala3Pro,0.07106188,0,pncA,3) Uncertain significance
+pncA_p.Ala36Pro,0.07171023,0,pncA,3) Uncertain significance
+pncA_p.Ala30Val,0.072138816,0,pncA,3) Uncertain significance
+pncA_p.Ala3_Ile5del,0.9931441,1,pncA,3) Uncertain significance
+pncA_p.Ala28Asp,0.092981994,0,pncA,3) Uncertain significance
+pncA_p.Ala28_Leu172del,0.99954563,1,pncA,3) Uncertain significance
+pncA_p.Ala26Val,0.06691483,0,pncA,3) Uncertain significance
+pncA_p.Ala171Val,0.23805594,1,pncA,3) Uncertain significance
+pncA_p.Ala171Thr,0.1513556,0,pncA,3) Uncertain significance
+pncA_p.Ala171Gly,0.08503902,0,pncA,3) Uncertain significance
+pncA_p.Ala171Asp,0.6639332,1,pncA,3) Uncertain significance
+pncA_p.Ala165del,0.848369,1,pncA,3) Uncertain significance
+pncA_p.Arg140Gly,0.12147367,0,pncA,3) Uncertain significance
+pncA_p.Ala161Pro,0.0920586,0,pncA,3) Uncertain significance
+pncA_p.Ala143Val,0.10067472,0,pncA,3) Uncertain significance
+pncA_p.Ala143Thr,0.07558301,0,pncA,3) Uncertain significance
+pncA_p.Ala134Pro,0.09434721,0,pncA,3) Uncertain significance
+pncA_p.Ala134Gly,0.111797154,0,pncA,3) Uncertain significance
+pncA_p.Ala102Leu,0.23743695,1,pncA,3) Uncertain significance
+pncA_c.-9G>A,0.06952578,0,pncA,3) Uncertain significance
+pncA_c.-7T>G,0.1358889,0,pncA,3) Uncertain significance
+pncA_c.-6G>C,0.09178698,0,pncA,3) Uncertain significance
+pncA_p.Arg140Ser,0.100352615,0,pncA,3) Uncertain significance
+pncA_p.Ala79Val,0.072505265,0,pncA,3) Uncertain significance
+pncA_c.-3C>T,0.08211276,0,pncA,3) Uncertain significance
+pncA_c.-39C>T,0.069065005,0,pncA,3) Uncertain significance
+pncA_p.Ala161Gly,0.09159136,0,pncA,3) Uncertain significance
+panD_p.Asp31Glu,0.06927431,0,panD,3) Uncertain significance
+pncA_p.Ala46Thr,0.31119162,1,pncA,3) Uncertain significance
+panD_p.Asp109Asn,0.07018289,0,panD,3) Uncertain significance
+panD_c.-1920G>A,0.074881315,0,panD,3) Uncertain significance
+panD_c.-1921T>A,0.070982456,0,panD,3) Uncertain significance
+panD_c.-1921T>G,0.07009727,0,panD,3) Uncertain significance
+panD_c.-1922G>A,0.07078543,0,panD,3) Uncertain significance
+panD_c.-23C>A,0.068862915,0,panD,3) Uncertain significance
+panD_c.-1929T>C,0.0726783,0,panD,3) Uncertain significance
+panD_c.-34A>G,0.06904927,0,panD,3) Uncertain significance
+panD_c.-38G>A,0.06612757,0,panD,3) Uncertain significance
+panD_c.-1937delC,0.07157421,0,panD,3) Uncertain significance
+panD_c.-1940C>T,0.07992861,0,panD,3) Uncertain significance
+panD_c.-1946G>C,0.07502395,0,panD,3) Uncertain significance
+panD_c.-31G>A,0.068409115,0,panD,3) Uncertain significance
+panD_c.-1947A>C,0.15793446,0,panD,3) Uncertain significance
+panD_c.-26A>G,0.06881267,0,panD,3) Uncertain significance
+panD_c.-24C>T,0.06902307,0,panD,3) Uncertain significance
+panD_p.Asp116Gly,0.072586864,0,panD,3) Uncertain significance
+panD_c.-1938C>G,0.074085,0,panD,3) Uncertain significance
+panD_c.-39C>A,0.06881338,0,panD,3) Uncertain significance
+panD_c.-1923C>T,0.07474983,0,panD,3) Uncertain significance
+panD_p.Arg135Gly,0.07266936,0,panD,3) Uncertain significance
+panD_c.-3C>G,0.06844282,0,panD,3) Uncertain significance
+panD_p.Arg104Gln,0.07060957,0,panD,3) Uncertain significance
+panD_p.Ala98Thr,0.07009894,0,panD,3) Uncertain significance
+panD_p.Ala96Val,0.068832755,0,panD,3) Uncertain significance
+panD_p.Ala96Thr,0.06817293,0,panD,3) Uncertain significance
+panD_p.Ala122Thr,0.06872478,0,panD,3) Uncertain significance
+panD_p.Arg99Gly,0.08488095,0,panD,3) Uncertain significance
+panD_p.Arg97Trp,0.07397768,0,panD,3) Uncertain significance
+panD_c.-43C>A,0.0687761,0,panD,3) Uncertain significance
+panD_c.-7G>A,0.06910646,0,panD,3) Uncertain significance
+rpsA_c.627C>T,0.06921041,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.636A>C,0.06846106,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2406C>T,0.068807095,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2415C>T,0.0689944,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.642T>C,0.06886858,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2439C>T,0.068849325,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2232C>T,0.06798196,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2445C>T,0.06870127,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2457C>T,0.0685792,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2460C>T,0.06902653,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.651C>G,0.06854591,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2463C>T,0.06856477,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2478G>T,0.06898609,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2481G>A,0.06897691,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2397G>A,0.06892058,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.621A>G,0.06987095,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2280C>T,0.068888515,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.576G>A,0.07154396,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2277G>A,0.06892684,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2275C>T,0.068914115,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2302T>C,0.075282335,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.234T>C,0.070845366,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2361G>A,0.068935424,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2370C>T,0.06899911,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2373C>T,0.06904858,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.603G>A,0.071891785,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2262G>C,0.06903297,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2262G>A,0.06902307,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.225T>C,0.06972274,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2247G>A,0.06907272,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2244G>A,0.06905162,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.408G>A,0.06824374,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.405C>G,0.06929541,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.546C>T,0.07780743,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.417C>T,0.06838903,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2490G>A,0.069263875,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.273C>T,0.08110607,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2508A>G,0.06893471,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.402G>A,0.06920731,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.999G>T,0.06851587,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.732C>T,0.07025635,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.969C>T,0.068216085,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.960G>A,0.069015265,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.936C>T,0.06803143,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2226C>T,0.069138825,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.738C>T,0.073571324,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.744G>A,0.07090706,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.396C>G,0.07016361,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.903C>T,0.06916246,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.768C>T,0.07242519,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.774C>T,0.06850931,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.777C>G,0.06789732,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.807T>C,0.06874195,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.813G>C,0.067101896,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.822G>A,0.066997886,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.837T>C,0.06965339,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.825A>C,0.06841174,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.825A>G,0.06851792,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.897C>T,0.06787899,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.387C>T,0.06966427,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.384C>A,0.06973153,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.720A>G,0.07092202,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2517C>T,0.06884411,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.684C>T,0.08169064,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.2520G>C,0.06890097,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2535G>T,0.06902468,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.255A>G,0.08045682,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.267G>A,0.08554584,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.693G>A,0.07184246,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.693G>T,0.07008171,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.27C>T,0.08022034,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.282A>G,0.0686793,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.294T>C,0.0691905,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.300C>T,0.069378614,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.30C>G,0.07684904,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.312G>C,0.06820461,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.330G>A,0.06795436,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.336C>T,0.06750348,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.33G>A,0.07365137,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.342A>G,0.068216205,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.372G>A,0.06888887,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.705G>A,0.073120534,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.378G>A,0.06976348,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.249C>T,0.07278949,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.921C>T,0.066608965,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.1881C>T,0.06894821,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2217C>T,0.068688214,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.132T>C,0.06583062,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1344C>T,0.06919673,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1353C>T,0.06877291,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1369C>T,0.06734738,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1386T>C,0.06816876,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1425G>T,0.068648666,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1431G>C,0.06966844,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1443C>T,0.07005808,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.144A>C,0.06875935,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.145C>T,0.06860256,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1461G>A,0.06862351,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1476C>A,0.069126636,0,clpC1,4) Not assoc w R - Interim
+rpsA_p.Met432Thr,0.069643825,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.1479T>C,0.06894341,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1494G>A,0.067864984,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1545C>T,0.06893611,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.154T>C,0.07209319,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1590G>A,0.069047004,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1605C>T,0.0688951,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1323C>T,0.06772566,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1287C>T,0.067627996,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1261C>T,0.06856573,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1257A>G,0.068332374,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1014G>A,0.06868848,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1017G>A,0.06898627,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1023C>A,0.06901133,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1029G>A,0.06869051,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.102T>C,0.068876356,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1038G>A,0.069176465,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1062C>T,0.06906542,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1098C>T,0.06735858,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1107C>T,0.06895012,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1606C>A,0.06880179,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1111C>A,0.0678184,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1128T>C,0.068980336,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1167C>T,0.069262415,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1170C>T,0.06850237,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1203C>T,0.069013506,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1212C>T,0.06837779,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1224T>G,0.068267554,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.123G>C,0.06865397,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1248C>G,0.068047255,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1251A>G,0.068713635,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1113G>A,0.067938685,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2220C>T,0.06874576,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1611C>A,0.06895009,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1626C>G,0.06897339,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1915C>T,0.068867564,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1923G>A,0.06867662,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1926C>T,0.06871909,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1956C>T,0.068603575,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1959C>T,0.06904322,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2002C>T,0.0690321,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2007C>T,0.06911877,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2013C>G,0.068941414,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2022T>C,0.06892529,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2034T>G,0.06894177,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.204C>T,0.08263183,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2073G>A,0.06897205,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2076G>T,0.06894359,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.207G>A,0.10130647,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2151C>T,0.068958014,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2169C>T,0.06890038,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.216G>A,0.08001959,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2181C>T,0.068607,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.2211G>T,0.06912017,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.486G>A,0.0689092,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.1872C>T,0.06883776,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1863G>A,0.0688881,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1857C>T,0.06896788,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1626C>T,0.068981856,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1647C>T,0.06908426,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1659C>T,0.06890604,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1689C>T,0.06883532,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1692G>A,0.06899497,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1698G>A,0.06893638,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1701C>T,0.06872812,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1708T>C,0.06874585,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.171A>G,0.08217186,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1611C>T,0.06888959,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1722C>T,0.06855559,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1737G>A,0.062634766,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1773G>A,0.06896046,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1776G>A,0.06887981,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1794G>A,0.06905401,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.180C>T,0.07460138,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1827A>G,0.06881276,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.183T>C,0.06821725,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1842G>T,0.06869915,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1845G>C,0.06898779,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1731T>C,0.069042444,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.426C>G,0.067184,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.1203C>T,0.06789273,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.454C>T,0.06920573,0,rpsA,4) Not assoc w R - Interim
+pncA_c.560G>A,0.06812975,0,pncA,4) Not assoc w R - Interim
+pncA_c.540C>T,0.06808105,0,pncA,4) Not assoc w R - Interim
+pncA_p.Thr168Ile,0.07975143,0,pncA,4) Not assoc w R - Interim
+pncA_c.51C>T,0.07400867,0,pncA,4) Not assoc w R - Interim
+pncA_c.514C>T,0.07433781,0,pncA,4) Not assoc w R - Interim
+pncA_c.501C>T,0.069820434,0,pncA,4) Not assoc w R - Interim
+pncA_c.465G>T,0.09311789,0,pncA,4) Not assoc w R - Interim
+pncA_c.459C>T,0.068792015,0,pncA,4) Not assoc w R - Interim
+pncA_c.57G>C,0.09103733,0,pncA,4) Not assoc w R - Interim
+pncA_p.Thr160Ala,0.7331258,1,pncA,4) Not assoc w R - Interim
+pncA_c.408T>C,0.08918655,0,pncA,4) Not assoc w R - Interim
+pncA_c.3G>A,0.10347542,0,pncA,4) Not assoc w R - Interim
+pncA_c.393C>T,0.8870977,1,pncA,4) Not assoc w R - Interim
+pncA_c.378T>C,0.10008043,0,pncA,4) Not assoc w R - Interim
+pncA_c.361C>A,0.10233715,0,pncA,4) Not assoc w R - Interim
+pncA_c.349C>T,0.07081872,0,pncA,4) Not assoc w R - Interim
+pncA_c.-33G>A,0.06890008,0,pncA,4) Not assoc w R - Interim
+pncA_c.309C>T,0.0772849,0,pncA,4) Not assoc w R - Interim
+pncA_c.453G>A,0.06548342,0,pncA,4) Not assoc w R - Interim
+pncA_c.6G>T,0.08065748,0,pncA,4) Not assoc w R - Interim
+pncA_c.72C>A,0.07037911,0,pncA,4) Not assoc w R - Interim
+pncA_c.72C>T,0.06862089,0,pncA,4) Not assoc w R - Interim
+rpsA_c.468C>A,0.071040004,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.852G>T,0.06367111,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.861C>T,0.06840637,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.870C>T,0.06919241,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.876G>A,0.06840542,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.882T>C,0.06882021,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.882T>G,0.06816068,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.885T>C,0.06790656,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.888A>C,0.06810039,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.900C>T,0.06751302,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.909C>T,0.067855746,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.924G>A,0.06789762,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.942C>T,0.06712586,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.960C>T,0.06858003,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.987C>T,0.06840831,0,clpC1,4) Not assoc w R - Interim
+pncA_p.Ala102Val,0.15628278,0,pncA,4) Not assoc w R - Interim
+pncA_p.Thr87Met,0.06530082,0,pncA,4) Not assoc w R - Interim
+pncA_c.93C>T,0.071285784,0,pncA,4) Not assoc w R - Interim
+pncA_c.75C>G,0.06754345,0,pncA,4) Not assoc w R - Interim
+pncA_p.Thr114Met,0.06517342,0,pncA,4) Not assoc w R - Interim
+clpC1_c.837C>T,0.068832815,0,clpC1,4) Not assoc w R - Interim
+pncA_c.306G>A,0.072313726,0,pncA,4) Not assoc w R - Interim
+pncA_c.291T>G,0.092804015,0,pncA,4) Not assoc w R - Interim
+panD_c.39C>G,0.06908503,0,panD,4) Not assoc w R - Interim
+panD_c.36C>A,0.06904489,0,panD,4) Not assoc w R - Interim
+panD_c.357C>T,0.06876975,0,panD,4) Not assoc w R - Interim
+panD_c.354C>T,0.06890103,0,panD,4) Not assoc w R - Interim
+panD_c.348C>T,0.06819013,0,panD,4) Not assoc w R - Interim
+panD_c.336C>T,0.06916317,0,panD,4) Not assoc w R - Interim
+clpC1_p.Val63Ala,0.072057694,0,clpC1,4) Not assoc w R - Interim
+pncA_p.Leu35Arg,0.08861697,0,pncA,4) Not assoc w R - Interim
+pncA_p.His137Arg,0.29020447,1,pncA,4) Not assoc w R - Interim
+panD_c.231C>T,0.06893793,0,panD,4) Not assoc w R - Interim
+panD_c.21G>A,0.0691002,0,panD,4) Not assoc w R - Interim
+panD_c.123C>A,0.06888792,0,panD,4) Not assoc w R - Interim
+panD_c.126A>G,0.06894174,0,panD,4) Not assoc w R - Interim
+panD_c.144T>C,0.069159806,0,panD,4) Not assoc w R - Interim
+panD_c.219T>C,0.06908646,0,panD,4) Not assoc w R - Interim
+panD_c.1A>C,0.06811136,0,panD,4) Not assoc w R - Interim
+panD_c.192C>T,0.069018364,0,panD,4) Not assoc w R - Interim
+pncA_p.Ile6Leu,0.090355545,0,pncA,4) Not assoc w R - Interim
+panD_c.105C>G,0.06891444,0,panD,4) Not assoc w R - Interim
+panD_c.405G>C,0.06886834,0,panD,4) Not assoc w R - Interim
+panD_c.4T>C,0.06897396,0,panD,4) Not assoc w R - Interim
+panD_c.63C>T,0.06895882,0,panD,4) Not assoc w R - Interim
+pncA_c.27G>C,0.10005915,0,pncA,4) Not assoc w R - Interim
+pncA_c.246T>C,0.06730908,0,pncA,4) Not assoc w R - Interim
+pncA_c.225T>C,0.08521238,0,pncA,4) Not assoc w R - Interim
+pncA_c.222C>T,0.10076624,0,pncA,4) Not assoc w R - Interim
+pncA_p.Ser66Leu,0.061686546,0,pncA,4) Not assoc w R - Interim
+pncA_c.210G>A,0.101118416,0,pncA,4) Not assoc w R - Interim
+pncA_c.201G>A,0.06453541,0,pncA,4) Not assoc w R - Interim
+pncA_c.1A>C,0.07167566,0,pncA,4) Not assoc w R - Interim
+pncA_c.195C>G,0.05486411,0,pncA,4) Not assoc w R - Interim
+pncA_c.180C>T,0.07534799,0,pncA,4) Not assoc w R - Interim
+pncA_c.138A>G,0.091885984,0,pncA,4) Not assoc w R - Interim
+pncA_c.132C>T,0.10296127,0,pncA,4) Not assoc w R - Interim
+pncA_c.114G>C,0.059298694,0,pncA,4) Not assoc w R - Interim
+pncA_p.Glu15Gly,0.08079997,0,pncA,4) Not assoc w R - Interim
+pncA_c.105G>A,0.070842296,0,pncA,4) Not assoc w R - Interim
+pncA_c.103C>T,0.071241975,0,pncA,4) Not assoc w R - Interim
+pncA_p.Gly113_Leu116delinsVal,0.010130346,0,pncA,4) Not assoc w R - Interim
+pncA_p.Phe58Val,0.37229013,1,pncA,4) Not assoc w R - Interim
+panD_c.6A>G,0.068754345,0,panD,4) Not assoc w R - Interim
+pncA_c.300C>G,0.07399759,0,pncA,4) Not assoc w R - Interim
+clpC1_c.816G>A,0.068905324,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.852G>A,0.059622914,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.786C>T,0.072452515,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.142C>A,0.06930968,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1416C>T,0.069072366,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1395C>T,0.067595184,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1371A>G,0.068639874,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1356T>C,0.06872377,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1353C>T,0.06863275,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1347G>T,0.06781387,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1344G>A,0.06863657,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1335G>C,0.06772962,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1332C>T,0.06844923,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1317G>A,0.067694396,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1305C>T,0.0673559,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1272G>A,0.06840202,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1257C>T,0.06929794,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1254C>T,0.06959641,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1248T>A,0.06882092,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.117C>G,0.07157451,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1155C>T,0.06880975,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.798G>A,0.068630576,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.1431C>T,0.07584384,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1119C>T,0.06879267,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.459C>T,0.068485975,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.162C>T,0.07223752,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.423C>T,0.06684184,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.393C>T,0.07117465,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.378C>T,0.07018334,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.357C>T,0.06759009,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.345C>T,0.06867808,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.429C>G,0.06788477,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.432T>C,0.07308355,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.438A>G,0.06855732,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.27G>C,0.07249138,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.276C>T,0.07277548,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.43C>T,0.07145321,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.222C>T,0.06748605,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.441C>T,0.068130344,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.21C>T,0.07449189,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.219C>T,0.07079038,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.210C>T,0.07666364,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.204G>A,0.07725069,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.18C>A,0.09796941,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.186G>A,0.07485652,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.15C>G,0.070495486,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1116G>A,0.06850594,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1125G>T,0.06824151,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.45G>A,0.07315555,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.1110C>T,0.06790206,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.612C>G,0.09538734,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.612C>T,0.09305844,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.615T>C,0.07229665,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.642G>C,0.06829026,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.657C>T,0.06758803,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.660C>G,0.06757915,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.663C>T,0.06789091,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.600C>T,0.06968552,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.684A>C,0.08124876,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.693G>A,0.08036944,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.69C>G,0.06698316,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.708C>T,0.08938068,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.723G>A,0.069595784,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.756G>A,0.06998995,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.75C>T,0.06956962,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.780C>T,0.06951827,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.786C>A,0.07156354,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.690G>A,0.07205671,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.594G>A,0.071284235,0,clpC1,4) Not assoc w R - Interim
+pncA_p.Val21Ala,0.105790436,0,pncA,4) Not assoc w R - Interim
+clpC1_c.558A>G,0.0855993,0,clpC1,4) Not assoc w R - Interim
+rpsA_c.1071G>A,0.0688737,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.105T>C,0.06762084,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1029C>T,0.06973386,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1023C>T,0.06908584,0,rpsA,4) Not assoc w R - Interim
+rpsA_c.1020C>T,0.06788641,0,rpsA,4) Not assoc w R - Interim
+clpC1_c.462C>T,0.076066524,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.474C>A,0.06941649,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.48T>C,0.06901732,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.579C>T,0.07132518,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.48T>G,0.06924665,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.1005C>T,0.06842151,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.492T>C,0.0684956,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.495G>A,0.068362206,0,clpC1,4) Not assoc w R - Interim
+pncA_p.Ala79Thr,0.07714522,0,pncA,4) Not assoc w R - Interim
+clpC1_c.534C>T,0.07304785,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.543G>C,0.07252431,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.543G>T,0.076400936,0,clpC1,4) Not assoc w R - Interim
+clpC1_c.546G>A,0.08026135,0,clpC1,4) Not assoc w R - Interim
+rpsA_p.Ile70Leu,0.06950575,0,rpsA,5) Not assoc w R
+clpC1_p.Asp326Asn,0.06560758,0,clpC1,5) Not assoc w R
+clpC1_c.2418C>T,0.06883237,0,clpC1,5) Not assoc w R
+rpsA_c.618G>A,0.06624648,0,rpsA,5) Not assoc w R
+clpC1_c.714G>A,0.067162216,0,clpC1,5) Not assoc w R
+clpC1_p.Pro796Leu,0.06906444,0,clpC1,5) Not assoc w R
+panD_c.-1937C>T,0.07678893,0,panD,5) Not assoc w R
+pncA_c.195C>T,0.039854705,0,pncA,5) Not assoc w R
+panD_c.259C>T,0.06699097,0,panD,5) Not assoc w R
+MT_H37Rv,0.06901908,0,clpC1,

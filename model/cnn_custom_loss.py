@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
+from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
 tf.config.run_functions_eagerly(True)
@@ -15,7 +16,6 @@ results_dir = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
 # utils files are in the utils directory
 sys.path.append("utils")
 from data_utils import *
-from analysis_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
@@ -58,6 +58,8 @@ parser.add_argument('--AF-thresh', dest='AF_thresh', default=0.75, type=float, h
 
 parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
 
+parser.add_argument('--binary', dest='binary', action='store_true', help='If True, use the {drug}_binary directory and train a binary model')
+
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
@@ -71,6 +73,7 @@ patience_epochs = cmd_line_args.patience
 N_epochs = cmd_line_args.epochs
 AF_thresh = cmd_line_args.AF_thresh
 augment = cmd_line_args.augment
+binary = cmd_line_args.binary
 
 # use the non-75% AF thresh for the test data generator if specified
 if AF_thresh > 1:
@@ -91,9 +94,13 @@ BATCH_SIZE = kwargs["batch_size"]
 phenotype_file = kwargs["phenotype_file"]
 genotype_input_directory = kwargs["genotype_input_directory"]
 binary_thresh = kwargs["binary_thresh"]
+
 loss_type = "L1"
-binary = False
-bounded_loss = True
+
+if train_model:
+    bounded_loss = True
+else:
+    bounded_loss = False
 
 output_path = f"{results_dir}/{drug}"
 
@@ -106,9 +113,21 @@ if augment:
     # same thing for the phenotypes file
     phenotype_file = os.path.join(os.path.dirname(phenotype_file) + "_augment", os.path.basename(phenotype_file))
 
+    
+if binary:
+    output_path += "_binary"
+
+    # the last folder in the directory name is "fastas", and we need to append "augment" to the second to last level
+    genotype_input_directory = os.path.join(os.path.dirname(genotype_input_directory) + "_binary", os.path.basename(genotype_input_directory))
+
+    # same thing for the phenotypes file
+    phenotype_file = os.path.join(os.path.dirname(phenotype_file) + "_binary", os.path.basename(phenotype_file))
+
+    
 df_phenos = pd.read_csv(phenotype_file)
 df_train_val = df_phenos.query("category in ['train_set', 'validation_set']").reset_index(drop=True)
 df_test = df_phenos.query("category == 'test_set'").reset_index(drop=True)
+print(df_phenos['Binary'].value_counts())
     
 seq_data_path = output_path
 
@@ -251,7 +270,6 @@ num_peptide_lengths = test_generator.num_peptide_lengths
 additional_data_len = test_generator.mlp_data_shape
 print(f"MLP input shape: {additional_data_len}")
 
-
 if perform_cross_validation:
     
     num_cv_splits = 5
@@ -309,8 +327,38 @@ if perform_cross_validation:
             model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
 
         # train a model for on each split
-        train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, len(train_idx), len(val_idx), save_model_fName=os.path.join(cv_dir, f"model_{split}.h5"), save_history_fName=os.path.join(cv_dir, f"history_{split}.csv"), patience_epochs=patience_epochs, return_min_loss=False)
-
+        if not binary:
+            train_single_CNN(model, loss_type, N_epochs, train_generator, val_generator, len(train_idx), len(val_idx), save_model_fName=os.path.join(cv_dir, f"model_{split}.h5"), save_history_fName=os.path.join(cv_dir, f"history_{split}.csv"), patience_epochs=patience_epochs, return_min_loss=False)
+        else:
+            model.compile(optimizer=Adam(learning_rate = np.exp(-1.0 * 9)), loss="binary_crossentropy", metrics=["accuracy"])
+            
+            early_stop = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=patience_epochs, restore_best_weights=True)
+            
+            # get class weights on the training data to balance training
+            balanced_class_weights = compute_class_weight(class_weight='balanced', 
+                                                          classes=df_train_val.iloc[train_idx].Binary.unique(), 
+                                                          y=df_train_val.iloc[train_idx].Binary.values
+                                                         )
+            
+            balanced_class_weight_dict = dict(zip(df_train_val.iloc[train_idx].Binary.unique(), balanced_class_weights))
+                        
+            history = model.fit(
+                                train_generator,
+                                epochs=N_epochs,
+                                batch_size=BATCH_SIZE,
+                                validation_data=val_generator,
+                                callbacks=[early_stop],
+                                class_weight=balanced_class_weight_dict,
+                                verbose=1
+                            )
+            
+            # save the model
+            model.save(os.path.join(cv_dir, f"model_{split}.h5"))
+            
+            # save the history
+            df_history = pd.DataFrame(history.history)
+            df_history.to_csv(os.path.join(cv_dir, f"history_{split}.csv"))
+            
         # load in the finished model
         model.load_weights(os.path.join(cv_dir, f"model_{split}.h5"))
 
@@ -321,26 +369,52 @@ if perform_cross_validation:
             use_multiprocessing=True,
         )
 
-        # predictions will be saved for isolates with Span_CC = 1, but the summary df will not include them in the computation
-        summary_df = create_summary_df(df_test,
-                                       y_pred, 
-                                       drug,
-                                       binary_thresh, 
-                                       num_loci, 
-                                       model_name="CNN", 
-                                       binarize=True, 
-                                       save_fName=os.path.join(cv_dir, f"test_predictions_{split}.csv"),
-                                      )
+        if binary:
+            
+            df_binary_pred = df_test.copy()
+            df_binary_pred['y_pred'] = y_pred
+
+            # determine the threshold that maximizes sensitivity and specificity. This function adds a column y_pred_label, the binarized predictions, to the dataframe
+            threshold_val, df_binary_pred = get_threshold_val(df_binary_pred, 'y_pred', 'Binary', spec_thresh=None)
+            df_binary_pred = df_binary_pred.rename(columns={'Binary': 'y_test'})
+            
+            # save the threshold val. Need it to get predictions on new data because need to use the same binarization threshold. Save as an array of length 1
+            np.save(os.path.join(cv_dir, f"binarization_threshold_{split}.npy"), [threshold_val])
+            
+            # save only relevant columns
+            df_binary_pred[['ROLLINGDB_ID', 'y_test', 'y_pred', 'y_pred_label']].to_csv(os.path.join(cv_dir, f"test_predictions_{split}.csv"), index=False)
+
+            # add the binary metrics, like sens, spec accuracy, F1, etc. using the compute_binary_metrics function
+            summary_df = compute_binary_metrics(df_binary_pred['y_test'], df_binary_pred['y_pred_label'], binary_thresh, binarize=False)
+
+            # add AUC
+            summary_df['AUC'] = sklearn.metrics.roc_auc_score(df_binary_pred['y_test'], df_binary_pred['y_pred'])
+                    
+        else:
+            # predictions will be saved for isolates with Span_CC = 1, but the summary df will not include them in the computation
+            summary_df = create_summary_df(df_test,
+                                           y_pred, 
+                                           drug,
+                                           binary_thresh, 
+                                           num_loci, 
+                                           model_name="CNN", 
+                                           binarize=True, 
+                                           save_fName=os.path.join(cv_dir, f"test_predictions_{split}.csv"),
+                                          )
+            
         summary_df["CV"] = split
         cv_model_results.append(summary_df)
 
-        if loss_type == "L1":
-            print(f"    Final loss on the test set: {summary_df['Binned_MAE'].values[0]}")
-        else:
-            print(f"    Final loss on the test set: {summary_df['Binned_MSE'].values[0]}")
+        if not binary:
+            if loss_type == "L1":
+                print(f"    Final loss on the test set: {summary_df['Binned_MAE'].values[0]}")
+            else:
+                print(f"    Final loss on the test set: {summary_df['Binned_MSE'].values[0]}")
 
         del train_generator
         del val_generator
+        del df_binary_pred
+        del df_history
 
     # save the cross-validation model results
     pd.concat(cv_model_results).to_csv(os.path.join(output_path, "results.csv"), index=False)
@@ -380,18 +454,47 @@ if train_model:
         model = conv_nn(binary, longest_locus, num_loci, additional_data_len, bounded_loss, filter_size, reg_strength=0)
         
     # train a model on the full dataset, tuning on the test dataset. Just save the model and history dataframe, don't need the loss
-    train_single_CNN(model,
-                     loss_type, 
-                     N_epochs, 
-                     train_generator, 
-                     test_generator, 
-                     len(df_train_val), 
-                     len(df_test),
-                     save_model_fName=os.path.join(output_path, "best_model.h5"), 
-                     save_history_fName=os.path.join(output_path, "history.csv"), 
-                     patience_epochs=patience_epochs, 
-                     return_min_loss=False
-                    )
+    if not binary:
+        train_single_CNN(model,
+                         loss_type, 
+                         N_epochs, 
+                         train_generator, 
+                         test_generator, 
+                         len(df_train_val), 
+                         len(df_test),
+                         save_model_fName=os.path.join(output_path, "best_model.h5"), 
+                         save_history_fName=os.path.join(output_path, "history.csv"), 
+                         patience_epochs=patience_epochs, 
+                         return_min_loss=False
+                        )
+    else:
+        model.compile(optimizer=Adam(learning_rate = np.exp(-1.0 * 9)), loss="binary_crossentropy", metrics=["accuracy"])
+
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=patience_epochs, restore_best_weights=True)
+
+        # get class weights on the training data to balance training
+        balanced_class_weights = compute_class_weight(class_weight='balanced', 
+                                                      classes=df_train_val.query("category=='train_set'").Binary.unique(), 
+                                                      y=df_train_val.query("category=='train_set'").Binary.values
+                                                     )
+        
+        balanced_class_weight_dict = dict(zip(df_train_val.query("category=='train_set'").Binary.unique(), balanced_class_weights))
+
+        history = model.fit(
+                            train_generator,
+                            epochs=N_epochs,
+                            batch_size=BATCH_SIZE,
+                            validation_data=test_generator,
+                            callbacks=[early_stop],
+                            class_weight=balanced_class_weight_dict,
+                            verbose=1
+                        )
+        
+        # save the model
+        model.save(os.path.join(output_path, "best_model.h5"))
+
+        df_history = pd.DataFrame(history.history)
+        df_history.to_csv(os.path.join(output_path, "history.csv"))
 
     K.clear_session()
 
@@ -412,19 +515,40 @@ if os.path.isfile(os.path.join(output_path, "best_model.h5")):
                             workers=4,
                             use_multiprocessing=True,
                         )
-    
-    # predictions will be saved for isolates with Span_CC = 1, but the summary df will not include them in the computation
-    summary_df = create_summary_df(df_test,
-                                   y_pred, 
-                                   drug,
-                                   binary_thresh, 
-                                   num_loci, 
-                                   model_name="CNN",
-                                   binarize=True, 
-                                   save_fName=os.path.join(output_path, "test_predictions.csv"),
-                                  )    
+       
+    if binary:
+        df_binary_pred = df_test.copy()
+        df_binary_pred['y_pred'] = y_pred
+        
+        # determine the threshold that maximizes sensitivity and specificity. This function adds a column y_pred_label, the binarized predictions, to the dataframe
+        threshold_val, df_binary_pred = get_threshold_val(df_binary_pred, 'y_pred', 'Binary', spec_thresh=None)
+        df_binary_pred = df_binary_pred.rename(columns={'Binary': 'y_test'})
+        
+        # save the threshold val. Need it to get predictions on new data because need to use the same binarization threshold
+        np.save(os.path.join(output_path, "binarization_threshold.npy"), threshold_val)
+        
+        # save only relevant columns
+        df_binary_pred[['ROLLINGDB_ID', 'y_test', 'y_pred', 'y_pred_label']].to_csv(os.path.join(output_path, "test_predictions.csv"), index=False)
+            
+        # add the binary metrics, like sens, spec accuracy, F1, etc. using the compute_binary_metrics function
+        summary_df = compute_binary_metrics(df_binary_pred['y_test'], df_binary_pred['y_pred_label'], binary_thresh, binarize=False)
+                
+        # add AUC
+        summary_df['AUC'] = sklearn.metrics.roc_auc_score(df_binary_pred['y_test'], df_binary_pred['y_pred'])
+                        
+    else:
+        # predictions will be saved for isolates with Span_CC = 1, but the summary df will not include them in the computation
+        summary_df = create_summary_df(df_test,
+                                       y_pred, 
+                                       drug,
+                                       binary_thresh, 
+                                       num_loci, 
+                                       model_name="CNN",
+                                       binarize=True, 
+                                       save_fName=os.path.join(output_path, "test_predictions.csv"),
+                                      )    
 
-    summary_df.to_csv(os.path.join(output_path, "full_model_results.csv"))
+    summary_df.to_csv(os.path.join(output_path, "full_model_results.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

@@ -66,10 +66,11 @@ class MtbGeneDataset(Sequence):
         # get phenotypes only if bounded_loss is True. If it's False, then we're just getting predictions on this dataset 
         if bounded_loss:
             if binary:
-                if f"{drug}_midpoint" in df_phenos.columns:
-                    y = (df_phenos[f"{drug}_midpoint"].values >= cc).astype(int)
-                else:
+                if 'Binary' in df_phenos.columns:
                     y = df_phenos["Binary"].values.astype(int)
+                else:
+                    y = (df_phenos[f"{drug}_midpoint"].values >= cc).astype(int)
+
                 assert len(np.unique(y)) == 2
             else:
                 y = np.log2(df_phenos[f"{drug}_midpoint"]).values

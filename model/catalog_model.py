@@ -4,9 +4,6 @@ import matplotlib.pyplot as plt
 import glob, os, sparse, sys, warnings, yaml, vcf, pickle, shutil, subprocess, argparse
 import scipy.optimize
 
-# sys.path.append("utils")
-# from data_utils import *
-
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
                   "Clofazimine": "CFZ",
@@ -35,12 +32,14 @@ parser = argparse.ArgumentParser()
 # Add a required string argument for the config file
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('--V1', dest='V1', action='store_true', help='If true, save predictions for V1 in addition to V2')
+parser.add_argument('--binary', dest='binary', action='store_true', help='If true, save predictions for the binary, not quantitative CNN. This simply affects the test set of isolates used.')
 parser.add_argument('--AF-thresh', type=float, dest='AF_thresh', default=0.75, help='Alternative allele frequency threshold (exclusive) to consider variants present')
 
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
 get_V1_pred = cmd_line_args.V1
+binary = cmd_line_args.binary
 AF_thresh = cmd_line_args.AF_thresh
 
 if AF_thresh > 1:
@@ -51,7 +50,13 @@ drug = kwargs["drug"]
 cc = kwargs['binary_thresh']
 
 # single model because there is no lineage or mino acid information in the catalog model
-output_path = f"{results_dir}/{drug}"
+if binary:
+    phenotypes_path = os.path.join(data_dir, f"{drug}_binary")
+    output_path = f"{results_dir}/{drug}_binary"
+else:
+    phenotypes_path = os.path.join(data_dir, drug)
+    output_path = f"{results_dir}/{drug}"
+    
 output_file = os.path.join(output_path, "catalog_test_predictions_V2.csv")
 
 if get_V1_pred:
@@ -63,7 +68,7 @@ if AF_thresh != 0.75:
 print(f"Saving predictions to {output_file}")
 
 # get test set isolates
-df_test = pd.read_csv(os.path.join(data_dir, drug, "data_for_model.csv")).query("category=='test_set'").reset_index(drop=True)
+df_test = pd.read_csv(os.path.join(phenotypes_path, "data_for_model.csv")).query("category=='test_set'").reset_index(drop=True)
     
 def single_isolate_catalog_resistance_prediction(sample_id, drug, get_V1_pred=False, AF_thresh=0.75):
 
@@ -86,6 +91,11 @@ df_test['y_pred'] = df_test['y_pred'].map({'R': 1, 'S': 0})
 assert sum(pd.isnull(df_test['y_pred'])) == 0
 
 df_test['y_pred'] = df_test['y_pred'].astype(int)
-df_test['y_test'] = (df_test[f'{drug}_upper_bound'] > cc).astype(int)
 
-df_test[['ROLLINGDB_ID', 'y_pred', 'y_test', 'Span_CC']].to_csv(output_file, index=False)
+if binary:
+    df_test['y_test'] = df_test['Binary'].values
+    df_test[['ROLLINGDB_ID', 'y_pred', 'y_test']].to_csv(output_file, index=False)
+else:
+    # if LB == CC, then that means the MIC was (LB, UB], so it is resistance. All MICs are (LB, UB].
+    df_test['y_test'] = (df_test[f'{drug}_lower_bound'] >= cc).astype(int)
+    df_test[['ROLLINGDB_ID', 'y_pred', 'y_test', 'Span_CC']].to_csv(output_file, index=False)    

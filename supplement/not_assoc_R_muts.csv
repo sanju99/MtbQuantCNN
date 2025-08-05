@@ -1,26 +1,29 @@
-drug,variant,effect,CC,ref_pred,pred_MIC,fold_change
-Ethambutol,embA_p.Ala813Gly,missense_variant,5.0,1.2485973,1.2503426,1.0013978085648592
-Ethambutol,embA_p.Pro639Ser,missense_variant,5.0,1.2485973,1.2493889,1.0006339914398341
-Ethambutol,embA_p.Val468Ala,missense_variant,5.0,1.2485973,1.2484771,0.9999037319718695
-Ethambutol,embB_c.660G>A,synonymous_variant,5.0,1.2485973,1.2470399,0.9987526803077342
-Ethambutol,embB_p.Gly156Cys,missense_variant,5.0,1.2485973,1.2626053,1.0112189895012587
-Ethambutol,embB_p.Ser1054Pro,missense_variant,5.0,1.2485973,1.2437775,0.9961398282696912
-Ethambutol,embB_p.Val668Ile,missense_variant,5.0,1.2485973,1.2473621,0.9990107298806429
-Ethambutol,embC_c.-1188C>T,upstream_gene_variant,5.0,1.2485973,0.752372,0.6025737841976754
-Ethambutol,embC_c.-1520C>A,upstream_gene_variant,5.0,1.2485973,1.249281,1.0005475744661632
-Ethambutol,embC_c.-20A>C,upstream_gene_variant,5.0,1.2485973,1.247824,0.9993806650070444
-Ethambutol,ubiA_p.Val49Ile,missense_variant,5.0,1.2485973,1.2488852,1.000230578746246
-Isoniazid,ahpC_c.18T>C,synonymous_variant,0.2,0.04846172,0.04839411,0.9986048782420434
-Isoniazid,katG_c.-354C>T,upstream_gene_variant,0.2,0.04846172,0.048517205,1.001144924282506
-Isoniazid,katG_c.1197A>G,synonymous_variant,0.2,0.04846172,0.047442507,0.9789686994188403
-Levofloxacin,gyrA_p.Ala90Gly,missense_variant,1.0,0.25274527,0.25724736,1.0178127566937254
-Levofloxacin,gyrA_p.Arg252Leu,missense_variant,1.0,0.25274527,0.3590627,1.420650522955385
-Moxifloxacin,gyrA_p.Ala90Gly,missense_variant,0.5,0.08749218,0.07634985,0.8726477040576655
-Moxifloxacin,gyrA_p.Thr80Ala,missense_variant,0.5,0.08749218,0.10545269,1.2052813177131945
-Pyrazinamide,clpC1_p.Val63Ala,missense_variant,100.0,24.936594,25.306684,1.0148412409489445
-Pyrazinamide,rpsA_c.636A>C,synonymous_variant,100.0,24.936594,25.7942,1.034391465009215
-Pyrazinamide,rpsA_p.Met432Thr,missense_variant,100.0,24.936594,24.12908,0.9676173097256184
-Rifampicin,rpoB_p.Glu250Gly,missense_variant,0.5,0.05893942,0.058901563,0.9993576964279594
-Isoniazid,ahpC_c.-84T>C,upstream_gene_variant,0.2,0.04846172,0.048630614,1.0034851012304145
-Isoniazid,ahpC_c.-10G>A,upstream_gene_variant,0.2,0.04846172,0.047931485,0.9890586838436606
-Isoniazid,ahpC_c.-88G>A,upstream_gene_variant,0.2,0.04846172,0.0477144,0.984579168878034
+variant,log2_pred_MIC,pred_MIC,effect,CC,Locus,confidence,ref_pred,fold_change,log2_fold_change,gene,drug
+mmpL5_p.Ile948Val,-5.0253506,0.030705681,missense_variant,0.25,mmpLS5,4) Not assoc w R - Interim,0.032069653,0.9574684515607326,-0.0627031436479118,mmpL5,Bedaquiline
+mmpL5_p.Thr794Ile,-4.9394617,0.032589212,missense_variant,0.25,mmpLS5,4) Not assoc w R - Interim,0.032069653,1.0162009548403907,0.0231857248306776,mmpL5,Bedaquiline
+mmpS5_c.-74G>T,-5.002921,0.031186791,upstream_gene_variant,0.25,mmpLS5,4) Not assoc w R - Interim,0.032069653,0.9724704847913384,-0.0402736310007175,mmpS5,Bedaquiline
+embA_p.Ala813Gly,0.3223235,1.2503426,missense_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,1.0013978085648592,0.0020152033782545,embA,Ethambutol
+embA_p.Pro639Ser,0.32122272,1.2493889,missense_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,1.000633991439834,0.0009143664865694,embA,Ethambutol
+embA_p.Val468Ala,0.32016936,1.2484771,missense_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,0.9999037319718695,-0.0001388920923211,embA,Ethambutol
+embB_c.660G>A,0.3185076,1.2470399,synonymous_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,0.9987526803077342,-0.0018006251456339,embB,Ethambutol
+embB_p.Gly156Cys,0.3364037,1.2626053,missense_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,1.0112189895012589,0.0160954609951973,embB,Ethambutol
+embB_p.Ser1054Pro,0.31472844,1.2437775,missense_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,0.9961398282696912,-0.0055798270998333,embB,Ethambutol
+embB_p.Val668Ile,0.3188804,1.2473621,missense_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,0.9990107298806428,-0.0014279215118496,embB,Ethambutol
+embC_c.-1188C>T,-0.41048184,0.752372,upstream_gene_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,0.6025737841976754,-0.7307901870242377,embC,Ethambutol
+embC_c.-1520C>A,0.3210981,1.249281,upstream_gene_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,1.0005475744661632,0.0007897667585235,embC,Ethambutol
+embC_c.-20A>C,0.31941447,1.247824,upstream_gene_variant,5.0,aftA-embCAB,4) Not assoc w R - Interim,1.2485973,0.9993806650070444,-0.0008937883287587,embC,Ethambutol
+ubiA_p.Val49Ile,0.3206408,1.2488852,missense_variant,5.0,aftB-ubiA,4) Not assoc w R - Interim,1.2485973,1.000230578746246,0.0003326164680728,ubiA,Ethambutol
+ahpC_c.18T>C,-4.3690248,0.04839411,synonymous_variant,0.2,ahpC,4) Not assoc w R - Interim,0.04846172,0.9986048782420434,-0.0020141405542114,ahpC,Isoniazid
+katG_c.-354C>T,-4.36536,0.048517205,upstream_gene_variant,0.2,katG-furA,4) Not assoc w R - Interim,0.04846172,1.001144924282506,0.0016508317261296,katG,Isoniazid
+katG_c.1197A>G,-4.397676,0.047442507,synonymous_variant,0.2,katG-furA,4) Not assoc w R - Interim,0.04846172,0.9789686994188403,-0.0306653616315422,katG,Isoniazid
+gyrA_p.Ala90Gly,-1.9587718,0.25724736,missense_variant,1.0,gyrBA,4) Not assoc w R - Interim,0.25274527,1.0178127566937254,0.0254721784708247,gyrA,Levofloxacin
+gyrA_p.Arg252Leu,-1.4776922,0.3590627,missense_variant,1.0,gyrBA,4) Not assoc w R - Interim,0.25274527,1.420650522955385,0.506551698276134,gyrA,Levofloxacin
+gyrA_p.Ala90Gly,-3.2326555,0.10638336,missense_variant,0.5,gyrBA,4) Not assoc w R - Interim,0.057518803,1.849540575453213,0.8871669508339117,gyrA,Moxifloxacin
+gyrA_p.Thr80Ala,-4.0213194,0.0615832,missense_variant,0.5,gyrBA,4) Not assoc w R - Interim,0.057518803,1.0706620581099366,0.098503182212294,gyrA,Moxifloxacin
+clpC1_p.Val63Ala,4.6614466,25.306684,missense_variant,100.0,clpC1,4) Not assoc w R - Interim,24.936594,1.0148412409489445,0.0212540537060252,clpC1,Pyrazinamide
+rpsA_c.636A>C,4.688975,25.7942,synonymous_variant,100.0,rpsA,4) Not assoc w R - Interim,24.936594,1.034391465009215,0.048782276316799,rpsA,Pyrazinamide
+rpsA_p.Met432Thr,4.592701,24.12908,missense_variant,100.0,rpsA,4) Not assoc w R - Interim,24.936594,0.9676173097256184,-0.0474915169379211,rpsA,Pyrazinamide
+rpoB_p.Glu250Gly,-4.0855503,0.058901563,missense_variant,0.5,rpoBC,4) Not assoc w R - Interim,0.05893942,0.9993576964279594,-0.0009269459003379,rpoB,Rifampicin
+ahpC_c.-84T>C,-4.3619914,0.048630614,upstream_gene_variant,0.2,ahpC,3) Uncertain significance,0.04846172,1.0034851012304145,0.0050191971284728,ahpC,Isoniazid
+ahpC_c.-10G>A,-4.3828826,0.047931485,upstream_gene_variant,0.2,ahpC,3) Uncertain significance,0.04846172,0.9890586838436606,-0.0158719719024433,ahpC,Isoniazid
+ahpC_c.-88G>A,-4.3894315,0.0477144,upstream_gene_variant,0.2,ahpC,5) Not assoc w R,0.04846172,0.984579168878034,-0.0224208786481933,ahpC,Isoniazid

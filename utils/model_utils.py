@@ -13,6 +13,7 @@ import sklearn.metrics
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
 
+from data_utils import *
 
 
 def quantLoss_CNN(y_true, y_pred, loss_type):
@@ -407,3 +408,460 @@ def boundedLoss_Reg(y_pred, y_true, lower_bounds, upper_bounds, loss_type="L1"):
 
     # because we used np.clip above, the value in the errors array for points predicted within the MIC bin will be 0, so just take the simple mean
     return np.mean(masked_errors)
+
+
+
+
+def create_summary_df(df_test, y_pred, drug, binary_thresh, num_loci, model_name, binarize=True, save_fName=None):
+    
+    # predictions dataframe: get indices of validation data in the cv splits
+    pred_df = df_test[["ROLLINGDB_ID", f"{drug}_midpoint", f"{drug}_lower_bound", f"{drug}_upper_bound", "Span_CC"]]
+
+    # rename columns to make them easier to read
+    pred_df.rename(columns={"ROLLINGDB_ID": "Isolate", 
+                            f"{drug}_midpoint": "y_test",
+                            f"{drug}_lower_bound": "lower",
+                            f"{drug}_upper_bound": "upper"
+                           }, 
+                   inplace=True
+                  )
+
+    # add model predictions, and log-transform the test values
+    pred_df["y_pred"] = np.squeeze(y_pred)
+    pred_df["y_test"] = np.log2(pred_df["y_test"])
+    
+    if save_fName is not None:
+        pred_df.to_csv(save_fName, index=False)
+
+    # exclude isolates whose MICs span the CC from the final error calculation. BUT they are saved in the dataframe above to see later
+    pred_df = pred_df.query("Span_CC==0").reset_index(drop=True)
+
+    binned_mae, binned_mse, within_doubling = boundedLoss_predict(pred_df, y_pred_col="y_pred", lower_bounds_col="lower", upper_bounds_col="upper")
+
+    summary_df = pd.DataFrame({"Drug": drug,
+                               "Model": model_name,
+                               "Num_Loci": num_loci,
+                               "Binned_MAE": binned_mae,
+                               "Binned_MSE": binned_mse,
+                               "MAE": np.mean(np.abs(pred_df["y_pred"]-pred_df["y_test"])),
+                               "MSE": np.mean(np.square(pred_df["y_pred"]-pred_df["y_test"])),
+                               "Within_doubling": within_doubling,
+                               "Spearman": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[0],
+                               "Spearman_pval": st.spearmanr(pred_df["y_pred"], pred_df["y_test"])[1],
+                              }, index=[0])
+
+    # compute binary metrics using the upper bound
+    binary_metrics_df = compute_binary_metrics(pred_df["upper"], pred_df["y_pred"], binary_thresh, binarize=binarize)
+    summary_df = pd.concat([summary_df, binary_metrics_df], axis=1)
+    return summary_df
+
+
+
+
+
+def get_train_test_val_lineages(df_train, df_test, df_val=None, lineage_fName="/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv"):
+    
+    lineages = pd.read_csv(lineage_fName, index_col=[0])
+    lineages.columns = [f"lineageSNP_{col}" for col in lineages.columns]
+    assert len(np.unique(lineages.values)) == 2
+
+    train_lineages = lineages.loc[df_train["ROLLINGDB_ID"].values]
+    assert sum(train_lineages.index.values != df_train["ROLLINGDB_ID"].values) == 0
+
+    test_lineages = lineages.loc[df_test["ROLLINGDB_ID"].values]
+    assert sum(test_lineages.index.values != df_test["ROLLINGDB_ID"].values) == 0
+
+    # include support for no validation data (i.e. Pyrazinamide)
+    if df_val is not None:
+        val_lineages = lineages.loc[df_val["ROLLINGDB_ID"].values]
+        assert sum(val_lineages.index.values != df_val["ROLLINGDB_ID"].values) == 0
+    else:
+        val_lineages = None
+        
+    return train_lineages, test_lineages, val_lineages
+    
+
+
+
+def prepare_model_inputs(X, model_type, include_lineage, feature_names=None, lineages_matrix=None):
+    
+    if model_type == "CNN":
+        
+        if include_lineage:
+            model_inputs = [X, lineages_matrix.values, np.zeros(len(X)), np.zeros(len(X))]
+        else:
+            model_inputs = [X, np.zeros(len(X)), np.zeros(len(X))]
+        
+    elif model_type == "Regression":
+  
+        if include_lineage:
+            
+            # # first combine the dataframes to preserve the features, then get only the features specified in the argument
+            # assert sum(X.index.values != lineages_matrix.index.values) == 0
+            model_inputs = X.merge(lineages_matrix, left_index=True, right_index=True, how="inner")
+            model_inputs = model_inputs[feature_names].values
+        else:
+            # keep only the features specified in the argument
+            model_inputs = X[feature_names].values
+        
+    else:
+        raise ValueError(f"{model_type} is not a valid model type!")
+        
+    return model_inputs
+
+    
+
+
+def get_inputs_for_regression(config_file):
+
+    kwargs = yaml.safe_load(open(config_file, "r"))
+
+    df_phenos = pd.read_csv(kwargs["phenotype_file"])
+    data_dir = os.path.dirname(kwargs["phenotype_file"])
+    locus_list = kwargs["locus_list"]
+    drug = kwargs["drug"]
+    results_dir = kwargs["output_path"]
+    ridge_dir = os.path.join(results_dir, "ridge")
+    fasta_dir = kwargs["genotype_input_directory"]
+    include_lineage = kwargs["include_lineage"]
+
+    # make dataframes of coordinates
+    gene_coords, _ = get_gene_coords(locus_list, fasta_dir)
+    h37Rv_coords = make_h37rv_coordinates(gene_coords, locus_list, fasta_dir)    
+
+    # this is for samples that don't have data from the MIC-ML consortium, so there is no validation dataset
+    if os.path.isfile(os.path.join(data_dir, "validation_data_for_model.csv")):
+        val_data_present = True
+    else:
+        val_data_present = False
+
+    if val_data_present:
+
+        df_val = pd.read_csv(os.path.join(data_dir, "validation_data_for_model.csv"))
+
+        # get the pickle file made for the CNN input
+        if not os.path.isfile(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")):
+            
+            val_matrix = get_new_aln_for_CNN(df_val,
+                                            locus_list,
+                                            fasta_dir
+                                           )
+            sparse.save_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz"), sparse.COO(val_matrix))
+        else:
+            val_matrix = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")).todense()
+        
+        val_samples = val_matrix.shape[0]  
+        one_hot_encodings = val_matrix.shape[1]
+        longest_locus = val_matrix.shape[2]
+        num_loci = val_matrix.shape[3]
+        assert one_hot_encodings == 5
+
+        ref_matrix = sparse.load_npz(f"{results_dir.replace('_lineage', '')}/pkl_sparse_ref.npz").todense()
+        
+        if os.path.isfile(os.path.join(ridge_dir.replace("_lineage", ""), "val_seq_matrix.pkl")):
+            X_val = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "val_seq_matrix.pkl"))
+    
+        else:
+            print(f"Creating validation data pickle file")
+            
+            X_val = []
+            
+            for locus in locus_list:
+
+                # don't need the reference matrix here
+                single_locus_matrix, _ = get_single_locus_Reg_input(locus, locus_list, df_phenos, val_matrix, ref_matrix, h37Rv_coords)
+                X_val.append(single_locus_matrix)
+        
+            X_val = pd.concat(X_val, axis=1)
+            X_val.index = df_val["ROLLINGDB_ID"].values
+            X_val.to_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "val_seq_matrix.pkl"))
+
+    else:
+        df_val = None
+        X_val = None
+
+    # read in the pickle file of all the sequence features. This should be of length 5 x ALL nucleotides across all loci
+    # this is before anything has been dropped due to redundancy or not being present in the samples
+    X_train_test = pd.read_pickle(os.path.join(ridge_dir.replace("_lineage", ""), "full_seq_matrix.pkl"))
+
+    df_train = df_phenos.query("category=='original_train_set'").reset_index(drop=True)    
+    df_test = df_phenos.query("category=='original_test_set'").reset_index(drop=True)    
+
+    X_train = X_train_test.loc[df_train.ROLLINGDB_ID.values]
+    X_test = X_train_test.loc[df_test.ROLLINGDB_ID.values]
+
+    # X_train, X_test, and X_val should all be dataframes read in from pickle files, so the indices are ROLLLINGDB_ID and the columns are features
+    return X_train, X_test, X_val, df_train, df_test, df_val
+
+
+
+def get_new_aln_for_CNN(df,
+                        locus_list,
+                        fasta_dir
+                       ):
+    
+    # argument = directory that contains the fasta file
+    df_genos = make_genotype_df(locus_list, fasta_dir)
+    df_genos.index = [name.split(".")[0] for name in df_genos.index.values]
+        
+    # the additional new strains to predict MICs for
+    df_genos = df_genos.loc[df["ROLLINGDB_ID"].values]
+    
+    assert len(df_genos) == len(df)
+
+    # Apply one-hot encoding function to get each isolate sequence
+    print('making one hot encoding for...')
+    for locus in locus_list:
+        print("...", locus)
+        lengths = [len(seq) for seq in df_genos[locus]]
+        assert len(np.unique(lengths)) == 1
+        df_genos[locus + "_one_hot"] = df_genos[locus].apply(np.vectorize(get_one_hot))
+        
+    return create_X(df_genos)
+
+
+                           
+
+def get_inputs_for_CNN(config_file, keep_idx=None):
+    
+    kwargs = yaml.safe_load(open(config_file, "r"))
+    
+    data_dir = os.path.dirname(kwargs["phenotype_file"])
+    drug = kwargs["drug"]
+    locus_list = kwargs["locus_list"]
+    results_dir = kwargs["output_path"]
+    fasta_dir = kwargs["genotype_input_directory"]
+    include_lineage = kwargs["include_lineage"]
+    df_phenos = pd.read_csv(kwargs["phenotype_file"])
+
+    binary_thresh = kwargs["binary_thresh"]
+    binary = kwargs["binary"]
+
+    # this is for samples that don't have data from the MIC-ML consortium, so there is no validation dataset
+    if os.path.isfile(os.path.join(data_dir, "validation_data_for_model.csv")):
+        val_data_present = True
+
+        df_val = pd.read_csv(os.path.join(data_dir, "validation_data_for_model.csv"))
+
+        if not os.path.isfile(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")):
+            
+            X_val = get_new_aln_for_CNN(df_val,
+                                        locus_list,
+                                        fasta_dir
+                                       )
+            sparse.save_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz"), sparse.COO(X_val))
+            
+        else:
+            X_val = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_val.npz")).todense()
+
+    else:
+        val_data_present = False
+        df_val = None
+        X_val = None
+        
+    df_train = df_phenos.query("category=='original_train_set'")
+    df_test = df_phenos.query("category=='original_test_set'")    
+
+    X_train_test = sparse.load_npz(os.path.join(results_dir.replace("_lineage", ""), "pkl_sparse_full.npz")).todense()
+    X_train = X_train_test[df_train.index.values]
+    X_test = X_train_test[df_test.index.values]
+
+    # these are in the same order as df_train, df_test, and df_val, which are in the same order as X_train, X_test, and X_val
+    train_lineages, test_lineages, val_lineages = get_train_test_val_lineages(df_train, df_test, df_val)
+
+    X_train = prepare_model_inputs(X_train, "CNN", include_lineage, feature_names=None, lineages_matrix=train_lineages)
+    X_test = prepare_model_inputs(X_test, "CNN", include_lineage, feature_names=None, lineages_matrix=test_lineages)
+    
+    if val_data_present:
+        if keep_idx is not None:
+            X_val = X_val[keep_idx, :]
+
+            # lineages matrices have samples as the index for merging
+            if include_lineage:
+                val_lineages = val_lineages.iloc[keep_idx, :]
+
+            df_val = df_val.iloc[keep_idx, :]
+            
+        X_val = prepare_model_inputs(X_val, "CNN", include_lineage, feature_names=None, lineages_matrix=val_lineages)
+
+    # X_train, X_test, and X_val should all be numpy arrays (so no indices or columns)
+    return X_train, X_test, X_val, df_train.reset_index(drop=True), df_test.reset_index(drop=True), df_val
+
+
+
+
+def get_threshold_val(pred_df, pred_col, test_col, spec_thresh=None):
+    
+    y_prob = pred_df[pred_col].values
+    y_test = pred_df[test_col].values
+    
+    # Test thresholds from 0 to 1, in 0.01 increments
+    thresholds = np.linspace(0, 1, 101)
+    results_df = pd.DataFrame(columns=["thresh", "sens_spec", "sens", "spec"])
+    
+    for i, thresh in enumerate(thresholds):
+
+        y_pred = (y_prob > thresh).astype(int)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y_test, y_pred=y_pred).ravel()
+        
+        sens = tp / (tp + fn)
+        spec = tn / (tn + fp)
+        
+        results_df.loc[i, :] = [thresh, sens + spec, sens, spec]
+        
+    # get index of highest sum(s) of sens and spec.
+    if spec_thresh is None:
+        select_thresh = results_df.sort_values("sens_spec", ascending=False)["thresh"].values[0]
+    # if there is a threshold on specificity, then choose the threshold that maximizes sensitivity while having a specificity above the threshold
+    else:
+        if results_df["spec"].max() >= spec_thresh:
+            select_thresh = results_df.query("spec >= @spec_thresh").sort_values("sens", ascending=False)["thresh"].values[0]
+        # if there are no cases when the specificity reaches the threshold, take the highest sensitivity given that the specificity is maximized
+        else:
+            max_spec = results_df["spec"].max()
+            select_thresh = results_df.query("spec >= @max_spec").sort_values("sens", ascending=False)["thresh"].values[0]
+
+    print(f"Binarization threshold: {select_thresh}")
+    
+    # add the labels using the selected threshold
+    pred_df["y_pred_label"] = (pred_df[pred_col] > select_thresh).astype(int)    
+    return select_thresh, pred_df
+
+
+
+
+def compute_binary_metrics(y_true, y_pred, binary_thresh, binarize=False):
+        
+    # binarize using the critical concentration
+    # see if the upper bound is greater than the critical concentration. If so, resistant. If the upper bound is equal to the CC, then it is susceptible because it dies at the CC.
+    if binarize:
+        y_true_binary = (y_true > binary_thresh).astype(int)
+        y_pred_binary = (y_pred > np.log2(binary_thresh)).astype(int)
+    else:
+        y_true_binary = np.copy(y_true)
+        y_pred_binary = np.copy(y_pred)
+        
+    assert len(np.unique(y_true_binary)) <= 2
+    assert len(np.unique(y_pred_binary)) <= 2
+    
+    tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true_binary, y_pred_binary).ravel()
+    sens = tp / (tp+fn)
+    spec = tn / (tn+fp)
+    precision = tp / (tp+fp)
+    acc = sklearn.metrics.accuracy_score(y_true_binary, y_pred_binary)
+    balanced_acc = sklearn.metrics.balanced_accuracy_score(y_true_binary, y_pred_binary)
+    F1 = sklearn.metrics.f1_score(y_true_binary, y_pred_binary)
+
+    return pd.DataFrame({"Sensitivity": sens,
+                         "Specificity": spec,
+                         "Precision": precision,
+                         "Accuracy": acc,
+                         "Balanced_Acc": balanced_acc,
+                         "F1": F1,
+                        }, index=[0]
+                       )
+
+
+    
+def compute_proportion_within_1bin(df, y_pred_col, y_true_col, lower_bounds_col, upper_bounds_col, binary_thresh):
+    
+    df = df.reset_index(drop=True)
+    
+    # list of all lower and upper bounds from the table
+    MIC_vals = list(np.sort(np.unique(np.concatenate([df["lower"].values, df["upper"].values]))))
+    max_val = np.max(MIC_vals)
+    
+    for i, row in df.iterrows():
+
+        pred_MIC, actual_MIC = np.exp2(row[y_pred_col]), np.round(np.exp2(row[y_true_col]), 2)
+        lower, upper = row[lower_bounds_col], row[upper_bounds_col]
+
+        if not lower <= actual_MIC:
+            print("lower problem", lower, actual_MIC)
+            
+        if not actual_MIC <= upper:
+            print("upper problem", actual_MIC, upper)
+
+        lower_idx = MIC_vals.index(lower)
+        upper_idx = MIC_vals.index(upper)
+
+        if lower > 0:
+            lower_adj = MIC_vals[lower_idx - 1]
+        else:
+            lower_adj = 0
+
+        if upper < np.max(df[upper_bounds_col].values):
+            upper_adj = MIC_vals[upper_idx + 1]
+        else:
+            upper_adj = np.max(df[upper_bounds_col].values)
+
+        assert lower_adj < upper_adj
+        
+        if lower_adj > 0:
+            assert lower_adj < lower
+        else:
+            assert lower_adj <= lower
+        
+        if upper_adj < max_val:
+            assert upper_adj > upper
+        else:
+            assert upper_adj >= upper
+            
+        df.loc[i, ["lower_adj", "upper_adj"]] = [lower_adj, upper_adj]
+
+        if pred_MIC >= lower_adj and pred_MIC <= upper_adj:
+            df.loc[i, "within_1bin"] = 1
+        else:
+            df.loc[i, "within_1bin"] = 0
+
+    assert np.nan not in df["within_1bin"].unique()
+    df["within_1bin"] = df["within_1bin"].astype(int)
+
+    return df
+
+
+
+
+def boundedLoss_predict(pred_df, y_pred_col="y_pred", lower_bounds_col="lower", upper_bounds_col="upper"):
+    '''
+    y_true and y_pred are log-MICs. lower_bounds and upper_bounds are exponentiated. 
+    
+    This function returns bounded MAE, MSE, and the proportion of points measured within 1 MIC doubling (1 log2 unit)
+    ''' 
+    
+    del_cols = [f"{y_pred_col}_exp", "within_doubling", "within_1bin", "compute_error", f"{lower_bounds_col}_rounded", f"{upper_bounds_col}_rounded"]
+
+    for col in del_cols:
+        if col in pred_df.columns:
+            del pred_df[col]
+
+    # first add essential agreement (proportion within 1 doubling dilution)
+    # not always helpful because some "doubling" dilutions are not exact, i.e. 0.3, 0.6, 0.125, 0.5. But the number is here if needed
+    pred_df[f"{y_pred_col}_exp"] = np.round(np.exp2(pred_df[y_pred_col]).astype(float), 2)
+    
+    pred_df.loc[(pred_df[lower_bounds_col] / 2 <= pred_df[f"{y_pred_col}_exp"]) & 
+                (pred_df[upper_bounds_col] * 2 >= pred_df[f"{y_pred_col}_exp"])
+                , "within_doubling"] = 1
+
+    pred_df.loc[(pred_df[f"{y_pred_col}_exp"] == 0.06) & (pred_df[lower_bounds_col] == 0.12), "within_doubling"] = 1
+    pred_df["within_doubling"] = pred_df["within_doubling"].fillna(0).astype(int)
+        
+    # make copies to avoid changing the original dataframe
+    lower_bounds = np.copy(pred_df[lower_bounds_col].values) #pred_df[lower_bounds_col].values / 2
+    upper_bounds = np.copy(pred_df[upper_bounds_col].values) #pred_df[upper_bounds_col].values * 2
+    
+    lower_bounds[lower_bounds==0] += 1e-10
+    lower_bounds = np.log2(lower_bounds)
+    upper_bounds = np.log2(upper_bounds)
+
+    # use less than or equal to because the true MIC is in the range (lower, upper], so it is not equal to lower.
+    pred_df["compute_error"] = ((pred_df[y_pred_col].values <= lower_bounds) | (pred_df[y_pred_col].values > upper_bounds)).astype(int)
+
+    # compute the error relative to the bounds, NOT RELATIVE TO THE MIDPOINT (y_test) of each isolate
+    # np.clip returns one of the values from lower_bounds or upper_bounds, whichever is closest to the prediction, if the value is outside the bounds
+    # if the test values are within the bounds, the values themselves are returned
+    bound_to_compute_error = np.clip(pred_df[y_pred_col].values, lower_bounds, upper_bounds)
+    mae = np.mean((np.abs(bound_to_compute_error - pred_df[y_pred_col])))
+    mse = np.mean((np.square(bound_to_compute_error - pred_df[y_pred_col])))
+
+    return mae, mse, pred_df["within_doubling"].mean()

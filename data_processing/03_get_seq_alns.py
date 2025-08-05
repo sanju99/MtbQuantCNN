@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 
-parser.add_argument('--augment', dest='augment', action='store_true', help='If True, use the {drug}_augment directory')
+parser.add_argument('--model_suffix', dest='model_suffix', help='If specified, use the {drug}_{model_suffix} directory. Must be one of "binary" or "augment" if specified.')
 
 parser.add_argument('--TRUST', dest='TRUST_data', action='store_true', help='Flag to add TRUST samples paths to the scripts')
 
@@ -71,7 +71,8 @@ parser.add_argument('--AF-thresh', dest='AF_thresh', type=float, default=0.75, h
 
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
-augment = cmd_line_args.augment
+model_suffix = cmd_line_args.model_suffix
+assert model_suffix in ['binary', 'augment', None]
 TRUST_data = cmd_line_args.TRUST_data
 insilico_muts = cmd_line_args.insilico_muts
 saturation_muts = cmd_line_args.saturation_muts
@@ -97,13 +98,12 @@ if insilico_muts or saturation_muts:
 if saturation_muts:
     assert gene is not None
 
-if augment:
-    drug_data_dir = os.path.join(data_dir, f"{drug}_augment")
+if model_suffix is not None:
+    drug_data_dir = os.path.join(data_dir, f"{drug}_{model_suffix}")
 else:
     drug_data_dir = os.path.join(data_dir, drug)
-
+    
 # this is to remove training/validation/testing data from the alignments if we're only interested in TRUST data to save space and avoid having to re-encode nucleotide sequences for this data
-print(drug_data_dir)
 df_phenos = pd.read_csv(os.path.join(drug_data_dir, "data_for_model.csv")) 
 
 # create output directories
@@ -120,6 +120,8 @@ if insilico_muts:
 
 if saturation_muts:
     out_dir = f"{drug_data_dir}/inSilico_analysis/saturation_mutagenesis"
+    
+print(f"Output directory: {out_dir}")
     
 if TRUST_data:
     if not os.path.isdir(os.path.join(out_dir, "fastas")):
