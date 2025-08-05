@@ -24,5 +24,7 @@ config_*.yaml
 *temp*
 
 # unpublished patient data
-analysis/TRUST/*.csv
+analysis/TRUST/*.csv*
 analysis/TRUST/*.xlsx
+analysis/TRUST/*.txt*
+analysis/TRUST/*.tsv*
