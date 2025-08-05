@@ -22,3 +22,7 @@
 config_*.yaml
 *insertion_sites_dict.csv
 *temp*
+
+# unpublished patient data
+analysis/TRUST/*.csv
+analysis/TRUST/*.xlsx
