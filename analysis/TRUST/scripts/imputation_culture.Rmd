@@ -1,0 +1,308 @@
+---
+title: "TRUST Patient Data Imputation"
+output: html_document
+date: "2024-10-31"
+---
+
+```{r setup, echo =F, warning=F, message=F}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+
+# delete all variables
+rm(list=ls())
+
+# clear RAM
+gc()
+
+library(kableExtra)
+library(Hmisc)
+library(tidyr)
+library(tidyverse)
+library(arsenal)
+library(ggforce)
+library(mice)
+library(dplyr)
+library(data.table)
+library(ggplot2)
+library(lubridate)
+library(gridExtra)
+library(readxl)
+library(ggpubr)
+library(GGally)
+library(data.table)
+library(readr)
+library(survminer)
+library(survival)
+library(rstudioapi)
+
+# Set the working directory to the directory of the current R Markdown file
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
+source("prep_table1.R")
+theme_set(theme_bw())
+
+# Enable verbose output
+options(mice.verbose = TRUE)
+
+# sputum data generated from the above, up to 12 weeks only
+df_sputum <- read.csv("../data/cultures.csv", stringsAsFactors = FALSE)
+
+# matrix of ordinal smear grades for all patients across 12 weeks
+df_smear_grade <- read.csv("../data/smear_grade.csv", stringsAsFactors = FALSE)
+
+# matrix of smear positivity (binary variable) for all patients across 12 weeks
+df_smear_positivity <- read.csv("../data/smear_positivity.csv", stringsAsFactors = FALSE)
+
+dim(df_sputum)
+dim(df_smear_grade)
+dim(df_smear_positivity)
+```
+
+
+```{r, warning=TRUE}
+# set TRUE if you want to impute cultures and FALSE if not for the outcomes data
+impute_TCC <- TRUE
+
+df <- read.csv("../data/patient_data.csv", stringsAsFactors = FALSE)
+
+df <- prep_table1.fn(df)
+dim(df)
+
+covars_array = c("pid",
+                 "screen_sex",
+                 "screen_years",
+                 "bl_bmi", # need to keep this because it's used in the models to determine underweight binary var
+                 "bmi", # ordinal variable from underweight to normal to obese
+                 "fstrom1_baseline",
+                 "HIV_CD4", # categorical variable: 0 = HIV-, 1 = HIV+/high CD4, 2 = HIV+/low CD4
+                 "bl_prevtb",
+                 "diabetes",
+                 "total_adherence",
+                 "adherence_12week",
+                 "smoked_substance_use",
+                 "inh_resistant",
+                 "peth_value_baseline",
+                 "alcohol_use", # LCA group: They grouped people by alcohol use
+                 "bl_mandrax",
+                 "RIF_AUC",
+                 "INH_AUC",
+                 "EMB_AUC",
+                 "PZA_AUC",
+                 "TTP_baseline",
+                 "smear_grade_baseline"
+                 )
+
+
+# # add TCC_longer_8weeks if running imputation for the outcomes, not the TCC model
+# if (!impute_TCC) {
+#    covars_array <- c(covars_array, "TCC_longer_8weeks")
+# } else {
+#   covars_array <- c(covars_array, "HIV_CD4") # the outcomes dataset doesn't converge in mice 
+# }
+
+combine_patient_data_with_cultures <- function(df, covars_array, df_sputum=NULL, df_smear=NULL) {
+  
+  # subset to include only covariates that need to be imputed or would be relevant for imputing other covariates
+  # the patient demographics are complete -- age, sex, drug use, HIV, diabetes, etc.
+  df <- df %>% dplyr::select(covars_array)
+  
+  # if either of the passed in dataframes are None, then create an empty dataframe to merge with so that there are no changes to df
+  if (is.null(df_sputum)) {
+    df_sputum <- data.frame(pid = df$pid)
+  }
+  
+  if (is.null(df_smear)) {
+    df_smear <- data.frame(pid = df$pid)
+  }
+  
+  # this function combines the patient metadata file with wide sputum and smear dataframes
+  df_combined <- df %>%
+    dplyr::inner_join(df_sputum, by = "pid") %>%
+    dplyr::inner_join(df_smear, by = "pid")
+  
+  # set everything to factors
+  df_combined <- df_combined %>%
+      mutate_if(is.character, as.factor)
+  
+  # Except smear grade, which is ordered factor conversion to all smear grade columns from 1-12
+  # the other ordered factors are in the dataframe and were processed to ordered factors by prep_table1.R already
+  df_combined <- df_combined %>%
+    mutate(across(matches("^smear_grade_\\d+$"),
+                  ~ factor(.x, levels = c(0, 1, 2, 3, 4), ordered = TRUE)))
+
+  # smear positivity sometimes detected as having 3 levels because of the NAs, so force convert
+  df_combined <- df_combined %>%
+    mutate(across(matches("^smear_positivity_\\d+$"),
+                  ~ factor(.x, levels = c(0, 1))))
+  
+  # cultures sometimes detected as having 3 levels because of the NAs, so force convert
+  df_combined <- df_combined %>%
+    mutate(across(matches("^culture_\\d+$"),
+                  ~ factor(.x, levels = c("tb_positive", "tb_negative"))))
+  
+  df_combined$pid <- as.character(df_combined$pid)
+  
+  return(df_combined)
+}
+```
+
+```{r warning=TRUE}
+if (impute_TCC) {
+  df_combined <- combine_patient_data_with_cultures(df, covars_array, df_sputum, df_smear_positivity)
+} else {
+  df_combined <- combine_patient_data_with_cultures(df, covars_array)
+}
+
+# check data types
+sapply(df_combined, class)
+```
+
+# Imputation -- will compare imputation-derived TCC with original date-derived TCC later in Python
+```{r, warning=TRUE}
+initialize_mice <- function(df) {
+  
+  # initialize a mice model. Do this if you want to make changes to the predictor matrix or methods before actually running it
+  # this is why maxit (max iterations) is set to 0, so no fitting is done
+  init <- mice(df,  maxit = 0)
+  
+  # where the predictor matrix = 1, the ith varible is used to impute the jth variable
+  # it is a square matrix
+  pred_matrix <- init$predictorMatrix
+  
+  # mice detects the variable types and determines best imputation methods. Check that it got all of them
+  # predictors that are complete may have no method because there is nothing missing for them.
+  # for smear grade, which is ordinal, need to specify a method that will consider the order (not just a categorical imputer)
+  # good, it defaults to using method = "polr" for smear grade, if you run init$method
+  method <- init$method
+  
+  # Loop through each column and set method based on criteria
+  for (col in names(df)) {
+      # Check if the column is a factor
+      if (method[[col]] == "") {
+        if (is.factor(df[[col]])) {
+            # If binary (0/1), set method to "logreg"
+            if (nlevels(df[[col]]) == 2) {
+                # binary variables
+                method[col] <- "logreg"
+            }
+            # If multi-level factor, set method to "polyreg" or "polr" depending on if the factor is ordered
+            else if ((nlevels(df[[col]]) > 2) & (nlevels(df[[col]]) <= 10)) {
+              if (is.ordered(df[[col]])) {
+                method[col] <- "polr"
+              }
+              else {
+                method[col] <- "polyreg"
+              }
+            }
+        }
+        else {
+          # continuous values
+          method[col] <- "pmm"
+        }
+      }
+  }
+  
+  # check that these are all as expected
+  method
+  
+  smear_cols <- grep("^smear_positivity_", colnames(df), value = TRUE)
+  culture_cols <- grep("^culture_", colnames(df), value = TRUE)
+  
+  # make sure that they are sorted by the numerical suffix
+  smear_numeric_suffix <- as.numeric(sub("^smear_positivity_", "", smear_cols))
+  culture_numeric_suffix <- as.numeric(sub("^culture_", "", culture_cols))
+  
+  # Reorder 'culture_cols' based on the numeric suffix
+  smear_cols <- smear_cols[order(smear_numeric_suffix)]
+  culture_cols <- culture_cols[order(culture_numeric_suffix)]
+  
+  # by default, use everything to impute everything, so set all 1s
+  pred_matrix[,] <- 1
+
+  # this prevents the first column and first row (the pid) from being used as part of the imputation
+  pred_matrix[,1] <- 0
+  pred_matrix[1,] <- 0
+  
+  # WE ONLY WANT TO IMPUTE THE CULTURES, NOT THE PATIENT DATA. SO ZERO OUT EVERYTHING ELSE
+  # set all rows that are not cultures to 0. Remember that columns are used to impute rows
+  # OKAY, THIS FAILS BECAUSE THERE AREN'T A LOT OF SAMPLES, AND SOMETIMES THERE AREN'T ENOUGH
+  # COMPLTE OBSERVATIONS IN AN IMPUTATION ITERATION AND THERE WILL BE JUST ONE OUTPUT CULTURE CLASS
+  # SO USE ALL VARIABLES TO IMPUTE ALL OTHER VARIABLES. BUT ONLY KEEP THE IMPUTED CULTURES DOWNSTREAM 
+  # impute_cols <- c(smear_cols, culture_cols)
+  # pred_matrix[!rownames(pred_matrix) %in% impute_cols, ] <- 0
+  
+  modify_predictor_matrix_for_longitudinal_data <- function(pred_matrix, predictors_1, predictors_2) {
+    # it's not appropriate to impute earlier cultures with later cultures because you're using future information to infer the past.
+    # so modify the predictor matrix to only use previous weeks for imputation
+    
+    # in mice, for the (i, j) value, the predictor in column j is used to impute the predictor in row i
+    # Iterate through the columns
+    
+    # NEED TO CHANGE THIS SO THAT IT ACTUALLY LOOKS AT THE SUFFIXES. OTHERWISE IT'S ASSUMING THAT THE CULTURES
+    # AND SMEARS HAVE BEEN ORDERED ALREADY, WHICH COULD MISTAKENLY NOT HAPPEN
+    
+    # CHANGE TO ITERATE THROUGH THE COLUMNS, GET THE SUFFIX, AND TURN IT INTO AN INTEGER BEFORE COMPARING I AND J.
+    for (i in seq_along(predictors_1)) {
+      for (j in seq_along(predictors_2)) {
+        # If the jth value was sampled after the ith value, don't use it for imputing
+        if (j > i) {
+          # Set to 0 if culture_i should not be used to impute culture_j
+          pred_matrix[predictors_1[i], predictors_2[j]] <- 0
+        }
+      }
+    }
+    return(pred_matrix)
+  }
+  
+  # do this for both the smear grades and cultures.
+  pred_matrix = modify_predictor_matrix_for_longitudinal_data(pred_matrix, smear_cols, smear_cols)
+  pred_matrix = modify_predictor_matrix_for_longitudinal_data(pred_matrix, culture_cols, culture_cols)
+  
+  # then you also have to do it between them. i.e. smear_grade_j can not be used to impute culture_i, where j > i, and vice versa
+  pred_matrix = modify_predictor_matrix_for_longitudinal_data(pred_matrix, smear_cols, culture_cols)
+  pred_matrix = modify_predictor_matrix_for_longitudinal_data(pred_matrix, culture_cols, smear_cols)
+  
+  return(list(method = method, pred_matrix = pred_matrix))
+}
+```
+
+
+```{r warning=TRUE}
+# initialize and check the method and predictor matrix
+init_results <- initialize_mice(df_combined)
+method <- init_results$method
+pred_matrix <- init_results$pred_matrix
+```
+
+
+```{r warning=TRUE}
+run_imputation <- function(df, method, predictor_matrix, out_fName, num_impute=30) {
+  
+  # set seed
+  set.seed(123)
+  
+  # run full imputation with updated methods and predictor matrix. Run 30 imputed datasets for 10 iterations and save them all
+  imputation_results <- mice(df, maxit = 10, method=method, predictorMatrix=pred_matrix, m=num_impute, printFlag = TRUE)
+  
+  # save the imputed file
+  # save(imputation_results, file = "data/imputed_data.RData")
+  
+  # Extract all imputed datasets as a list
+  all_imputed_datasets <- complete(imputation_results, action='long', include = T)
+  
+  # save to a CSV file. The ".imp" column tells which imputation each row belongs to
+  write.csv(all_imputed_datasets, file=out_fName, row.names = FALSE)
+}
+```
+
+```{r warning=TRUE}
+# run the imputation
+num_impute <- 30
+
+if (impute_TCC) {
+  out_file <- "../data/imputed_cultures.csv"
+} else {
+  out_file <- "../data/imputed_patient_data.csv"
+}
+
+run_imputation(df_combined, method, pred_matrix, out_file)
+```
