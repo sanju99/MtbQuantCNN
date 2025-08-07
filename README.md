@@ -17,7 +17,7 @@ The top-level directories are as follows:
   <li><code>supplement</code>: Supplementary Data files</li>
 </ul>
 
-Each directory has its own README to further describe its contents.
+Each directory has its own README to further describe its contents, if needed.
 
 All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>envs/tensorflow2</code> environment to run (because this environment includes tensorflow2). All other scripts and notebooks can be run using the <code>envs/MtbQuantCNN.yaml</code> environment.
 
