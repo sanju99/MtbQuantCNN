@@ -176,21 +176,6 @@ if not os.path.isfile(os.path.join(seq_data_path, "pkl_sparse_train_val.npz")) o
                              split_groups=True
                             )
 
-# # make peptide lengths dataframe if it has not already been created
-# if include_peptide_lengths and not os.path.isfile(os.path.join(seq_data_path, "gene_peptide_lengths.csv")):
-
-#     print("Creating gene peptide lengths dataframe")
-
-#     if not os.path.isfile(os.path.join(seq_data_path, "seqDict.pkl")):
-#         all_loci_seq = create_all_loci_matrices(config_file, genotype_input_directory)
-#         pickle.dump(all_loci_seq, open(os.path.join(seq_data_path, "seqDict.pkl"), "wb"))
-
-#     # make dataframe for both tiers of genes, then subset them appropriately
-#     locus_peptide_lengths = make_CDS_length_df(drug, kwargs["tier1_loci"] + kwargs["tier2_loci"], genotype_input_directory, os.path.join(seq_data_path, "seqDict.pkl"))
-    
-#     # keep index because that's the samples column
-#     locus_peptide_lengths.to_csv(os.path.join(seq_data_path, "gene_peptide_lengths.csv"))
-
 
 if include_amino_acid_properties:
 

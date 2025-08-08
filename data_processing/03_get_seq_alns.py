@@ -6,8 +6,8 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
-# h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-drug_loci = pd.read_csv("/home/sak0914/MtbQuantCNN/data_processing/data_utils/drug_loci.csv")
+
+drug_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
 
 
 def create_MSA_script(locus, drug, AF_thresh=0.75, TRUST_data=False, insilico_muts=False, saturation_muts=False, gene=None, hours=3, memory=1):

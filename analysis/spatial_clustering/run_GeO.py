@@ -126,23 +126,6 @@ def compute_GeO_score_with_permutation(values_fName):
     shuffle_table = random_G_score_table(NUM_SHUFFLES, X, w, dm)
     shuffle_table.to_csv(f"{absolute_path}/{output_path}/random_GeO_iterations_{NUM_SHUFFLES}.csv.gz", compression='gzip', index=False)
 
-    # don't need this because we're doing per-residue clustering, not global protein clustering
-    # ks_results = []
-    
-    # # is the distribution of per-residue GeO scores significantly different from the per-residue scores of a randomly shuffled protein?
-    # for i in range(1,NUM_SHUFFLES+1):
-    #     ks = ks_2samp(G_scores.flatten(), shuffle_table.iloc[:,i].values.flatten())
-    #     ks_results.append([ks.statistic, ks.pvalue])
-    
-    # result_table = pd.DataFrame(ks_results, columns=["KS_score", "pvalue"])
-    # result_table.sort_values("pvalue", inplace=True)
-    # result_table.to_csv(f"{absolute_path}/{output_path}/{prefix}_random_GeO_pvalues_{NUM_SHUFFLES}.csv.gz", compression='gzip', index=False)
-    
-    # ### Now compute GeO versus combination of all shuffled isolates
-    # ks = ks_2samp(G_scores.flatten(), shuffle_table.iloc[:,1::].values.flatten())
-    # result_table_full = pd.DataFrame([[ks.statistic, ks.pvalue]], columns=["score", "pvalue"])
-    # result_table_full.to_csv(f"{absolute_path}/{output_path}/random_GeO_full_distribution_{NUM_SHUFFLES}.csv")
-
 
 
 parser = argparse.ArgumentParser()
@@ -154,7 +137,7 @@ cmd_line_args = parser.parse_args()
 output_path = cmd_line_args.output_path
 prot_id = cmd_line_args.prot_id
 NUM_SHUFFLES = 10000
-absolute_path = "/home/sak0914/MtbQuantCNN/spatial_clustering"
+absolute_path = "./analysis/spatial_clustering"
 
 # read the distance map
 # DON'T INCLUDE .CSV OR .NPY IN THE FILE EXTENSION

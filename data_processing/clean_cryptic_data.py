@@ -7,7 +7,7 @@ import os
 cryptic_reuse = pd.read_csv("./MIC_data/CRyPTIC_reuse_table_20231208.csv")
 
 # from Sacha Laurent, FIND
-cc_df = pd.read_csv("~/who-analysis/data/drug_CC.csv")
+cc_df = pd.read_csv("./data_processing/data_utils/drug_CC.csv")
 
 drug_abbr_dict = {'Amikacin': 'AMI',
                   'Bedaquiline': 'BDQ',
@@ -174,7 +174,7 @@ for i, row in df_combined.iterrows():
         df_combined.loc[i, 'ENA_RUN'] = ','.join(np.sort(row['ENA_RUN'].replace('.', ',').split(',')))
 
 # combine with BioSample IDs
-cryptic_metadata = pd.read_csv("/n/data1/hms/dbmi/farhat/rollingDB/metadata/cryptic_WGS_metadata.csv")
+cryptic_metadata = pd.read_csv("./MIC_data/cryptic_WGS_metadata.csv")
 
 # exclude ENA_RUN column, join on Sample, which is a unique sample identifier, like BioSample
 df_combined = cryptic_metadata[['BioSample', 'Sample', 'Combined_Runs']].drop_duplicates().merge(df_combined.iloc[:, 1:].rename(columns={'ENA_SAMPLE': 'Sample'}), how='inner', on='Sample')

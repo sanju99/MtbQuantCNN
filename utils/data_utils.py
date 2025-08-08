@@ -8,16 +8,16 @@ import sklearn.metrics
 import sklearn.utils
 from sklearn.preprocessing import StandardScaler
 import scipy.stats as st
-# from saliency_utils import *
 
-model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
+data_utils_dir = "./data_processing/data_utils"
+model_loci = pd.read_csv(f"{data_utils_dir}/drug_loci.csv")
 model_loci[['Start', 'End']] = model_loci[['Start', 'End']].astype(int)
 
-amino_acid_biophysical_properties = pd.read_csv("./data_processing/protein_seqs/biophysical_properties_AA.csv", index_col=[0])
+amino_acid_biophysical_properties = pd.read_csv(f"{data_utils_dir}/biophysical_properties_AA.csv", index_col=[0])
 
 # get the dataframe of start and end coordinates from mycobrowser
-h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-h37Rv_regions = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_v4.csv")
+h37Rv_genes = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+h37Rv_regions = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_v4.csv")
 
 
 

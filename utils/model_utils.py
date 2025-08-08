@@ -11,8 +11,7 @@ from sklearn.linear_model import Ridge, RidgeCV
 import sklearn.metrics
     
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
-h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-
+h37Rv_genes = pd.read_csv(f"./data_processing/data_utils/H37Rv/mycobrowser_h37rv_genes_v4.csv")
 from data_utils import *
 
 

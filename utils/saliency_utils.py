@@ -12,25 +12,24 @@ import scipy.stats as st
 from data_utils import *
 from inSilicoMut_utils import *
 
-model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
-amino_acid_biophysical_properties = pd.read_csv("./data_processing/protein_seqs/biophysical_properties_AA.csv", index_col=[0])
+data_utils_dir = "./data_processing/data_utils"
+model_loci = pd.read_csv(f"{data_utils_dir}/drug_loci.csv")
+model_loci[['Start', 'End']] = model_loci[['Start', 'End']].astype(int)
+
+amino_acid_biophysical_properties = pd.read_csv(f"{data_utils_dir}/biophysical_properties_AA.csv", index_col=[0])
 
 # import reference files
-h37Rv_path = "/n/data1/hms/dbmi/farhat/Sanjana/H37Rv"
-h37Rv_seq = SeqIO.read(os.path.join(h37Rv_path, "GCF_000195955.2_ASM19595v2_genomic.gbff"), "genbank")
-h37Rv_genes = pd.read_csv(os.path.join(h37Rv_path, "mycobrowser_h37rv_genes_v4.csv"))
-h37Rv_coords = pd.read_csv(os.path.join(h37Rv_path, "h37Rv_coords_to_gene.csv"))
-h37Rv_coords_dict = dict(zip(h37Rv_coords["pos"].values, h37Rv_coords["region"].values))
+h37Rv_seq = SeqIO.read(f"{data_utils_dir}/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
+h37Rv_genes = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+h37Rv_coords_to_gene = pd.read_csv(f"{data_utils_dir}/H37Rv/h37Rv_coords_to_gene.csv")
+h37Rv_coords_to_gene_dict = dict(zip(h37Rv_coords_to_gene['pos'], h37Rv_coords_to_gene['region']))
+
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}
 
-who_variants_V1 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V1.csv")
-who_variants_V2 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V2.csv")
-coll_2014 = pd.read_csv("./data_processing/data_utils/coll2014_SNP_scheme.tsv", sep="\t")
-freschi_2020 = pd.read_csv("./data_processing/data_utils/freschi_hierarchical_SNP_scheme.tsv", sep="\t")
-
+who_variants_V1 = pd.read_csv(f"{data_utils_dir}/WHO_catalog_V1.csv")
+who_variants_V2 = pd.read_csv(f"{data_utils_dir}/WHO_catalog_V2.csv")
+coll_2014 = pd.read_csv(f"{data_utils_dir}/coll2014_SNP_scheme.tsv", sep="\t")
 coll_2014["position"] = coll_2014["position"].astype(int)
-freschi_2020["position"] = freschi_2020["position"].astype(int)
-
 
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
@@ -285,7 +284,6 @@ def did_cnn_find_pos(cnn_saliency_df, drug, cat_to_check=["1", "2"], significanc
     
     # add lineage SNP designations
     cnn_saliency_df["Coll_2014"] = cnn_saliency_df.Pos.isin(coll_2014.position).astype(int)
-    cnn_saliency_df["Freschi_2020"] = cnn_saliency_df.Pos.isin(freschi_2020.position).astype(int)
     
     non_zero_scores = cnn_saliency_df.query("Max > 0")
     

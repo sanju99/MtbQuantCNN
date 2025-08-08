@@ -12,14 +12,17 @@ import warnings
 warnings.filterwarnings("ignore")
 from data_utils import *
 
-h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
-h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-h37Rv_regions = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_v4.csv")
+data_utils_dir = "./data_processing/data_utils"
 
-drug_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
+# import reference files
+h37Rv = SeqIO.read(f"{data_utils_dir}/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
+h37Rv_genes = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+h37Rv_regions = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_v4.csv")
 
-who_variants_V2 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V2.csv", header=[2]).reset_index(drop=True)
-who_variants_V1 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V1.csv")
+drug_loci = pd.read_csv(f"{data_utils_dir}/drug_loci.csv")
+
+who_variants_V2 = pd.read_csv(f"{data_utils_dir}/WHO_catalog_V2.csv", header=[2]).reset_index(drop=True)
+who_variants_V1 = pd.read_csv(f"{data_utils_dir}/WHO_catalog_V1.csv")
 
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
