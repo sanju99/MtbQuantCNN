@@ -6,7 +6,7 @@ The top-level directories are as follows:
 
 <ul>
   <li><code>envs</code>: YAML files to build required conda environments with</li>
-  <li><code>MIC_data</code>code>: Raw file containing MIC data from multiple sources. These are combined, cleaned, and subset into single-drug files by scripts in the <code>data_processing</code> directory</li>
+  <li><code>MIC_data</code>: Raw file containing MIC data from multiple sources. These are combined, cleaned, and subset into single-drug files by scripts in the <code>data_processing</code> directory</li>
   <li><code>model</code>: Scripts to train CNN, regression, and catalog classification models</li>
   <li><code>config_files</code>: Config files used to specify different parameters for different drug models when running scripts in the <code>model</code> and <code>analysis</code> directories</li>
   <li><code>utils: Helper scripts and functions imported into other scripts and notebooks throughout the repository</code></li>
@@ -19,7 +19,7 @@ The top-level directories are as follows:
 
 ## Conda Environments
 
-The code was run using conda environments with conda version 
+The code was run using conda environments with conda v23.7.4. 
 
 All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>envs/tensorflow2</code> environment to run (because this environment includes tensorflow2). The notebooks should be run with the <code>envs/notebook_env.yaml</code> environment. All other scripts can be run with the <code>envs/MtbQuantCNN.yaml</code> environment.
 
