@@ -17,8 +17,14 @@ The top-level directories are as follows:
   <li><code>supplement</code>: Supplementary Data files</li>
 </ul>
 
-Each directory has its own README to further describe its contents, if needed.
+## Conda Environments
+
+The code was run using conda environments with conda version 
 
 All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>envs/tensorflow2</code> environment to run (because this environment includes tensorflow2). The notebooks should be run with the <code>envs/notebook_env.yaml</code> environment. All other scripts can be run with the <code>envs/MtbQuantCNN.yaml</code> environment.
+
+## Data
+
+Due to size, the data files have been zipped and uploaded <a href="https://drive.google.com/drive/folders/1VglsptcOv1ZYZ0fdknTH8Bt3okl_Bxvo?usp=sharing" target="_blank">here</a>. The .pkl, .npz, and .npy files were excluded due to size, but they can be generated from the FASTA alignments and the provided code.
 
 The code was run on the Orchestra 2 Linux high-performance <a href="https://harvardmed.atlassian.net/wiki/spaces/O2/overview" target="_blank">computing cluster</a> at Harvard Medical School. Convolutional neural network models were run on 1 GPU and 1 CPU, and all other code was run on 1 CPU.
