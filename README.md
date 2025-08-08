@@ -19,9 +19,9 @@ The top-level directories are as follows:
 
 ## Conda Environments
 
-The code was run using conda environments with conda v23.7.4. 
+The code was run using conda environments with conda v23.7.4. The YAML files to build the environments are in <code>envs/</code>.
 
-All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>envs/tensorflow2</code> environment to run (because this environment includes tensorflow2). The notebooks should be run with the <code>envs/notebook_env.yaml</code> environment. All other scripts can be run with the <code>envs/MtbQuantCNN.yaml</code> environment.
+All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>tensorflow2</code> environment to run (because this environment includes tensorflow2). The notebooks should be run with the <code>notebook_env.yaml</code> environment. All other scripts can be run with the <code>MtbQuantCNN.yaml</code> environment.
 
 ## Data
 
