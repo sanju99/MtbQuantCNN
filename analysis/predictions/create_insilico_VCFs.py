@@ -9,30 +9,32 @@ from Bio.Seq import Seq
 import warnings, pickle
 warnings.filterwarnings("ignore")
 
+data_utils_dir = "./data_processing/data_utils"
+
 # load all utils functions
-who_variants_V2 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V2.csv", header=[2]).reset_index(drop=True)
-who_variants_V1 = pd.read_csv("./data_processing/data_utils/WHO_catalog_V1.csv")
+who_variants_V2 = pd.read_csv(f"{data_utils_dir}/WHO_catalog_V2.csv", header=[2]).reset_index(drop=True)
+who_variants_V1 = pd.read_csv(f"{data_utils_dir}/WHO_catalog_V1.csv")
 
 sys.path.append("utils")
 from data_utils import *
 from inSilicoMut_utils import *
 
-drug_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
+drug_loci = pd.read_csv(f"{data_utils_dir}/drug_loci.csv")
 
-results_dir = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
-data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
+results_path = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results" # change
+data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs" # change
 
-coll_2014 = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
+coll_2014 = pd.read_csv(f"{data_utils_dir}/coll2014_SNP_scheme.tsv", sep="\t")
 coll_2014["lineage"] = coll_2014["#lineage"].str.replace("lineage", "")
 del coll_2014["#lineage"]
 
-lineages_matrix = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
-amino_acid_biophysical_properties = pd.read_csv("./data_processing/protein_seqs/biophysical_properties_AA.csv", index_col=[0])
+lineages_matrix = pd.read_csv(f"{data_utils_dir}/lineage_matrix_Coll2014.csv", index_col=[0])
+amino_acid_biophysical_properties = pd.read_csv(f"{data_utils_dir}/biophysical_properties_AA.csv", index_col=[0])
 
-h37Rv = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
-h37Rv_regions = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_v4.csv")
-h37Rv_genes = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-h37Rv_coords_to_gene = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/H37Rv/h37Rv_coords_to_gene.csv")
+h37Rv = SeqIO.read(f"{data_utils_dir}/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
+h37Rv_regions = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_v4.csv")
+h37Rv_genes = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_genes_v4.csv")
+h37Rv_coords_to_gene = pd.read_csv(f"{data_utils_dir}/H37Rv/h37Rv_coords_to_gene.csv.gz", compression='gzip')
 h37Rv_coords_to_gene_dict = dict(zip(h37Rv_coords_to_gene['pos'], h37Rv_coords_to_gene['region']))
 
 drug_abbr_dict = {"Delamanid": "DLM",

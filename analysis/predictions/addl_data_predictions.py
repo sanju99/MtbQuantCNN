@@ -14,15 +14,17 @@ from data_utils import *
 from model_utils import *
 from dataloader import MtbGeneDataset
 
-results_path = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
-data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs"
+results_path = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results" # change
+data_dir = "/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs" # change
 
-coll_2014 = pd.read_csv("/home/sak0914/who-analysis/data/coll2014_SNP_scheme.tsv", sep="\t")
+data_utils_dir = "./data_processing/data_utils"
+
+coll_2014 = pd.read_csv(f"{data_utils_dir}/coll2014_SNP_scheme.tsv", sep="\t")
 coll_2014["lineage"] = coll_2014["#lineage"].str.replace("lineage", "")
 del coll_2014["#lineage"]
 
-lineages_matrix = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_Coll2014.csv", index_col=[0])
-drug_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
+lineages_matrix = pd.read_csv(f"{data_utils_dir}/lineage_matrix_Coll2014.csv", index_col=[0])
+drug_loci = pd.read_csv(f"{data_utils_dir}/drug_loci.csv")
 
 # starting the memory monitoring
 tracemalloc.start()

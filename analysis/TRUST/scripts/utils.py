@@ -42,8 +42,6 @@ drug_abbr_dict = {"Delamanid": "DLM",
 
 abbr_drug_dict = {val: key for key, val in drug_abbr_dict.items()}
 
-cc_df = pd.read_csv("/n/data1/hms/dbmi/farhat/rollingDB/metadata/MIC/critical_concentrations_WHO_catalog.csv")
-
 # MIC encoding from the TRUST codebook
 MIC_encoding_dicts = {'RIF': {1: '0,0.03', 2: '0.03,0.06', 3: '0.06,0.125', 4: '0.125,0.25', 5: '0.25,0.5', 6: '0.5,1', 7: '1,inf'},
                       'INH': {1: '0,0.025', 2: '0.025,0.05', 3: '0.05,0.1', 4: '0.1,0.2', 5: '0.2,inf'},

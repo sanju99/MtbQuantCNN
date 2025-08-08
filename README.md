@@ -17,6 +17,12 @@ The top-level directories are as follows:
   <li><code>supplement</code>: Supplementary Data files</li>
 </ul>
 
+# Computing
+
+The code was run on the Orchestra 2 Linux high-performance <a href="https://harvardmed.atlassian.net/wiki/spaces/O2/overview" target="_blank">computing cluster</a> at Harvard Medical School. Convolutional neural network models were run on 1 GPU and 1 CPU, and all other code was run on 1 CPU.
+
+On a M1 Mac with 8 CPUs and 8 GB of RAM....
+
 ## Conda Environments
 
 The code was run using conda environments with conda v23.7.4. The YAML files to build the environments are in <code>envs/</code>.
@@ -27,4 +33,4 @@ All scripts in the <code>model</code> and <code>analysis/saliency</code> directo
 
 Due to size, the data files have been zipped and uploaded <a href="https://drive.google.com/drive/folders/1VglsptcOv1ZYZ0fdknTH8Bt3okl_Bxvo?usp=sharing" target="_blank">here</a>. The .pkl, .npz, and .npy files were excluded due to size, but they can be generated from the FASTA alignments and the provided code.
 
-The code was run on the Orchestra 2 Linux high-performance <a href="https://harvardmed.atlassian.net/wiki/spaces/O2/overview" target="_blank">computing cluster</a> at Harvard Medical School. Convolutional neural network models were run on 1 GPU and 1 CPU, and all other code was run on 1 CPU.
+Once these files are downloaded, and unzipped, they should be placed in the main repository. Then, in the iPython notebooks, any path of `/n/data/hms/dbmi/farhat/Sanjana/MIC_data` should be replaced with `MIC_data/`, and any path of `/n/data1/hms/dbmi/farhat/Sanjana/CNN_results` should be replaced with `CNN_results`. 
