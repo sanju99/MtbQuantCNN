@@ -21,8 +21,6 @@ The top-level directories are as follows:
 
 The code was run on the Orchestra 2 Linux high-performance <a href="https://harvardmed.atlassian.net/wiki/spaces/O2/overview" target="_blank">computing cluster</a> at Harvard Medical School. Convolutional neural network models were run on 1 GPU and 1 CPU, and all other code was run on 1 CPU.
 
-On a M1 Mac with 8 CPUs and 8 GB of RAM....
-
 ## Conda Environments
 
 The code was run using conda environments with conda v23.7.4. The YAML files to build the environments are in <code>envs/</code>.
