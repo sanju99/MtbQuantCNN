@@ -29,6 +29,8 @@ The code was run using conda environments with conda v23.7.4. The YAML files to 
 
 All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>tensorflow2</code> environment to run (because this environment includes tensorflow2). The notebooks should be run with the <code>notebook_env.yaml</code> environment. All other scripts can be run with the <code>MtbQuantCNN.yaml</code> environment.
 
+Environment build times are less than 30 minutes.
+
 ## Data
 
 Due to size, the data files have been zipped and uploaded <a href="https://drive.google.com/drive/folders/1VglsptcOv1ZYZ0fdknTH8Bt3okl_Bxvo?usp=sharing" target="_blank">here</a>. The .pkl, .npz, and .npy files were excluded due to size, but they can be generated from the FASTA alignments and the provided code.
