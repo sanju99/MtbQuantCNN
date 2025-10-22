@@ -21,6 +21,8 @@ The top-level directories are as follows:
 
 The code was run on the Orchestra 2 Linux high-performance <a href="https://harvardmed.atlassian.net/wiki/spaces/O2/overview" target="_blank">computing cluster</a> at Harvard Medical School. Convolutional neural network models were run on 1 GPU and 1 CPU, and all other code was run on 1 CPU.
 
+A single CNN trained on 1 GPU and 1 CPU takes approximately 1-8 hours, depending on the size of the training dataset.
+
 ## Conda Environments
 
 The code was run using conda environments with conda v23.7.4. The YAML files to build the environments are in <code>envs/</code>.
