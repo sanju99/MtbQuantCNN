@@ -31,4 +31,4 @@ All scripts in the <code>model</code> and <code>analysis/saliency</code> directo
 
 Due to size, the data files have been zipped and uploaded <a href="https://drive.google.com/drive/folders/1VglsptcOv1ZYZ0fdknTH8Bt3okl_Bxvo?usp=sharing" target="_blank">here</a>. The .pkl, .npz, and .npy files were excluded due to size, but they can be generated from the FASTA alignments and the provided code.
 
-Once these files are downloaded, and unzipped, they should be placed in the main repository. Then, in the iPython notebooks, any path of `/n/data/hms/dbmi/farhat/Sanjana/MIC_data` should be replaced with `MIC_data/`, and any path of `/n/data1/hms/dbmi/farhat/Sanjana/CNN_results` should be replaced with `CNN_results`. 
+Once these files are downloaded, and unzipped, they should be placed in the main repository. Then, in the iPython notebooks, any path of `/n/data/hms/dbmi/farhat/Sanjana/MIC_data` should be replaced with `MIC_data`, and any path of `/n/data1/hms/dbmi/farhat/Sanjana/CNN_results` should be replaced with `CNN_results`. 
