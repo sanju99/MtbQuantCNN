@@ -1,0 +1,244 @@
+---
+title: "Firth Cox Regression"
+output: html_document
+date: "2025-12-02"
+---
+
+```{r setup, include=FALSE}
+library(coxphf)
+library(dplyr)
+library(survival)
+```
+
+```{r}
+data_dir <- "/home/sak0914/MtbQuantCNN/analysis/TRUST/processed_data"
+
+df_trust_patients <- read.csv(paste0(data_dir, "/df_trust_patients_for_outcomes.csv"))
+df_pred_combined <- read.csv(paste0(data_dir, "/df_pred_combined_for_outcomes.csv"))
+TRUST_phenos <- read.csv(paste0(data_dir, "/TRUST_phenos_for_outcomes.csv"))
+df_outcomes <- read.csv(paste0(data_dir, "/tx_outcomes.csv"))
+
+merged_df <- left_join(df_trust_patients, df_outcomes, by = "pid")
+merged_df$high_lung_involvement <- as.integer(merged_df$predicted_PLI > 20)
+
+merged_df['Lineage_2'] <- as.integer(merged_df$Lineage == 2)
+merged_df['underweight'] <- as.integer(merged_df$bl_bmi < 18)
+
+# remove mixed infections
+merged_df <- subset(merged_df, F2 <= 0.1)
+
+# log_transform_cols <- c("F2", "TTP_baseline", "peth_value_baseline")
+# merged_df[log_transform_cols] <- lapply(merged_df[log_transform_cols], log2)
+
+merged_df$HIV_CD4 <- factor(merged_df$HIV_CD4,levels=c(0, 1, 2), ordered=FALSE)
+print(levels(merged_df$HIV_CD4))
+
+cols_lst <- c(
+              'screen_sex',
+              'screen_years',
+              'underweight',
+              # 'bl_bmi',
+              'fstrom1_baseline',
+              # 'smoked_substance_use',
+              'HIV_CD4',
+              'TTP_baseline',
+              'smear_pos_no_contam_sputum_specimen_1',
+              'diabetes',
+              'high_lung_involvement',
+              'F2',
+              'Lineage_2',
+              'total_adherence'
+              )
+
+dim(merged_df)
+```
+
+
+```{r}
+outcome_time = "date"
+outcome_event = "event"
+
+tb_deaths_only <- TRUE
+
+# Drop rows with NA in any covariates or outcome
+df_for_model <- merged_df[complete.cases(merged_df[, c(cols_lst, outcome_time, outcome_event)]), ]
+
+print(dim(df_for_model))
+
+if (tb_deaths_only) {
+  # restrict to TB deaths only
+  df_for_model <- df_for_model %>%
+        mutate(event = ifelse(event_type == "death" & TB_death == 0, 0, event))
+}
+
+# Scale numeric covariates if desired
+for (cov in cols_lst) {
+  if (is.numeric(df_for_model[[cov]])  && length(unique(df_for_model[[cov]])) > 2) {
+  # if (is.numeric(merged_df[[cov]]) ){
+    df_for_model[[cov]] <- scale(df_for_model[[cov]])
+  }
+}
+```
+
+# Base model with just the patient covariates (and lineage)
+
+```{r}
+# Build formula dynamically
+formula_text <- paste0(
+  "Surv(", outcome_time, ", ", outcome_event, ") ~ ",
+  paste(cols_lst, collapse = " + ")
+)
+
+cox_formula <- as.formula(formula_text)
+
+base_fit <- coxph(
+                  formula = cox_formula,
+                  data = df_for_model,
+                )
+
+# AIC = -2LL + 2k
+base_AIC = -2 * base_fit$loglik[2] + 2*length(coef(base_fit))
+
+# check proportional hazards assumption
+pvals <- cox.zph(base_fit)$table[, "p"]
+print(min(pvals))
+
+# summary(base_fit)
+
+# summary(base_fit)$coefficients
+# summary(base_fit)$coefficients[, "Pr(>|z|)"]
+# confint(base_fit)
+base_fit
+```
+
+
+```{r}
+MIC_type_lst <- c("measured", "predicted")
+tb_deaths_only_lst <- c(TRUE)
+drugs_lst <- c('RIF', 'INH', 'EMB', 'PZA')
+
+# drugs_lst assumed to already exist
+param_grid <- expand.grid(
+  MIC_type = MIC_type_lst,
+  tb_deaths_only = tb_deaths_only_lst,
+  drug = drugs_lst,
+  stringsAsFactors = FALSE
+)
+
+param_grid_list <- lapply(seq_len(nrow(param_grid)), function(i) {
+  drug <- param_grid$drug[[i]]
+
+  list(
+    MIC_type = param_grid$MIC_type[i],
+    tb_deaths_only = param_grid$tb_deaths_only[i],
+    include_drugs_lst = if (is.list(drug)) drug else list(drug)
+  )
+})
+
+length(param_grid_list)
+```
+
+
+```{r}
+df_all_results <- list()
+
+for (params in param_grid_list) {
+  
+  TB_deaths_only <- params$tb_deaths_only
+  MIC_type <- params$MIC_type
+  drug <- paste(unlist(params$include_drugs_lst), collapse = ",")
+
+  if (MIC_type == 'predicted') {
+    df_for_model <- inner_join(merged_df, df_pred_combined, by = "pid")
+    MIC_col <- paste(drug, "_pred_MIC", sep="")
+  } else if (MIC_type == 'measured') {
+    df_for_model <- inner_join(merged_df, TRUST_phenos, by = "pid")
+    MIC_col <- paste(drug, "_midpoint", sep="")
+  }
+  
+  # don't include inh_resistant if we're already including INH MIC (predicted or measured)
+  # if (drug == 'INH') {
+  #   final_cols_lst <- c(cols_lst, c(MIC_col, paste(drug, '_AUC', sep='')))
+  # add INH binary variable, lineage, MIC, and PK AUC columns
+  # } else {
+  #   final_cols_lst <- c(cols_lst, c(MIC_col, paste(drug, '_AUC', sep='')))
+  # }
+  
+  final_cols_lst <- c(cols_lst, c(MIC_col, paste(drug, '_AUC', sep='')))
+  # final_cols_lst <- c(MIC_col, paste(drug, '_AUC', sep=''), 'HIV_CD4', 'total_adherence')
+  
+  if (TB_deaths_only) {
+    # restrict to TB deaths only
+    df_for_model <- df_for_model %>%
+          mutate(event = ifelse(event_type == "death" & TB_death == 0, 0, event))
+  }
+
+  # Drop rows with NA in any covariates or outcome
+  df_for_model <- df_for_model[complete.cases(df_for_model[, c(final_cols_lst, outcome_time, outcome_event)]), ]
+  
+  # F2, TTP, and peth have already been log2 transformed. Log2 transform the MIC col here
+  df_for_model[MIC_col] <- log2(df_for_model[MIC_col])
+  
+  # Scale numeric covariates
+  for (cov in final_cols_lst) {
+    if (is.numeric(df_for_model[[cov]])  && length(unique(df_for_model[[cov]])) > 2) {
+    # if (is.numeric(df_for_model[[cov]]) ){
+      df_for_model[[cov]] <- scale(df_for_model[[cov]])
+    }
+   }
+  
+  # Build formula dynamically
+  formula_text <- paste0(
+    "Surv(", outcome_time, ", ", outcome_event, ") ~ ",
+    paste(final_cols_lst, collapse = " + ")
+  )
+  cox_formula <- as.formula(formula_text)
+  
+  fit <- coxphf(
+                formula = cox_formula,
+                data = df_for_model,
+                firth=TRUE,
+                penalty = 0.5, # fixed from theory
+                pl=FALSE, # if true, base the confidence intervals and p-values on the penalized log-like, not the Wald method
+                maxit = 1000,
+                alpha=0.05,
+                maxstep = 0.1
+              )
+  
+  # AIC = -2LL + 2k
+  AIC = -2 * fit$loglik[2] + 2*length(coef(fit))
+  
+  df_model_summary <- data.frame(
+    term      = names(fit$coefficients),
+    coef      = fit$coefficients,
+    OR      = exp(fit$coefficients),
+    lower_95  = fit$ci.lower,
+    upper_95  = fit$ci.upper,
+    p         = fit$prob,
+    row.names = NULL
+  )
+  
+  df_model_summary$AIC <- AIC
+  df_model_summary$MIC_type <- MIC_type
+  df_model_summary$TB_deaths_only <- TB_deaths_only
+  df_model_summary$Drug <- drug
+  df_model_summary$pids <- dim(df_for_model)[1]
+  
+  df_all_results[[length(df_all_results) + 1]] <- df_model_summary
+
+  print(paste("Finished TB deaths =", TB_deaths_only, MIC_type, drug, sep=" "))
+}
+
+df_all_results <- bind_rows(df_all_results)
+```
+
+```{r}
+View(subset(df_all_results, p <= 0.2))
+```
+
+```{r}
+if (TB_deaths_only) {
+  write.csv(df_model_summary, "/home/sak0914/MtbQuantCNN/analysis/TRUST/model_results/outcomes/Firth_TB_deaths_only.csv", row.names=FALSE)
+} else {
+  write.csv(df_model_summary, "/home/sak0914/MtbQuantCNN/analysis/TRUST/model_results/outcomes/Firth_all_deaths.csv", row.names=FALSE)
+}

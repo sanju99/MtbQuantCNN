@@ -1,24 +1,24 @@
-drug,variant,effect,pred_MIC,log2_fold_change
-Bedaquiline,mmpL5_p.Gln702*,stop_gained,0.004057065,-2.982700421732128
-Bedaquiline,mmpL5_p.Tyr185*,stop_gained,0.0050142813,-2.6770939052109943
-Bedaquiline,mmpL5_p.Trp39*,stop_gained,0.00519146,-2.626996512147729
-Bedaquiline,mmpL5_p.Gln60*,stop_gained,0.0052203443,-2.6189918777785857
-Bedaquiline,mmpL5_p.Tyr586*,stop_gained,0.005488684,-2.5466765570823267
-Bedaquiline,mmpL5_p.Gln504*,stop_gained,0.007393304,-2.1169176027985537
-Bedaquiline,mmpL5_p.Ala136_Ala139del,inframe_deletion,0.009232464,-1.7964211065411302
-Bedaquiline,mmpL5_p.Trp833*,stop_gained,0.011287617,-1.506467801808017
-Bedaquiline,mmpL5_p.Met638_Met641del,inframe_deletion,0.011564085,-1.4715576253467404
-Bedaquiline,mmpL5_p.Ile555_Gly559del,inframe_deletion,0.011797906,-1.4426779239880911
-Bedaquiline,mmpL5_p.Ala350del,inframe_deletion,0.01308391,-1.293415002884554
-Bedaquiline,mmpL5_p.Tyr300*,stop_gained,0.013366663,-1.262569403410574
-Bedaquiline,mmpL5_p.Asp767Ala,missense_variant,0.0153784575,-1.0602979391933194
-Ethambutol,embB_p.Leu370Arg,missense_variant,0.35543984,-1.812630949039084
-Ethambutol,embA_p.Val1073Ile,missense_variant,0.6165275,-1.0180710990894184
-Ethionamide,ethA_p.Trp391Arg,missense_variant,0.30354986,-1.723257012874836
-Ethionamide,ethR_p.Met1?,start_lost,0.3553237,-1.4960566014103265
-Ethionamide,ethA_p.Leu397Arg,missense_variant,0.39773452,-1.333384739347013
-Ethionamide,ethR_p.Trp145*,stop_gained,0.41341028,-1.2776162569266
-Ethionamide,ethA_p.Leu393Arg,missense_variant,0.4232183,-1.243788509606353
-Ethionamide,ethR_p.Thr3Ala,missense_variant,0.4864975,-1.0427581293356172
-Ethionamide,inhA_c.-158C>T,upstream_gene_variant,0.4927243,-1.024409896959046
-Levofloxacin,gyrA_p.Asn282Lys,missense_variant,0.122835614,-1.040955187966121
+drug,variant,effect,pred_MIC,log2_fold_change,confidence
+Bedaquiline,mmpL5_p.Gln702*,stop_gained,0.004057065,-2.982700421732128,3) Uncertain significance
+Bedaquiline,mmpL5_p.Tyr185*,stop_gained,0.0050142813,-2.6770939052109943,3) Uncertain significance
+Bedaquiline,mmpL5_p.Trp39*,stop_gained,0.00519146,-2.626996512147729,3) Uncertain significance
+Bedaquiline,mmpL5_p.Gln60*,stop_gained,0.0052203443,-2.6189918777785857,3) Uncertain significance
+Bedaquiline,mmpL5_p.Tyr586*,stop_gained,0.005488684,-2.5466765570823267,3) Uncertain significance
+Bedaquiline,mmpL5_p.Gln504*,stop_gained,0.007393304,-2.1169176027985537,3) Uncertain significance
+Bedaquiline,mmpL5_p.Ala136_Ala139del,inframe_deletion,0.009232464,-1.7964211065411302,3) Uncertain significance
+Bedaquiline,mmpL5_p.Trp833*,stop_gained,0.011287617,-1.506467801808017,3) Uncertain significance
+Bedaquiline,mmpL5_p.Met638_Met641del,inframe_deletion,0.011564085,-1.4715576253467404,3) Uncertain significance
+Bedaquiline,mmpL5_p.Ile555_Gly559del,inframe_deletion,0.011797906,-1.4426779239880911,3) Uncertain significance
+Bedaquiline,mmpL5_p.Ala350del,inframe_deletion,0.01308391,-1.293415002884554,3) Uncertain significance
+Bedaquiline,mmpL5_p.Tyr300*,stop_gained,0.013366663,-1.262569403410574,3) Uncertain significance
+Bedaquiline,mmpL5_p.Asp767Ala,missense_variant,0.0153784575,-1.0602979391933194,3) Uncertain significance
+Ethambutol,embB_p.Leu370Arg,missense_variant,0.35543984,-1.812630949039084,3) Uncertain significance
+Ethambutol,embA_p.Val1073Ile,missense_variant,0.6165275,-1.0180710990894184,3) Uncertain significance
+Ethionamide,ethA_p.Trp391Arg,missense_variant,0.30354986,-1.723257012874836,3) Uncertain significance
+Ethionamide,ethR_p.Met1?,start_lost,0.3553237,-1.4960566014103265,3) Uncertain significance
+Ethionamide,ethA_p.Leu397Arg,missense_variant,0.39773452,-1.333384739347013,3) Uncertain significance
+Ethionamide,ethR_p.Trp145*,stop_gained,0.41341028,-1.2776162569266,3) Uncertain significance
+Ethionamide,ethA_p.Leu393Arg,missense_variant,0.4232183,-1.243788509606353,3) Uncertain significance
+Ethionamide,ethR_p.Thr3Ala,missense_variant,0.4864975,-1.0427581293356172,3) Uncertain significance
+Ethionamide,inhA_c.-158C>T,upstream_gene_variant,0.4927243,-1.024409896959046,3) Uncertain significance
+Levofloxacin,gyrA_p.Asn282Lys,missense_variant,0.122835614,-1.040955187966121,3) Uncertain significance

@@ -210,8 +210,7 @@ if not os.path.isdir(output_path):
     
 # get the lists of samples to get MIC predictions for
 if TRUST_data:
-    # df_samples = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/20240124_MIC_pass_genoQC.csv")
-
+    
     df_samples = pd.DataFrame([os.path.basename(val).split(".")[0] for val in pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/vcf_full_paths.txt", sep='\t', header=None)[0].values])
 
     # rename the column to ROLLINGDB_ID for consistency with the TRUST dataframe

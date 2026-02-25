@@ -1,0 +1,7 @@
+,0,2,4,6,8,10,12,14,16,18,20,22,24
+Group,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL,RIF MIC ≤ 0.06 µg/mL
+at_risk,236,225,221,213,204,196,189,184,178,127,15,2,1
+censored,0,1,1,0,1,1,1,1,1,5,1,1,1
+Group,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL,RIF MIC > 0.06 µg/mL
+at_risk,137,131,125,115,110,109,107,105,97,70,6,2,1
+censored,0,3,1,1,0,0,1,1,1,2,1,1,1

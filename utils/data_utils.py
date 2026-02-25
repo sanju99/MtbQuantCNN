@@ -205,36 +205,41 @@ def extract_lineages(df, name_col, out_dir=None):
     
     for sample in df[name_col].unique():
 
-        if os.path.isfile(f"{out_dir}/{sample}/lineage/fast_lineage_caller_output.txt"):
-        
-            F2 = float(pd.read_csv(f"{out_dir}/{sample}/lineage/F2_Coll2014.txt", sep='\t', header=None)[0].values[0])
-    
-            df_flc = pd.read_csv(f"{out_dir}/{sample}/lineage/fast_lineage_caller_output.txt", sep='\t')
-    
-            df_flc['ROLLINGDB_ID'] = df_flc['Isolate'].str.split('_').str[0]
+        try:
+            flc_fName = f"{out_dir}/{sample}/lineage/fast_lineage_caller_output.txt"
             
-            for col in df_flc.columns:
-                if col not in ['Isolate', 'ROLLINGDB_ID']:
-                    df_flc.rename(columns={col: col.capitalize()}, inplace=True)
-    
-            df_flc['Coll2014'] = df_flc['Coll2014'].str.replace('lineage', '')
-            df_flc['F2'] = F2
-            
-            split_lineages = df_flc['Coll2014'].values[0].split(',')                
-                
-            unique_lineages = []
+            if os.path.isfile(flc_fName):
 
-            for lineage in split_lineages:
-                if lineage[0].isnumeric():
-                    unique_lineages.append(lineage[0])
-                else:
-                    unique_lineages.append(lineage)
-                    
-            df_flc['Lineage'] = ','.join(np.sort(np.unique(unique_lineages)))
-            
-            df_add.append(df_flc)
+                F2 = float(pd.read_csv(f"{out_dir}/{sample}/lineage/F2_Coll2014.txt", sep='\t', header=None)[0].values[0])
+
+                df_flc = pd.read_csv(f"{out_dir}/{sample}/lineage/fast_lineage_caller_output.txt", sep='\t')
+
+                df_flc['ROLLINGDB_ID'] = os.path.basename(os.path.dirname(os.path.dirname(flc_fName)))
+
+                for col in df_flc.columns:
+                    if col not in ['Isolate', 'ROLLINGDB_ID']:
+                        df_flc.rename(columns={col: col.capitalize()}, inplace=True)
+
+                df_flc['Coll2014'] = df_flc['Coll2014'].str.replace('lineage', '')
+                df_flc['F2'] = F2
+
+                split_lineages = df_flc['Coll2014'].values[0].split(',')                
+
+                unique_lineages = []
+
+                for lineage in split_lineages:
+                    if lineage[0].isnumeric():
+                        unique_lineages.append(lineage[0])
+                    else:
+                        unique_lineages.append(lineage)
+
+                df_flc['Lineage'] = ','.join(np.sort(np.unique(unique_lineages)))
+
+                df_add.append(df_flc)
+        except:
+            print(f"{sample} failed")
     
-    df_add = pd.concat(df_add)
+    df_add = pd.concat(df_add).reset_index(drop=True)
     del df_add['Isolate']
     
     return df_add
@@ -513,7 +518,7 @@ def make_nucleotide_matrices(drug, locus_list, seq_data_path, df_phenos, genotyp
         # last row is H37Rv
         X_H37Rv = X_sparse[[-1], :]
         print(f"Reference shape: {X_H37Rv.shape}")
-        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=False)
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_ref.npz"), X_H37Rv, compressed=True)
     
         # H37Rv is the last row, so remove it before saving to avoid redundancy 
         X_sparse = X_sparse[:-1, :]
@@ -524,12 +529,12 @@ def make_nucleotide_matrices(drug, locus_list, seq_data_path, df_phenos, genotyp
         test_idx = df_geno_pheno.query("category == 'test_set'").index
 
         # Separate train + val from test to keep test aside only for final predictions
-        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_train_val.npz"), X_sparse[train_val_idx, :], compressed=False)
-        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_test.npz"), X_sparse[test_idx, :], compressed=False)
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_train_val.npz"), X_sparse[train_val_idx, :], compressed=True)
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_test.npz"), X_sparse[test_idx, :], compressed=True)
     
     # save all data (including H37Rv) to a single pkl file. This is for getting model predictions on addl data
     else:
-        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_full.npz"), X_sparse, compressed=False)
+        sparse.save_npz(os.path.join(seq_data_path, "pkl_sparse_full.npz"), X_sparse, compressed=True)
 
 
 
@@ -641,6 +646,7 @@ def create_all_loci_matrices(locus_list, genotype_input_directory, isolates_lst)
         # The ROLLINGDB_ID column is just the isolate name, not the full file path
         seq_df["Isolate"] = [isolate.replace(".eff", "").replace(".vcf", "").replace("_freebayes", "").replace("_variants", "").replace("_combinedCodons", "") for isolate in seq_df["Isolate"].values]
         seq_df = seq_df.set_index("Isolate")
+        
         seq_df = seq_df.loc[isolates_lst]
 
         nuc_matrix = seq_df["Seq"].str.split("", expand=True)

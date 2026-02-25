@@ -11,7 +11,6 @@ from tensorflow.keras.optimizers import Adam
 tf.config.run_functions_eagerly(True)
 
 model_loci = pd.read_csv("./data_processing/data_utils/drug_loci.csv")
-results_dir = "/n/data1/hms/dbmi/farhat/Sanjana/CNN_results"
 
 # utils files are in the utils directory
 sys.path.append("utils")
@@ -60,6 +59,8 @@ parser.add_argument('--augment', dest='augment', action='store_true', help='If T
 
 parser.add_argument('--binary', dest='binary', action='store_true', help='If True, use the {drug}_binary directory and train a binary model')
 
+parser.add_argument('-d', dest='results_dir', default="/n/data1/hms/dbmi/farhat/Sanjana/CNN_results", help='Output directory to save output files to')
+
 cmd_line_args = parser.parse_args()
 
 config_file = cmd_line_args.config_file
@@ -69,11 +70,12 @@ include_tier2 = cmd_line_args.tier2
 include_amino_acid_properties = cmd_line_args.amino_acid
 train_model = cmd_line_args.train_model
 perform_cross_validation = cmd_line_args.perform_cross_validation
-patience_epochs = cmd_line_args.patience
 N_epochs = cmd_line_args.epochs
+patience_epochs = cmd_line_args.patience
 AF_thresh = cmd_line_args.AF_thresh
 augment = cmd_line_args.augment
 binary = cmd_line_args.binary
+results_dir = cmd_line_args.results_dir
 
 # use the non-75% AF thresh for the test data generator if specified
 if AF_thresh > 1:

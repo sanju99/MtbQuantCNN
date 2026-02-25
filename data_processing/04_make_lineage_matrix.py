@@ -5,9 +5,9 @@ import vcf, glob, os, sys
 _, scheme = sys.argv
 
 # all isolates passing genotypic quality control and with MICs. Keep all the TRUST isolates. Don't add the mixed non-TRUST samples though
-df = pd.read_csv("./samples_pass_geno_QC.csv").query("F2 <= 0.1 | DB_OF_ORIGIN == 'TRUST'").reset_index(drop=True)
+# df = pd.read_csv("./samples_pass_geno_QC.csv").query("F2 <= 0.1 | DB_OF_ORIGIN == 'TRUST'").reset_index(drop=True)
 
-print(df.DB_OF_ORIGIN.value_counts())
+# print(df.DB_OF_ORIGIN.value_counts())
 
 if scheme.upper() == "FRESCHI":
     lineage_SNPs = pd.read_csv("./data_utils/freschi2020_SNP_scheme.tsv", sep="\t")
@@ -21,7 +21,8 @@ else:
 lineage_SNPs[["REF", "ALT"]] = lineage_SNPs["allele_change"].str.split("/", expand=True)
 
 lineage_mat_fName = f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/lineage_matrix_{suffix}.csv"
-samples_all = list(df['ROLLINGDB_ID'].values)
+# samples_all = list(df['ROLLINGDB_ID'].values)
+samples_all = [os.path.basename(fName).split('.')[0] for fName in glob.glob(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/VCF/*.vcf") + glob.glob(f"/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/TRUST/VCF/*.vcf")]
 
 # skip isolates for which the SNP vectors were already constructed, otherwise this is very inefficient
 if os.path.isfile(lineage_mat_fName):

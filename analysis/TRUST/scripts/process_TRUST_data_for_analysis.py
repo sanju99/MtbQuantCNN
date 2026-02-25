@@ -115,7 +115,7 @@ print(f"{df_trust_patients['unique_patient'].nunique()} unique patients across {
 df_trust_patients['unique_patient'] = df_trust_patients['unique_patient'].astype(int)
 
 # keep the first instance of each re-enrolled patient
-# df_trust_patients = df_trust_patients.sort_values(['unique_patient', 'pid']).drop_duplicates(subset='unique_patient', keep='first')
+df_trust_patients = df_trust_patients.sort_values(['unique_patient', 'pid']).drop_duplicates(subset='unique_patient', keep='first')
 
 
 ############################## STEP 5: REMOVE PATIENTS WHO CHANGED TREATMENT REGIMEN ##############################
@@ -233,6 +233,11 @@ assert len(df_final.query("date < 0")) == 0
 df_final = compute_difference_between_dates(df_final, 'esp_date_end_of_study_parti', 'screen_date', 'time_in_trial')
 df_final.loc[(df_final['event_date'] > df_final['esp_date_end_of_study_parti']) & (df_final['event']==1), 'event'] = 0
 df_final.loc[(df_final['event_date'] > df_final['esp_date_end_of_study_parti']), 'date'] = df_final.loc[(df_final['event_date'] > df_final['esp_date_end_of_study_parti'])]['time_in_trial']
+
+# # keep events of patients if the event occurred within 2 years of the screening date (2 years = 365 * 2 = 730 days).
+# censor_day = 730
+# df_final.loc[(df_final['event'] == 1) & (df_final['event_type'] != 'cure') & (df_final['date'] > censor_day), 'event'] = 0
+# df_final.loc[(df_final['event_type'] != 'cure') & (df_final['date'] > censor_day), 'date'] = df_final.loc[(df_final['event_type'] != 'cure') & (df_final['date'] > censor_day)]['time_in_trial']
 
 df_final['weeks'] = df_final['date'] / 7
 df_final['months'] = df_final['date'] / 30

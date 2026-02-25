@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 import lifelines, itertools
 from sklearn.model_selection import KFold
 
+log_metadata_cols = ['F2', 'TTP_baseline', 'peth_value_baseline']
+
 drugs_lst = ['RIF', 'INH', 'EMB', 'PZA']
 
 # ordinal encoding: bl_afbprog --> smear
@@ -669,7 +671,7 @@ def dummy_encode_lineages(df, lineage_col, binary=False):
 
 
 
-def process_input_features_for_model(df, model_cols, stratify_variables=[], MIC_type='none', include_drugs=[], binarize_drugs=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, binary_lineage=False):
+def process_input_features_for_model(df, model_cols, stratify_variables=[], MIC_type='none', include_drugs=[], binarize_drugs=[], log_transform_drugs=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, binary_lineage=False):
 
     df_model = df.copy()
     cols_lst = model_cols.copy()
@@ -776,8 +778,17 @@ def process_input_features_for_model(df, model_cols, stratify_variables=[], MIC_
     df_model = df_model.dropna()
 
     # variables with high degree of skew or needed to satisfy the proportional hazards assumption
-    log_transform_cols = np.unique(['F2', 'TTP_baseline'] + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
-    
+    # log_transform_cols = np.unique(log_metadata_cols + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
+    if MIC_type == 'predicted':
+        MIC_log_transform_cols = [f"{drug}_pred_MIC" for drug in list(set(include_drugs).intersection(log_transform_drugs))]
+    elif MIC_type == 'measured':
+         MIC_log_transform_cols = [f"{drug}_midpoint" for drug in list(set(include_drugs).intersection(log_transform_drugs))]
+    else:
+         MIC_log_transform_cols = []
+            
+    print(MIC_log_transform_cols)
+    log_transform_cols = np.unique(log_metadata_cols + MIC_log_transform_cols)
+
     for col in log_transform_cols:
 
         if col in df_model.columns:
@@ -796,7 +807,7 @@ def process_input_features_for_model(df, model_cols, stratify_variables=[], MIC_
 
 
 
-def fit_cox_hazard_ratio_model(df, df_outcome, cols_lst, event_col, time_col, MIC_type='none', include_drugs=drugs_lst, binarize_drugs=[], stratify_variables=[], non_linear_term_variables=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, cluster_col=None, penalize_features=[], binary_lineage=False):
+def fit_cox_hazard_ratio_model(df, df_outcome, cols_lst, event_col, time_col, MIC_type='none', include_drugs=drugs_lst, binarize_drugs=[], log_transform_drugs=[], stratify_variables=[], non_linear_term_variables=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, cluster_col=None, penalize_features=[], binary_lineage=False):
     
     # the penalize_features argument is not used, but I wanted to keep the arguments the same for both the fit_cox_hazard_ratio_model and fit_cox_hazard_ratio_model_with_L2_penalty functions
     
@@ -807,6 +818,7 @@ def fit_cox_hazard_ratio_model(df, df_outcome, cols_lst, event_col, time_col, MI
                                                                         MIC_type=MIC_type, 
                                                                         include_drugs=include_drugs, 
                                                                         binarize_drugs=binarize_drugs, 
+                                                                        log_transform_drugs=log_transform_drugs,
                                                                         interact_MIC_lineage=interact_MIC_lineage,
                                                                         interact_indel_change_lineage=interact_indel_change_lineage,
                                                                         binary_lineage=binary_lineage
@@ -889,16 +901,24 @@ def fit_cox_hazard_ratio_model(df, df_outcome, cols_lst, event_col, time_col, MI
     df_model_results['coef_transformed'] = df_model_results['coef'] / df_model_results['original_std']
     df_model_results['se_transformed'] = df_model_results['se(coef)'] / df_model_results['original_std']
 
-    # 2) Undo the log2-transform for the variables that were log2-transformed
-    # To do this, exponentiate the coefficients, so 2**coef. SE is approximately ln(2) * 2**coef * SE(coef)
-    log_transform_cols = np.unique(['F2', 'TTP_baseline'] + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
+#     # 2) Undo the log2-transform for the variables that were log2-transformed
+#     # To do this, exponentiate the coefficients, so 2**coef. SE is approximately ln(2) * 2**coef * SE(coef)
+#     # log_transform_cols = np.unique(log_metadata_cols + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
+#     if MIC_type == 'predicted':
+#         MIC_log_transform_cols = [f"{drug}_pred_MIC" for drug in list(set(include_drugs).intersection(log_transform_drugs))]
+#     elif MIC_type == 'measured':
+#          MIC_log_transform_cols = [f"{drug}_midpoint" for drug in list(set(include_drugs).intersection(log_transform_drugs))]
+#     else:
+#          MIC_log_transform_cols = []
+            
+#     log_transform_cols = np.unique(log_metadata_cols + MIC_log_transform_cols)
+    
+#     # the current coefficient is the factor increase if the value is multiplied by the base. i.e. if log2-transformed with beta = 2, then a doubling of x leads to a 2 * 2 = 4 multiplier on the log HR
+#     # so to scale it to the original scale, you would multiply by the base of the logarithm you took
+#     df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'coef_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['coef_transformed'] #np.exp(df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['coef_transformed'])
 
-    # the current coefficient is the factor increase if the value is multiplied by the base. i.e. if log2-transformed with beta = 2, then a doubling of x leads to a 2 * 2 = 4 multiplier on the log HR
-    # so to scale it to the original scale, you would multiply by the base of the logarithm you took
-    df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'coef_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['coef_transformed'] #np.exp(df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['coef_transformed'])
-
-    # is it the same transformation?
-    df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'se_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['se_transformed'] 
+#     # is it the same transformation?
+#     df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'se_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['se_transformed'] 
 
     return df_model_results, df_model_processed, cph
 
@@ -906,7 +926,7 @@ def fit_cox_hazard_ratio_model(df, df_outcome, cols_lst, event_col, time_col, MI
 
 
 
-def fit_cox_hazard_ratio_model_with_L2_penalty(df, df_outcome, cols_lst, event_col, time_col, MIC_type='none', include_drugs=drugs_lst, binarize_drugs=[], stratify_variables=[], non_linear_term_variables=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, cluster_col=None, penalize_features=[], binary_lineage=False):
+def fit_cox_hazard_ratio_model_with_L2_penalty(df, df_outcome, cols_lst, event_col, time_col, MIC_type='none', include_drugs=drugs_lst, binarize_drugs=[], log_transform_drugs=[], stratify_variables=[], non_linear_term_variables=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, cluster_col=None, penalize_features=[], binary_lineage=False):
     
     # Process input features
     df_model_processed, features_lst = process_input_features_for_model(df, 
@@ -915,6 +935,7 @@ def fit_cox_hazard_ratio_model_with_L2_penalty(df, df_outcome, cols_lst, event_c
                                                                         MIC_type=MIC_type, 
                                                                         include_drugs=include_drugs, 
                                                                         binarize_drugs=binarize_drugs, 
+                                                                        log_transform_drugs=log_transform_drugs,
                                                                         interact_MIC_lineage=interact_MIC_lineage,
                                                                         interact_indel_change_lineage=interact_indel_change_lineage,
                                                                         binary_lineage=binary_lineage
@@ -1071,23 +1092,30 @@ def fit_cox_hazard_ratio_model_with_L2_penalty(df, df_outcome, cols_lst, event_c
     df_model_results['coef_transformed'] = df_model_results['coef'] / df_model_results['original_std']
     df_model_results['se_transformed'] = df_model_results['se(coef)'] / df_model_results['original_std']
 
-    # 2) Undo the log2-transform for the variables that were log2-transformed
-    # To do this, exponentiate the coefficients, so 2**coef. SE is approximately ln(2) * 2**coef * SE(coef)
-    log_transform_cols = np.unique(['F2', 'TTP_baseline'] + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
-    
-    # the current coefficient is the factor increase if the value is multiplied by the base. i.e. if log2-transformed with beta = 2, then a doubling of x leads to a 2 * 2 = 4 multiplier on the log HR
-    # so to scale it to the original scale, you would multiply by the base of the logarithm you took
-    df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'coef_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['coef_transformed'] 
+#     # 2) Undo the log2-transform for the variables that were log2-transformed
+#     # To do this, exponentiate the coefficients, so 2**coef. SE is approximately ln(2) * 2**coef * SE(coef)
+#     # log_transform_cols = np.unique(log_metadata_cols + [col for col in features_lst if col.endswith('_pred_MIC') or col.endswith('_midpoint')])
+#     if MIC_type == 'predicted':
+#         MIC_log_transform_cols = [f"{drug}_pred_MIC" for drug in list(set(include_drugs).intersection(log_transform_drugs))]
+#     elif MIC_type == 'measured':
+#          MIC_log_transform_cols = [f"{drug}_midpoint" for drug in list(set(include_drugs).intersection(log_transform_drugs))]
+#     else:
+#          MIC_log_transform_cols = []
+            
+#     log_transform_cols = np.unique(log_metadata_cols + MIC_log_transform_cols)    
+#     # the current coefficient is the factor increase if the value is multiplied by the base. i.e. if log2-transformed with beta = 2, then a doubling of x leads to a 2 * 2 = 4 multiplier on the log HR
+#     # so to scale it to the original scale, you would multiply by the base of the logarithm you took
+#     df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'coef_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['coef_transformed'] 
 
-    # same for the standard error
-    df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'se_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['se_transformed'] 
+#     # same for the standard error
+#     df_model_results.loc[df_model_results.index.isin(log_transform_cols), 'se_transformed'] = 2 * df_model_results.loc[df_model_results.index.isin(log_transform_cols)]['se_transformed'] 
 
     return df_model_results, df_model_processed, cph
 
 
 
 
-def fit_cox_models_all_imputations(df_trust_patients, df_pred_combined, TRUST_phenos, df_outcome, cols_lst, event_col, time_col, alpha=0.05, invert_OR=True, exclude_resistance=False, MIC_type=None, include_drugs=[], binarize_drugs=[], tb_deaths_only=False, stratify_variables=[], non_linear_term_variables=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, cluster_col=None, L2_penalty=False, penalize_features=[], binary_lineage=False):
+def fit_cox_models_all_imputations(df_trust_patients, df_pred_combined, TRUST_phenos, df_outcome, cols_lst, event_col, time_col, alpha=0.05, invert_OR=True, exclude_resistance=False, MIC_type=None, include_drugs=[], binarize_drugs=[], log_transform_drugs=[], tb_deaths_only=False, stratify_variables=[], non_linear_term_variables=[], interact_MIC_lineage=False, interact_indel_change_lineage=False, cluster_col=None, L2_penalty=False, penalize_features=[], binary_lineage=False):
 
     coef_col = 'coef_transformed'
     se_col = 'se_transformed'
@@ -1174,6 +1202,7 @@ def fit_cox_models_all_imputations(df_trust_patients, df_pred_combined, TRUST_ph
                                                                MIC_type=MIC_type,
                                                                include_drugs=include_drugs,
                                                                binarize_drugs=binarize_drugs,
+                                                               log_transform_drugs=log_transform_drugs,
                                                                stratify_variables=stratify_variables,
                                                                non_linear_term_variables=non_linear_term_variables,
                                                                interact_MIC_lineage=interact_MIC_lineage, 

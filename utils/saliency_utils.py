@@ -21,7 +21,7 @@ amino_acid_biophysical_properties = pd.read_csv(f"{data_utils_dir}/biophysical_p
 # import reference files
 h37Rv_seq = SeqIO.read(f"{data_utils_dir}/H37Rv/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
 h37Rv_genes = pd.read_csv(f"{data_utils_dir}/H37Rv/mycobrowser_h37rv_genes_v4.csv")
-h37Rv_coords_to_gene = pd.read_csv(f"{data_utils_dir}/H37Rv/h37Rv_coords_to_gene.csv")
+h37Rv_coords_to_gene = pd.read_csv(f"{data_utils_dir}/H37Rv/h37Rv_coords_to_gene.csv.gz", compression='gzip')
 h37Rv_coords_to_gene_dict = dict(zip(h37Rv_coords_to_gene['pos'], h37Rv_coords_to_gene['region']))
 
 BASE_TO_COLUMN = {'A': 0, 'C': 1, 'T': 2, 'G': 3, '-': 4}

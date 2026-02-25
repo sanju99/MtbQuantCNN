@@ -137,7 +137,7 @@ cmd_line_args = parser.parse_args()
 output_path = cmd_line_args.output_path
 prot_id = cmd_line_args.prot_id
 NUM_SHUFFLES = 10000
-absolute_path = "./analysis/spatial_clustering"
+absolute_path = "/home/sak0914/MtbQuantCNN/analysis/spatial_clustering"
 
 # read the distance map
 # DON'T INCLUDE .CSV OR .NPY IN THE FILE EXTENSION
