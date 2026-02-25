@@ -27,7 +27,7 @@ A single CNN trained on 1 GPU and 1 CPU takes approximately 1-8 hours, depending
 
 The code was run using conda environments with conda v23.7.4. The YAML files to build the environments are in <code>envs/</code>.
 
-All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>tensorflow2</code> environment to run (because this environment includes tensorflow2). The notebooks should be run with the <code>notebook_env.yaml</code> environment. All other scripts can be run with the <code>MtbQuantCNN.yaml</code> environment.
+All scripts in the <code>model</code> and <code>analysis/saliency</code> directories require the <code>tf2_models</code> environment, which is created using the <code>tensorflow2.yaml</code> file. The notebooks should be run with the <code>notebook_env.yaml</code> environment. All other scripts can be run with the <code>MtbQuantCNN.yaml</code> environment.
 
 Environment build times are less than 30 minutes.
 
