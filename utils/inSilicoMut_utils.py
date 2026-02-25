@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import glob, os, yaml, itertools, sys, vcf, sparse
+import glob, os, yaml, itertools, sys, sparse
 
 from Bio import SeqIO
 from Bio.Seq import Seq
