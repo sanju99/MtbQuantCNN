@@ -33,6 +33,6 @@ Environment build times are less than 30 minutes.
 
 ## Data
 
-Due to size, the data files have been zipped and uploaded <a href="https://drive.google.com/drive/folders/1VglsptcOv1ZYZ0fdknTH8Bt3okl_Bxvo?usp=sharing" target="_blank">here</a>. The .pkl, .npz, and .npy files were excluded due to size, but they can be generated from the FASTA alignments and the provided code.
+Due to size, the data files have been zipped and uploaded <a href="https://drive.google.com/drive/folders/1VglsptcOv1ZYZ0fdknTH8Bt3okl_Bxvo?usp=sharing" target="_blank">here</a>. The .pkl, .npz, and .npy files were excluded due to size (because they contain data for around 10,000 isolates), but they can be generated from the FASTA alignments and the provided code. An example of these files for 10 isolates is provided in `test_example/`, and the code there can be used to generate MIC predictions by a saved CNN model.
 
 Once these files are downloaded, and unzipped, they should be placed in the main repository. Then, in the iPython notebooks, any path of `/n/data/hms/dbmi/farhat/Sanjana/MIC_data` should be replaced with `MIC_data`, and any path of `/n/data1/hms/dbmi/farhat/Sanjana/CNN_results` should be replaced with `CNN_results`. 
