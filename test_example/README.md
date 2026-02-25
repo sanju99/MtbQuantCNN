@@ -14,6 +14,8 @@ File descriptions:
     <li><code>full_model_results.csv</code>: Model statistics 
     <li><code>pkl_AA_test.npy</code>: Array of amino acid features encoded with hydrophobicity, molecular weight, and </li>
     <li><code>pkl_sparse_test.npz</code>: Sparse array of one-hot encoded nucleotides.</li>
+    <li><code>seqDict.pkl</code>: Dictionary of dataframes for each of the genetic loci. Each dataframe is a matrix of the full sequence of each region of interest for each sample in the example dataset.</li>
+    <li><code>test_predictions.csv</code>: Dataframe of predicted MICs obtained by running the code in the next section.</li>
 </ul>
     
 ## Getting predictions
