@@ -178,7 +178,7 @@ def pool_imputation_results(df, num_samples, coef_col, se_col, alpha=0.05, inver
 
 
 
-def forest_plot(df, covariates_order, labels_dict, val_col='OR', alpha=0.05, log=False, pval_offset=1.05, df_stratify_variables_results=None, saveName=None):
+def forest_plot(df, covariates_order, labels_dict, val_col='OR', alpha=0.05, log=False, pval_offset=1.05, x_lim=None, df_stratify_variables_results=None, saveName=None):
     
     # add the relative risks dataframe to plot those as well
     if df_stratify_variables_results is not None:
@@ -189,6 +189,13 @@ def forest_plot(df, covariates_order, labels_dict, val_col='OR', alpha=0.05, log
 
     df.loc[df['pval'] <= alpha, 'significant'] = 1
     df['significant'] = df['significant'].fillna(0).astype(int)
+
+    # plot asterisks instead of p-values
+    df.loc[df['pval'] <= 1e-4, 'asterisk'] = '****'
+    df.loc[df['pval'] <= 1e-3, 'asterisk'] = '***'
+    df.loc[df['pval'] <= 1e-2, 'asterisk'] = '**'
+    df.loc[df['pval'] <= 5e-2, 'asterisk'] = '*'
+    df.loc[df['pval'] > 5e-2, 'asterisk'] = ''
 
     # improve the names for tick labels
     df['plot_column'] = df['covariate'].map(labels_dict)
@@ -211,30 +218,6 @@ def forest_plot(df, covariates_order, labels_dict, val_col='OR', alpha=0.05, log
     df.loc[df['significant']==1, 'err_color'] = 'darkorange'
     df.loc[df['significant']==0, 'point_color'] = 'black'
     df.loc[df['significant']==0, 'err_color'] = 'gray'
-            
-#     # Separate significant and non-significant predictors
-#     significant_df = df.query("significant==1")
-#     non_significant_df = df.query("significant==0")
-    
-#     # Plotting
-#     fig, ax = plt.subplots(figsize=(6, len(df) * 0.6))
-
-#     conf_lower_col = f"{val_col}_lower"
-#     conf_upper_col = f"{val_col}_upper"
-    
-#     # Plot significant predictors in orange
-#     ax.errorbar(
-#         significant_df[val_col], range(len(significant_df)),
-#         xerr=[significant_df[val_col] - significant_df[conf_lower_col], significant_df[conf_upper_col] - significant_df[val_col]],
-#         fmt='o', color='darkorange', ecolor='darkorange', markeredgewidth=0.7, markeredgecolor='black', capsize=3, label='Significant'
-#     )
-
-#     # Plot non-significant predictors in gray
-#     ax.errorbar(
-#         non_significant_df[val_col], range(len(significant_df), len(significant_df) + len(non_significant_df)),
-#         xerr=[non_significant_df[val_col] - non_significant_df[conf_lower_col], non_significant_df[conf_upper_col] - non_significant_df[val_col]],
-#         fmt='o', color='black', ecolor='gray', capsize=3, label='Non-Significant'
-#     )
 
     # Plotting
     fig, ax = plt.subplots(figsize=(6, len(df) * 0.6))
@@ -262,7 +245,7 @@ def forest_plot(df, covariates_order, labels_dict, val_col='OR', alpha=0.05, log
     
         # digits = sig - int(np.floor(np.log10(abs(x)))) - 1
         # return f"{round(x, digits):f}".rstrip('0').rstrip('.')  # strip trailing 0s and .
-
+        
     for i, row in df.iterrows():
     
         # Plot significant predictors in orange
@@ -274,7 +257,8 @@ def forest_plot(df, covariates_order, labels_dict, val_col='OR', alpha=0.05, log
             fmt='o', color=row['point_color'], ecolor=row['err_color'], markeredgewidth=0.7, markeredgecolor='black', capsize=3
         )
 
-        ax.text(df[conf_upper_col].max() * pval_offset, i + 0.1, f"p = {format_sigfig_fixed(row['pval'])}")
+        # ax.text(df[conf_upper_col].max() * pval_offset, i + 0.1, f"p = {format_sigfig_fixed(row['pval'])}")
+        ax.text(df[conf_upper_col].max() * pval_offset, i + 0.1, row['asterisk'])
 
     # Customize plot appearance
     ax.set_yticks(range(len(df)))
@@ -299,6 +283,9 @@ def forest_plot(df, covariates_order, labels_dict, val_col='OR', alpha=0.05, log
         
         # change the tick labels from 10^0 to 1
         ax.set_xticks(ax.get_xticks(), [format_sigfig_fixed(val) for val in ax.get_xticks()])
+        
+    if x_lim is not None:
+        plt.xlim(x_lim[0], x_lim[1])
 
     # Show or save the plot
     if saveName is None:
