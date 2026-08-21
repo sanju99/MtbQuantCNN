@@ -35,4 +35,4 @@ Environment build times are less than 30 minutes.
 
 Due to size, the full data files have been zipped and uploaded <a href="https://zenodo.org/records/22035633" target="_blank">here</a>. An example of these files for 10 isolates is provided in `test_example/`, and the code in that directory can be used to generate MIC predictions by a saved CNN model. Or you may use `./analysis/predictions/addl_data_predictions.py` and modify the paths.
 
-Once these files are downloaded, and unzipped, they should be placed in the main repository. Then, in the iPython notebooks, any path of `/n/data/hms/dbmi/farhat/Sanjana/MIC_data` should be replaced with `MIC_data`, and any path of `/n/data1/hms/dbmi/farhat/Sanjana/CNN_results` should be replaced with `CNN_results`. 
+Once these files are downloaded, and un-tarred, they should be placed in the main repository. Then, any path of `/n/data/hms/dbmi/farhat/Sanjana/MIC_data` should be replaced with `MIC_data`, and any path of `/n/data1/hms/dbmi/farhat/Sanjana/CNN_results` should be replaced with `CNN_results`. 
