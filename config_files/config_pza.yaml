@@ -1,7 +1,6 @@
 drug: PZA
 filter_size: 12
 batch_size: 128
-N_PC: 100
 tier1_loci:
 - pncA
 - panD
