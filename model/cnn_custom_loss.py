@@ -461,11 +461,11 @@ if train_model:
 
         # get class weights on the training data to balance training
         balanced_class_weights = compute_class_weight(class_weight='balanced', 
-                                                      classes=df_train_val.query("category=='train_set'").Binary.unique(), 
-                                                      y=df_train_val.query("category=='train_set'").Binary.values
+                                                      classes=df_train_val.Binary.unique(), 
+                                                      y=df_train_val.Binary.values
                                                      )
         
-        balanced_class_weight_dict = dict(zip(df_train_val.query("category=='train_set'").Binary.unique(), balanced_class_weights))
+        balanced_class_weight_dict = dict(zip(df_train_val.Binary.unique(), balanced_class_weights))
 
         history = model.fit(
                             train_generator,
