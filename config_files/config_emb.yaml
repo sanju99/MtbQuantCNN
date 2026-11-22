@@ -1,0 +1,14 @@
+batch_size: 128
+binary: false
+binary_thresh: 5
+drug: EMB
+filter_size: 12
+genotype_input_directory: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/EMB/fastas
+phenotype_file: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/EMB/data_for_model.csv
+tier1_loci:
+- aftA-embCAB
+- aftB-ubiA
+tier2_loci:
+- embR
+- Rv2477c
+- Rv2752c

@@ -1,0 +1,21 @@
+batch_size: 128
+binary: false
+binary_thresh: 0.2
+drug: INH
+filter_size: 12
+genotype_input_directory: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/INH/fastas
+phenotype_file: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/INH/data_for_model.csv
+tier1_loci:
+- fabG1-inhA
+- katG-furA
+- ahpC
+- kasA
+tier2_loci:
+- dnaA
+- Rv0010c
+- mshA
+- hadA
+- Rv1129c
+- Rv1258c
+- ndh
+- Rv2752c

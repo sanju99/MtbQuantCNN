@@ -1,0 +1,19 @@
+drug: PZA
+filter_size: 12
+batch_size: 128
+N_PC: 100
+tier1_loci:
+- pncA
+- panD
+- rpsA
+- clpC1
+tier2_loci:
+- sigE
+- Rv3236c
+- Rv1258c
+- Rv2571c
+# - PPE35
+# - Rv1248c
+phenotype_file: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/PZA/data_for_model.csv
+genotype_input_directory: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/PZA/fastas
+binary_thresh: 100

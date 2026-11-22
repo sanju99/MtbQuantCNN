@@ -1,0 +1,13 @@
+batch_size: 128
+binary: false
+binary_thresh: 1
+drug: LFX
+filter_size: 12
+genotype_input_directory: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/LFX/fastas
+phenotype_file: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/LFX/data_for_model.csv
+tier1_loci:
+- gyrBA
+tier2_loci:
+- Rv1129c
+- Rv2477c
+- Rv2752c

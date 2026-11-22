@@ -1,0 +1,18 @@
+N_PC: 1000
+batch_size: 128
+binary: false
+binary_thresh: 0.5
+drug: RIF
+filter_size: 12
+genotype_input_directory: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/RIF/fastas
+phenotype_file: /n/data1/hms/dbmi/farhat/Sanjana/MIC_data/single_drugs/RIF/data_for_model.csv
+tier1_loci:
+- rpoBC
+tier2_loci:
+- rpoA
+- rpoZ
+- nusG
+- Rv1129c
+- Rv2477c
+- Rv2752c
+- lpqB-mtrBA
